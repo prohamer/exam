@@ -528,12 +528,12 @@
             return newArray;
         }
 
-        // 觸控拖曳支援 - 不立即移除版本
+        // 觸控拖曳支援 - 修復同區域拖動
         let touchDragData = null;
         let touchDragElement = null;
         let touchClone = null;
         let touchRemoveCallback = null;
-        let touchStartScrollTop = 0;
+        let touchSourceZoneId = null;
 
         function handleTouchStart(e, item, removeCallback) {
             // 儲存數據
@@ -541,9 +541,9 @@
             touchDragElement = e.currentTarget;
             touchRemoveCallback = removeCallback;
             
-            // 記錄當前滾動位置
-            const scrollContainer = document.querySelector('.overflow-y-auto');
-            touchStartScrollTop = scrollContainer ? scrollContainer.scrollTop : 0;
+            // 記錄來源分類區
+            const sourceZone = touchDragElement.closest('.drop-zone, .formula-slot');
+            touchSourceZoneId = sourceZone ? sourceZone.getAttribute('data-zone-id') : null;
             
             const touch = e.touches[0];
             
@@ -563,8 +563,6 @@
             touchDragElement.style.opacity = '0.2';
             touchDragElement.style.transform = 'scale(0.95)';
             touchDragElement.style.transition = 'opacity 0.2s, transform 0.2s';
-            
-            // 不要立即執行移除回調！
         }
 
         function handleTouchMove(e) {
@@ -588,7 +586,11 @@
             if (elementBelow) {
                 const dropZone = elementBelow.closest('.drop-zone, .formula-slot');
                 if (dropZone) {
-                    dropZone.classList.add('drag-over');
+                    const targetZoneId = dropZone.getAttribute('data-zone-id');
+                    // 只有不同區域才高亮
+                    if (targetZoneId !== touchSourceZoneId) {
+                        dropZone.classList.add('drag-over');
+                    }
                 }
             }
         }
@@ -618,17 +620,18 @@
             const dropZones = document.querySelectorAll('.drop-zone, .formula-slot');
             dropZones.forEach(zone => zone.classList.remove('drag-over'));
             
-            // 如果成功放置到新位置
-            if (targetZone && targetZoneId && touchDragData && dropCallback) {
-                // 先執行移除回調（從原位置移除）
+            // 判斷是否成功放置到【不同】的區域
+            const isValidDrop = targetZone && targetZoneId && touchDragData && 
+                              targetZoneId !== touchSourceZoneId;
+            
+            if (isValidDrop && dropCallback) {
+                // 放置到不同區域：先移除，再添加
                 if (touchRemoveCallback) {
                     touchRemoveCallback();
                 }
-                
-                // 然後放置到新位置
                 dropCallback(touchDragData, targetZoneId);
             } else {
-                // 沒有成功放置，恢復原元素
+                // 放回原位或無效放置：恢復原元素
                 if (touchDragElement) {
                     touchDragElement.style.opacity = '1';
                     touchDragElement.style.transform = 'scale(1)';
@@ -640,7 +643,7 @@
             touchDragElement = null;
             touchClone = null;
             touchRemoveCallback = null;
-            touchStartScrollTop = 0;
+            touchSourceZoneId = null;
         }
 
         // ===========================================
