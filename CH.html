@@ -40,12 +40,11 @@
             font-family: 'Noto Sans TC', sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            /* 允許垂直滾動，但禁止水平滾動和縮放 */
-            touch-action: pan-y pinch-zoom;
+            /* 禁用下拉刷新 */
+            overscroll-behavior: none;
             -webkit-user-select: none;
             user-select: none;
             overflow-x: hidden;
-            overflow-y: auto;
         }
 
         /* 允許輸入框選取（如果未來有的話） */
@@ -63,26 +62,27 @@
         }
 
         .drag-item {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.2s ease;
             cursor: grab !important;
-            /* 拖曳項目時才禁用touch */
-            touch-action: none;
+            /* 拖曳時禁用所有手勢 */
+            -webkit-touch-callout: none;
         }
 
         .drag-item:active {
             cursor: grabbing !important;
-            transform: scale(1.05);
         }
 
-        .drag-item:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        @media (hover: hover) {
+            .drag-item:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            }
         }
 
         /* 行動裝置專用：正在拖曳的項目 */
         .dragging {
             opacity: 0.5;
-            transform: scale(1.1);
+            transform: scale(1.05);
             z-index: 1000;
             position: fixed;
             pointer-events: none;
@@ -91,6 +91,7 @@
         /* 可移動的項目 */
         .cursor-move {
             cursor: move !important;
+            -webkit-touch-callout: none;
         }
 
         .cursor-move:active {
@@ -98,29 +99,25 @@
         }
 
         .drop-zone {
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
             min-height: 80px;
-            /* 允許在drop-zone上滾動 */
-            touch-action: pan-y;
         }
 
         .drop-zone.drag-over {
-            background: rgba(59, 130, 246, 0.1);
-            border: 2px dashed #3b82f6 !important;
+            background: rgba(59, 130, 246, 0.2);
+            border: 3px dashed #3b82f6 !important;
             transform: scale(1.02);
         }
 
         .formula-slot {
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
             min-height: 70px;
             min-width: 100px;
-            /* 允許在公式槽上滾動 */
-            touch-action: pan-y;
         }
 
         .formula-slot.drag-over {
-            background: rgba(59, 130, 246, 0.2);
-            border: 2px dashed #3b82f6 !important;
+            background: rgba(59, 130, 246, 0.3);
+            border: 3px dashed #3b82f6 !important;
             transform: scale(1.05);
         }
 
@@ -531,17 +528,21 @@
             return newArray;
         }
 
-        // 觸控拖曳支援
+        // 觸控拖曳支援 - 簡化版
         let touchDragData = null;
         let touchDragElement = null;
         let touchClone = null;
+        let touchRemoveCallback = null;
 
         function handleTouchStart(e, item, removeCallback) {
-            const touch = e.touches[0];
+            // 儲存數據但不做任何處理
             touchDragData = item;
             touchDragElement = e.currentTarget;
+            touchRemoveCallback = removeCallback;
             
-            // 創建視覺複製
+            const touch = e.touches[0];
+            
+            // 立即創建視覺複製
             touchClone = touchDragElement.cloneNode(true);
             touchClone.style.position = 'fixed';
             touchClone.style.zIndex = '10000';
@@ -550,20 +551,24 @@
             touchClone.style.width = touchDragElement.offsetWidth + 'px';
             touchClone.style.left = (touch.clientX - touchDragElement.offsetWidth / 2) + 'px';
             touchClone.style.top = (touch.clientY - touchDragElement.offsetHeight / 2) + 'px';
+            touchClone.style.transition = 'none';
             document.body.appendChild(touchClone);
             
             // 原元素變透明
             touchDragElement.style.opacity = '0.3';
+            touchDragElement.style.transform = 'scale(0.95)';
             
-            // 如果有移除回調，執行它
-            if (removeCallback) {
-                setTimeout(removeCallback, 0);
+            // 執行移除回調
+            if (touchRemoveCallback) {
+                setTimeout(touchRemoveCallback, 0);
             }
         }
 
         function handleTouchMove(e) {
-            e.preventDefault();
             if (!touchClone) return;
+            
+            // 阻止頁面滾動和下拉刷新
+            e.preventDefault();
             
             const touch = e.touches[0];
             touchClone.style.left = (touch.clientX - touchClone.offsetWidth / 2) + 'px';
@@ -594,6 +599,7 @@
             }
             if (touchDragElement) {
                 touchDragElement.style.opacity = '1';
+                touchDragElement.style.transform = 'scale(1)';
             }
             
             // 清除高亮
@@ -615,6 +621,7 @@
             touchDragData = null;
             touchDragElement = null;
             touchClone = null;
+            touchRemoveCallback = null;
         }
 
         // ===========================================
@@ -1055,9 +1062,9 @@
                 }
 
                 return (
-                    <div className="min-h-screen p-3 md:p-6">
-                        {/* 頁首 - 緊湊電玩風格 */}
-                        <div className={`bg-gradient-to-r ${colors.header} rounded-xl p-3 mb-3 text-white shadow-xl`}>
+                    <div className="h-screen flex flex-col overflow-hidden">
+                        {/* 頁首 - 固定在頂部 */}
+                        <div className={`flex-shrink-0 bg-gradient-to-r ${colors.header} p-3 text-white shadow-xl`}>
                             {/* 關卡進度條 - 精簡版 */}
                             <div className="mb-2">
                                 <div className="flex items-center justify-between mb-1.5">
@@ -1108,6 +1115,9 @@
                             </div>
                         </div>
 
+                        {/* 遊戲內容區 - 可滾動 */}
+                        <div className="flex-1 overflow-y-auto p-3 md:p-6" style={{WebkitOverflowScrolling: 'touch'}}>
+                        
                         {/* 分類題型 */}
                         {currentLevel.type === 'classification' && (
                             <div className="grid lg:grid-cols-3 gap-3">
@@ -1524,6 +1534,9 @@
                                 </div>
                             </div>
                         )}
+                        
+                        </div>
+                        {/* 遊戲內容區結束 */}
                     </div>
                 );
             }
