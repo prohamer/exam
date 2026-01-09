@@ -528,17 +528,22 @@
             return newArray;
         }
 
-        // 觸控拖曳支援 - 簡化版
+        // 觸控拖曳支援 - 不立即移除版本
         let touchDragData = null;
         let touchDragElement = null;
         let touchClone = null;
         let touchRemoveCallback = null;
+        let touchStartScrollTop = 0;
 
         function handleTouchStart(e, item, removeCallback) {
-            // 儲存數據但不做任何處理
+            // 儲存數據
             touchDragData = item;
             touchDragElement = e.currentTarget;
             touchRemoveCallback = removeCallback;
+            
+            // 記錄當前滾動位置
+            const scrollContainer = document.querySelector('.overflow-y-auto');
+            touchStartScrollTop = scrollContainer ? scrollContainer.scrollTop : 0;
             
             const touch = e.touches[0];
             
@@ -554,14 +559,12 @@
             touchClone.style.transition = 'none';
             document.body.appendChild(touchClone);
             
-            // 原元素變透明
-            touchDragElement.style.opacity = '0.3';
+            // 原元素只是變透明，不移除
+            touchDragElement.style.opacity = '0.2';
             touchDragElement.style.transform = 'scale(0.95)';
+            touchDragElement.style.transition = 'opacity 0.2s, transform 0.2s';
             
-            // 執行移除回調
-            if (touchRemoveCallback) {
-                setTimeout(touchRemoveCallback, 0);
-            }
+            // 不要立即執行移除回調！
         }
 
         function handleTouchMove(e) {
@@ -569,8 +572,11 @@
             
             // 阻止頁面滾動和下拉刷新
             e.preventDefault();
+            e.stopPropagation();
             
             const touch = e.touches[0];
+            
+            // 更新複製位置
             touchClone.style.left = (touch.clientX - touchClone.offsetWidth / 2) + 'px';
             touchClone.style.top = (touch.clientY - touchClone.offsetHeight / 2) + 'px';
             
@@ -593,27 +599,39 @@
             const touch = e.changedTouches[0];
             const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
             
+            // 找到放置區域
+            let targetZone = null;
+            let targetZoneId = null;
+            if (elementBelow) {
+                targetZone = elementBelow.closest('.drop-zone, .formula-slot');
+                if (targetZone) {
+                    targetZoneId = targetZone.getAttribute('data-zone-id');
+                }
+            }
+            
             // 清除視覺效果
             if (touchClone && touchClone.parentNode) {
                 touchClone.parentNode.removeChild(touchClone);
-            }
-            if (touchDragElement) {
-                touchDragElement.style.opacity = '1';
-                touchDragElement.style.transform = 'scale(1)';
             }
             
             // 清除高亮
             const dropZones = document.querySelectorAll('.drop-zone, .formula-slot');
             dropZones.forEach(zone => zone.classList.remove('drag-over'));
             
-            // 處理放置
-            if (elementBelow && touchDragData) {
-                const dropZone = elementBelow.closest('.drop-zone, .formula-slot');
-                if (dropZone && dropCallback) {
-                    const zoneId = dropZone.getAttribute('data-zone-id');
-                    if (zoneId) {
-                        dropCallback(touchDragData, zoneId);
-                    }
+            // 如果成功放置到新位置
+            if (targetZone && targetZoneId && touchDragData && dropCallback) {
+                // 先執行移除回調（從原位置移除）
+                if (touchRemoveCallback) {
+                    touchRemoveCallback();
+                }
+                
+                // 然後放置到新位置
+                dropCallback(touchDragData, targetZoneId);
+            } else {
+                // 沒有成功放置，恢復原元素
+                if (touchDragElement) {
+                    touchDragElement.style.opacity = '1';
+                    touchDragElement.style.transform = 'scale(1)';
                 }
             }
             
@@ -622,6 +640,7 @@
             touchDragElement = null;
             touchClone = null;
             touchRemoveCallback = null;
+            touchStartScrollTop = 0;
         }
 
         // ===========================================
