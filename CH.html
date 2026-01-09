@@ -689,6 +689,16 @@
             const [levelProgress, setLevelProgress] = useState({});
             const [errorLog, setErrorLog] = useState([]);
             const [completedLevels, setCompletedLevels] = useState([]);
+            
+            // 新增：小節完成狀態追蹤 (localStorage持久化)
+            const [sectionCompletionStatus, setSectionCompletionStatus] = useState(() => {
+                try {
+                    const saved = localStorage.getItem('chapter5_completion_status');
+                    return saved ? JSON.parse(saved) : {};
+                } catch {
+                    return {};
+                }
+            });
 
             // 計時器
             useEffect(() => {
@@ -1008,7 +1018,30 @@
                     const endTime = new Date();
                     const totalSeconds = Math.floor((endTime - sectionStartTime) / 1000);
                     setSectionTotalTime(totalSeconds);
-                    setScreen('final_summary');
+                    
+                    // 標記小節完成
+                    const newStatus = {
+                        ...sectionCompletionStatus,
+                        [currentSection]: {
+                            completed: true,
+                            completedAt: endTime.toISOString(),
+                            totalTime: totalSeconds,
+                            attempts: score.total,
+                            errors: score.total - score.correct
+                        }
+                    };
+                    setSectionCompletionStatus(newStatus);
+                    localStorage.setItem('chapter5_completion_status', JSON.stringify(newStatus));
+                    
+                    // 檢查是否全部完成
+                    const allSections = ['5-1', '5-2', '5-3', '5-4'];
+                    const allCompleted = allSections.every(sec => newStatus[sec]?.completed);
+                    
+                    if (allCompleted) {
+                        setScreen('all_complete');
+                    } else {
+                        setScreen('final_summary');
+                    }
                 }
             };
 
@@ -1060,24 +1093,51 @@
                             </div>
 
                             <div className="grid md:grid-cols-2 gap-6">
-                                {sections.map((section, index) => (
-                                    <div
-                                        key={section.id}
-                                        className="glass-effect rounded-2xl p-8 hover:scale-105 transition-all duration-300 cursor-pointer fade-in"
-                                        style={{ animationDelay: `${index * 0.1}s` }}
-                                        onClick={() => selectSection(section.id)}
-                                    >
-                                        <div className={`w-20 h-20 bg-gradient-to-br ${section.color} rounded-2xl flex items-center justify-center mb-6 mx-auto`}>
-                                            <i className={`${section.icon} text-4xl text-white`}></i>
+                                {sections.map((section, index) => {
+                                    const isCompleted = sectionCompletionStatus[section.id]?.completed;
+                                    const completionData = sectionCompletionStatus[section.id];
+                                    
+                                    return (
+                                        <div
+                                            key={section.id}
+                                            className="glass-effect rounded-2xl p-8 hover:scale-105 transition-all duration-300 cursor-pointer fade-in relative"
+                                            style={{ animationDelay: `${index * 0.1}s` }}
+                                            onClick={() => selectSection(section.id)}
+                                        >
+                                            {/* 完成標記 */}
+                                            {isCompleted && (
+                                                <div className="absolute top-4 right-4 bg-green-500 text-white px-3 py-1 rounded-full text-sm font-bold flex items-center gap-1 shadow-lg animate-bounce">
+                                                    <i className="fas fa-check-circle"></i>
+                                                    已完成
+                                                </div>
+                                            )}
+                                            
+                                            <div className={`w-20 h-20 bg-gradient-to-br ${section.color} rounded-2xl flex items-center justify-center mb-6 mx-auto relative`}>
+                                                <i className={`${section.icon} text-4xl text-white`}></i>
+                                                {isCompleted && (
+                                                    <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-green-500 rounded-full flex items-center justify-center border-4 border-white">
+                                                        <i className="fas fa-trophy text-white text-sm"></i>
+                                                    </div>
+                                                )}
+                                            </div>
+                                            
+                                            <h2 className="text-2xl font-bold text-white text-center mb-3">
+                                                {section.title}
+                                            </h2>
+                                            
+                                            <p className="text-white/80 text-center mb-2">
+                                                共 {section.levels} 個關卡
+                                            </p>
+                                            
+                                            {isCompleted && completionData && (
+                                                <div className="text-center text-white/70 text-xs mt-3 space-y-1">
+                                                    <div>⏱️ {Math.floor(completionData.totalTime / 60)}:{(completionData.totalTime % 60).toString().padStart(2, '0')}</div>
+                                                    <div>🎯 嘗試 {completionData.attempts} 次</div>
+                                                </div>
+                                            )}
                                         </div>
-                                        <h2 className="text-2xl font-bold text-white text-center mb-3">
-                                            {section.title}
-                                        </h2>
-                                        <p className="text-white/80 text-center">
-                                            共 {section.levels} 個關卡
-                                        </p>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         </div>
                     </div>
@@ -1578,6 +1638,182 @@
                         
                         </div>
                         {/* 遊戲內容區結束 */}
+                    </div>
+                );
+            }
+
+            // ===========================================
+            // 全部完成畫面 (四個小節都完成)
+            // ===========================================
+            if (screen === 'all_complete') {
+                const allSectionData = ['5-1', '5-2', '5-3', '5-4'].map(id => ({
+                    id,
+                    ...sectionCompletionStatus[id]
+                }));
+                
+                const totalTime = allSectionData.reduce((sum, sec) => sum + (sec.totalTime || 0), 0);
+                const totalAttempts = allSectionData.reduce((sum, sec) => sum + (sec.attempts || 0), 0);
+                const totalErrors = allSectionData.reduce((sum, sec) => sum + (sec.errors || 0), 0);
+                const totalLevels = 2 + 4 + 3 + 3; // 各小節關卡數
+                
+                const takeFullScreenshot = () => {
+                    const element = document.getElementById('all-complete-content');
+                    html2canvas(element, {
+                        backgroundColor: '#667eea',
+                        scale: 2
+                    }).then(canvas => {
+                        const completionDate = new Date();
+                        const link = document.createElement('a');
+                        link.download = `第5章-全章完成-${completionDate.getFullYear()}${(completionDate.getMonth()+1).toString().padStart(2,'0')}${completionDate.getDate().toString().padStart(2,'0')}.png`;
+                        link.href = canvas.toDataURL();
+                        link.click();
+                    });
+                };
+                
+                return (
+                    <div className="min-h-screen p-6">
+                        <div id="all-complete-content" className="max-w-5xl mx-auto">
+                            {/* 慶祝標題 */}
+                            <div className="glass-effect rounded-3xl p-8 mb-6 text-center fade-in">
+                                <div className="text-8xl mb-4">🎊🏆🎊</div>
+                                <h1 className="text-6xl font-black text-white mb-3">
+                                    完美達成！
+                                </h1>
+                                <p className="text-3xl text-yellow-300 font-bold mb-2">
+                                    第5章 溫度與熱 - 全章通關
+                                </p>
+                                <p className="text-xl text-white/90">
+                                    恭喜你完成所有 {totalLevels} 個關卡！
+                                </p>
+                            </div>
+
+                            {/* 總體統計 */}
+                            <div className="grid md:grid-cols-4 gap-4 mb-6">
+                                <div className="glass-effect rounded-2xl p-6 text-center">
+                                    <div className="text-5xl mb-3">⏱️</div>
+                                    <div className="text-white/80 text-sm mb-1">總學習時間</div>
+                                    <div className="text-3xl font-bold text-white">
+                                        {Math.floor(totalTime / 60)}分{totalTime % 60}秒
+                                    </div>
+                                </div>
+                                <div className="glass-effect rounded-2xl p-6 text-center">
+                                    <div className="text-5xl mb-3">📚</div>
+                                    <div className="text-white/80 text-sm mb-1">完成小節</div>
+                                    <div className="text-3xl font-bold text-green-400">4 / 4</div>
+                                </div>
+                                <div className="glass-effect rounded-2xl p-6 text-center">
+                                    <div className="text-5xl mb-3">🎯</div>
+                                    <div className="text-white/80 text-sm mb-1">總嘗試次數</div>
+                                    <div className="text-3xl font-bold text-white">{totalAttempts}</div>
+                                </div>
+                                <div className="glass-effect rounded-2xl p-6 text-center">
+                                    <div className="text-5xl mb-3">{totalErrors === 0 ? '💯' : '📊'}</div>
+                                    <div className="text-white/80 text-sm mb-1">總錯誤次數</div>
+                                    <div className={`text-3xl font-bold ${totalErrors === 0 ? 'text-green-400' : 'text-yellow-400'}`}>
+                                        {totalErrors}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* 各小節詳情 */}
+                            <div className="glass-effect rounded-2xl p-6 mb-6">
+                                <h3 className="text-2xl font-bold text-white mb-4 flex items-center">
+                                    <i className="fas fa-list-check mr-3"></i>
+                                    各小節完成狀況
+                                </h3>
+                                <div className="space-y-3">
+                                    {allSectionData.map((sec, idx) => {
+                                        const sectionNames = {
+                                            '5-1': '5-1 溫度與溫度計',
+                                            '5-2': '5-2 熱量與比熱',
+                                            '5-3': '5-3 熱對物質的影響',
+                                            '5-4': '5-4 熱的傳播方式'
+                                        };
+                                        return (
+                                            <div key={idx} className="bg-white/10 rounded-xl p-4 flex items-center justify-between">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center text-white font-bold text-xl">
+                                                        ✓
+                                                    </div>
+                                                    <div>
+                                                        <div className="text-white font-bold text-lg">{sectionNames[sec.id]}</div>
+                                                        <div className="text-white/70 text-sm">
+                                                            嘗試 {sec.attempts} 次 · 錯誤 {sec.errors} 次
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div className="text-white/80 text-lg font-mono">
+                                                    {Math.floor(sec.totalTime / 60)}:{(sec.totalTime % 60).toString().padStart(2, '0')}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+
+                            {/* 成就評級 */}
+                            <div className="glass-effect rounded-2xl p-6 mb-6 text-center">
+                                <h3 className="text-2xl font-bold text-white mb-4">🌟 總體評級</h3>
+                                <div className="text-8xl mb-3">
+                                    {totalErrors === 0 ? '🏆' : totalErrors <= 5 ? '🥇' : totalErrors <= 10 ? '🥈' : '🥉'}
+                                </div>
+                                <div className="text-3xl font-bold text-white mb-2">
+                                    {totalErrors === 0 ? '完美大師！' : totalErrors <= 5 ? '優秀學習者！' : totalErrors <= 10 ? '表現良好！' : '持續進步！'}
+                                </div>
+                                <div className="text-white/80 text-lg">
+                                    {totalErrors === 0 ? '全部關卡一次通過，你是真正的物理大師！' : 
+                                     totalErrors <= 5 ? '非常優秀的表現，繼續保持！' :
+                                     totalErrors <= 10 ? '不錯的學習成果，加油！' :
+                                     '完成就是勝利，下次會更好！'}
+                                </div>
+                            </div>
+
+                            {/* 學習建議 */}
+                            {totalErrors > 0 && (
+                                <div className="glass-effect rounded-2xl p-6 mb-6">
+                                    <h3 className="text-xl font-bold text-white mb-3 flex items-center">
+                                        <i className="fas fa-lightbulb mr-2 text-yellow-400"></i>
+                                        學習建議
+                                    </h3>
+                                    <ul className="text-white/80 space-y-2">
+                                        <li>• 複習錯誤較多的小節，鞏固知識點</li>
+                                        <li>• 可以隨時回來重新挑戰，追求完美通關</li>
+                                        <li>• 將學習成果截圖保存，記錄學習歷程</li>
+                                    </ul>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* 操作按鈕 */}
+                        <div className="max-w-5xl mx-auto flex gap-4 justify-center mt-6 flex-wrap">
+                            <button
+                                onClick={takeFullScreenshot}
+                                className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-8 py-4 rounded-xl font-bold text-lg hover:scale-105 transition-all shadow-xl"
+                            >
+                                <i className="fas fa-camera mr-2"></i>
+                                下載完成證書
+                            </button>
+                            <button
+                                onClick={() => {
+                                    if (confirm('確定要清除所有完成記錄嗎？')) {
+                                        setSectionCompletionStatus({});
+                                        localStorage.removeItem('chapter5_completion_status');
+                                        setScreen('section_select');
+                                    }
+                                }}
+                                className="bg-gradient-to-r from-orange-500 to-red-600 text-white px-8 py-4 rounded-xl font-bold text-lg hover:scale-105 transition-all shadow-xl"
+                            >
+                                <i className="fas fa-redo mr-2"></i>
+                                重置所有進度
+                            </button>
+                            <button
+                                onClick={() => setScreen('section_select')}
+                                className="bg-white/20 text-white px-8 py-4 rounded-xl font-bold text-lg hover:bg-white/30 transition-all"
+                            >
+                                <i className="fas fa-home mr-2"></i>
+                                返回選單
+                            </button>
+                        </div>
                     </div>
                 );
             }
