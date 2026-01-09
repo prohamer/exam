@@ -1,0 +1,1799 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第5章 溫度與熱 - 互動式闖關系統</title>
+    
+    <!-- React -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+    
+    <!-- html2canvas for screenshot -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            /* 禁用文字選取 */
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            /* 禁用文字游標 */
+            cursor: default;
+        }
+
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            /* 防止行動裝置拖曳時的預設行為 */
+            touch-action: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        /* 允許輸入框選取（如果未來有的話） */
+        input, textarea {
+            -webkit-user-select: text;
+            -moz-user-select: text;
+            -ms-user-select: text;
+            user-select: text;
+            cursor: text;
+        }
+
+        /* 按鈕保持指標游標 */
+        button, a, .clickable {
+            cursor: pointer !important;
+        }
+
+        .drag-item {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: grab !important;
+            /* 行動裝置觸控優化 */
+            touch-action: none;
+        }
+
+        .drag-item:active {
+            cursor: grabbing !important;
+            transform: scale(1.05);
+        }
+
+        .drag-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        /* 行動裝置專用：正在拖曳的項目 */
+        .dragging {
+            opacity: 0.5;
+            transform: scale(1.1);
+            z-index: 1000;
+            position: fixed;
+            pointer-events: none;
+        }
+
+        /* 可移動的項目 */
+        .cursor-move {
+            cursor: move !important;
+        }
+
+        .cursor-move:active {
+            cursor: grabbing !important;
+        }
+
+        .drop-zone {
+            transition: all 0.3s ease;
+            min-height: 80px;
+        }
+
+        .drop-zone.drag-over {
+            background: rgba(59, 130, 246, 0.1);
+            border: 2px dashed #3b82f6 !important;
+            transform: scale(1.02);
+        }
+
+        .formula-slot {
+            transition: all 0.3s ease;
+            min-height: 70px;
+            min-width: 100px;
+        }
+
+        .formula-slot.drag-over {
+            background: rgba(59, 130, 246, 0.2);
+            border: 2px dashed #3b82f6 !important;
+            transform: scale(1.05);
+        }
+
+        .correct-answer {
+            animation: correctPulse 0.6s ease-out;
+            border: 3px solid #10b981 !important;
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        .wrong-answer {
+            animation: shake 0.5s ease-out;
+            border: 3px solid #ef4444 !important;
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        @keyframes correctPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .formula-display {
+            font-size: 1.5rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        // ===========================================
+        // GAME DATA - 所有關卡數據
+        // ===========================================
+        const CHAPTER_DATA = {
+            "5-1": [
+                {
+                    id: "5-1-1",
+                    section: "5-1",
+                    type: "classification",
+                    title: "第一關：溫度計的分類",
+                    description: "請將各種溫度計依據其測量原理分類",
+                    zones: [
+                        { id: 'zone1', title: '熱脹冷縮原理', icon: 'fa-ruler-vertical' },
+                        { id: 'zone2', title: '液晶變色原理', icon: 'fa-palette' },
+                        { id: 'zone3', title: '紅外線感測原理', icon: 'fa-radiation' }
+                    ],
+                    items: [
+                        { id: 'item1', text: '酒精溫度計', val: 'thermal' },
+                        { id: 'item2', text: '水銀溫度計', val: 'thermal' },
+                        { id: 'item3', text: '液晶溫度計', val: 'crystal' },
+                        { id: 'item4', text: '耳溫槍', val: 'infrared' },
+                        { id: 'item5', text: '熱成像儀', val: 'infrared' }
+                    ],
+                    solution: {
+                        zone1: ['thermal'],
+                        zone2: ['crystal'],
+                        zone3: ['infrared']
+                    }
+                },
+                {
+                    id: "5-1-2",
+                    section: "5-1",
+                    type: "classification",
+                    title: "第二關：溫標對應",
+                    description: "請將對應的溫度配對（一大氣壓下）",
+                    zones: [
+                        { id: 'zone1', title: '攝氏 0℃', icon: 'fa-snowflake' },
+                        { id: 'zone2', title: '攝氏 100℃', icon: 'fa-fire' },
+                        { id: 'zone3', title: '攝氏 37℃', icon: 'fa-heart-pulse' }
+                    ],
+                    items: [
+                        { id: 'item1', text: '華氏 32℉', val: 'ice' },
+                        { id: 'item2', text: '華氏 212℉', val: 'boil' },
+                        { id: 'item3', text: '華氏 98.6℉', val: 'body' },
+                        { id: 'item4', text: '水的冰點', val: 'ice' },
+                        { id: 'item5', text: '水的沸點', val: 'boil' },
+                        { id: 'item6', text: '人體正常體溫', val: 'body' }
+                    ],
+                    solution: {
+                        zone1: ['ice'],
+                        zone2: ['boil'],
+                        zone3: ['body']
+                    }
+                }
+            ],
+            "5-2": [
+                {
+                    id: "5-2-1",
+                    section: "5-2",
+                    type: "classification",
+                    title: "第一關：熱量影響因素",
+                    description: "將影響物質溫度變化的因素分類",
+                    zones: [
+                        { id: 'zone1', title: '溫度變化越大', icon: 'fa-arrow-up' },
+                        { id: 'zone2', title: '溫度變化越小', icon: 'fa-arrow-down' }
+                    ],
+                    items: [
+                        { id: 'item1', text: '提供熱量越多', val: 'increase' },
+                        { id: 'item2', text: '物質質量越大', val: 'decrease' },
+                        { id: 'item3', text: '物質比熱越大', val: 'decrease' },
+                        { id: 'item4', text: '加熱時間越長', val: 'increase' },
+                        { id: 'item5', text: '物質質量越小', val: 'increase' },
+                        { id: 'item6', text: '物質比熱越小', val: 'increase' }
+                    ],
+                    solution: {
+                        zone1: ['increase'],
+                        zone2: ['decrease']
+                    }
+                },
+                {
+                    id: "5-2-2",
+                    section: "5-2",
+                    type: "classification",
+                    title: "第二關：比熱的應用",
+                    description: "請將不同應用依據比熱特性分類",
+                    zones: [
+                        { id: 'zone1', title: '利用水比熱大', icon: 'fa-droplet' },
+                        { id: 'zone2', title: '利用金屬比熱小', icon: 'fa-medal' }
+                    ],
+                    items: [
+                        { id: 'item1', text: '汽車引擎用水冷卻', val: 'water' },
+                        { id: 'item2', text: '自助餐用熱水保溫', val: 'water' },
+                        { id: 'item3', text: '金屬鍋具快速導熱', val: 'metal' },
+                        { id: 'item4', text: '海水調節沿海氣溫', val: 'water' },
+                        { id: 'item5', text: '烤肉插入金屬串加速熟透', val: 'metal' }
+                    ],
+                    solution: {
+                        zone1: ['water'],
+                        zone2: ['metal']
+                    }
+                },
+                {
+                    id: "5-2-3",
+                    section: "5-2",
+                    type: "classification",
+                    title: "第三關：熱量公式配對",
+                    description: "根據熱量公式 H = M × S × ΔT，請將各變數與其意義配對",
+                    zones: [
+                        { id: 'zone1', title: 'H（熱量）', icon: 'fa-fire-flame-curved' },
+                        { id: 'zone2', title: 'M（質量）', icon: 'fa-weight-scale' },
+                        { id: 'zone3', title: 'S（比熱）', icon: 'fa-temperature-half' },
+                        { id: 'zone4', title: 'ΔT（溫度變化）', icon: 'fa-chart-line' }
+                    ],
+                    items: [
+                        { id: 'item1', text: '單位：卡（cal）', val: 'H' },
+                        { id: 'item2', text: '單位：公克（g）', val: 'M' },
+                        { id: 'item3', text: '單位：cal/(g·℃)', val: 'S' },
+                        { id: 'item4', text: '單位：℃', val: 'deltaT' },
+                        { id: 'item5', text: '物質吸收或放出的能量', val: 'H' },
+                        { id: 'item6', text: '物質的多寡', val: 'M' },
+                        { id: 'item7', text: '物質升降1℃所需的熱量', val: 'S' },
+                        { id: 'item8', text: '溫度上升或下降的度數', val: 'deltaT' }
+                    ],
+                    solution: {
+                        zone1: ['H'],
+                        zone2: ['M'],
+                        zone3: ['S'],
+                        zone4: ['deltaT']
+                    }
+                },
+                {
+                    id: "5-2-4",
+                    section: "5-2",
+                    type: "formula_match",
+                    title: "第四關：熱量公式組合與配對",
+                    description: "步驟1：組合公式 H = M × S × ΔT，步驟2：配對符號與中文意義",
+                    formulaItems: [
+                        { id: 'f1', text: 'H', val: 'H' },
+                        { id: 'f2', text: 'M', val: 'M' },
+                        { id: 'f3', text: 'S', val: 'S' },
+                        { id: 'f4', text: 'ΔT', val: 'deltaT' }
+                    ],
+                    matchItems: [
+                        { id: 'm1', text: '熱量', val: 'H' },
+                        { id: 'm2', text: '質量', val: 'M' },
+                        { id: 'm3', text: '比熱', val: 'S' },
+                        { id: 'm4', text: '溫度變化', val: 'deltaT' }
+                    ],
+                    zones: [
+                        { id: 'zone1', title: 'H', icon: 'fa-fire-flame-curved' },
+                        { id: 'zone2', title: 'M', icon: 'fa-weight-scale' },
+                        { id: 'zone3', title: 'S', icon: 'fa-temperature-half' },
+                        { id: 'zone4', title: 'ΔT', icon: 'fa-chart-line' }
+                    ],
+                    solution: {
+                        formula: {
+                            left: ['H'],
+                            right: ['M', 'S', 'deltaT']
+                        },
+                        match: {
+                            zone1: ['H'],
+                            zone2: ['M'],
+                            zone3: ['S'],
+                            zone4: ['deltaT']
+                        }
+                    }
+                }
+            ],
+            "5-3": [
+                {
+                    id: "5-3-1",
+                    section: "5-3",
+                    type: "classification",
+                    title: "第一關：物質三態變化",
+                    description: "請將不同的物態變化過程分類",
+                    zones: [
+                        { id: 'zone1', title: '吸熱過程', icon: 'fa-fire-flame-curved' },
+                        { id: 'zone2', title: '放熱過程', icon: 'fa-snowflake' }
+                    ],
+                    items: [
+                        { id: 'item1', text: '熔化', val: 'absorb' },
+                        { id: 'item2', text: '凝固', val: 'release' },
+                        { id: 'item3', text: '汽化', val: 'absorb' },
+                        { id: 'item4', text: '凝結', val: 'release' },
+                        { id: 'item5', text: '昇華', val: 'absorb' },
+                        { id: 'item6', text: '凝華', val: 'release' }
+                    ],
+                    solution: {
+                        zone1: ['absorb'],
+                        zone2: ['release']
+                    }
+                },
+                {
+                    id: "5-3-2",
+                    section: "5-3",
+                    type: "classification",
+                    title: "第二關：生活中的三態變化",
+                    description: "請將生活現象對應到正確的物態變化",
+                    zones: [
+                        { id: 'zone1', title: '熔化現象', icon: 'fa-ice-cream' },
+                        { id: 'zone2', title: '汽化現象', icon: 'fa-cloud' },
+                        { id: 'zone3', title: '凝結現象', icon: 'fa-droplet' },
+                        { id: 'zone4', title: '昇華現象', icon: 'fa-smoke' }
+                    ],
+                    items: [
+                        { id: 'item1', text: '冰棒融化', val: 'melt' },
+                        { id: 'item2', text: '水煮沸產生水蒸氣', val: 'vaporize' },
+                        { id: 'item3', text: '衣服晾乾', val: 'vaporize' },
+                        { id: 'item4', text: '眼鏡起霧', val: 'condense' },
+                        { id: 'item5', text: '乾冰消失', val: 'sublime' },
+                        { id: 'item6', text: '冷飲杯外的水珠', val: 'condense' }
+                    ],
+                    solution: {
+                        zone1: ['melt'],
+                        zone2: ['vaporize'],
+                        zone3: ['condense'],
+                        zone4: ['sublime']
+                    }
+                },
+                {
+                    id: "5-3-3",
+                    section: "5-3",
+                    type: "classification",
+                    title: "第三關：熱脹冷縮應用",
+                    description: "請判斷以下設計是利用熱脹冷縮的什麼特性",
+                    zones: [
+                        { id: 'zone1', title: '避免受熱變形', icon: 'fa-shield' },
+                        { id: 'zone2', title: '利用熱脹開啟', icon: 'fa-unlock' }
+                    ],
+                    items: [
+                        { id: 'item1', text: '鐵軌間預留空隙', val: 'prevent' },
+                        { id: 'item2', text: '熱水泡金屬瓶蓋', val: 'utilize' },
+                        { id: 'item3', text: '雙層玻璃杯空氣層', val: 'prevent' },
+                        { id: 'item4', text: '橋梁伸縮縫設計', val: 'prevent' }
+                    ],
+                    solution: {
+                        zone1: ['prevent'],
+                        zone2: ['utilize']
+                    }
+                }
+            ],
+            "5-4": [
+                {
+                    id: "5-4-1",
+                    section: "5-4",
+                    type: "classification",
+                    title: "第一關：熱傳播方式",
+                    description: "請將各種熱傳播現象分類到正確的方式",
+                    zones: [
+                        { id: 'zone1', title: '傳導', icon: 'fa-hand-fist' },
+                        { id: 'zone2', title: '對流', icon: 'fa-wind' },
+                        { id: 'zone3', title: '輻射', icon: 'fa-sun' }
+                    ],
+                    items: [
+                        { id: 'item1', text: '金屬棒傳熱', val: 'conduction' },
+                        { id: 'item2', text: '熱水上升冷水下沉', val: 'convection' },
+                        { id: 'item3', text: '太陽溫暖地球', val: 'radiation' },
+                        { id: 'item4', text: '鍋柄變熱', val: 'conduction' },
+                        { id: 'item5', text: '海風陸風形成', val: 'convection' },
+                        { id: 'item6', text: '暖爐發出熱', val: 'radiation' }
+                    ],
+                    solution: {
+                        zone1: ['conduction'],
+                        zone2: ['convection'],
+                        zone3: ['radiation']
+                    }
+                },
+                {
+                    id: "5-4-2",
+                    section: "5-4",
+                    type: "classification",
+                    title: "第二關：導熱性質分類",
+                    description: "請將不同材質依據導熱性分類",
+                    zones: [
+                        { id: 'zone1', title: '熱的良導體', icon: 'fa-fire' },
+                        { id: 'zone2', title: '熱的不良導體', icon: 'fa-ban' }
+                    ],
+                    items: [
+                        { id: 'item1', text: '銅', val: 'good' },
+                        { id: 'item2', text: '鐵', val: 'good' },
+                        { id: 'item3', text: '木頭', val: 'poor' },
+                        { id: 'item4', text: '塑膠', val: 'poor' },
+                        { id: 'item5', text: '空氣', val: 'poor' },
+                        { id: 'item6', text: '鋁', val: 'good' }
+                    ],
+                    solution: {
+                        zone1: ['good'],
+                        zone2: ['poor']
+                    }
+                },
+                {
+                    id: "5-4-3",
+                    section: "5-4",
+                    type: "classification",
+                    title: "第三關：輻射熱的應用",
+                    description: "請將以下設計依據是否容易吸收輻射熱分類",
+                    zones: [
+                        { id: 'zone1', title: '容易吸收輻射熱', icon: 'fa-circle' },
+                        { id: 'zone2', title: '不易吸收輻射熱', icon: 'fa-circle-notch' }
+                    ],
+                    items: [
+                        { id: 'item1', text: '太陽能集熱板（深色）', val: 'absorb' },
+                        { id: 'item2', text: '氧氣儲存槽（白色）', val: 'reflect' },
+                        { id: 'item3', text: '黑色柏油路', val: 'absorb' },
+                        { id: 'item4', text: '白色牆壁', val: 'reflect' },
+                        { id: 'item5', text: '深色衣服', val: 'absorb' },
+                        { id: 'item6', text: '淺色衣服', val: 'reflect' }
+                    ],
+                    solution: {
+                        zone1: ['absorb'],
+                        zone2: ['reflect']
+                    }
+                }
+            ]
+        };
+
+        // 主題配色
+        const themeColors = {
+            '5-1': { 
+                primary: 'from-orange-500 to-red-600',
+                header: 'from-orange-600 to-red-700', 
+                badge: 'bg-orange-500' 
+            },
+            '5-2': { 
+                primary: 'from-blue-500 to-cyan-600',
+                header: 'from-blue-600 to-cyan-700', 
+                badge: 'bg-blue-500' 
+            },
+            '5-3': { 
+                primary: 'from-purple-500 to-pink-600',
+                header: 'from-purple-600 to-pink-700', 
+                badge: 'bg-purple-500' 
+            },
+            '5-4': { 
+                primary: 'from-green-500 to-teal-600',
+                header: 'from-green-600 to-teal-700', 
+                badge: 'bg-green-500' 
+            }
+        };
+
+        // ===========================================
+        // 輔助函數
+        // ===========================================
+        
+        // 隨機排序函數（Fisher-Yates shuffle）
+        function shuffleArray(array) {
+            const newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        }
+
+        // 觸控拖曳支援
+        let touchDragData = null;
+        let touchDragElement = null;
+        let touchClone = null;
+
+        function handleTouchStart(e, item, removeCallback) {
+            const touch = e.touches[0];
+            touchDragData = item;
+            touchDragElement = e.currentTarget;
+            
+            // 創建視覺複製
+            touchClone = touchDragElement.cloneNode(true);
+            touchClone.style.position = 'fixed';
+            touchClone.style.zIndex = '10000';
+            touchClone.style.opacity = '0.8';
+            touchClone.style.pointerEvents = 'none';
+            touchClone.style.width = touchDragElement.offsetWidth + 'px';
+            touchClone.style.left = (touch.clientX - touchDragElement.offsetWidth / 2) + 'px';
+            touchClone.style.top = (touch.clientY - touchDragElement.offsetHeight / 2) + 'px';
+            document.body.appendChild(touchClone);
+            
+            // 原元素變透明
+            touchDragElement.style.opacity = '0.3';
+            
+            // 如果有移除回調，執行它
+            if (removeCallback) {
+                setTimeout(removeCallback, 0);
+            }
+        }
+
+        function handleTouchMove(e) {
+            e.preventDefault();
+            if (!touchClone) return;
+            
+            const touch = e.touches[0];
+            touchClone.style.left = (touch.clientX - touchClone.offsetWidth / 2) + 'px';
+            touchClone.style.top = (touch.clientY - touchClone.offsetHeight / 2) + 'px';
+            
+            // 高亮可放置區域
+            const dropZones = document.querySelectorAll('.drop-zone, .formula-slot');
+            dropZones.forEach(zone => zone.classList.remove('drag-over'));
+            
+            const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+            if (elementBelow) {
+                const dropZone = elementBelow.closest('.drop-zone, .formula-slot');
+                if (dropZone) {
+                    dropZone.classList.add('drag-over');
+                }
+            }
+        }
+
+        function handleTouchEnd(e, dropCallback) {
+            if (!touchClone) return;
+            
+            const touch = e.changedTouches[0];
+            const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+            
+            // 清除視覺效果
+            if (touchClone && touchClone.parentNode) {
+                touchClone.parentNode.removeChild(touchClone);
+            }
+            if (touchDragElement) {
+                touchDragElement.style.opacity = '1';
+            }
+            
+            // 清除高亮
+            const dropZones = document.querySelectorAll('.drop-zone, .formula-slot');
+            dropZones.forEach(zone => zone.classList.remove('drag-over'));
+            
+            // 處理放置
+            if (elementBelow && touchDragData) {
+                const dropZone = elementBelow.closest('.drop-zone, .formula-slot');
+                if (dropZone && dropCallback) {
+                    const zoneId = dropZone.getAttribute('data-zone-id');
+                    if (zoneId) {
+                        dropCallback(touchDragData, zoneId);
+                    }
+                }
+            }
+            
+            // 重置
+            touchDragData = null;
+            touchDragElement = null;
+            touchClone = null;
+        }
+
+        // ===========================================
+        // 主應用程式
+        // ===========================================
+        function App() {
+            const [screen, setScreen] = useState('section_select');
+            const [currentSection, setCurrentSection] = useState(null);
+            const [currentLevelIndex, setCurrentLevelIndex] = useState(0);
+            const [gameState, setGameState] = useState('playing');
+            const [droppedItems, setDroppedItems] = useState({});
+            const [formulaSlots, setFormulaSlots] = useState({ left: null, right1: null, right2: null, right3: null });
+            const [matchZones, setMatchZones] = useState({});
+            const [feedback, setFeedback] = useState({});
+            const [startTime, setStartTime] = useState(null);
+            const [elapsedTime, setElapsedTime] = useState(0);
+            const [score, setScore] = useState({ correct: 0, total: 0 });
+            const [shuffledItems, setShuffledItems] = useState([]);
+            const [shuffledZones, setShuffledZones] = useState([]);
+            
+            // 新增：遊戲進度追蹤
+            const [sectionStartTime, setSectionStartTime] = useState(null);
+            const [sectionTotalTime, setSectionTotalTime] = useState(0);
+            const [levelProgress, setLevelProgress] = useState({});
+            const [errorLog, setErrorLog] = useState([]);
+            const [completedLevels, setCompletedLevels] = useState([]);
+
+            // 計時器
+            useEffect(() => {
+                let timer;
+                if (gameState === 'playing' && startTime) {
+                    timer = setInterval(() => {
+                        setElapsedTime(Math.floor((new Date() - startTime) / 1000));
+                    }, 1000);
+                }
+                return () => {
+                    if (timer) clearInterval(timer);
+                };
+            }, [gameState, startTime]);
+
+            // 初始化關卡（隨機排序）
+            const initializeLevel = (sectionId, levelIndex) => {
+                const level = CHAPTER_DATA[sectionId][levelIndex];
+                if (level.formulaItems) {
+                    setShuffledItems(shuffleArray(level.formulaItems));
+                } else if (level.items) {
+                    setShuffledItems(shuffleArray(level.items));
+                }
+                if (level.zones) {
+                    setShuffledZones(shuffleArray(level.zones));
+                }
+            };
+
+            // 選擇小節
+            const selectSection = (sectionId) => {
+                setCurrentSection(sectionId);
+                setCurrentLevelIndex(0);
+                setScreen('playing');
+                setGameState('playing');
+                setStartTime(new Date());
+                setSectionStartTime(new Date());
+                setElapsedTime(0);
+                setDroppedItems({});
+                setFormulaSlots({ left: null, right1: null, right2: null, right3: null });
+                setMatchZones({});
+                setFeedback({});
+                setScore({ correct: 0, total: 0 });
+                setLevelProgress({});
+                setErrorLog([]);
+                setCompletedLevels([]);
+                initializeLevel(sectionId, 0);
+            };
+
+            // 處理拖曳
+            const handleDragStart = (e, item) => {
+                e.dataTransfer.setData('item', JSON.stringify(item));
+            };
+
+            const handleDragOver = (e) => {
+                e.preventDefault();
+            };
+
+            const handleDrop = (e, zoneId) => {
+                e.preventDefault();
+                const item = JSON.parse(e.dataTransfer.getData('item'));
+                
+                setDroppedItems(prev => ({
+                    ...prev,
+                    [zoneId]: [...(prev[zoneId] || []), item]
+                }));
+            };
+
+            // 觸控版本的放置處理
+            const handleTouchDrop = (item, zoneId) => {
+                setDroppedItems(prev => ({
+                    ...prev,
+                    [zoneId]: [...(prev[zoneId] || []), item]
+                }));
+            };
+
+            // 處理配對區拖曳
+            const handleMatchDrop = (e, zoneId) => {
+                e.preventDefault();
+                const item = JSON.parse(e.dataTransfer.getData('item'));
+                
+                setMatchZones(prev => ({
+                    ...prev,
+                    [zoneId]: [...(prev[zoneId] || []), item]
+                }));
+            };
+
+            // 觸控版本的配對區放置
+            const handleTouchMatchDrop = (item, zoneId) => {
+                setMatchZones(prev => ({
+                    ...prev,
+                    [zoneId]: [...(prev[zoneId] || []), item]
+                }));
+            };
+
+            // 處理公式拖曳
+            const handleFormulaDrop = (e, slotId) => {
+                e.preventDefault();
+                const item = JSON.parse(e.dataTransfer.getData('item'));
+                
+                setFormulaSlots(prev => ({
+                    ...prev,
+                    [slotId]: item
+                }));
+            };
+
+            // 觸控版本的公式放置
+            const handleTouchFormulaDrop = (item, slotId) => {
+                setFormulaSlots(prev => ({
+                    ...prev,
+                    [slotId]: item
+                }));
+            };
+
+            // 移除已放置的項目
+            const removeItem = (zoneId, itemId) => {
+                setDroppedItems(prev => ({
+                    ...prev,
+                    [zoneId]: prev[zoneId].filter(item => item.id !== itemId)
+                }));
+            };
+
+            // 移除配對區的項目
+            const removeMatchItem = (zoneId, itemId) => {
+                setMatchZones(prev => ({
+                    ...prev,
+                    [zoneId]: prev[zoneId].filter(item => item.id !== itemId)
+                }));
+            };
+
+            // 移除公式槽中的項目
+            const removeFormulaItem = (slotId) => {
+                setFormulaSlots(prev => ({
+                    ...prev,
+                    [slotId]: null
+                }));
+            };
+
+            // 檢查答案（分類題）
+            const checkClassificationAnswers = () => {
+                const currentLevel = CHAPTER_DATA[currentSection][currentLevelIndex];
+                const newFeedback = {};
+                let correctCount = 0;
+                let totalZones = Object.keys(currentLevel.solution).length;
+                const wrongAnswers = [];
+
+                Object.keys(currentLevel.solution).forEach(zoneId => {
+                    const correctVals = currentLevel.solution[zoneId];
+                    const droppedVals = (droppedItems[zoneId] || []).map(item => item.val);
+                    
+                    // 檢查：該區域的所有項目的val都必須在正確答案中
+                    // 且該區域必須有項目（不能為空）
+                    const isCorrect = droppedVals.length > 0 &&
+                                    droppedVals.every(val => correctVals.includes(val));
+                    
+                    newFeedback[zoneId] = isCorrect;
+                    if (isCorrect) {
+                        correctCount++;
+                    } else {
+                        // 記錄錯誤
+                        const zone = currentLevel.zones.find(z => z.id === zoneId);
+                        wrongAnswers.push({
+                            zone: zone.title,
+                            userAnswer: (droppedItems[zoneId] || []).map(item => item.text),
+                            correctAnswer: currentLevel.items
+                                .filter(item => correctVals.includes(item.val))
+                                .map(item => item.text)
+                        });
+                    }
+                });
+
+                // 額外檢查：確保所有項目都已分類
+                const allItemsPlaced = Object.values(droppedItems).flat().length === currentLevel.items.length;
+
+                setFeedback(newFeedback);
+
+                if (correctCount === totalZones && allItemsPlaced) {
+                    // 過關
+                    const levelTime = elapsedTime;
+                    setCompletedLevels(prev => [...prev, {
+                        levelId: currentLevel.id,
+                        title: currentLevel.title,
+                        time: levelTime,
+                        attempts: score.total + 1
+                    }]);
+                    setGameState('completed');
+                    setScore(prev => ({ 
+                        correct: prev.correct + 1, 
+                        total: prev.total + 1 
+                    }));
+                } else {
+                    // 答錯
+                    if (wrongAnswers.length > 0) {
+                        setErrorLog(prev => [...prev, {
+                            levelId: currentLevel.id,
+                            levelTitle: currentLevel.title,
+                            timestamp: new Date(),
+                            errors: wrongAnswers
+                        }]);
+                    }
+                    setScore(prev => ({ 
+                        ...prev, 
+                        total: prev.total + 1 
+                    }));
+                }
+            };
+
+            // 檢查答案（公式配對題）
+            const checkFormulaMatchAnswers = () => {
+                const currentLevel = CHAPTER_DATA[currentSection][currentLevelIndex];
+                const { left, right1, right2, right3 } = formulaSlots;
+                
+                // 檢查公式組合
+                const leftCorrect = left && left.val === currentLevel.solution.formula.left[0];
+                const rightVals = [right1, right2, right3].filter(slot => slot !== null).map(slot => slot.val);
+                const correctRight = currentLevel.solution.formula.right;
+                const formulaCorrect = leftCorrect && rightVals.length === 3 &&
+                                    correctRight.every(val => rightVals.includes(val)) &&
+                                    rightVals.every(val => correctRight.includes(val));
+
+                // 檢查配對
+                const newFeedback = { formula: formulaCorrect };
+                let matchCorrectCount = 0;
+                const totalZones = Object.keys(currentLevel.solution.match).length;
+
+                Object.keys(currentLevel.solution.match).forEach(zoneId => {
+                    const correctVals = currentLevel.solution.match[zoneId];
+                    const matchedVals = (matchZones[zoneId] || []).map(item => item.val);
+                    
+                    const isCorrect = matchedVals.length > 0 &&
+                                    matchedVals.every(val => correctVals.includes(val));
+                    
+                    newFeedback[zoneId] = isCorrect;
+                    if (isCorrect) matchCorrectCount++;
+                });
+
+                // 檢查所有配對項目都已使用
+                const allMatchItemsPlaced = Object.values(matchZones).flat().length === currentLevel.matchItems.length;
+
+                setFeedback(newFeedback);
+
+                if (formulaCorrect && matchCorrectCount === totalZones && allMatchItemsPlaced) {
+                    setGameState('completed');
+                    setScore(prev => ({ 
+                        correct: prev.correct + 1, 
+                        total: prev.total + 1 
+                    }));
+                } else {
+                    setScore(prev => ({ 
+                        ...prev, 
+                        total: prev.total + 1 
+                    }));
+                }
+            };
+
+            // 檢查答案（公式題）
+            const checkFormulaAnswers = () => {
+                const currentLevel = CHAPTER_DATA[currentSection][currentLevelIndex];
+                const { left, right1, right2, right3 } = formulaSlots;
+                
+                // 檢查左邊
+                const leftCorrect = left && left.val === currentLevel.solution.left[0];
+                
+                // 檢查右邊（順序不限）
+                const rightVals = [right1, right2, right3].filter(slot => slot !== null).map(slot => slot.val);
+                const correctRight = currentLevel.solution.right;
+                const rightCorrect = rightVals.length === 3 &&
+                                    correctRight.every(val => rightVals.includes(val)) &&
+                                    rightVals.every(val => correctRight.includes(val));
+
+                const newFeedback = {
+                    left: leftCorrect,
+                    right: rightCorrect
+                };
+
+                setFeedback(newFeedback);
+
+                if (leftCorrect && rightCorrect) {
+                    setGameState('completed');
+                    setScore(prev => ({ 
+                        correct: prev.correct + 1, 
+                        total: prev.total + 1 
+                    }));
+                } else {
+                    setScore(prev => ({ 
+                        ...prev, 
+                        total: prev.total + 1 
+                    }));
+                }
+            };
+
+            // 檢查答案統一接口
+            const checkAnswers = () => {
+                const currentLevel = CHAPTER_DATA[currentSection][currentLevelIndex];
+                if (currentLevel.type === 'formula_match') {
+                    checkFormulaMatchAnswers();
+                } else if (currentLevel.type === 'formula') {
+                    checkFormulaAnswers();
+                } else {
+                    checkClassificationAnswers();
+                }
+            };
+
+            // 下一關
+            const nextLevel = () => {
+                if (currentLevelIndex < CHAPTER_DATA[currentSection].length - 1) {
+                    const newIndex = currentLevelIndex + 1;
+                    setCurrentLevelIndex(newIndex);
+                    setGameState('playing');
+                    setStartTime(new Date());
+                    setElapsedTime(0);
+                    setDroppedItems({});
+                    setFormulaSlots({ left: null, right1: null, right2: null, right3: null });
+                    setMatchZones({});
+                    setFeedback({});
+                    initializeLevel(currentSection, newIndex);
+                } else {
+                    // 完成所有關卡，計算總時間
+                    const endTime = new Date();
+                    const totalSeconds = Math.floor((endTime - sectionStartTime) / 1000);
+                    setSectionTotalTime(totalSeconds);
+                    setScreen('final_summary');
+                }
+            };
+
+            // 重新開始
+            const restart = () => {
+                setCurrentLevelIndex(0);
+                setGameState('playing');
+                setStartTime(new Date());
+                setElapsedTime(0);
+                setDroppedItems({});
+                setFormulaSlots({ left: null, right1: null, right2: null, right3: null });
+                setMatchZones({});
+                setFeedback({});
+                setScore({ correct: 0, total: 0 });
+                initializeLevel(currentSection, 0);
+            };
+
+            // 格式化時間
+            const formatTime = (seconds) => {
+                const mins = Math.floor(seconds / 60);
+                const secs = seconds % 60;
+                return `${mins}:${secs.toString().padStart(2, '0')}`;
+            };
+
+            // 取得當前關卡
+            const currentLevel = currentSection ? CHAPTER_DATA[currentSection][currentLevelIndex] : null;
+            const colors = currentSection ? themeColors[currentSection] : themeColors['5-1'];
+
+            // ===========================================
+            // 小節選擇畫面
+            // ===========================================
+            if (screen === 'section_select') {
+                const sections = [
+                    { id: '5-1', title: '5-1 溫度與溫度計', icon: 'fa-thermometer-half', levels: 2, color: 'from-orange-400 to-red-600' },
+                    { id: '5-2', title: '5-2 熱量與比熱', icon: 'fa-fire', levels: 4, color: 'from-blue-400 to-cyan-600' },
+                    { id: '5-3', title: '5-3 熱對物質的影響', icon: 'fa-water', levels: 3, color: 'from-purple-400 to-pink-600' },
+                    { id: '5-4', title: '5-4 熱的傳播方式', icon: 'fa-sun', levels: 3, color: 'from-green-400 to-teal-600' }
+                ];
+
+                return (
+                    <div className="min-h-screen flex items-center justify-center p-6">
+                        <div className="max-w-6xl w-full">
+                            <div className="text-center mb-12 fade-in">
+                                <h1 className="text-5xl font-black text-white mb-4">
+                                    <i className="fas fa-temperature-high mr-4"></i>
+                                    第5章 溫度與熱
+                                </h1>
+                                <p className="text-xl text-white/90">選擇一個小節開始學習</p>
+                            </div>
+
+                            <div className="grid md:grid-cols-2 gap-6">
+                                {sections.map((section, index) => (
+                                    <div
+                                        key={section.id}
+                                        className="glass-effect rounded-2xl p-8 hover:scale-105 transition-all duration-300 cursor-pointer fade-in"
+                                        style={{ animationDelay: `${index * 0.1}s` }}
+                                        onClick={() => selectSection(section.id)}
+                                    >
+                                        <div className={`w-20 h-20 bg-gradient-to-br ${section.color} rounded-2xl flex items-center justify-center mb-6 mx-auto`}>
+                                            <i className={`${section.icon} text-4xl text-white`}></i>
+                                        </div>
+                                        <h2 className="text-2xl font-bold text-white text-center mb-3">
+                                            {section.title}
+                                        </h2>
+                                        <p className="text-white/80 text-center">
+                                            共 {section.levels} 個關卡
+                                        </p>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            // ===========================================
+            // 遊戲進行畫面
+            // ===========================================
+            if (screen === 'playing' && currentLevel) {
+                // 取得還沒被放置的項目
+                let availableItems = [];
+                
+                if (currentLevel.type === 'formula_match') {
+                    const placedVals = Object.values(formulaSlots).filter(slot => slot !== null).map(slot => slot.val);
+                    availableItems = shuffledItems.filter(item => !placedVals.includes(item.val));
+                } else if (currentLevel.type === 'formula') {
+                    const placedVals = Object.values(formulaSlots).filter(slot => slot !== null).map(slot => slot.val);
+                    availableItems = shuffledItems.filter(item => !placedVals.includes(item.val));
+                } else {
+                    const placedItemIds = Object.values(droppedItems).flat().map(item => item.id);
+                    availableItems = shuffledItems.filter(item => !placedItemIds.includes(item.id));
+                }
+
+                return (
+                    <div className="min-h-screen p-6">
+                        {/* 頁首 - 電玩風格 */}
+                        <div className={`bg-gradient-to-r ${colors.header} rounded-2xl p-6 mb-6 text-white shadow-2xl`}>
+                            {/* 關卡進度條 */}
+                            <div className="mb-4">
+                                <div className="flex items-center justify-between mb-2">
+                                    <span className="text-sm font-bold opacity-90">🎮 STAGE {currentLevelIndex + 1} / {CHAPTER_DATA[currentSection].length}</span>
+                                    <span className="text-sm opacity-80">⏱️ {formatTime(elapsedTime)}</span>
+                                </div>
+                                <div className="relative h-8 bg-black/30 rounded-full overflow-hidden">
+                                    <div 
+                                        className="absolute h-full bg-gradient-to-r from-yellow-400 to-yellow-600 transition-all duration-500"
+                                        style={{ width: `${((currentLevelIndex + 1) / CHAPTER_DATA[currentSection].length) * 100}%` }}
+                                    ></div>
+                                    <div className="absolute inset-0 flex items-center justify-center">
+                                        <span className="text-sm font-bold text-white drop-shadow-lg">
+                                            {completedLevels.length} / {CHAPTER_DATA[currentSection].length} CLEARED
+                                        </span>
+                                    </div>
+                                </div>
+                                {/* 關卡星星顯示 */}
+                                <div className="flex gap-2 mt-3 justify-center flex-wrap">
+                                    {CHAPTER_DATA[currentSection].map((level, idx) => (
+                                        <div 
+                                            key={idx}
+                                            className={`
+                                                w-10 h-10 rounded-lg flex items-center justify-center font-bold transition-all
+                                                ${idx < currentLevelIndex ? 'bg-green-500 text-white scale-110' : ''}
+                                                ${idx === currentLevelIndex ? 'bg-yellow-400 text-black scale-125 animate-pulse' : ''}
+                                                ${idx > currentLevelIndex ? 'bg-gray-500/30 text-gray-400' : ''}
+                                            `}
+                                        >
+                                            {idx < currentLevelIndex ? '✓' : idx + 1}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                            
+                            <div className="flex justify-between items-center flex-wrap gap-4">
+                                <div>
+                                    <h2 className="text-2xl font-bold mb-1">{currentLevel.title}</h2>
+                                    <p className="text-white/90 text-sm">{currentLevel.description}</p>
+                                </div>
+                                <div className="flex gap-3 items-center">
+                                    <div className="text-center bg-black/20 px-4 py-2 rounded-lg">
+                                        <div className="text-xs opacity-80">嘗試次數</div>
+                                        <div className="text-xl font-bold">{score.total}</div>
+                                    </div>
+                                    <button
+                                        onClick={() => setScreen('section_select')}
+                                        className="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-xl transition-all"
+                                    >
+                                        <i className="fas fa-home mr-2"></i>返回
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* 分類題型 */}
+                        {currentLevel.type === 'classification' && (
+                            <div className="grid lg:grid-cols-3 gap-6">
+                                {/* 選項區 */}
+                                <div className="lg:col-span-1">
+                                    <div className="glass-effect rounded-2xl p-6 sticky top-6">
+                                        <h3 className="text-2xl font-bold text-white mb-4 flex items-center">
+                                            <i className="fas fa-cube mr-3"></i>
+                                            待分類項目
+                                        </h3>
+                                        <div className="space-y-3">
+                                            {availableItems.map(item => (
+                                                <div
+                                                    key={item.id}
+                                                    draggable
+                                                    onDragStart={(e) => handleDragStart(e, item)}
+                                                    onTouchStart={(e) => handleTouchStart(e, item, null)}
+                                                    onTouchMove={handleTouchMove}
+                                                    onTouchEnd={(e) => handleTouchEnd(e, handleTouchDrop)}
+                                                    className="drag-item bg-white rounded-xl p-4 shadow-lg"
+                                                >
+                                                    <p className="text-gray-800 font-medium text-center">
+                                                        {item.text}
+                                                    </p>
+                                                </div>
+                                            ))}
+                                            {availableItems.length === 0 && (
+                                                <div className="text-center text-white/70 py-8">
+                                                    所有項目都已分類
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* 分類區 */}
+                                <div className="lg:col-span-2">
+                                    <div className="grid gap-4">
+                                        {shuffledZones.map(zone => (
+                                            <div
+                                                key={zone.id}
+                                                data-zone-id={zone.id}
+                                                onDragOver={handleDragOver}
+                                                onDrop={(e) => handleDrop(e, zone.id)}
+                                                className={`
+                                                    drop-zone glass-effect rounded-2xl p-6
+                                                    ${feedback[zone.id] === true ? 'correct-answer' : ''}
+                                                    ${feedback[zone.id] === false ? 'wrong-answer' : ''}
+                                                    ${!feedback[zone.id] ? 'border-2 border-white/30' : ''}
+                                                `}
+                                            >
+                                                <h4 className="text-xl font-bold text-white mb-4 flex items-center">
+                                                    <i className={`${zone.icon} mr-3`}></i>
+                                                    {zone.title}
+                                                    {feedback[zone.id] === true && (
+                                                        <i className="fas fa-check-circle text-green-400 ml-auto text-2xl"></i>
+                                                    )}
+                                                    {feedback[zone.id] === false && (
+                                                        <i className="fas fa-times-circle text-red-400 ml-auto text-2xl"></i>
+                                                    )}
+                                                </h4>
+                                                <div className="grid grid-cols-2 gap-3">
+                                                    {(droppedItems[zone.id] || []).map(item => (
+                                                        <div
+                                                            key={item.id}
+                                                            draggable
+                                                            onDragStart={(e) => {
+                                                                handleDragStart(e, item);
+                                                                // 從原位置移除
+                                                                setTimeout(() => removeItem(zone.id, item.id), 0);
+                                                            }}
+                                                            onTouchStart={(e) => handleTouchStart(e, item, () => removeItem(zone.id, item.id))}
+                                                            onTouchMove={handleTouchMove}
+                                                            onTouchEnd={(e) => handleTouchEnd(e, handleTouchDrop)}
+                                                            className="bg-white rounded-xl p-3 shadow-lg group relative cursor-move"
+                                                        >
+                                                            <p className="text-gray-800 font-medium text-sm text-center pr-8">
+                                                                {item.text}
+                                                            </p>
+                                                            <button
+                                                                onClick={() => removeItem(zone.id, item.id)}
+                                                                className="absolute top-2 right-2 w-6 h-6 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-xs"
+                                                            >
+                                                                ×
+                                                            </button>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    {/* 檢查答案按鈕 */}
+                                    <div className="mt-6 flex gap-4">
+                                        {gameState === 'playing' && (
+                                            <button
+                                                onClick={checkAnswers}
+                                                className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 text-white py-4 rounded-xl font-bold text-lg hover:scale-105 transition-all shadow-xl"
+                                                disabled={Object.values(droppedItems).flat().length === 0}
+                                            >
+                                                <i className="fas fa-check mr-2"></i>
+                                                檢查答案
+                                            </button>
+                                        )}
+                                        {gameState === 'completed' && (
+                                            <button
+                                                onClick={nextLevel}
+                                                className="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 text-white py-4 rounded-xl font-bold text-lg hover:scale-105 transition-all shadow-xl"
+                                            >
+                                                <i className="fas fa-arrow-right mr-2"></i>
+                                                {currentLevelIndex < CHAPTER_DATA[currentSection].length - 1 ? '下一關' : '完成本節'}
+                                            </button>
+                                        )}
+                                        <button
+                                            onClick={restart}
+                                            className="bg-white/20 text-white px-6 py-4 rounded-xl hover:bg-white/30 transition-all"
+                                        >
+                                            <i className="fas fa-redo mr-2"></i>
+                                            重新開始
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* 公式配對題型 */}
+                        {currentLevel.type === 'formula_match' && (
+                            <div className="max-w-5xl mx-auto">
+                                {/* 公式區域 */}
+                                <div className="glass-effect rounded-2xl p-8 mb-6">
+                                    <div className="formula-display justify-center text-white mb-8">
+                                        {/* 左邊 */}
+                                        <div
+                                            data-zone-id="left"
+                                            onDragOver={handleDragOver}
+                                            onDrop={(e) => handleFormulaDrop(e, 'left')}
+                                            className={`
+                                                formula-slot border-4 rounded-xl flex items-center justify-center
+                                                ${feedback.formula === true ? 'correct-answer border-green-400' : ''}
+                                                ${feedback.formula === false ? 'wrong-answer border-red-400' : ''}
+                                                ${feedback.formula === undefined ? 'border-white/50 border-dashed' : ''}
+                                            `}
+                                        >
+                                            {formulaSlots.left ? (
+                                                <div className="relative group">
+                                                    <div className="text-center">
+                                                        <div className="text-3xl font-bold">{formulaSlots.left.text}</div>
+                                                    </div>
+                                                    <button
+                                                        onClick={() => removeFormulaItem('left')}
+                                                        className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity text-xs"
+                                                    >
+                                                        ×
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <span className="text-white/40 text-xl">拖曳到此</span>
+                                            )}
+                                        </div>
+
+                                        <span className="text-4xl">=</span>
+
+                                        {/* 右邊1 */}
+                                        <div
+                                            data-zone-id="right1"
+                                            onDragOver={handleDragOver}
+                                            onDrop={(e) => handleFormulaDrop(e, 'right1')}
+                                            className={`
+                                                formula-slot border-4 rounded-xl flex items-center justify-center
+                                                ${feedback.formula === true ? 'correct-answer border-green-400' : ''}
+                                                ${feedback.formula === false ? 'wrong-answer border-red-400' : ''}
+                                                ${feedback.formula === undefined ? 'border-white/50 border-dashed' : ''}
+                                            `}
+                                        >
+                                            {formulaSlots.right1 ? (
+                                                <div className="relative group">
+                                                    <div className="text-center">
+                                                        <div className="text-3xl font-bold">{formulaSlots.right1.text}</div>
+                                                    </div>
+                                                    <button
+                                                        onClick={() => removeFormulaItem('right1')}
+                                                        className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity text-xs"
+                                                    >
+                                                        ×
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <span className="text-white/40 text-xl">拖曳到此</span>
+                                            )}
+                                        </div>
+
+                                        <span className="text-4xl">×</span>
+
+                                        {/* 右邊2 */}
+                                        <div
+                                            data-zone-id="right2"
+                                            onDragOver={handleDragOver}
+                                            onDrop={(e) => handleFormulaDrop(e, 'right2')}
+                                            className={`
+                                                formula-slot border-4 rounded-xl flex items-center justify-center
+                                                ${feedback.formula === true ? 'correct-answer border-green-400' : ''}
+                                                ${feedback.formula === false ? 'wrong-answer border-red-400' : ''}
+                                                ${feedback.formula === undefined ? 'border-white/50 border-dashed' : ''}
+                                            `}
+                                        >
+                                            {formulaSlots.right2 ? (
+                                                <div className="relative group">
+                                                    <div className="text-center">
+                                                        <div className="text-3xl font-bold">{formulaSlots.right2.text}</div>
+                                                    </div>
+                                                    <button
+                                                        onClick={() => removeFormulaItem('right2')}
+                                                        className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity text-xs"
+                                                    >
+                                                        ×
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <span className="text-white/40 text-xl">拖曳到此</span>
+                                            )}
+                                        </div>
+
+                                        <span className="text-4xl">×</span>
+
+                                        {/* 右邊3 */}
+                                        <div
+                                            data-zone-id="right3"
+                                            onDragOver={handleDragOver}
+                                            onDrop={(e) => handleFormulaDrop(e, 'right3')}
+                                            className={`
+                                                formula-slot border-4 rounded-xl flex items-center justify-center
+                                                ${feedback.formula === true ? 'correct-answer border-green-400' : ''}
+                                                ${feedback.formula === false ? 'wrong-answer border-red-400' : ''}
+                                                ${feedback.formula === undefined ? 'border-white/50 border-dashed' : ''}
+                                            `}
+                                        >
+                                            {formulaSlots.right3 ? (
+                                                <div className="relative group">
+                                                    <div className="text-center">
+                                                        <div className="text-3xl font-bold">{formulaSlots.right3.text}</div>
+                                                    </div>
+                                                    <button
+                                                        onClick={() => removeFormulaItem('right3')}
+                                                        className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity text-xs"
+                                                    >
+                                                        ×
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <span className="text-white/40 text-xl">拖曳到此</span>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* 提示 */}
+                                    <div className="text-center text-white/70 text-sm">
+                                        💡 提示：右邊三個變數的順序可以任意排列
+                                    </div>
+                                </div>
+
+                                {/* 配對區域 */}
+                                <div className="glass-effect rounded-2xl p-8 mb-6">
+                                    <h3 className="text-2xl font-bold text-white mb-6 text-center">
+                                        <i className="fas fa-link mr-3"></i>
+                                        步驟2：配對符號與中文意義
+                                    </h3>
+                                    <div className="grid grid-cols-4 gap-4">
+                                        {shuffledZones.map(zone => (
+                                            <div key={zone.id} className="flex flex-col gap-2">
+                                                {/* 符號標題 */}
+                                                <div className="bg-white/20 rounded-xl p-4 text-center">
+                                                    <div className="text-3xl font-bold text-white mb-1">{zone.title}</div>
+                                                    <i className={`${zone.icon} text-white/70 text-sm`}></i>
+                                                </div>
+                                                {/* 配對拖放區 */}
+                                                <div
+                                                    data-zone-id={zone.id}
+                                                    onDragOver={handleDragOver}
+                                                    onDrop={(e) => handleMatchDrop(e, zone.id)}
+                                                    className={`
+                                                        drop-zone rounded-xl p-4 min-h-[80px] flex items-center justify-center
+                                                        ${feedback[zone.id] === true ? 'correct-answer' : ''}
+                                                        ${feedback[zone.id] === false ? 'wrong-answer' : ''}
+                                                        ${!feedback[zone.id] ? 'border-2 border-white/30 border-dashed' : ''}
+                                                    `}
+                                                >
+                                                    {(matchZones[zone.id] || []).length > 0 ? (
+                                                        <div className="w-full">
+                                                            {matchZones[zone.id].map(item => (
+                                                                <div
+                                                                    key={item.id}
+                                                                    draggable
+                                                                    onDragStart={(e) => {
+                                                                        handleDragStart(e, item);
+                                                                        // 從原位置移除
+                                                                        setTimeout(() => removeMatchItem(zone.id, item.id), 0);
+                                                                    }}
+                                                                    onTouchStart={(e) => handleTouchStart(e, item, () => removeMatchItem(zone.id, item.id))}
+                                                                    onTouchMove={handleTouchMove}
+                                                                    onTouchEnd={(e) => handleTouchEnd(e, handleTouchMatchDrop)}
+                                                                    className="bg-white rounded-lg p-3 shadow-lg group relative cursor-move"
+                                                                >
+                                                                    <p className="text-gray-800 font-medium text-center pr-6">
+                                                                        {item.text}
+                                                                    </p>
+                                                                    <button
+                                                                        onClick={() => removeMatchItem(zone.id, item.id)}
+                                                                        className="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-xs"
+                                                                    >
+                                                                        ×
+                                                                    </button>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    ) : (
+                                                        <span className="text-white/40 text-sm">拖曳中文到此</span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* 選項區 */}
+                                <div className="glass-effect rounded-2xl p-6 mb-6">
+                                    <h3 className="text-2xl font-bold text-white mb-4 text-center">
+                                        <i className="fas fa-cube mr-3"></i>
+                                        可用選項
+                                    </h3>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        {/* 左側：公式變數 */}
+                                        <div>
+                                            <p className="text-white/80 text-sm mb-3 text-center">步驟1：組合公式的變數</p>
+                                            <div className="flex justify-center gap-3 flex-wrap">
+                                                {availableItems.map(item => (
+                                                    <div
+                                                        key={item.id}
+                                                        draggable
+                                                        onDragStart={(e) => handleDragStart(e, item)}
+                                                        onTouchStart={(e) => handleTouchStart(e, item, null)}
+                                                        onTouchMove={handleTouchMove}
+                                                        onTouchEnd={(e) => handleTouchEnd(e, handleTouchFormulaDrop)}
+                                                        className="drag-item bg-white rounded-xl p-4 shadow-lg"
+                                                    >
+                                                        <p className="text-gray-800 font-bold text-2xl text-center">
+                                                            {item.text}
+                                                        </p>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                        {/* 右側：中文意義 */}
+                                        <div>
+                                            <p className="text-white/80 text-sm mb-3 text-center">步驟2：配對的中文意義</p>
+                                            <div className="flex justify-center gap-3 flex-wrap">
+                                                {(() => {
+                                                    const placedMatchIds = Object.values(matchZones).flat().map(item => item.id);
+                                                    return currentLevel.matchItems.filter(item => !placedMatchIds.includes(item.id)).map(item => (
+                                                        <div
+                                                            key={item.id}
+                                                            draggable
+                                                            onDragStart={(e) => handleDragStart(e, item)}
+                                                            onTouchStart={(e) => handleTouchStart(e, item, null)}
+                                                            onTouchMove={handleTouchMove}
+                                                            onTouchEnd={(e) => handleTouchEnd(e, handleTouchMatchDrop)}
+                                                            className="drag-item bg-white rounded-xl p-4 shadow-lg"
+                                                        >
+                                                            <p className="text-gray-800 font-medium text-center">
+                                                                {item.text}
+                                                            </p>
+                                                        </div>
+                                                    ));
+                                                })()}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* 檢查答案按鈕 */}
+                                <div className="flex gap-4">
+                                    {gameState === 'playing' && (
+                                        <button
+                                            onClick={checkAnswers}
+                                            className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 text-white py-4 rounded-xl font-bold text-lg hover:scale-105 transition-all shadow-xl"
+                                            disabled={
+                                                !formulaSlots.left || 
+                                                !formulaSlots.right1 || 
+                                                !formulaSlots.right2 || 
+                                                !formulaSlots.right3 ||
+                                                Object.values(matchZones).flat().length === 0
+                                            }
+                                        >
+                                            <i className="fas fa-check mr-2"></i>
+                                            檢查答案
+                                        </button>
+                                    )}
+                                    {gameState === 'completed' && (
+                                        <button
+                                            onClick={nextLevel}
+                                            className="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 text-white py-4 rounded-xl font-bold text-lg hover:scale-105 transition-all shadow-xl"
+                                        >
+                                            <i className="fas fa-arrow-right mr-2"></i>
+                                            {currentLevelIndex < CHAPTER_DATA[currentSection].length - 1 ? '下一關' : '完成本節'}
+                                        </button>
+                                    )}
+                                    <button
+                                        onClick={restart}
+                                        className="bg-white/20 text-white px-6 py-4 rounded-xl hover:bg-white/30 transition-all"
+                                    >
+                                        <i className="fas fa-redo mr-2"></i>
+                                        重新開始
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                );
+            }
+
+            // ===========================================
+            // 最終總結畫面
+            // ===========================================
+            if (screen === 'final_summary') {
+                const completionDate = new Date();
+                const errorCount = errorLog.length;
+                const totalAttempts = score.total;
+                const correctAttempts = score.correct;
+                const wrongAttempts = totalAttempts - correctAttempts;
+                
+                // 截圖功能
+                const takeScreenshot = () => {
+                    const element = document.getElementById('summary-content');
+                    html2canvas(element, {
+                        backgroundColor: '#667eea',
+                        scale: 2
+                    }).then(canvas => {
+                        const link = document.createElement('a');
+                        link.download = `第5章-${currentSection}-學習成果-${completionDate.getFullYear()}${(completionDate.getMonth()+1).toString().padStart(2,'0')}${completionDate.getDate().toString().padStart(2,'0')}.png`;
+                        link.href = canvas.toDataURL();
+                        link.click();
+                    });
+                };
+                
+                return (
+                    <div className="min-h-screen p-6">
+                        <div id="summary-content" className="max-w-5xl mx-auto">
+                            {/* 標題區 */}
+                            <div className="glass-effect rounded-3xl p-8 mb-6 text-center fade-in">
+                                <div className="text-6xl mb-4">🏆</div>
+                                <h1 className="text-5xl font-black text-white mb-2">
+                                    挑戰完成！
+                                </h1>
+                                <p className="text-2xl text-white/90">
+                                    {currentSection} 全關卡通關
+                                </p>
+                            </div>
+
+                            {/* 基本統計 */}
+                            <div className="grid md:grid-cols-4 gap-4 mb-6">
+                                <div className="glass-effect rounded-2xl p-6 text-center">
+                                    <div className="text-4xl mb-2">📅</div>
+                                    <div className="text-white/80 text-sm mb-1">完成時間</div>
+                                    <div className="text-white font-bold">
+                                        {completionDate.getFullYear()}/{(completionDate.getMonth()+1).toString().padStart(2,'0')}/{completionDate.getDate().toString().padStart(2,'0')}
+                                    </div>
+                                    <div className="text-white font-bold">
+                                        {completionDate.getHours().toString().padStart(2,'0')}:{completionDate.getMinutes().toString().padStart(2,'0')}:{completionDate.getSeconds().toString().padStart(2,'0')}
+                                    </div>
+                                </div>
+                                <div className="glass-effect rounded-2xl p-6 text-center">
+                                    <div className="text-4xl mb-2">⏱️</div>
+                                    <div className="text-white/80 text-sm mb-1">總闖關時間</div>
+                                    <div className="text-3xl font-bold text-white">
+                                        {Math.floor(sectionTotalTime / 60)}:{(sectionTotalTime % 60).toString().padStart(2, '0')}
+                                    </div>
+                                </div>
+                                <div className="glass-effect rounded-2xl p-6 text-center">
+                                    <div className="text-4xl mb-2">🎯</div>
+                                    <div className="text-white/80 text-sm mb-1">總嘗試次數</div>
+                                    <div className="text-3xl font-bold text-white">{totalAttempts}</div>
+                                </div>
+                                <div className="glass-effect rounded-2xl p-6 text-center">
+                                    <div className="text-4xl mb-2">{wrongAttempts === 0 ? '💯' : '📊'}</div>
+                                    <div className="text-white/80 text-sm mb-1">錯誤次數</div>
+                                    <div className={`text-3xl font-bold ${wrongAttempts === 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                        {wrongAttempts}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* 關卡詳情 */}
+                            <div className="glass-effect rounded-2xl p-6 mb-6">
+                                <h3 className="text-2xl font-bold text-white mb-4 flex items-center">
+                                    <i className="fas fa-list-check mr-3"></i>
+                                    關卡完成詳情
+                                </h3>
+                                <div className="space-y-3">
+                                    {completedLevels.map((level, idx) => (
+                                        <div key={idx} className="bg-white/10 rounded-xl p-4 flex items-center justify-between">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center text-white font-bold">
+                                                    ✓
+                                                </div>
+                                                <div>
+                                                    <div className="text-white font-bold">{level.title}</div>
+                                                    <div className="text-white/70 text-sm">嘗試次數：{level.attempts} 次</div>
+                                                </div>
+                                            </div>
+                                            <div className="text-white/80">
+                                                {Math.floor(level.time / 60)}:{(level.time % 60).toString().padStart(2, '0')}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* 錯誤記錄 */}
+                            {errorLog.length > 0 && (
+                                <div className="glass-effect rounded-2xl p-6 mb-6">
+                                    <h3 className="text-2xl font-bold text-white mb-4 flex items-center">
+                                        <i className="fas fa-exclamation-triangle mr-3 text-yellow-400"></i>
+                                        錯誤記錄與正確答案
+                                    </h3>
+                                    <div className="space-y-4">
+                                        {errorLog.map((log, idx) => (
+                                            <div key={idx} className="bg-white/10 rounded-xl p-4">
+                                                <div className="text-white font-bold mb-2 flex items-center gap-2">
+                                                    <span className="bg-red-500 px-2 py-1 rounded text-xs">錯誤 {idx + 1}</span>
+                                                    {log.levelTitle}
+                                                </div>
+                                                {log.errors.map((error, errorIdx) => (
+                                                    <div key={errorIdx} className="ml-4 mb-2 bg-white/5 rounded-lg p-3">
+                                                        <div className="text-white/80 text-sm mb-1">
+                                                            📍 {error.zone}
+                                                        </div>
+                                                        <div className="grid md:grid-cols-2 gap-2 text-sm">
+                                                            <div>
+                                                                <span className="text-red-400">❌ 你的答案：</span>
+                                                                <span className="text-white ml-2">
+                                                                    {error.userAnswer.length > 0 ? error.userAnswer.join(', ') : '(未填寫)'}
+                                                                </span>
+                                                            </div>
+                                                            <div>
+                                                                <span className="text-green-400">✓ 正確答案：</span>
+                                                                <span className="text-white ml-2">
+                                                                    {error.correctAnswer.join(', ')}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* 成就評級 */}
+                            <div className="glass-effect rounded-2xl p-6 mb-6 text-center">
+                                <h3 className="text-2xl font-bold text-white mb-4">🌟 成就評級</h3>
+                                <div className="text-6xl mb-2">
+                                    {wrongAttempts === 0 ? '🏆' : wrongAttempts <= 2 ? '🥇' : wrongAttempts <= 5 ? '🥈' : '🥉'}
+                                </div>
+                                <div className="text-2xl font-bold text-white mb-2">
+                                    {wrongAttempts === 0 ? '完美通關！' : wrongAttempts <= 2 ? '優秀表現！' : wrongAttempts <= 5 ? '表現良好！' : '繼續加油！'}
+                                </div>
+                                <div className="text-white/80">
+                                    {wrongAttempts === 0 ? '一次錯誤都沒有，太厲害了！' : 
+                                     wrongAttempts <= 2 ? '只有少數錯誤，非常棒！' :
+                                     wrongAttempts <= 5 ? '還有進步空間，加油！' :
+                                     '多練習幾次會更好的！'}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* 操作按鈕 */}
+                        <div className="max-w-5xl mx-auto flex gap-4 justify-center mt-6 flex-wrap">
+                            <button
+                                onClick={takeScreenshot}
+                                className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-8 py-4 rounded-xl font-bold text-lg hover:scale-105 transition-all shadow-xl"
+                            >
+                                <i className="fas fa-camera mr-2"></i>
+                                下載學習成果截圖
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setCurrentLevelIndex(0);
+                                    setScreen('playing');
+                                    setGameState('playing');
+                                    setStartTime(new Date());
+                                    setSectionStartTime(new Date());
+                                    setElapsedTime(0);
+                                    setDroppedItems({});
+                                    setFormulaSlots({ left: null, right1: null, right2: null, right3: null });
+                                    setMatchZones({});
+                                    setFeedback({});
+                                    setScore({ correct: 0, total: 0 });
+                                    setErrorLog([]);
+                                    setCompletedLevels([]);
+                                    initializeLevel(currentSection, 0);
+                                }}
+                                className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-8 py-4 rounded-xl font-bold text-lg hover:scale-105 transition-all shadow-xl"
+                            >
+                                <i className="fas fa-redo mr-2"></i>
+                                再挑戰一次
+                            </button>
+                            <button
+                                onClick={() => setScreen('section_select')}
+                                className="bg-white/20 text-white px-8 py-4 rounded-xl font-bold text-lg hover:bg-white/30 transition-all"
+                            >
+                                <i className="fas fa-home mr-2"></i>
+                                返回選單
+                            </button>
+                        </div>
+                    </div>
+                );
+            }
+
+            // ===========================================
+            // 小節完成畫面
+            // ===========================================
+            if (screen === 'section_complete') {
+                const accuracy = score.total > 0 ? Math.round((score.correct / score.total) * 100) : 0;
+                
+                return (
+                    <div className="min-h-screen flex items-center justify-center p-6">
+                        <div className="max-w-2xl w-full glass-effect rounded-3xl p-12 text-center fade-in">
+                            <div className="text-8xl mb-6">🎉</div>
+                            <h2 className="text-5xl font-black text-white mb-4">
+                                恭喜完成！
+                            </h2>
+                            <p className="text-2xl text-white/90 mb-8">
+                                你已完成 {currentSection} 所有關卡
+                            </p>
+                            
+                            <div className="grid grid-cols-3 gap-6 mb-8">
+                                <div className="bg-white/10 rounded-2xl p-6">
+                                    <div className="text-4xl font-bold text-white mb-2">{score.correct}</div>
+                                    <div className="text-white/80">正確次數</div>
+                                </div>
+                                <div className="bg-white/10 rounded-2xl p-6">
+                                    <div className="text-4xl font-bold text-white mb-2">{score.total}</div>
+                                    <div className="text-white/80">總嘗試次數</div>
+                                </div>
+                                <div className="bg-white/10 rounded-2xl p-6">
+                                    <div className="text-4xl font-bold text-white mb-2">{accuracy}%</div>
+                                    <div className="text-white/80">正確率</div>
+                                </div>
+                            </div>
+
+                            <div className="flex gap-4 justify-center">
+                                <button
+                                    onClick={() => {
+                                        setCurrentLevelIndex(0);
+                                        setScreen('playing');
+                                        setGameState('playing');
+                                        setStartTime(new Date());
+                                        setElapsedTime(0);
+                                        setDroppedItems({});
+                                        setFormulaSlots({ left: null, right1: null, right2: null, right3: null });
+                                        setFeedback({});
+                                        setScore({ correct: 0, total: 0 });
+                                    }}
+                                    className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-8 py-4 rounded-xl font-bold text-lg hover:scale-105 transition-all shadow-xl"
+                                >
+                                    <i className="fas fa-redo mr-2"></i>
+                                    再玩一次
+                                </button>
+                                <button
+                                    onClick={() => setScreen('section_select')}
+                                    className="bg-white/20 text-white px-8 py-4 rounded-xl font-bold text-lg hover:bg-white/30 transition-all"
+                                >
+                                    <i className="fas fa-home mr-2"></i>
+                                    返回選單
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            return null;
+        }
+
+        // 渲染應用程式
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
