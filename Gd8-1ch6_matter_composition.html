@@ -128,19 +128,19 @@
                     id: "6-1-2",
                     section: "6-1",
                     title: "第二關：金屬與非金屬性質配對",
-                    description: "請將以下性質與金屬或非金屬元素配對",
-                    type: "formula_match",
-                    leftOptions: [
-                        { id: 'left1', text: '金屬元素的特性', val: 'metal_properties' },
-                        { id: 'left2', text: '非金屬元素的特性', val: 'nonmetal_properties' }
+                    description: "請將以下性質分類到金屬或非金屬元素",
+                    type: "classification",
+                    zones: [
+                        { id: 'metal_properties', title: '金屬元素的特性', icon: 'fa-gem' },
+                        { id: 'nonmetal_properties', title: '非金屬元素的特性', icon: 'fa-cube' }
                     ],
-                    rightOptions: [
-                        { id: 'right1', text: '具有金屬光澤', val: 'metal_luster' },
-                        { id: 'right2', text: '大部分為電熱不良導體', val: 'poor_conductor' },
-                        { id: 'right3', text: '具有延性與展性', val: 'ductile' },
-                        { id: 'right4', text: '容易被敲碎', val: 'brittle' },
-                        { id: 'right5', text: '導電性與導熱性佳', val: 'good_conductor' },
-                        { id: 'right6', text: '顏色差異大', val: 'various_color' }
+                    items: [
+                        { id: 'item1', text: '具有金屬光澤', val: 'metal_luster' },
+                        { id: 'item2', text: '大部分為電熱不良導體', val: 'poor_conductor' },
+                        { id: 'item3', text: '具有延性與展性', val: 'ductile' },
+                        { id: 'item4', text: '容易被敲碎', val: 'brittle' },
+                        { id: 'item5', text: '導電性與導熱性佳', val: 'good_conductor' },
+                        { id: 'item6', text: '顏色差異大', val: 'various_color' }
                     ],
                     solution: {
                         metal_properties: ['metal_luster', 'good_conductor', 'ductile'],
@@ -151,23 +151,23 @@
                     id: "6-1-3",
                     section: "6-1",
                     title: "第三關：特殊性質配對",
-                    description: "請將特殊性質的元素或物質與其特性配對",
-                    type: "formula_match",
-                    leftOptions: [
-                        { id: 'left1', text: '石墨', val: 'graphite' },
-                        { id: 'left2', text: '鑽石', val: 'diamond' },
-                        { id: 'left3', text: '汞（水銀）', val: 'mercury' },
-                        { id: 'left4', text: '金', val: 'gold' },
-                        { id: 'left5', text: '銅', val: 'copper' },
-                        { id: 'left6', text: '活性碳', val: 'activated_carbon' }
+                    description: "請將特性拖拉到對應的物質",
+                    type: "classification",
+                    zones: [
+                        { id: 'graphite', title: '石墨', icon: 'fa-atom' },
+                        { id: 'diamond', title: '鑽石', icon: 'fa-gem' },
+                        { id: 'mercury', title: '汞（水銀）', icon: 'fa-droplet' },
+                        { id: 'gold', title: '金', icon: 'fa-coins' },
+                        { id: 'copper', title: '銅', icon: 'fa-circle' },
+                        { id: 'activated_carbon', title: '活性碳', icon: 'fa-filter' }
                     ],
-                    rightOptions: [
-                        { id: 'right1', text: '碳的同素異形體，可導電', val: 'graphite_prop' },
-                        { id: 'right2', text: '自然界最硬的物質', val: 'diamond_prop' },
-                        { id: 'right3', text: '常溫下唯一液態金屬', val: 'mercury_prop' },
-                        { id: 'right4', text: '延展性最好的金屬，呈金黃色', val: 'gold_prop' },
-                        { id: 'right5', text: '導電性僅次於銀的金屬', val: 'copper_prop' },
-                        { id: 'right6', text: '多孔隙，吸附性高，可用於過濾', val: 'activated_carbon_prop' }
+                    items: [
+                        { id: 'item1', text: '碳的同素異形體，可導電', val: 'graphite_prop' },
+                        { id: 'item2', text: '自然界最硬的物質', val: 'diamond_prop' },
+                        { id: 'item3', text: '常溫下唯一液態金屬', val: 'mercury_prop' },
+                        { id: 'item4', text: '延展性最好的金屬，呈金黃色', val: 'gold_prop' },
+                        { id: 'item5', text: '導電性僅次於銀的金屬', val: 'copper_prop' },
+                        { id: 'item6', text: '多孔隙，吸附性高，可用於過濾', val: 'activated_carbon_prop' }
                     ],
                     solution: {
                         graphite: ['graphite_prop'],
@@ -184,41 +184,33 @@
                     id: "6-2-1",
                     section: "6-2",
                     title: "第一關：元素週期表的族與週期",
-                    description: "請將元素與其對應的族群配對",
-                    type: "formula_match",
-                    leftOptions: [
-                        { id: 'left1', text: '鈉 (Na)', val: 'Na' },
-                        { id: 'left2', text: '鎂 (Mg)', val: 'Mg' },
-                        { id: 'left3', text: '氦 (He)', val: 'He' },
-                        { id: 'left4', text: '氯 (Cl)', val: 'Cl' },
-                        { id: 'left5', text: '鉀 (K)', val: 'K' },
-                        { id: 'left6', text: '鈣 (Ca)', val: 'Ca' },
-                        { id: 'left7', text: '氖 (Ne)', val: 'Ne' },
-                        { id: 'left8', text: '氬 (Ar)', val: 'Ar' },
-                        { id: 'left9', text: '鋰 (Li)', val: 'Li' },
-                        { id: 'left10', text: '鍶 (Sr)', val: 'Sr' },
-                        { id: 'left11', text: '氟 (F)', val: 'F' },
-                        { id: 'left12', text: '溴 (Br)', val: 'Br' }
+                    description: "請將元素分類到其對應的族群",
+                    type: "classification",
+                    zones: [
+                        { id: 'group1', title: '第1族（鹼金屬）', icon: 'fa-fire' },
+                        { id: 'group2', title: '第2族（鹼土金屬）', icon: 'fa-mountain' },
+                        { id: 'group17', title: '第17族（鹵素）', icon: 'fa-flask-vial' },
+                        { id: 'group18', title: '第18族（鈍氣）', icon: 'fa-shield-halved' }
                     ],
-                    rightOptions: [
-                        { id: 'right1', text: '第1族（鹼金屬）', val: 'group1' },
-                        { id: 'right2', text: '第2族（鹼土金屬）', val: 'group2' },
-                        { id: 'right3', text: '第17族（鹵素）', val: 'group17' },
-                        { id: 'right4', text: '第18族（鈍氣）', val: 'group18' }
+                    items: [
+                        { id: 'item1', text: '鈉 (Na)', val: 'Na' },
+                        { id: 'item2', text: '鎂 (Mg)', val: 'Mg' },
+                        { id: 'item3', text: '氦 (He)', val: 'He' },
+                        { id: 'item4', text: '氯 (Cl)', val: 'Cl' },
+                        { id: 'item5', text: '鉀 (K)', val: 'K' },
+                        { id: 'item6', text: '鈣 (Ca)', val: 'Ca' },
+                        { id: 'item7', text: '氖 (Ne)', val: 'Ne' },
+                        { id: 'item8', text: '氬 (Ar)', val: 'Ar' },
+                        { id: 'item9', text: '鋰 (Li)', val: 'Li' },
+                        { id: 'item10', text: '鍶 (Sr)', val: 'Sr' },
+                        { id: 'item11', text: '氟 (F)', val: 'F' },
+                        { id: 'item12', text: '溴 (Br)', val: 'Br' }
                     ],
                     solution: {
-                        Na: ['group1'],
-                        K: ['group1'],
-                        Li: ['group1'],
-                        Mg: ['group2'],
-                        Ca: ['group2'],
-                        Sr: ['group2'],
-                        He: ['group18'],
-                        Ne: ['group18'],
-                        Ar: ['group18'],
-                        Cl: ['group17'],
-                        F: ['group17'],
-                        Br: ['group17']
+                        group1: ['Na', 'K', 'Li'],
+                        group2: ['Mg', 'Ca', 'Sr'],
+                        group18: ['He', 'Ne', 'Ar'],
+                        group17: ['Cl', 'F', 'Br']
                     }
                 },
                 {
@@ -738,9 +730,9 @@
                 let totalItems = 0;
                 let placedItems = 0;
                 
-                if (currentLevel.type === 'classification' || currentLevel.type === 'formula') {
+                if (currentLevel.type === 'classification') {
                     totalItems = currentLevel.items ? currentLevel.items.length : 0;
-                    placedItems = Object.values(droppedItems).flat().filter(val => val !== 'options' && val !== 'items').length;
+                    placedItems = Object.values(droppedItems).flat().filter(val => val !== 'items').length;
                 } else if (currentLevel.type === 'formula_match') {
                     // For formula_match, count right options that need to be placed
                     totalItems = currentLevel.rightOptions ? currentLevel.rightOptions.length : 0;
@@ -750,6 +742,9 @@
                         }
                         return count;
                     }, 0);
+                } else if (currentLevel.type === 'formula') {
+                    totalItems = currentLevel.items ? currentLevel.items.length : 0;
+                    placedItems = Object.values(droppedItems).flat().filter(val => val !== 'items').length;
                 }
                 
                 return placedItems === totalItems;
@@ -761,9 +756,9 @@
             let placedItems = 0;
             
             if (currentLevel) {
-                if (currentLevel.type === 'classification' || currentLevel.type === 'formula') {
+                if (currentLevel.type === 'classification') {
                     totalItems = currentLevel.items ? currentLevel.items.length : 0;
-                    placedItems = Object.values(droppedItems).flat().filter(val => val !== 'options' && val !== 'items').length;
+                    placedItems = Object.values(droppedItems).flat().filter(val => val !== 'items').length;
                 } else if (currentLevel.type === 'formula_match') {
                     totalItems = currentLevel.rightOptions ? currentLevel.rightOptions.length : 0;
                     placedItems = Object.keys(droppedItems).reduce((count, key) => {
@@ -772,6 +767,9 @@
                         }
                         return count;
                     }, 0);
+                } else if (currentLevel.type === 'formula') {
+                    totalItems = currentLevel.items ? currentLevel.items.length : 0;
+                    placedItems = Object.values(droppedItems).flat().filter(val => val !== 'items').length;
                 }
             }
 
