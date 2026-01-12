@@ -708,6 +708,61 @@
                     return {};
                 }
             });
+            
+            // 新增：字體大小調整 (localStorage持久化)
+            const [fontSize, setFontSize] = useState(() => {
+                try {
+                    const saved = localStorage.getItem('chapter5_font_size');
+                    return saved || 'medium'; // 'small', 'medium', 'large'
+                } catch {
+                    return 'medium';
+                }
+            });
+            
+            // 字體大小對應的類別
+            const fontSizeClasses = {
+                small: {
+                    base: 'text-xs',
+                    sm: 'text-sm',
+                    md: 'text-base',
+                    lg: 'text-lg',
+                    xl: 'text-xl',
+                    '2xl': 'text-2xl',
+                    '3xl': 'text-3xl',
+                    '4xl': 'text-4xl',
+                    '5xl': 'text-5xl'
+                },
+                medium: {
+                    base: 'text-sm',
+                    sm: 'text-base',
+                    md: 'text-lg',
+                    lg: 'text-xl',
+                    xl: 'text-2xl',
+                    '2xl': 'text-3xl',
+                    '3xl': 'text-4xl',
+                    '4xl': 'text-5xl',
+                    '5xl': 'text-6xl'
+                },
+                large: {
+                    base: 'text-base',
+                    sm: 'text-lg',
+                    md: 'text-xl',
+                    lg: 'text-2xl',
+                    xl: 'text-3xl',
+                    '2xl': 'text-4xl',
+                    '3xl': 'text-5xl',
+                    '4xl': 'text-6xl',
+                    '5xl': 'text-7xl'
+                }
+            };
+            
+            const fs = fontSizeClasses[fontSize];
+            
+            // 改變字體大小
+            const changeFontSize = (size) => {
+                setFontSize(size);
+                localStorage.setItem('chapter5_font_size', size);
+            };
 
             // 計時器
             useEffect(() => {
@@ -1129,13 +1184,51 @@
 
                 return (
                     <div className="min-h-screen flex items-center justify-center p-6">
+                        {/* 字體大小調整按鈕 - 固定在右上角 */}
+                        <div className="fixed top-4 right-4 z-50 flex items-center gap-2 glass-effect rounded-xl p-2 shadow-xl">
+                            <span className={`text-white/70 ${fs.base} font-medium`}>字體</span>
+                            <button
+                                onClick={() => changeFontSize('small')}
+                                className={`px-3 py-1.5 rounded-lg font-bold transition-all ${
+                                    fontSize === 'small' 
+                                        ? 'bg-white text-purple-600 shadow-lg' 
+                                        : 'bg-white/20 text-white hover:bg-white/30'
+                                }`}
+                                title="小字體"
+                            >
+                                <span className="text-xs">A</span>
+                            </button>
+                            <button
+                                onClick={() => changeFontSize('medium')}
+                                className={`px-3 py-1.5 rounded-lg font-bold transition-all ${
+                                    fontSize === 'medium' 
+                                        ? 'bg-white text-purple-600 shadow-lg' 
+                                        : 'bg-white/20 text-white hover:bg-white/30'
+                                }`}
+                                title="中字體"
+                            >
+                                <span className="text-sm">A</span>
+                            </button>
+                            <button
+                                onClick={() => changeFontSize('large')}
+                                className={`px-3 py-1.5 rounded-lg font-bold transition-all ${
+                                    fontSize === 'large' 
+                                        ? 'bg-white text-purple-600 shadow-lg' 
+                                        : 'bg-white/20 text-white hover:bg-white/30'
+                                }`}
+                                title="大字體"
+                            >
+                                <span className="text-base">A</span>
+                            </button>
+                        </div>
+                        
                         <div className="max-w-6xl w-full">
                             <div className="text-center mb-12 fade-in">
-                                <h1 className="text-5xl font-black text-white mb-4">
+                                <h1 className={`${fs['5xl']} font-black text-white mb-4`}>
                                     <i className="fas fa-temperature-high mr-4"></i>
                                     第5章 溫度與熱
                                 </h1>
-                                <p className="text-xl text-white/90 mb-4">選擇一個小節開始學習</p>
+                                <p className={`${fs.xl} text-white/90 mb-4`}>選擇一個小節開始學習</p>
                                 
                                 {/* 清除記錄按鈕 */}
                                 {Object.keys(sectionCompletionStatus).length > 0 && (
@@ -1147,7 +1240,7 @@
                                                 alert('✅ 已清除所有記錄！');
                                             }
                                         }}
-                                        className="bg-red-500/80 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-bold transition-all shadow-lg hover:scale-105"
+                                        className={`bg-red-500/80 hover:bg-red-600 text-white px-4 py-2 rounded-lg ${fs.sm} font-bold transition-all shadow-lg hover:scale-105`}
                                     >
                                         <i className="fas fa-trash-alt mr-2"></i>
                                         清除所有完成記錄
@@ -1157,18 +1250,18 @@
                                 {/* 全部完成時的證書按鈕 */}
                                 {allCompleted && (
                                     <div className="mt-6 glass-effect rounded-2xl p-6 animate-bounce-slow">
-                                        <div className="text-4xl mb-3">🏆</div>
-                                        <h2 className="text-2xl font-bold text-yellow-300 mb-3">
+                                        <div className={`${fs['4xl']} mb-3`}>🏆</div>
+                                        <h2 className={`${fs['2xl']} font-bold text-yellow-300 mb-3`}>
                                             恭喜！已完成全部小節
                                         </h2>
                                         <button
                                             onClick={downloadCertificate}
-                                            className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-8 py-4 rounded-xl font-bold text-lg hover:scale-110 transition-all shadow-2xl"
+                                            className={`bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-8 py-4 rounded-xl font-bold ${fs.lg} hover:scale-110 transition-all shadow-2xl`}
                                         >
                                             <i className="fas fa-download mr-2"></i>
                                             下載完整學習證書
                                         </button>
-                                        <p className="text-white/70 text-sm mt-2">
+                                        <p className={`text-white/70 ${fs.sm} mt-2`}>
                                             包含所有關卡詳細資訊與錯誤分析
                                         </p>
                                     </div>
@@ -1189,31 +1282,31 @@
                                         >
                                             {/* 完成標記 */}
                                             {isCompleted && (
-                                                <div className="absolute top-4 right-4 bg-green-500 text-white px-3 py-1 rounded-full text-sm font-bold flex items-center gap-1 shadow-lg animate-bounce">
+                                                <div className={`absolute top-4 right-4 bg-green-500 text-white px-3 py-1 rounded-full ${fs.sm} font-bold flex items-center gap-1 shadow-lg animate-bounce`}>
                                                     <i className="fas fa-check-circle"></i>
                                                     已完成
                                                 </div>
                                             )}
                                             
                                             <div className={`w-20 h-20 bg-gradient-to-br ${section.color} rounded-2xl flex items-center justify-center mb-6 mx-auto relative`}>
-                                                <i className={`${section.icon} text-4xl text-white`}></i>
+                                                <i className={`${section.icon} ${fs['4xl']} text-white`}></i>
                                                 {isCompleted && (
                                                     <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-green-500 rounded-full flex items-center justify-center border-4 border-white">
-                                                        <i className="fas fa-trophy text-white text-sm"></i>
+                                                        <i className={`fas fa-trophy text-white ${fs.sm}`}></i>
                                                     </div>
                                                 )}
                                             </div>
                                             
-                                            <h2 className="text-2xl font-bold text-white text-center mb-3">
+                                            <h2 className={`${fs['2xl']} font-bold text-white text-center mb-3`}>
                                                 {section.title}
                                             </h2>
                                             
-                                            <p className="text-white/80 text-center mb-2">
+                                            <p className={`text-white/80 text-center mb-2 ${fs.base}`}>
                                                 共 {section.levels} 個關卡
                                             </p>
                                             
                                             {isCompleted && completionData && (
-                                                <div className="text-center text-white/70 text-xs mt-3 space-y-1">
+                                                <div className={`text-center text-white/70 ${fs.base} mt-3 space-y-1`}>
                                                     <div>⏱️ {Math.floor(completionData.totalTime / 60)}:{(completionData.totalTime % 60).toString().padStart(2, '0')}</div>
                                                     <div>🎯 嘗試 {completionData.attempts} 次</div>
                                                 </div>
@@ -1372,13 +1465,50 @@
 
                 return (
                     <div className="h-screen flex flex-col overflow-hidden">
+                        {/* 字體大小調整按鈕 - 固定在右上角 */}
+                        <div className="fixed top-2 right-2 z-50 flex items-center gap-1 glass-effect rounded-lg p-1.5 shadow-xl">
+                            <button
+                                onClick={() => changeFontSize('small')}
+                                className={`px-2 py-1 rounded font-bold transition-all ${
+                                    fontSize === 'small' 
+                                        ? 'bg-white text-purple-600' 
+                                        : 'bg-white/20 text-white hover:bg-white/30'
+                                }`}
+                                title="小"
+                            >
+                                <span className="text-xs">A</span>
+                            </button>
+                            <button
+                                onClick={() => changeFontSize('medium')}
+                                className={`px-2 py-1 rounded font-bold transition-all ${
+                                    fontSize === 'medium' 
+                                        ? 'bg-white text-purple-600' 
+                                        : 'bg-white/20 text-white hover:bg-white/30'
+                                }`}
+                                title="中"
+                            >
+                                <span className="text-sm">A</span>
+                            </button>
+                            <button
+                                onClick={() => changeFontSize('large')}
+                                className={`px-2 py-1 rounded font-bold transition-all ${
+                                    fontSize === 'large' 
+                                        ? 'bg-white text-purple-600' 
+                                        : 'bg-white/20 text-white hover:bg-white/30'
+                                }`}
+                                title="大"
+                            >
+                                <span className="text-base">A</span>
+                            </button>
+                        </div>
+                        
                         {/* 頁首 - 極度精簡版 */}
                         <div className={`flex-shrink-0 bg-gradient-to-r ${colors.header} p-2 md:p-3 text-white shadow-xl`}>
                             {/* 第一行：關卡名稱、進度條、按鈕 */}
                             <div className="flex items-center gap-2 mb-2">
                                 {/* 左側：關卡名稱 */}
                                 <div className="flex-shrink-0 min-w-0">
-                                    <h2 className="text-sm md:text-base font-bold truncate leading-tight">{currentLevel.title}</h2>
+                                    <h2 className={`${fs.sm} md:${fs.base} font-bold truncate leading-tight`}>{currentLevel.title}</h2>
                                 </div>
                                 
                                 {/* 中間：進度條 */}
@@ -1432,8 +1562,8 @@
                                 {/* 選項區 */}
                                 <div className="lg:col-span-1">
                                     <div className="glass-effect rounded-lg p-2 md:p-3 lg:sticky lg:top-2">
-                                        <h3 className="text-sm md:text-base font-bold text-white mb-2 flex items-center">
-                                            <i className="fas fa-cube mr-1 text-xs"></i>
+                                        <h3 className={`${fs.sm} md:${fs.base} font-bold text-white mb-2 flex items-center`}>
+                                            <i className={`fas fa-cube mr-1 ${fs.base}`}></i>
                                             待分類項目
                                         </h3>
                                         <div className="space-y-1.5">
@@ -1447,13 +1577,13 @@
                                                     onTouchEnd={(e) => handleTouchEnd(e, handleTouchDrop)}
                                                     className="drag-item bg-white rounded-lg p-2 shadow-lg"
                                                 >
-                                                    <p className="text-gray-800 font-medium text-center text-xs md:text-sm">
+                                                    <p className={`text-gray-800 font-medium text-center ${fs.base} md:${fs.sm}`}>
                                                         {item.text}
                                                     </p>
                                                 </div>
                                             ))}
                                             {availableItems.length === 0 && (
-                                                <div className="text-center text-white/70 py-3 text-xs">
+                                                <div className={`text-center text-white/70 py-3 ${fs.base}`}>
                                                     所有項目都已分類
                                                 </div>
                                             )}
@@ -1477,14 +1607,14 @@
                                                     ${!feedback[zone.id] ? 'border-2 border-white/30' : ''}
                                                 `}
                                             >
-                                                <h4 className="text-sm md:text-base font-bold text-white mb-2 flex items-center">
-                                                    <i className={`${zone.icon} mr-1 text-xs`}></i>
-                                                    <span className="flex-1 text-xs md:text-sm">{zone.title}</span>
+                                                <h4 className={`${fs.sm} md:${fs.base} font-bold text-white mb-2 flex items-center`}>
+                                                    <i className={`${zone.icon} mr-1 ${fs.base}`}></i>
+                                                    <span className={`flex-1 ${fs.base} md:${fs.sm}`}>{zone.title}</span>
                                                     {feedback[zone.id] === true && (
-                                                        <i className="fas fa-check-circle text-green-400 text-base"></i>
+                                                        <i className={`fas fa-check-circle text-green-400 ${fs.base}`}></i>
                                                     )}
                                                     {feedback[zone.id] === false && (
-                                                        <i className="fas fa-times-circle text-red-400 text-base"></i>
+                                                        <i className={`fas fa-times-circle text-red-400 ${fs.base}`}></i>
                                                     )}
                                                 </h4>
                                                 <div className="grid grid-cols-2 gap-1.5">
@@ -1502,12 +1632,12 @@
                                                             onTouchEnd={(e) => handleTouchEnd(e, handleTouchDrop)}
                                                             className="bg-white rounded-lg p-2 shadow-lg group relative cursor-move"
                                                         >
-                                                            <p className="text-gray-800 font-medium text-xs text-center pr-5">
+                                                            <p className={`text-gray-800 font-medium ${fs.base} text-center pr-5`}>
                                                                 {item.text}
                                                             </p>
                                                             <button
                                                                 onClick={() => removeItem(zone.id, item.id)}
-                                                                className="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-xs"
+                                                                className={`absolute top-1 right-1 w-4 h-4 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center ${fs.base}`}
                                                             >
                                                                 ×
                                                             </button>
@@ -1523,7 +1653,7 @@
                                         {gameState === 'playing' && (
                                             <button
                                                 onClick={checkAnswers}
-                                                className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 text-white py-2.5 rounded-lg font-bold text-sm hover:scale-105 transition-all shadow-xl"
+                                                className={`flex-1 bg-gradient-to-r from-green-500 to-emerald-600 text-white py-2.5 rounded-lg font-bold ${fs.sm} hover:scale-105 transition-all shadow-xl`}
                                                 disabled={Object.values(droppedItems).flat().length === 0}
                                             >
                                                 <i className="fas fa-check mr-1"></i>
@@ -1533,7 +1663,7 @@
                                         {gameState === 'completed' && (
                                             <button
                                                 onClick={nextLevel}
-                                                className="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 text-white py-2.5 rounded-lg font-bold text-sm hover:scale-105 transition-all shadow-xl"
+                                                className={`flex-1 bg-gradient-to-r from-blue-500 to-purple-600 text-white py-2.5 rounded-lg font-bold ${fs.sm} hover:scale-105 transition-all shadow-xl`}
                                             >
                                                 <i className="fas fa-arrow-right mr-1"></i>
                                                 {currentLevelIndex < CHAPTER_DATA[currentSection].length - 1 ? '下一關' : '完成本節'}
@@ -1541,7 +1671,7 @@
                                         )}
                                         <button
                                             onClick={restart}
-                                            className="bg-white/20 text-white px-3 py-2.5 rounded-lg hover:bg-white/30 transition-all text-sm"
+                                            className={`bg-white/20 text-white px-3 py-2.5 rounded-lg hover:bg-white/30 transition-all ${fs.sm}`}
                                         >
                                             <i className="fas fa-redo"></i>
                                             <span className="ml-1 hidden sm:inline">重來</span>
