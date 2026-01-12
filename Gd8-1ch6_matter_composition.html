@@ -1,0 +1,1388 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第6章 探索物質組成 - 互動式闖關系統</title>
+    
+    <!-- React -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+    
+    <!-- html2canvas for certificate -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
+    <style>
+        * {
+            font-family: 'Noto+Sans TC', sans-serif;
+        }
+        
+        body {
+            margin: 0;
+            padding: 0;
+            overscroll-behavior: none;
+        }
+        
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .drag-item {
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        
+        .drop-zone {
+            min-height: 120px;
+            transition: all 0.3s ease;
+        }
+        
+        .drop-zone.drag-over {
+            background-color: rgba(59, 130, 246, 0.1);
+            border-color: #3b82f6;
+            transform: scale(1.02);
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+        
+        .shake {
+            animation: shake 0.5s ease-in-out;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+        
+        .float {
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        .progress-bar {
+            max-width: 50%;
+        }
+        
+        @media (max-width: 768px) {
+            .progress-bar {
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        // ===========================================
+        // GAME DATA - 所有關卡數據
+        // ===========================================
+        const CHAPTER_DATA = {
+            "6-1": [
+                {
+                    id: "6-1-1",
+                    section: "6-1",
+                    title: "第一關：金屬與非金屬元素分類",
+                    description: "請將以下元素依其性質分類到金屬或非金屬",
+                    type: "classification",
+                    zones: [
+                        { id: 'metal', title: '金屬元素', icon: 'fa-layer-group' },
+                        { id: 'nonmetal', title: '非金屬元素', icon: 'fa-cube' }
+                    ],
+                    items: [
+                        { id: 'item1', text: '鐵 (Fe)', val: 'Fe' },
+                        { id: 'item2', text: '銅 (Cu)', val: 'Cu' },
+                        { id: 'item3', text: '硫 (S)', val: 'S' },
+                        { id: 'item4', text: '碳 (C)', val: 'C' },
+                        { id: 'item5', text: '鋁 (Al)', val: 'Al' },
+                        { id: 'item6', text: '氯 (Cl)', val: 'Cl' },
+                        { id: 'item7', text: '金 (Au)', val: 'Au' },
+                        { id: 'item8', text: '氧 (O)', val: 'O' },
+                        { id: 'item9', text: '銀 (Ag)', val: 'Ag' },
+                        { id: 'item10', text: '氮 (N)', val: 'N' }
+                    ],
+                    solution: {
+                        metal: ['Fe', 'Cu', 'Al', 'Au', 'Ag'],
+                        nonmetal: ['S', 'C', 'Cl', 'O', 'N']
+                    }
+                },
+                {
+                    id: "6-1-2",
+                    section: "6-1",
+                    title: "第二關：金屬與非金屬性質配對",
+                    description: "請將以下性質與金屬或非金屬元素配對",
+                    type: "formula_match",
+                    leftOptions: [
+                        { id: 'left1', text: '金屬元素的特性', val: 'metal_properties' },
+                        { id: 'left2', text: '非金屬元素的特性', val: 'nonmetal_properties' }
+                    ],
+                    rightOptions: [
+                        { id: 'right1', text: '具有金屬光澤', val: 'metal_luster' },
+                        { id: 'right2', text: '大部分為電熱不良導體', val: 'poor_conductor' },
+                        { id: 'right3', text: '具有延性與展性', val: 'ductile' },
+                        { id: 'right4', text: '容易被敲碎', val: 'brittle' },
+                        { id: 'right5', text: '導電性與導熱性佳', val: 'good_conductor' },
+                        { id: 'right6', text: '顏色差異大', val: 'various_color' }
+                    ],
+                    solution: {
+                        metal_properties: ['metal_luster', 'good_conductor', 'ductile'],
+                        nonmetal_properties: ['various_color', 'brittle', 'poor_conductor']
+                    }
+                },
+                {
+                    id: "6-1-3",
+                    section: "6-1",
+                    title: "第三關：特殊性質配對",
+                    description: "請將特殊性質的元素或物質與其特性配對",
+                    type: "formula_match",
+                    leftOptions: [
+                        { id: 'left1', text: '石墨', val: 'graphite' },
+                        { id: 'left2', text: '鑽石', val: 'diamond' },
+                        { id: 'left3', text: '汞（水銀）', val: 'mercury' },
+                        { id: 'left4', text: '金', val: 'gold' },
+                        { id: 'left5', text: '銅', val: 'copper' },
+                        { id: 'left6', text: '活性碳', val: 'activated_carbon' }
+                    ],
+                    rightOptions: [
+                        { id: 'right1', text: '碳的同素異形體，可導電', val: 'graphite_prop' },
+                        { id: 'right2', text: '自然界最硬的物質', val: 'diamond_prop' },
+                        { id: 'right3', text: '常溫下唯一液態金屬', val: 'mercury_prop' },
+                        { id: 'right4', text: '延展性最好的金屬，呈金黃色', val: 'gold_prop' },
+                        { id: 'right5', text: '導電性僅次於銀的金屬', val: 'copper_prop' },
+                        { id: 'right6', text: '多孔隙，吸附性高，可用於過濾', val: 'activated_carbon_prop' }
+                    ],
+                    solution: {
+                        graphite: ['graphite_prop'],
+                        diamond: ['diamond_prop'],
+                        mercury: ['mercury_prop'],
+                        gold: ['gold_prop'],
+                        copper: ['copper_prop'],
+                        activated_carbon: ['activated_carbon_prop']
+                    }
+                }
+            ],
+            "6-2": [
+                {
+                    id: "6-2-1",
+                    section: "6-2",
+                    title: "第一關：元素週期表的族與週期",
+                    description: "請將元素與其對應的族群配對",
+                    type: "formula_match",
+                    leftOptions: [
+                        { id: 'left1', text: '鈉 (Na)', val: 'Na' },
+                        { id: 'left2', text: '鎂 (Mg)', val: 'Mg' },
+                        { id: 'left3', text: '氦 (He)', val: 'He' },
+                        { id: 'left4', text: '氯 (Cl)', val: 'Cl' },
+                        { id: 'left5', text: '鉀 (K)', val: 'K' },
+                        { id: 'left6', text: '鈣 (Ca)', val: 'Ca' },
+                        { id: 'left7', text: '氖 (Ne)', val: 'Ne' },
+                        { id: 'left8', text: '氬 (Ar)', val: 'Ar' },
+                        { id: 'left9', text: '鋰 (Li)', val: 'Li' },
+                        { id: 'left10', text: '鍶 (Sr)', val: 'Sr' },
+                        { id: 'left11', text: '氟 (F)', val: 'F' },
+                        { id: 'left12', text: '溴 (Br)', val: 'Br' }
+                    ],
+                    rightOptions: [
+                        { id: 'right1', text: '第1族（鹼金屬）', val: 'group1' },
+                        { id: 'right2', text: '第2族（鹼土金屬）', val: 'group2' },
+                        { id: 'right3', text: '第17族（鹵素）', val: 'group17' },
+                        { id: 'right4', text: '第18族（鈍氣）', val: 'group18' }
+                    ],
+                    solution: {
+                        Na: ['group1'],
+                        K: ['group1'],
+                        Li: ['group1'],
+                        Mg: ['group2'],
+                        Ca: ['group2'],
+                        Sr: ['group2'],
+                        He: ['group18'],
+                        Ne: ['group18'],
+                        Ar: ['group18'],
+                        Cl: ['group17'],
+                        F: ['group17'],
+                        Br: ['group17']
+                    }
+                },
+                {
+                    id: "6-2-2",
+                    section: "6-2",
+                    title: "第二關：同族元素的性質",
+                    description: "請將以下元素依其化學性質歸類",
+                    type: "classification",
+                    zones: [
+                        { id: 'alkali', title: '鹼金屬（易與水反應）', icon: 'fa-flask' },
+                        { id: 'noble', title: '鈍氣（化學性質安定）', icon: 'fa-shield-alt' }
+                    ],
+                    items: [
+                        { id: 'item1', text: '鈉 (Na)', val: 'Na' },
+                        { id: 'item2', text: '鉀 (K)', val: 'K' },
+                        { id: 'item3', text: '氦 (He)', val: 'He' },
+                        { id: 'item4', text: '氖 (Ne)', val: 'Ne' },
+                        { id: 'item5', text: '鋰 (Li)', val: 'Li' },
+                        { id: 'item6', text: '氬 (Ar)', val: 'Ar' }
+                    ],
+                    solution: {
+                        alkali: ['Na', 'K', 'Li'],
+                        noble: ['He', 'Ne', 'Ar']
+                    }
+                }
+            ],
+            "6-3": [
+                {
+                    id: "6-3-1",
+                    section: "6-3",
+                    title: "第一關：道耳頓的原子說",
+                    description: "請將原子說的要點與對應的實例配對",
+                    type: "formula_match",
+                    leftOptions: [
+                        { id: 'left1', text: '物質由原子組成', val: 'concept1' },
+                        { id: 'left2', text: '相同元素的原子性質相同', val: 'concept2' },
+                        { id: 'left3', text: '化合物由不同原子以固定比例組成', val: 'concept3' },
+                        { id: 'left4', text: '化學反應是原子重新組合', val: 'concept4' }
+                    ],
+                    rightOptions: [
+                        { id: 'right1', text: '金是由金原子組成', val: 'example1' },
+                        { id: 'right2', text: '所有氧原子的質量相同', val: 'example2' },
+                        { id: 'right3', text: '水分子由2個氫原子和1個氧原子組成', val: 'example3' },
+                        { id: 'right4', text: '氫氣與氧氣反應生成水', val: 'example4' }
+                    ],
+                    solution: {
+                        concept1: ['example1'],
+                        concept2: ['example2'],
+                        concept3: ['example3'],
+                        concept4: ['example4']
+                    }
+                },
+                {
+                    id: "6-3-2",
+                    section: "6-3",
+                    title: "第二關：原子結構的組成",
+                    description: "請將原子的組成粒子填入正確位置",
+                    type: "formula",
+                    formulaSlots: [
+                        { id: 'slot1', position: 'left', placeholder: '原子核 = ？ + ？' },
+                        { id: 'slot2', position: 'right', placeholder: '原子 = 原子核 + ？' }
+                    ],
+                    items: [
+                        { id: 'item1', text: '質子', val: 'proton' },
+                        { id: 'item2', text: '中子', val: 'neutron' },
+                        { id: 'item3', text: '電子', val: 'electron' }
+                    ],
+                    solution: {
+                        slot1: ['proton', 'neutron'],
+                        slot2: ['electron']
+                    }
+                },
+                {
+                    id: "6-3-3",
+                    section: "6-3",
+                    title: "第三關：質量數與原子序計算",
+                    description: "已知鈹原子（⁹₄Be），請計算其質子數、中子數與電子數",
+                    type: "formula",
+                    formulaSlots: [
+                        { id: 'slot1', position: 'left', placeholder: '質子數 = ？' },
+                        { id: 'slot2', position: 'middle', placeholder: '中子數 = ？' },
+                        { id: 'slot3', position: 'right', placeholder: '電子數 = ？' }
+                    ],
+                    items: [
+                        { id: 'item1', text: '4', val: '4' },
+                        { id: 'item2', text: '5', val: '5' },
+                        { id: 'item3', text: '9', val: '9' }
+                    ],
+                    solution: {
+                        slot1: ['4'],
+                        slot2: ['5'],
+                        slot3: ['4']
+                    }
+                }
+            ],
+            "6-4": [
+                {
+                    id: "6-4-1",
+                    section: "6-4",
+                    title: "第一關：分子的組成",
+                    description: "請將分子與其組成原子數配對",
+                    type: "formula_match",
+                    leftOptions: [
+                        { id: 'left1', text: '氫氣 (H₂)', val: 'H2' },
+                        { id: 'left2', text: '水 (H₂O)', val: 'H2O' },
+                        { id: 'left3', text: '臭氧 (O₃)', val: 'O3' },
+                        { id: 'left4', text: '氦氣 (He)', val: 'He' }
+                    ],
+                    rightOptions: [
+                        { id: 'right1', text: '1個原子', val: '1atom' },
+                        { id: 'right2', text: '2個原子', val: '2atoms' },
+                        { id: 'right3', text: '3個原子（同種）', val: '3atoms_same' },
+                        { id: 'right4', text: '3個原子（不同種）', val: '3atoms_diff' }
+                    ],
+                    solution: {
+                        H2: ['2atoms'],
+                        H2O: ['3atoms_diff'],
+                        O3: ['3atoms_same'],
+                        He: ['1atom']
+                    }
+                },
+                {
+                    id: "6-4-2",
+                    section: "6-4",
+                    title: "第二關：化學式的書寫規則",
+                    description: "請將物質名稱與其正確化學式配對",
+                    type: "formula_match",
+                    leftOptions: [
+                        { id: 'left1', text: '水', val: 'water' },
+                        { id: 'left2', text: '氧氣', val: 'oxygen' },
+                        { id: 'left3', text: '氯化鈉', val: 'sodium_chloride' },
+                        { id: 'left4', text: '二氧化碳', val: 'carbon_dioxide' },
+                        { id: 'left5', text: '氮氣', val: 'nitrogen' },
+                        { id: 'left6', text: '臭氧', val: 'ozone' },
+                        { id: 'left7', text: '一氧化碳', val: 'carbon_monoxide' },
+                        { id: 'left8', text: '氨', val: 'ammonia' }
+                    ],
+                    rightOptions: [
+                        { id: 'right1', text: 'H₂O', val: 'H2O' },
+                        { id: 'right2', text: 'O₂', val: 'O2' },
+                        { id: 'right3', text: 'NaCl', val: 'NaCl' },
+                        { id: 'right4', text: 'CO₂', val: 'CO2' },
+                        { id: 'right5', text: 'N₂', val: 'N2' },
+                        { id: 'right6', text: 'O₃', val: 'O3' },
+                        { id: 'right7', text: 'CO', val: 'CO' },
+                        { id: 'right8', text: 'NH₃', val: 'NH3' }
+                    ],
+                    solution: {
+                        water: ['H2O'],
+                        oxygen: ['O2'],
+                        sodium_chloride: ['NaCl'],
+                        carbon_dioxide: ['CO2'],
+                        nitrogen: ['N2'],
+                        ozone: ['O3'],
+                        carbon_monoxide: ['CO'],
+                        ammonia: ['NH3']
+                    }
+                },
+                {
+                    id: "6-4-3",
+                    section: "6-4",
+                    title: "第三關：物質的分類與定義配對",
+                    description: "請將物質分類與其定義配對",
+                    type: "formula_match",
+                    leftOptions: [
+                        { id: 'left1', text: '元素', val: 'element' },
+                        { id: 'left2', text: '化合物', val: 'compound' },
+                        { id: 'left3', text: '混合物', val: 'mixture' },
+                        { id: 'left4', text: '純物質', val: 'pure_substance' }
+                    ],
+                    rightOptions: [
+                        { id: 'right1', text: '由同一種原子構成的純物質', val: 'element_def' },
+                        { id: 'right2', text: '不同種類的原子以固定比例結合而成的純物質', val: 'compound_def' },
+                        { id: 'right3', text: '兩種或兩種以上純物質混合而成', val: 'mixture_def' },
+                        { id: 'right4', text: '由單一種物質組成', val: 'pure_def' }
+                    ],
+                    solution: {
+                        element: ['element_def'],
+                        compound: ['compound_def'],
+                        mixture: ['mixture_def'],
+                        pure_substance: ['pure_def']
+                    }
+                }
+            ]
+        };
+
+        // ===========================================
+        // THEME COLORS
+        // ===========================================
+        const themeColors = {
+            '6-1': { 
+                primary: 'from-green-400 to-teal-600',
+                header: 'from-green-500 to-teal-700', 
+                badge: 'bg-green-500' 
+            },
+            '6-2': { 
+                primary: 'from-blue-400 to-cyan-600',
+                header: 'from-blue-500 to-cyan-700', 
+                badge: 'bg-blue-500' 
+            },
+            '6-3': { 
+                primary: 'from-purple-400 to-pink-600',
+                header: 'from-purple-500 to-pink-700', 
+                badge: 'bg-purple-500' 
+            },
+            '6-4': { 
+                primary: 'from-orange-400 to-red-600',
+                header: 'from-orange-500 to-red-700', 
+                badge: 'bg-orange-500' 
+            }
+        };
+
+        // ===========================================
+        // MAIN APP COMPONENT
+        // ===========================================
+        function App() {
+            const [screen, setScreen] = useState('section_select');
+            const [currentSection, setCurrentSection] = useState(null);
+            const [currentLevelIndex, setCurrentLevelIndex] = useState(0);
+            const [gameState, setGameState] = useState('playing');
+            const [droppedItems, setDroppedItems] = useState({});
+            const [startTime, setStartTime] = useState(null);
+            const [elapsedTime, setElapsedTime] = useState(0);
+            const [attempts, setAttempts] = useState(0);
+            const [draggedItem, setDraggedItem] = useState(null);
+            const [sectionCompletionStatus, setSectionCompletionStatus] = useState({});
+            const [errorLog, setErrorLog] = useState([]);
+            const [fontScale, setFontScale] = useState(100);
+
+            const currentLevel = currentSection ? CHAPTER_DATA[currentSection][currentLevelIndex] : null;
+            const totalLevels = currentSection ? CHAPTER_DATA[currentSection].length : 0;
+
+            // Load completion status and font scale from localStorage
+            useEffect(() => {
+                const saved = localStorage.getItem('chapter6_completion_status');
+                if (saved) {
+                    setSectionCompletionStatus(JSON.parse(saved));
+                }
+                const savedFontScale = localStorage.getItem('chapter6_font_scale');
+                if (savedFontScale) {
+                    setFontScale(parseInt(savedFontScale));
+                }
+            }, []);
+
+            // Apply font scale
+            useEffect(() => {
+                document.documentElement.style.fontSize = `${fontScale}%`;
+                localStorage.setItem('chapter6_font_scale', fontScale.toString());
+            }, [fontScale]);
+
+            // Timer
+            useEffect(() => {
+                let timer;
+                if (gameState === 'playing' && startTime) {
+                    timer = setInterval(() => {
+                        setElapsedTime(Math.floor((new Date() - startTime) / 1000));
+                    }, 1000);
+                }
+                return () => {
+                    if (timer) clearInterval(timer);
+                };
+            }, [gameState, startTime]);
+
+            // Start section
+            const startSection = (sectionId) => {
+                setCurrentSection(sectionId);
+                setCurrentLevelIndex(0);
+                setScreen('game');
+                setGameState('playing');
+                setDroppedItems({});
+                setStartTime(new Date());
+                setElapsedTime(0);
+                setAttempts(0);
+                setErrorLog([]);
+            };
+
+            // Drag handlers
+            const handleDragStart = (e, item) => {
+                setDraggedItem(item);
+                e.dataTransfer.effectAllowed = 'move';
+                if (e.target) {
+                    e.target.style.opacity = '0.5';
+                }
+            };
+
+            const handleDragEnd = (e) => {
+                if (e.target) {
+                    e.target.style.opacity = '1';
+                }
+                setDraggedItem(null);
+            };
+
+            const handleDrop = (e, zoneId) => {
+                e.preventDefault();
+                if (!draggedItem) return;
+
+                const newDroppedItems = { ...droppedItems };
+                
+                // Remove item from all zones
+                Object.keys(newDroppedItems).forEach(key => {
+                    newDroppedItems[key] = newDroppedItems[key].filter(val => val !== draggedItem.val);
+                });
+
+                // Add to new zone
+                if (!newDroppedItems[zoneId]) {
+                    newDroppedItems[zoneId] = [];
+                }
+                newDroppedItems[zoneId].push(draggedItem.val);
+
+                setDroppedItems(newDroppedItems);
+                setDraggedItem(null);
+            };
+
+            const handleDragOver = (e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+            };
+
+            // Touch handlers
+            const handleTouchStart = (e, item) => {
+                setDraggedItem(item);
+                document.body.style.overflow = 'hidden';
+            };
+
+            const handleTouchMove = (e) => {
+                e.preventDefault();
+            };
+
+            const handleTouchEnd = (e, zoneId) => {
+                if (!draggedItem) return;
+                
+                document.body.style.overflow = '';
+                
+                const touch = e.changedTouches[0];
+                const dropZone = document.elementFromPoint(touch.clientX, touch.clientY);
+                
+                if (dropZone && dropZone.dataset.zone) {
+                    const targetZoneId = dropZone.dataset.zone;
+                    const newDroppedItems = { ...droppedItems };
+                    
+                    Object.keys(newDroppedItems).forEach(key => {
+                        newDroppedItems[key] = newDroppedItems[key].filter(val => val !== draggedItem.val);
+                    });
+
+                    if (!newDroppedItems[targetZoneId]) {
+                        newDroppedItems[targetZoneId] = [];
+                    }
+                    newDroppedItems[targetZoneId].push(draggedItem.val);
+
+                    setDroppedItems(newDroppedItems);
+                }
+                
+                setDraggedItem(null);
+            };
+
+            // Check answer
+            const checkAnswer = () => {
+                setAttempts(prev => prev + 1);
+                
+                const solution = currentLevel.solution;
+                let allCorrect = true;
+                const newErrorLog = [...errorLog];
+
+                if (currentLevel.type === 'classification') {
+                    Object.keys(solution).forEach(zoneId => {
+                        const expected = solution[zoneId].sort();
+                        const actual = (droppedItems[zoneId] || []).sort();
+                        
+                        if (JSON.stringify(expected) !== JSON.stringify(actual)) {
+                            allCorrect = false;
+                            
+                            // Record errors
+                            actual.forEach(val => {
+                                if (!expected.includes(val)) {
+                                    const wrongItem = currentLevel.items.find(item => item.val === val);
+                                    const wrongZone = currentLevel.zones.find(zone => zone.id === zoneId);
+                                    const correctZoneId = Object.keys(solution).find(key => solution[key].includes(val));
+                                    const correctZone = currentLevel.zones.find(zone => zone.id === correctZoneId);
+                                    
+                                    if (wrongItem && wrongZone && correctZone) {
+                                        newErrorLog.push({
+                                            levelTitle: currentLevel.title,
+                                            wrongAnswer: `${wrongItem.text} → ${wrongZone.title}`,
+                                            correctAnswer: `${wrongItem.text} → ${correctZone.title}`
+                                        });
+                                    }
+                                }
+                            });
+                        }
+                    });
+                } else if (currentLevel.type === 'formula_match') {
+                    Object.keys(solution).forEach(leftId => {
+                        const expected = solution[leftId];
+                        const actual = droppedItems[leftId] || [];
+                        
+                        if (JSON.stringify(expected.sort()) !== JSON.stringify(actual.sort())) {
+                            allCorrect = false;
+                            
+                            const wrongLeft = currentLevel.leftOptions.find(opt => opt.val === leftId);
+                            if (wrongLeft) {
+                                const actualRights = actual.map(val => {
+                                    const right = currentLevel.rightOptions.find(opt => opt.val === val);
+                                    return right ? right.text : '';
+                                }).join(', ');
+                                
+                                const correctRights = expected.map(val => {
+                                    const right = currentLevel.rightOptions.find(opt => opt.val === val);
+                                    return right ? right.text : '';
+                                }).join(', ');
+                                
+                                newErrorLog.push({
+                                    levelTitle: currentLevel.title,
+                                    wrongAnswer: `${wrongLeft.text} → ${actualRights || '(未配對)'}`,
+                                    correctAnswer: `${wrongLeft.text} → ${correctRights}`
+                                });
+                            }
+                        }
+                    });
+                } else if (currentLevel.type === 'formula') {
+                    Object.keys(solution).forEach(slotId => {
+                        const expected = solution[slotId].sort();
+                        const actual = (droppedItems[slotId] || []).sort();
+                        
+                        if (JSON.stringify(expected) !== JSON.stringify(actual)) {
+                            allCorrect = false;
+                            
+                            const slot = currentLevel.formulaSlots.find(s => s.id === slotId);
+                            if (slot) {
+                                const actualItems = actual.map(val => {
+                                    const item = currentLevel.items.find(i => i.val === val);
+                                    return item ? item.text : '';
+                                }).join(', ');
+                                
+                                const correctItems = expected.map(val => {
+                                    const item = currentLevel.items.find(i => i.val === val);
+                                    return item ? item.text : '';
+                                }).join(', ');
+                                
+                                newErrorLog.push({
+                                    levelTitle: currentLevel.title,
+                                    wrongAnswer: `${slot.placeholder} = ${actualItems || '(空白)'}`,
+                                    correctAnswer: `${slot.placeholder} = ${correctItems}`
+                                });
+                            }
+                        }
+                    });
+                }
+
+                setErrorLog(newErrorLog);
+
+                if (allCorrect) {
+                    setGameState('completed');
+                } else {
+                    setGameState('wrong');
+                    setTimeout(() => {
+                        setGameState('playing');
+                    }, 2000);
+                }
+            };
+
+            // Next level
+            const nextLevel = () => {
+                if (currentLevelIndex < totalLevels - 1) {
+                    setCurrentLevelIndex(prev => prev + 1);
+                    setGameState('playing');
+                    setDroppedItems({});
+                } else {
+                    // Section completed
+                    const totalTime = elapsedTime;
+                    const totalErrors = errorLog.length;
+                    
+                    const newStatus = {
+                        ...sectionCompletionStatus,
+                        [currentSection]: {
+                            completed: true,
+                            completedAt: new Date().toISOString(),
+                            totalTime: totalTime,
+                            attempts: attempts,
+                            errors: totalErrors,
+                            errorLog: errorLog
+                        }
+                    };
+                    
+                    setSectionCompletionStatus(newStatus);
+                    localStorage.setItem('chapter6_completion_status', JSON.stringify(newStatus));
+                    
+                    setScreen('section_complete');
+                }
+            };
+
+            // Download certificate
+            const downloadCertificate = (elementId, filename) => {
+                const element = document.getElementById(elementId);
+                if (!element) return;
+
+                html2canvas(element, { scale: 2 }).then(canvas => {
+                    const link = document.createElement('a');
+                    link.download = filename;
+                    link.href = canvas.toDataURL();
+                    link.click();
+                });
+            };
+
+            // Clear all progress
+            const clearAllProgress = () => {
+                if (confirm('確定要清除所有完成記錄嗎？此操作無法復原。')) {
+                    localStorage.removeItem('chapter6_completion_status');
+                    setSectionCompletionStatus({});
+                    alert('所有記錄已清除！');
+                }
+            };
+
+            // Check if all placed
+            const checkAllPlaced = () => {
+                if (!currentLevel) return false;
+                
+                const totalItems = currentLevel.items ? currentLevel.items.length : 
+                                 (currentLevel.leftOptions ? currentLevel.leftOptions.length : 0);
+                const placedItems = Object.values(droppedItems).flat().length;
+                
+                return placedItems === totalItems;
+            };
+
+            const allPlaced = checkAllPlaced();
+            const totalItems = currentLevel && currentLevel.items ? currentLevel.items.length : 
+                             (currentLevel && currentLevel.leftOptions ? currentLevel.leftOptions.length : 0);
+            const placedItems = Object.values(droppedItems).flat().length;
+
+            // Check if all sections completed
+            const allSectionsCompleted = Object.keys(CHAPTER_DATA).every(
+                sectionId => sectionCompletionStatus[sectionId]?.completed
+            );
+
+            // ===========================================
+            // RENDER: SECTION SELECT
+            // ===========================================
+            if (screen === 'section_select') {
+                const sections = [
+                    { id: '6-1', title: '6-1 元素的探索', icon: 'fa-flask', levels: 3, color: 'from-green-400 to-teal-600' },
+                    { id: '6-2', title: '6-2 元素週期表', icon: 'fa-table', levels: 2, color: 'from-blue-400 to-cyan-600' },
+                    { id: '6-3', title: '6-3 化合物與原子概念的發展', icon: 'fa-atom', levels: 3, color: 'from-purple-400 to-pink-600' },
+                    { id: '6-4', title: '6-4 分子與化學式', icon: 'fa-dna', levels: 3, color: 'from-orange-400 to-red-600' }
+                ];
+
+                return (
+                    <div className="min-h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 p-4">
+                        <div className="max-w-6xl mx-auto">
+                            {/* Header */}
+                            <div className="text-center mb-8 mt-8">
+                                <div className="flex justify-between items-center mb-4">
+                                    <div className="flex-1"></div>
+                                    <h1 className="flex-1 text-4xl md:text-5xl font-black text-white drop-shadow-lg">
+                                        第6章 探索物質組成
+                                    </h1>
+                                    <div className="flex-1 flex justify-end items-center gap-2">
+                                        <button
+                                            onClick={() => setFontScale(Math.max(70, fontScale - 10))}
+                                            className="bg-white/20 hover:bg-white/30 text-white px-3 py-2 rounded-lg backdrop-blur-sm transition-all"
+                                            title="縮小字體"
+                                        >
+                                            A⁻
+                                        </button>
+                                        <button
+                                            onClick={() => setFontScale(Math.min(150, fontScale + 10))}
+                                            className="bg-white/20 hover:bg-white/30 text-white px-3 py-2 rounded-lg backdrop-blur-sm transition-all"
+                                            title="放大字體"
+                                        >
+                                            A⁺
+                                        </button>
+                                    </div>
+                                </div>
+                                <p className="text-xl text-white/90 mt-2">選擇小節開始闖關</p>
+                            </div>
+
+                            {/* Sections Grid */}
+                            <div className="grid md:grid-cols-2 gap-6 mb-8">
+                                {sections.map(section => {
+                                    const isCompleted = sectionCompletionStatus[section.id]?.completed;
+                                    return (
+                                        <div
+                                            key={section.id}
+                                            onClick={() => startSection(section.id)}
+                                            className="glass-effect rounded-2xl p-6 cursor-pointer hover:scale-105 transition-transform relative overflow-hidden group"
+                                        >
+                                            <div className={`absolute inset-0 bg-gradient-to-br ${section.color} opacity-20 group-hover:opacity-30 transition-opacity`}></div>
+                                            <div className="relative z-10">
+                                                <div className="flex items-center justify-between mb-4">
+                                                    <div className="flex items-center gap-3">
+                                                        <i className={`fas ${section.icon} text-3xl text-white`}></i>
+                                                        <h3 className="text-xl font-bold text-white">{section.title}</h3>
+                                                    </div>
+                                                    {isCompleted && (
+                                                        <div className="bg-green-500 text-white px-3 py-1 rounded-full text-sm font-bold">
+                                                            <i className="fas fa-check mr-1"></i>
+                                                            已完成
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <div className="text-white/80">
+                                                    <i className="fas fa-gamepad mr-2"></i>
+                                                    共 {section.levels} 個關卡
+                                                </div>
+                                                {isCompleted && sectionCompletionStatus[section.id] && (
+                                                    <div className="mt-3 text-sm text-white/70">
+                                                        <div>完成時間：{sectionCompletionStatus[section.id].totalTime} 秒</div>
+                                                        <div>嘗試次數：{sectionCompletionStatus[section.id].attempts} 次</div>
+                                                        <div>錯誤次數：{sectionCompletionStatus[section.id].errors} 次</div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+
+                            {/* All Complete Certificate */}
+                            {allSectionsCompleted && (
+                                <div className="glass-effect rounded-2xl p-6 mb-8">
+                                    <div className="text-center">
+                                        <i className="fas fa-trophy text-6xl text-yellow-300 mb-4"></i>
+                                        <h2 className="text-3xl font-bold text-white mb-4">🎉 恭喜完成所有小節！</h2>
+                                        <button
+                                            onClick={() => setScreen('all_complete')}
+                                            className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-8 py-3 rounded-xl font-bold hover:scale-105 transition-transform"
+                                        >
+                                            <i className="fas fa-certificate mr-2"></i>
+                                            查看完成證書
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Clear Progress Button */}
+                            <div className="text-center">
+                                <button
+                                    onClick={clearAllProgress}
+                                    className="bg-red-500/80 hover:bg-red-600 text-white px-6 py-3 rounded-xl font-bold transition-all"
+                                >
+                                    <i className="fas fa-trash-alt mr-2"></i>
+                                    清除所有完成記錄
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            // ===========================================
+            // RENDER: GAME SCREEN
+            // ===========================================
+            if (screen === 'game' && currentLevel) {
+                const colors = themeColors[currentSection];
+                
+                return (
+                    <div className={`min-h-screen bg-gradient-to-br ${colors.primary} p-4`}>
+                        <div className="max-w-6xl mx-auto">
+                            {/* Header */}
+                            <div className={`bg-gradient-to-r ${colors.header} rounded-2xl p-4 mb-6 shadow-lg`}>
+                                <div className="flex flex-wrap items-center justify-between gap-4">
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            onClick={() => setFontScale(Math.max(70, fontScale - 10))}
+                                            className="bg-white/20 hover:bg-white/30 text-white px-2 py-1 rounded text-sm"
+                                        >
+                                            A⁻
+                                        </button>
+                                        <button
+                                            onClick={() => setFontScale(Math.min(150, fontScale + 10))}
+                                            className="bg-white/20 hover:bg-white/30 text-white px-2 py-1 rounded text-sm"
+                                        >
+                                            A⁺
+                                        </button>
+                                        <h2 className="text-2xl font-bold text-white ml-2">{currentLevel.title}</h2>
+                                    </div>
+                                    <div className="flex items-center gap-4 text-white">
+                                        <div className="progress-bar bg-white/20 rounded-full px-4 py-2">
+                                            <i className="fas fa-layer-group mr-2"></i>
+                                            關卡 {currentLevelIndex + 1}/{totalLevels}
+                                        </div>
+                                        <div className="bg-white/20 rounded-full px-4 py-2">
+                                            <i className="fas fa-clock mr-2"></i>
+                                            {elapsedTime} 秒
+                                        </div>
+                                        <div className="bg-white/20 rounded-full px-4 py-2">
+                                            <i className="fas fa-redo mr-2"></i>
+                                            {attempts} 次
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Description */}
+                            <div className="bg-white rounded-xl p-6 mb-6 shadow-lg">
+                                <p className="text-lg text-gray-700">{currentLevel.description}</p>
+                            </div>
+
+                            {/* Classification Type */}
+                            {currentLevel.type === 'classification' && (
+                                <div className="grid md:grid-cols-2 gap-6 mb-6">
+                                    {currentLevel.zones.map(zone => (
+                                        <div
+                                            key={zone.id}
+                                            data-zone={zone.id}
+                                            onDrop={(e) => handleDrop(e, zone.id)}
+                                            onDragOver={handleDragOver}
+                                            onTouchEnd={(e) => handleTouchEnd(e, zone.id)}
+                                            className={`drop-zone bg-white rounded-xl p-6 border-4 ${
+                                                gameState === 'wrong' && 
+                                                JSON.stringify((droppedItems[zone.id] || []).sort()) !== 
+                                                JSON.stringify((currentLevel.solution[zone.id] || []).sort())
+                                                    ? 'border-red-500 shake' 
+                                                    : gameState === 'completed'
+                                                    ? 'border-green-500'
+                                                    : 'border-dashed border-gray-300'
+                                            }`}
+                                        >
+                                            <div className="flex items-center gap-3 mb-4">
+                                                <i className={`fas ${zone.icon} text-2xl ${colors.badge} text-white p-3 rounded-lg`}></i>
+                                                <h3 className="text-xl font-bold text-gray-800">{zone.title}</h3>
+                                            </div>
+                                            <div className="space-y-2">
+                                                {(droppedItems[zone.id] || []).map(val => {
+                                                    const item = currentLevel.items.find(i => i.val === val);
+                                                    return item ? (
+                                                        <div
+                                                            key={item.id}
+                                                            draggable
+                                                            onDragStart={(e) => handleDragStart(e, item)}
+                                                            onDragEnd={handleDragEnd}
+                                                            onTouchStart={(e) => handleTouchStart(e, item)}
+                                                            onTouchMove={handleTouchMove}
+                                                            className="drag-item bg-blue-500 text-white px-4 py-3 rounded-lg cursor-move hover:bg-blue-600 transition-colors"
+                                                        >
+                                                            {item.text}
+                                                        </div>
+                                                    ) : null;
+                                                })}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+
+                            {/* Formula Match Type */}
+                            {currentLevel.type === 'formula_match' && (
+                                <div className="grid md:grid-cols-2 gap-6 mb-6">
+                                    <div className="space-y-4">
+                                        <h3 className="text-xl font-bold text-white mb-4">左側選項</h3>
+                                        {currentLevel.leftOptions.map(left => (
+                                            <div
+                                                key={left.id}
+                                                data-zone={left.val}
+                                                onDrop={(e) => handleDrop(e, left.val)}
+                                                onDragOver={handleDragOver}
+                                                onTouchEnd={(e) => handleTouchEnd(e, left.val)}
+                                                className={`drop-zone bg-white rounded-xl p-4 border-4 ${
+                                                    gameState === 'wrong' && 
+                                                    JSON.stringify((droppedItems[left.val] || []).sort()) !== 
+                                                    JSON.stringify((currentLevel.solution[left.val] || []).sort())
+                                                        ? 'border-red-500 shake' 
+                                                        : gameState === 'completed'
+                                                        ? 'border-green-500'
+                                                        : 'border-dashed border-gray-300'
+                                                }`}
+                                            >
+                                                <div className="font-bold text-gray-800 mb-2">{left.text}</div>
+                                                <div className="min-h-[60px] space-y-2">
+                                                    {(droppedItems[left.val] || []).map(val => {
+                                                        const right = currentLevel.rightOptions.find(r => r.val === val);
+                                                        return right ? (
+                                                            <div
+                                                                key={right.id}
+                                                                draggable
+                                                                onDragStart={(e) => handleDragStart(e, right)}
+                                                                onDragEnd={handleDragEnd}
+                                                                onTouchStart={(e) => handleTouchStart(e, right)}
+                                                                onTouchMove={handleTouchMove}
+                                                                className="drag-item bg-purple-500 text-white px-3 py-2 rounded-lg cursor-move hover:bg-purple-600 transition-colors text-sm"
+                                                            >
+                                                                {right.text}
+                                                            </div>
+                                                        ) : null;
+                                                    })}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <div>
+                                        <h3 className="text-xl font-bold text-white mb-4">右側選項</h3>
+                                        <div
+                                            data-zone="options"
+                                            onDrop={(e) => handleDrop(e, 'options')}
+                                            onDragOver={handleDragOver}
+                                            onTouchEnd={(e) => handleTouchEnd(e, 'options')}
+                                            className="drop-zone bg-white rounded-xl p-4 min-h-[200px] border-4 border-dashed border-gray-300"
+                                        >
+                                            <div className="space-y-2">
+                                                {currentLevel.rightOptions.filter(right => {
+                                                    const isPlaced = Object.values(droppedItems).flat().includes(right.val);
+                                                    return !isPlaced;
+                                                }).map(right => (
+                                                    <div
+                                                        key={right.id}
+                                                        draggable
+                                                        onDragStart={(e) => handleDragStart(e, right)}
+                                                        onDragEnd={handleDragEnd}
+                                                        onTouchStart={(e) => handleTouchStart(e, right)}
+                                                        onTouchMove={handleTouchMove}
+                                                        className="drag-item bg-purple-500 text-white px-4 py-3 rounded-lg cursor-move hover:bg-purple-600 transition-colors"
+                                                    >
+                                                        {right.text}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Formula Type */}
+                            {currentLevel.type === 'formula' && (
+                                <div className="space-y-6 mb-6">
+                                    <div className="grid md:grid-cols-3 gap-4">
+                                        {currentLevel.formulaSlots.map(slot => (
+                                            <div
+                                                key={slot.id}
+                                                data-zone={slot.id}
+                                                onDrop={(e) => handleDrop(e, slot.id)}
+                                                onDragOver={handleDragOver}
+                                                onTouchEnd={(e) => handleTouchEnd(e, slot.id)}
+                                                className={`drop-zone bg-white rounded-xl p-4 border-4 ${
+                                                    gameState === 'wrong' && 
+                                                    JSON.stringify((droppedItems[slot.id] || []).sort()) !== 
+                                                    JSON.stringify((currentLevel.solution[slot.id] || []).sort())
+                                                        ? 'border-red-500 shake' 
+                                                        : gameState === 'completed'
+                                                        ? 'border-green-500'
+                                                        : 'border-dashed border-gray-300'
+                                                }`}
+                                            >
+                                                <div className="font-bold text-gray-700 mb-2">{slot.placeholder}</div>
+                                                <div className="min-h-[60px] space-y-2">
+                                                    {(droppedItems[slot.id] || []).map(val => {
+                                                        const item = currentLevel.items.find(i => i.val === val);
+                                                        return item ? (
+                                                            <div
+                                                                key={item.id}
+                                                                draggable
+                                                                onDragStart={(e) => handleDragStart(e, item)}
+                                                                onDragEnd={handleDragEnd}
+                                                                onTouchStart={(e) => handleTouchStart(e, item)}
+                                                                onTouchMove={handleTouchMove}
+                                                                className="drag-item bg-orange-500 text-white px-3 py-2 rounded-lg cursor-move hover:bg-orange-600 transition-colors"
+                                                            >
+                                                                {item.text}
+                                                            </div>
+                                                        ) : null;
+                                                    })}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <div>
+                                        <h3 className="text-xl font-bold text-white mb-4">待分類項目</h3>
+                                        <div
+                                            data-zone="items"
+                                            onDrop={(e) => handleDrop(e, 'items')}
+                                            onDragOver={handleDragOver}
+                                            onTouchEnd={(e) => handleTouchEnd(e, 'items')}
+                                            className="drop-zone bg-white rounded-xl p-4 min-h-[100px] border-4 border-dashed border-gray-300"
+                                        >
+                                            <div className="flex flex-wrap gap-2">
+                                                {currentLevel.items.filter(item => {
+                                                    const isPlaced = Object.values(droppedItems).flat().includes(item.val);
+                                                    return !isPlaced;
+                                                }).map(item => (
+                                                    <div
+                                                        key={item.id}
+                                                        draggable
+                                                        onDragStart={(e) => handleDragStart(e, item)}
+                                                        onDragEnd={handleDragEnd}
+                                                        onTouchStart={(e) => handleTouchStart(e, item)}
+                                                        onTouchMove={handleTouchMove}
+                                                        className="drag-item bg-orange-500 text-white px-4 py-3 rounded-lg cursor-move hover:bg-orange-600 transition-colors"
+                                                    >
+                                                        {item.text}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Items Pool for Classification */}
+                            {currentLevel.type === 'classification' && (
+                                <div>
+                                    <h3 className="text-2xl font-bold text-white mb-4">待分類項目</h3>
+                                    <div
+                                        data-zone="items"
+                                        onDrop={(e) => handleDrop(e, 'items')}
+                                        onDragOver={handleDragOver}
+                                        onTouchEnd={(e) => handleTouchEnd(e, 'items')}
+                                        className="drop-zone bg-white rounded-xl p-6 min-h-[120px] border-4 border-dashed border-gray-300"
+                                    >
+                                        <div className="flex flex-wrap gap-3">
+                                            {currentLevel.items.filter(item => {
+                                                const isPlaced = Object.values(droppedItems).flat().includes(item.val);
+                                                return !isPlaced;
+                                            }).map(item => (
+                                                <div
+                                                    key={item.id}
+                                                    draggable
+                                                    onDragStart={(e) => handleDragStart(e, item)}
+                                                    onDragEnd={handleDragEnd}
+                                                    onTouchStart={(e) => handleTouchStart(e, item)}
+                                                    onTouchMove={handleTouchMove}
+                                                    className="drag-item bg-blue-500 text-white px-6 py-3 rounded-lg cursor-move hover:bg-blue-600 transition-colors font-medium"
+                                                >
+                                                    {item.text}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Action Buttons */}
+                            <div className="flex justify-center gap-4 mt-8">
+                                <button
+                                    onClick={() => {
+                                        setScreen('section_select');
+                                        setCurrentSection(null);
+                                    }}
+                                    className="bg-gray-500 hover:bg-gray-600 text-white px-8 py-4 rounded-xl font-bold transition-all"
+                                >
+                                    <i className="fas fa-home mr-2"></i>
+                                    返回選單
+                                </button>
+                                
+                                {gameState === 'playing' && (
+                                    <button
+                                        onClick={checkAnswer}
+                                        disabled={!allPlaced}
+                                        className={`px-8 py-4 rounded-xl font-bold transition-all ${
+                                            allPlaced 
+                                                ? 'bg-green-500 hover:bg-green-600 text-white cursor-pointer' 
+                                                : 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                                        }`}
+                                    >
+                                        <i className="fas fa-check mr-2"></i>
+                                        {allPlaced ? '檢查答案' : `尚未完成 (${placedItems}/${totalItems})`}
+                                    </button>
+                                )}
+                                
+                                {gameState === 'completed' && (
+                                    <button
+                                        onClick={nextLevel}
+                                        className="bg-green-500 hover:bg-green-600 text-white px-8 py-4 rounded-xl font-bold transition-all"
+                                    >
+                                        <i className="fas fa-arrow-right mr-2"></i>
+                                        {currentLevelIndex < totalLevels - 1 ? '下一關' : '完成小節'}
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            // ===========================================
+            // RENDER: SECTION COMPLETE
+            // ===========================================
+            if (screen === 'section_complete') {
+                const colors = themeColors[currentSection];
+                const status = sectionCompletionStatus[currentSection];
+                
+                return (
+                    <div className={`min-h-screen bg-gradient-to-br ${colors.primary} p-4 flex items-center justify-center`}>
+                        <div className="max-w-2xl w-full">
+                            <div id="section-certificate" className="bg-white rounded-3xl p-8 shadow-2xl">
+                                <div className="text-center mb-6">
+                                    <i className="fas fa-trophy text-6xl text-yellow-500 mb-4 float"></i>
+                                    <h1 className="text-4xl font-black text-gray-800 mb-2">
+                                        🎉 恭喜完成！
+                                    </h1>
+                                    <p className="text-xl text-gray-600">
+                                        你已完成「{currentSection}」所有關卡
+                                    </p>
+                                </div>
+                                
+                                <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl p-6 mb-6">
+                                    <div className="grid grid-cols-2 gap-4 text-center">
+                                        <div>
+                                            <div className="text-3xl font-bold text-blue-600">{status.totalTime}</div>
+                                            <div className="text-gray-600">總時間（秒）</div>
+                                        </div>
+                                        <div>
+                                            <div className="text-3xl font-bold text-green-600">{totalLevels}</div>
+                                            <div className="text-gray-600">完成關卡</div>
+                                        </div>
+                                        <div>
+                                            <div className="text-3xl font-bold text-orange-600">{status.attempts}</div>
+                                            <div className="text-gray-600">嘗試次數</div>
+                                        </div>
+                                        <div>
+                                            <div className="text-3xl font-bold text-red-600">{status.errors}</div>
+                                            <div className="text-gray-600">錯誤次數</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {status.errorLog && status.errorLog.length > 0 && (
+                                    <div className="bg-red-50 rounded-2xl p-6 mb-6">
+                                        <h3 className="text-lg font-bold text-red-800 mb-3">
+                                            <i className="fas fa-exclamation-triangle mr-2"></i>
+                                            錯誤記錄（供複習）
+                                        </h3>
+                                        <div className="space-y-2 max-h-60 overflow-y-auto">
+                                            {status.errorLog.map((error, index) => (
+                                                <div key={index} className="bg-white p-3 rounded-lg text-sm">
+                                                    <div className="font-bold text-gray-700">{error.levelTitle}</div>
+                                                    <div className="text-red-600">✗ 你的答案：{error.wrongAnswer}</div>
+                                                    <div className="text-green-600">✓ 正確答案：{error.correctAnswer}</div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                                
+                                <div className="text-center text-sm text-gray-500">
+                                    完成時間：{new Date(status.completedAt).toLocaleString('zh-TW')}
+                                </div>
+                            </div>
+                            
+                            <div className="flex justify-center gap-4 mt-6">
+                                <button
+                                    onClick={() => downloadCertificate('section-certificate', `第6章_${currentSection}_完成證書.png`)}
+                                    className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-xl font-bold transition-all"
+                                >
+                                    <i className="fas fa-download mr-2"></i>
+                                    下載證書
+                                </button>
+                                <button
+                                    onClick={() => setScreen('section_select')}
+                                    className="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-xl font-bold transition-all"
+                                >
+                                    <i className="fas fa-home mr-2"></i>
+                                    返回選單
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            // ===========================================
+            // RENDER: ALL COMPLETE
+            // ===========================================
+            if (screen === 'all_complete') {
+                const allErrorLogs = Object.keys(sectionCompletionStatus).reduce((acc, sectionId) => {
+                    const status = sectionCompletionStatus[sectionId];
+                    if (status.errorLog && status.errorLog.length > 0) {
+                        acc[sectionId] = status.errorLog;
+                    }
+                    return acc;
+                }, {});
+
+                const totalErrors = Object.values(allErrorLogs).reduce((sum, logs) => sum + logs.length, 0);
+
+                return (
+                    <div className="min-h-screen bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 p-4 flex items-center justify-center">
+                        <div className="max-w-3xl w-full">
+                            <div id="all-complete-certificate" className="bg-white rounded-3xl p-8 shadow-2xl">
+                                <div className="text-center mb-6">
+                                    <i className="fas fa-medal text-8xl text-yellow-500 mb-4 float"></i>
+                                    <h1 className="text-5xl font-black text-gray-800 mb-2">
+                                        🏆 全章完成！
+                                    </h1>
+                                    <p className="text-2xl text-gray-600 mb-4">
+                                        恭喜你完成第6章所有小節
+                                    </p>
+                                    <div className="text-lg text-gray-500">
+                                        探索物質組成
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-4 gap-4 mb-6">
+                                    {Object.keys(CHAPTER_DATA).map(sectionId => {
+                                        const status = sectionCompletionStatus[sectionId];
+                                        return (
+                                            <div key={sectionId} className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl p-4 text-center">
+                                                <div className="text-lg font-bold text-gray-800 mb-2">{sectionId}</div>
+                                                <div className="text-sm text-gray-600">{status.totalTime}秒</div>
+                                                <div className="text-sm text-gray-600">{status.errors}錯</div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+
+                                {totalErrors > 0 && (
+                                    <div className="bg-red-50 rounded-2xl p-6 mb-6">
+                                        <h3 className="text-xl font-bold text-red-800 mb-4">
+                                            <i className="fas fa-clipboard-list mr-2"></i>
+                                            全章錯誤記錄（共 {totalErrors} 個錯誤）
+                                        </h3>
+                                        <div className="space-y-4 max-h-96 overflow-y-auto">
+                                            {Object.keys(allErrorLogs).map(sectionId => (
+                                                <div key={sectionId}>
+                                                    <div className="font-bold text-gray-700 mb-2">{sectionId}</div>
+                                                    <div className="space-y-2">
+                                                        {allErrorLogs[sectionId].map((error, index) => (
+                                                            <div key={index} className="bg-white p-3 rounded-lg text-sm">
+                                                                <div className="font-bold text-gray-600">{error.levelTitle}</div>
+                                                                <div className="text-red-600">✗ {error.wrongAnswer}</div>
+                                                                <div className="text-green-600">✓ {error.correctAnswer}</div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                <div className="text-center">
+                                    <div className="text-2xl font-bold text-gray-800 mb-2">
+                                        你是化學探索大師！
+                                    </div>
+                                    <div className="text-gray-600">
+                                        繼續保持學習的熱情 💪
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="flex justify-center gap-4 mt-6">
+                                <button
+                                    onClick={() => downloadCertificate('all-complete-certificate', '第6章_全章完成證書.png')}
+                                    className="bg-yellow-500 hover:bg-yellow-600 text-white px-8 py-4 rounded-xl font-bold transition-all text-lg"
+                                >
+                                    <i className="fas fa-download mr-2"></i>
+                                    下載完成證書
+                                </button>
+                                <button
+                                    onClick={() => setScreen('section_select')}
+                                    className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-4 rounded-xl font-bold transition-all text-lg"
+                                >
+                                    <i className="fas fa-home mr-2"></i>
+                                    返回選單
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            return null;
+        }
+
+        // ===========================================
+        // RENDER TO DOM
+        // ===========================================
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
