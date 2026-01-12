@@ -735,17 +735,45 @@
             const checkAllPlaced = () => {
                 if (!currentLevel) return false;
                 
-                const totalItems = currentLevel.items ? currentLevel.items.length : 
-                                 (currentLevel.leftOptions ? currentLevel.leftOptions.length : 0);
-                const placedItems = Object.values(droppedItems).flat().length;
+                let totalItems = 0;
+                let placedItems = 0;
+                
+                if (currentLevel.type === 'classification' || currentLevel.type === 'formula') {
+                    totalItems = currentLevel.items ? currentLevel.items.length : 0;
+                    placedItems = Object.values(droppedItems).flat().filter(val => val !== 'options' && val !== 'items').length;
+                } else if (currentLevel.type === 'formula_match') {
+                    // For formula_match, count right options that need to be placed
+                    totalItems = currentLevel.rightOptions ? currentLevel.rightOptions.length : 0;
+                    placedItems = Object.keys(droppedItems).reduce((count, key) => {
+                        if (key !== 'options') {
+                            return count + droppedItems[key].length;
+                        }
+                        return count;
+                    }, 0);
+                }
                 
                 return placedItems === totalItems;
             };
 
             const allPlaced = checkAllPlaced();
-            const totalItems = currentLevel && currentLevel.items ? currentLevel.items.length : 
-                             (currentLevel && currentLevel.leftOptions ? currentLevel.leftOptions.length : 0);
-            const placedItems = Object.values(droppedItems).flat().length;
+            
+            let totalItems = 0;
+            let placedItems = 0;
+            
+            if (currentLevel) {
+                if (currentLevel.type === 'classification' || currentLevel.type === 'formula') {
+                    totalItems = currentLevel.items ? currentLevel.items.length : 0;
+                    placedItems = Object.values(droppedItems).flat().filter(val => val !== 'options' && val !== 'items').length;
+                } else if (currentLevel.type === 'formula_match') {
+                    totalItems = currentLevel.rightOptions ? currentLevel.rightOptions.length : 0;
+                    placedItems = Object.keys(droppedItems).reduce((count, key) => {
+                        if (key !== 'options') {
+                            return count + droppedItems[key].length;
+                        }
+                        return count;
+                    }, 0);
+                }
+            }
 
             // Check if all sections completed
             const allSectionsCompleted = Object.keys(CHAPTER_DATA).every(
