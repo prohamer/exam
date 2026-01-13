@@ -519,15 +519,15 @@
                         { id: 'three', title: '3個原子', icon: 'fa-ellipsis' }
                     ],
                     items: [
-                        { id: 'item1', text: '氫氣 (H₂)', val: 'two_atoms' },
-                        { id: 'item2', text: '水 (H₂O)', val: 'three_atoms' },
-                        { id: 'item3', text: '臭氧 (O₃)', val: 'three_atoms' },
-                        { id: 'item4', text: '氦氣 (He)', val: 'one_atom' }
+                        { id: 'item1', text: '氫氣 (H₂)', val: 'h2' },
+                        { id: 'item2', text: '水 (H₂O)', val: 'h2o' },
+                        { id: 'item3', text: '臭氧 (O₃)', val: 'o3' },
+                        { id: 'item4', text: '氦氣 (He)', val: 'he' }
                     ],
                     solution: {
-                        one: ['one_atom'],
-                        two: ['two_atoms'],
-                        three: ['three_atoms']
+                        one: ['he'],
+                        two: ['h2'],
+                        three: ['h2o', 'o3']
                     }
                 },
                 {
@@ -567,17 +567,17 @@
                         { id: 'mixture', title: '混合物', icon: 'fa-blender' }
                     ],
                     items: [
-                        { id: 'item1', text: '氧氣 (O₂)', val: 'element_val' },
-                        { id: 'item2', text: '水 (H₂O)', val: 'compound_val' },
-                        { id: 'item3', text: '空氣', val: 'mixture_val' },
-                        { id: 'item4', text: '鐵 (Fe)', val: 'element_val' },
-                        { id: 'item5', text: '食鹽水', val: 'mixture_val' },
-                        { id: 'item6', text: '二氧化碳 (CO₂)', val: 'compound_val' }
+                        { id: 'item1', text: '氧氣 (O₂)', val: 'oxygen_o2' },
+                        { id: 'item2', text: '水 (H₂O)', val: 'water_h2o' },
+                        { id: 'item3', text: '空氣', val: 'air' },
+                        { id: 'item4', text: '鐵 (Fe)', val: 'iron_fe' },
+                        { id: 'item5', text: '食鹽水', val: 'saltwater' },
+                        { id: 'item6', text: '二氧化碳 (CO₂)', val: 'co2' }
                     ],
                     solution: {
-                        element: ['element_val'],
-                        compound: ['compound_val'],
-                        mixture: ['mixture_val']
+                        element: ['oxygen_o2', 'iron_fe'],
+                        compound: ['water_h2o', 'co2'],
+                        mixture: ['air', 'saltwater']
                     }
                 }
             ]
