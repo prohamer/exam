@@ -5,80 +5,166 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>8上第6章 探索物質組成 - 互動式闖關系統</title>
     
-    <!-- React -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
-    
-    <!-- html2canvas for certificate -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     
     <style>
         * {
-            font-family: 'Noto+Sans TC', sans-serif;
-        }
-        
-        body {
             margin: 0;
             padding: 0;
-            overscroll-behavior: none;
-        }
-        
-        .glass-effect {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-        
-        .drag-item {
-            touch-action: none;
-            user-select: none;
+            box-sizing: border-box;
             -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            cursor: default;
         }
-        
+
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            overscroll-behavior: none;
+            -webkit-user-select: none;
+            user-select: none;
+            overflow-x: hidden;
+        }
+
+        input, textarea {
+            -webkit-user-select: text;
+            -moz-user-select: text;
+            -ms-user-select: text;
+            user-select: text;
+            cursor: text;
+        }
+
+        button, a, .clickable {
+            cursor: pointer !important;
+        }
+
+        .drag-item {
+            transition: all 0.2s ease;
+            cursor: grab !important;
+            touch-action: none;
+            -webkit-touch-callout: none;
+        }
+
+        .drag-item:active {
+            cursor: grabbing !important;
+        }
+
+        @media (hover: hover) {
+            .drag-item:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            }
+        }
+
+        .dragging {
+            opacity: 0.5;
+            transform: scale(1.05);
+            z-index: 1000;
+            position: fixed;
+            pointer-events: none;
+        }
+
+        .cursor-move {
+            cursor: move !important;
+            touch-action: none;
+            -webkit-touch-callout: none;
+        }
+
+        .cursor-move:active {
+            cursor: grabbing !important;
+        }
+
         .drop-zone {
-            min-height: 120px;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
+            min-height: 80px;
         }
-        
+
         .drop-zone.drag-over {
-            background-color: rgba(59, 130, 246, 0.1);
-            border-color: #3b82f6;
+            background: rgba(59, 130, 246, 0.2);
+            border: 3px dashed #3b82f6 !important;
             transform: scale(1.02);
         }
-        
+
+        .formula-slot {
+            transition: all 0.2s ease;
+            min-height: 70px;
+            min-width: 100px;
+        }
+
+        .formula-slot.drag-over {
+            background: rgba(59, 130, 246, 0.3);
+            border: 3px dashed #3b82f6 !important;
+            transform: scale(1.05);
+        }
+
+        .correct-answer {
+            animation: correctPulse 0.6s ease-out;
+            border: 3px solid #10b981 !important;
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        .wrong-answer {
+            animation: shake 0.5s ease-out;
+            border: 3px solid #ef4444 !important;
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        @keyframes correctPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
         @keyframes shake {
             0%, 100% { transform: translateX(0); }
             25% { transform: translateX(-10px); }
             75% { transform: translateX(10px); }
         }
-        
-        .shake {
-            animation: shake 0.5s ease-in-out;
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-        
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-20px); }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-out;
         }
-        
-        .float {
-            animation: float 3s ease-in-out infinite;
+
+        @keyframes bounce-slow {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
         }
-        
+
+        .animate-bounce-slow {
+            animation: bounce-slow 2s ease-in-out infinite;
+        }
+
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .formula-display {
+            font-size: 1.5rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
         .progress-bar {
             max-width: 50%;
         }
-        
+
         @media (max-width: 768px) {
             .progress-bar {
                 max-width: 100%;
@@ -92,9 +178,122 @@
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
 
-        // ===========================================
-        // GAME DATA - 所有關卡數據
-        // ===========================================
+        let touchDragData = null;
+        let touchDragElement = null;
+        let touchClone = null;
+        let touchRemoveCallback = null;
+        let touchSourceZoneId = null;
+
+        function handleTouchStartGlobal(e, item, removeCallback) {
+            e.preventDefault();
+            
+            touchDragData = item;
+            touchDragElement = e.currentTarget;
+            touchRemoveCallback = removeCallback;
+            
+            const scrollContainer = document.querySelector('.overflow-y-auto');
+            if (scrollContainer) {
+                scrollContainer.style.overflowY = 'hidden';
+                scrollContainer.style.touchAction = 'none';
+            }
+            
+            const sourceZone = touchDragElement.closest('.drop-zone, .formula-slot');
+            touchSourceZoneId = sourceZone ? sourceZone.getAttribute('data-zone-id') : null;
+            
+            const touch = e.touches[0];
+            
+            touchClone = touchDragElement.cloneNode(true);
+            touchClone.style.position = 'fixed';
+            touchClone.style.zIndex = '10000';
+            touchClone.style.opacity = '0.8';
+            touchClone.style.pointerEvents = 'none';
+            touchClone.style.width = touchDragElement.offsetWidth + 'px';
+            touchClone.style.left = (touch.clientX - touchDragElement.offsetWidth / 2) + 'px';
+            touchClone.style.top = (touch.clientY - touchDragElement.offsetHeight / 2) + 'px';
+            touchClone.style.transition = 'none';
+            document.body.appendChild(touchClone);
+            
+            touchDragElement.style.opacity = '0.2';
+            touchDragElement.style.transform = 'scale(0.95)';
+            touchDragElement.style.transition = 'opacity 0.2s, transform 0.2s';
+        }
+
+        function handleTouchMoveGlobal(e) {
+            if (!touchClone) return;
+            
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const touch = e.touches[0];
+            
+            touchClone.style.left = (touch.clientX - touchClone.offsetWidth / 2) + 'px';
+            touchClone.style.top = (touch.clientY - touchClone.offsetHeight / 2) + 'px';
+            
+            const dropZones = document.querySelectorAll('.drop-zone, .formula-slot');
+            dropZones.forEach(zone => zone.classList.remove('drag-over'));
+            
+            const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+            if (elementBelow) {
+                const dropZone = elementBelow.closest('.drop-zone, .formula-slot');
+                if (dropZone) {
+                    const targetZoneId = dropZone.getAttribute('data-zone-id');
+                    if (targetZoneId !== touchSourceZoneId) {
+                        dropZone.classList.add('drag-over');
+                    }
+                }
+            }
+        }
+
+        function handleTouchEndGlobal(e, dropCallback) {
+            if (!touchClone) return;
+            
+            const touch = e.changedTouches[0];
+            const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+            
+            let targetZone = null;
+            let targetZoneId = null;
+            if (elementBelow) {
+                targetZone = elementBelow.closest('.drop-zone, .formula-slot');
+                if (targetZone) {
+                    targetZoneId = targetZone.getAttribute('data-zone-id');
+                }
+            }
+            
+            if (touchClone && touchClone.parentNode) {
+                touchClone.parentNode.removeChild(touchClone);
+            }
+            
+            const scrollContainer = document.querySelector('.overflow-y-auto');
+            if (scrollContainer) {
+                scrollContainer.style.overflowY = 'auto';
+                scrollContainer.style.touchAction = '';
+            }
+            
+            const dropZones = document.querySelectorAll('.drop-zone, .formula-slot');
+            dropZones.forEach(zone => zone.classList.remove('drag-over'));
+            
+            const isValidDrop = targetZone && targetZoneId && touchDragData && 
+                              targetZoneId !== touchSourceZoneId;
+            
+            if (isValidDrop && dropCallback) {
+                if (touchRemoveCallback) {
+                    touchRemoveCallback();
+                }
+                dropCallback(touchDragData, targetZoneId);
+            } else {
+                if (touchDragElement) {
+                    touchDragElement.style.opacity = '1';
+                    touchDragElement.style.transform = 'scale(1)';
+                }
+            }
+            
+            touchDragData = null;
+            touchDragElement = null;
+            touchClone = null;
+            touchRemoveCallback = null;
+            touchSourceZoneId = null;
+        }
+
         const CHAPTER_DATA = {
             "6-1": [
                 {
@@ -241,20 +440,20 @@
                 {
                     id: "6-3-1",
                     section: "6-3",
-                    title: "第一關：道耳頓的原子說",
-                    description: "請將原子說的要點與對應的實例配對",
-                    type: "formula_match",
-                    leftOptions: [
-                        { id: 'left1', text: '物質由原子組成', val: 'concept1' },
-                        { id: 'left2', text: '相同元素的原子性質相同', val: 'concept2' },
-                        { id: 'left3', text: '化合物由不同原子以固定比例組成', val: 'concept3' },
-                        { id: 'left4', text: '化學反應是原子重新組合', val: 'concept4' }
+                    title: "第一關：道耳頓的原子說配對",
+                    description: "請將原子說的要點與實例配對",
+                    type: "classification",
+                    zones: [
+                        { id: 'concept1', title: '物質由原子組成', icon: 'fa-atom' },
+                        { id: 'concept2', title: '相同元素的原子性質相同', icon: 'fa-equals' },
+                        { id: 'concept3', title: '化合物由不同原子以固定比例組成', icon: 'fa-layer-group' },
+                        { id: 'concept4', title: '化學反應是原子重新組合', icon: 'fa-arrows-rotate' }
                     ],
-                    rightOptions: [
-                        { id: 'right1', text: '金是由金原子組成', val: 'example1' },
-                        { id: 'right2', text: '所有氧原子的質量相同', val: 'example2' },
-                        { id: 'right3', text: '水分子由2個氫原子和1個氧原子組成', val: 'example3' },
-                        { id: 'right4', text: '氫氣與氧氣反應生成水', val: 'example4' }
+                    items: [
+                        { id: 'item1', text: '金是由金原子組成', val: 'example1' },
+                        { id: 'item2', text: '所有氧原子的質量相同', val: 'example2' },
+                        { id: 'item3', text: '水分子由2個氫原子和1個氧原子組成', val: 'example3' },
+                        { id: 'item4', text: '氫氣與氧氣反應生成水', val: 'example4' }
                     ],
                     solution: {
                         concept1: ['example1'],
@@ -266,12 +465,12 @@
                 {
                     id: "6-3-2",
                     section: "6-3",
-                    title: "第二關：原子結構的組成",
-                    description: "請將原子的組成粒子填入正確位置",
-                    type: "formula",
-                    formulaSlots: [
-                        { id: 'slot1', position: 'left', placeholder: '原子核 = ？ + ？' },
-                        { id: 'slot2', position: 'right', placeholder: '原子 = 原子核 + ？' }
+                    title: "第二關：原子結構組成",
+                    description: "請將原子的組成粒子分類",
+                    type: "classification",
+                    zones: [
+                        { id: 'nucleus', title: '原子核內', icon: 'fa-circle-dot' },
+                        { id: 'electron', title: '原子核外', icon: 'fa-circle' }
                     ],
                     items: [
                         { id: 'item1', text: '質子', val: 'proton' },
@@ -279,30 +478,31 @@
                         { id: 'item3', text: '電子', val: 'electron' }
                     ],
                     solution: {
-                        slot1: ['proton', 'neutron'],
-                        slot2: ['electron']
+                        nucleus: ['proton', 'neutron'],
+                        electron: ['electron']
                     }
                 },
                 {
                     id: "6-3-3",
                     section: "6-3",
-                    title: "第三關：質量數與原子序計算",
-                    description: "已知鈹原子（⁹₄Be），請計算其質子數、中子數與電子數",
-                    type: "formula",
-                    formulaSlots: [
-                        { id: 'slot1', position: 'left', placeholder: '質子數 = ？' },
-                        { id: 'slot2', position: 'middle', placeholder: '中子數 = ？' },
-                        { id: 'slot3', position: 'right', placeholder: '電子數 = ？' }
+                    title: "第三關：原子計算",
+                    description: "鈹原子（⁹₄Be）中，請分類以下數值",
+                    type: "classification",
+                    zones: [
+                        { id: 'four', title: '數值為 4', icon: 'fa-4' },
+                        { id: 'five', title: '數值為 5', icon: 'fa-5' },
+                        { id: 'nine', title: '數值為 9', icon: 'fa-9' }
                     ],
                     items: [
-                        { id: 'item1', text: '4', val: '4' },
-                        { id: 'item2', text: '5', val: '5' },
-                        { id: 'item3', text: '9', val: '9' }
+                        { id: 'item1', text: '質子數', val: 'four_val' },
+                        { id: 'item2', text: '中子數', val: 'five_val' },
+                        { id: 'item3', text: '電子數', val: 'four_val' },
+                        { id: 'item4', text: '質量數', val: 'nine_val' }
                     ],
                     solution: {
-                        slot1: ['4'],
-                        slot2: ['5'],
-                        slot3: ['4']
+                        four: ['four_val'],
+                        five: ['five_val'],
+                        nine: ['nine_val']
                     }
                 }
             ],
@@ -310,105 +510,88 @@
                 {
                     id: "6-4-1",
                     section: "6-4",
-                    title: "第一關：分子的組成",
-                    description: "請將分子與其組成原子數配對",
-                    type: "formula_match",
-                    leftOptions: [
-                        { id: 'left1', text: '氫氣 (H₂)', val: 'H2' },
-                        { id: 'left2', text: '水 (H₂O)', val: 'H2O' },
-                        { id: 'left3', text: '臭氧 (O₃)', val: 'O3' },
-                        { id: 'left4', text: '氦氣 (He)', val: 'He' }
+                    title: "第一關：分子的原子數",
+                    description: "請將分子依其原子數分類",
+                    type: "classification",
+                    zones: [
+                        { id: 'one', title: '1個原子', icon: 'fa-circle' },
+                        { id: 'two', title: '2個原子', icon: 'fa-grip-lines' },
+                        { id: 'three', title: '3個原子', icon: 'fa-ellipsis' }
                     ],
-                    rightOptions: [
-                        { id: 'right1', text: '1個原子', val: '1atom' },
-                        { id: 'right2', text: '2個原子', val: '2atoms' },
-                        { id: 'right3', text: '3個原子（同種）', val: '3atoms_same' },
-                        { id: 'right4', text: '3個原子（不同種）', val: '3atoms_diff' }
+                    items: [
+                        { id: 'item1', text: '氫氣 (H₂)', val: 'two_atoms' },
+                        { id: 'item2', text: '水 (H₂O)', val: 'three_atoms' },
+                        { id: 'item3', text: '臭氧 (O₃)', val: 'three_atoms' },
+                        { id: 'item4', text: '氦氣 (He)', val: 'one_atom' }
                     ],
                     solution: {
-                        H2: ['2atoms'],
-                        H2O: ['3atoms_diff'],
-                        O3: ['3atoms_same'],
-                        He: ['1atom']
+                        one: ['one_atom'],
+                        two: ['two_atoms'],
+                        three: ['three_atoms']
                     }
                 },
                 {
                     id: "6-4-2",
                     section: "6-4",
-                    title: "第二關：化學式的書寫規則",
-                    description: "請將物質名稱與其正確化學式配對",
-                    type: "formula_match",
-                    leftOptions: [
-                        { id: 'left1', text: '水', val: 'water' },
-                        { id: 'left2', text: '氧氣', val: 'oxygen' },
-                        { id: 'left3', text: '氯化鈉', val: 'sodium_chloride' },
-                        { id: 'left4', text: '二氧化碳', val: 'carbon_dioxide' },
-                        { id: 'left5', text: '氮氣', val: 'nitrogen' },
-                        { id: 'left6', text: '臭氧', val: 'ozone' },
-                        { id: 'left7', text: '一氧化碳', val: 'carbon_monoxide' },
-                        { id: 'left8', text: '氨', val: 'ammonia' }
+                    title: "第二關：常見化學式",
+                    description: "請將物質名稱與化學式配對（拖到對應位置）",
+                    type: "classification",
+                    zones: [
+                        { id: 'h2o', title: 'H₂O', icon: 'fa-droplet' },
+                        { id: 'o2', title: 'O₂', icon: 'fa-wind' },
+                        { id: 'nacl', title: 'NaCl', icon: 'fa-cube' },
+                        { id: 'co2', title: 'CO₂', icon: 'fa-cloud' }
                     ],
-                    rightOptions: [
-                        { id: 'right1', text: 'H₂O', val: 'H2O' },
-                        { id: 'right2', text: 'O₂', val: 'O2' },
-                        { id: 'right3', text: 'NaCl', val: 'NaCl' },
-                        { id: 'right4', text: 'CO₂', val: 'CO2' },
-                        { id: 'right5', text: 'N₂', val: 'N2' },
-                        { id: 'right6', text: 'O₃', val: 'O3' },
-                        { id: 'right7', text: 'CO', val: 'CO' },
-                        { id: 'right8', text: 'NH₃', val: 'NH3' }
+                    items: [
+                        { id: 'item1', text: '水', val: 'water' },
+                        { id: 'item2', text: '氧氣', val: 'oxygen' },
+                        { id: 'item3', text: '氯化鈉（食鹽）', val: 'salt' },
+                        { id: 'item4', text: '二氧化碳', val: 'carbon_dioxide' }
                     ],
                     solution: {
-                        water: ['H2O'],
-                        oxygen: ['O2'],
-                        sodium_chloride: ['NaCl'],
-                        carbon_dioxide: ['CO2'],
-                        nitrogen: ['N2'],
-                        ozone: ['O3'],
-                        carbon_monoxide: ['CO'],
-                        ammonia: ['NH3']
+                        h2o: ['water'],
+                        o2: ['oxygen'],
+                        nacl: ['salt'],
+                        co2: ['carbon_dioxide']
                     }
                 },
                 {
                     id: "6-4-3",
                     section: "6-4",
-                    title: "第三關：物質的分類與定義配對",
-                    description: "請將物質分類與其定義配對",
-                    type: "formula_match",
-                    leftOptions: [
-                        { id: 'left1', text: '元素', val: 'element' },
-                        { id: 'left2', text: '化合物', val: 'compound' },
-                        { id: 'left3', text: '混合物', val: 'mixture' },
-                        { id: 'left4', text: '純物質', val: 'pure_substance' }
+                    title: "第三關：物質分類",
+                    description: "請將以下物質依其分類歸類",
+                    type: "classification",
+                    zones: [
+                        { id: 'element', title: '元素', icon: 'fa-atom' },
+                        { id: 'compound', title: '化合物', icon: 'fa-flask' },
+                        { id: 'mixture', title: '混合物', icon: 'fa-blender' }
                     ],
-                    rightOptions: [
-                        { id: 'right1', text: '由同一種原子構成的純物質', val: 'element_def' },
-                        { id: 'right2', text: '不同種類的原子以固定比例結合而成的純物質', val: 'compound_def' },
-                        { id: 'right3', text: '兩種或兩種以上純物質混合而成', val: 'mixture_def' },
-                        { id: 'right4', text: '由單一種物質組成', val: 'pure_def' }
+                    items: [
+                        { id: 'item1', text: '氧氣 (O₂)', val: 'element_val' },
+                        { id: 'item2', text: '水 (H₂O)', val: 'compound_val' },
+                        { id: 'item3', text: '空氣', val: 'mixture_val' },
+                        { id: 'item4', text: '鐵 (Fe)', val: 'element_val' },
+                        { id: 'item5', text: '食鹽水', val: 'mixture_val' },
+                        { id: 'item6', text: '二氧化碳 (CO₂)', val: 'compound_val' }
                     ],
                     solution: {
-                        element: ['element_def'],
-                        compound: ['compound_def'],
-                        mixture: ['mixture_def'],
-                        pure_substance: ['pure_def']
+                        element: ['element_val'],
+                        compound: ['compound_val'],
+                        mixture: ['mixture_val']
                     }
                 }
             ]
         };
 
-        // ===========================================
-        // THEME COLORS
-        // ===========================================
         const themeColors = {
             '6-1': { 
-                primary: 'from-green-400 to-teal-600',
-                header: 'from-green-500 to-teal-700', 
+                primary: 'from-green-400 to-emerald-600',
+                header: 'from-green-500 to-emerald-700', 
                 badge: 'bg-green-500' 
             },
             '6-2': { 
-                primary: 'from-blue-400 to-cyan-600',
-                header: 'from-blue-500 to-cyan-700', 
+                primary: 'from-blue-400 to-blue-600',
+                header: 'from-blue-500 to-blue-700', 
                 badge: 'bg-blue-500' 
             },
             '6-3': { 
@@ -423,45 +606,37 @@
             }
         };
 
-        // ===========================================
-        // MAIN APP COMPONENT
-        // ===========================================
         function App() {
             const [screen, setScreen] = useState('section_select');
             const [currentSection, setCurrentSection] = useState(null);
             const [currentLevelIndex, setCurrentLevelIndex] = useState(0);
             const [gameState, setGameState] = useState('playing');
             const [droppedItems, setDroppedItems] = useState({});
+            const [draggedItem, setDraggedItem] = useState(null);
             const [startTime, setStartTime] = useState(null);
             const [elapsedTime, setElapsedTime] = useState(0);
             const [attempts, setAttempts] = useState(0);
-            const [draggedItem, setDraggedItem] = useState(null);
+            const [showFeedback, setShowFeedback] = useState(false);
+            const [feedbackType, setFeedbackType] = useState('');
             const [sectionCompletionStatus, setSectionCompletionStatus] = useState({});
-            const [errorLog, setErrorLog] = useState([]);
             const [fontScale, setFontScale] = useState(100);
+            const [errorLog, setErrorLog] = useState([]);
 
-            const currentLevel = currentSection ? CHAPTER_DATA[currentSection][currentLevelIndex] : null;
-            const totalLevels = currentSection ? CHAPTER_DATA[currentSection].length : 0;
-
-            // Load completion status and font scale from localStorage
             useEffect(() => {
                 const saved = localStorage.getItem('chapter6_completion_status');
                 if (saved) {
                     setSectionCompletionStatus(JSON.parse(saved));
                 }
-                const savedFontScale = localStorage.getItem('chapter6_font_scale');
-                if (savedFontScale) {
-                    setFontScale(parseInt(savedFontScale));
+                const savedFont = localStorage.getItem('chapter6_font_scale');
+                if (savedFont) {
+                    setFontScale(parseInt(savedFont));
                 }
             }, []);
 
-            // Apply font scale
             useEffect(() => {
                 document.documentElement.style.fontSize = `${fontScale}%`;
-                localStorage.setItem('chapter6_font_scale', fontScale.toString());
             }, [fontScale]);
 
-            // Timer
             useEffect(() => {
                 let timer;
                 if (gameState === 'playing' && startTime) {
@@ -474,53 +649,50 @@
                 };
             }, [gameState, startTime]);
 
-            // Start section
+            const increaseFontSize = () => {
+                setFontScale(prev => {
+                    const newScale = Math.min(prev + 10, 150);
+                    localStorage.setItem('chapter6_font_scale', newScale);
+                    return newScale;
+                });
+            };
+
+            const decreaseFontSize = () => {
+                setFontScale(prev => {
+                    const newScale = Math.max(prev - 10, 70);
+                    localStorage.setItem('chapter6_font_scale', newScale);
+                    return newScale;
+                });
+            };
+
+            const clearAllProgress = () => {
+                if (confirm('確定要清除所有完成記錄嗎？此操作無法復原。')) {
+                    localStorage.removeItem('chapter6_completion_status');
+                    localStorage.removeItem('chapter6_font_scale');
+                    setSectionCompletionStatus({});
+                    setFontScale(100);
+                    alert('已清除所有記錄！');
+                }
+            };
+
             const startSection = (sectionId) => {
                 setCurrentSection(sectionId);
                 setCurrentLevelIndex(0);
-                setScreen('game');
-                setGameState('playing');
                 setDroppedItems({});
                 setStartTime(new Date());
                 setElapsedTime(0);
                 setAttempts(0);
                 setErrorLog([]);
+                setScreen('game');
+                setGameState('playing');
             };
 
-            // Drag handlers
             const handleDragStart = (e, item) => {
                 setDraggedItem(item);
                 e.dataTransfer.effectAllowed = 'move';
-                if (e.target) {
-                    e.target.style.opacity = '0.5';
-                }
             };
 
-            const handleDragEnd = (e) => {
-                if (e.target) {
-                    e.target.style.opacity = '1';
-                }
-                setDraggedItem(null);
-            };
-
-            const handleDrop = (e, zoneId) => {
-                e.preventDefault();
-                if (!draggedItem) return;
-
-                const newDroppedItems = { ...droppedItems };
-                
-                // Remove item from all zones
-                Object.keys(newDroppedItems).forEach(key => {
-                    newDroppedItems[key] = newDroppedItems[key].filter(val => val !== draggedItem.val);
-                });
-
-                // Add to new zone
-                if (!newDroppedItems[zoneId]) {
-                    newDroppedItems[zoneId] = [];
-                }
-                newDroppedItems[zoneId].push(draggedItem.val);
-
-                setDroppedItems(newDroppedItems);
+            const handleDragEnd = () => {
                 setDraggedItem(null);
             };
 
@@ -529,480 +701,397 @@
                 e.dataTransfer.dropEffect = 'move';
             };
 
-            // Touch handlers
-            const handleTouchStart = (e, item) => {
-                setDraggedItem(item);
-                document.body.style.overflow = 'hidden';
-            };
+            const handleDrop = (e, targetZoneId) => {
+                if (e) {
+                    e.preventDefault();
+                }
+                
+                const item = draggedItem || touchDragData;
+                if (!item) return;
 
-            const handleTouchMove = (e) => {
-                e.preventDefault();
-            };
-
-            const handleTouchEnd = (e, zoneId) => {
-                if (!draggedItem) return;
+                const currentLevel = CHAPTER_DATA[currentSection][currentLevelIndex];
                 
-                document.body.style.overflow = '';
-                
-                const touch = e.changedTouches[0];
-                const dropZone = document.elementFromPoint(touch.clientX, touch.clientY);
-                
-                if (dropZone && dropZone.dataset.zone) {
-                    const targetZoneId = dropZone.dataset.zone;
+                if (currentLevel.type === 'classification') {
                     const newDroppedItems = { ...droppedItems };
                     
-                    Object.keys(newDroppedItems).forEach(key => {
-                        newDroppedItems[key] = newDroppedItems[key].filter(val => val !== draggedItem.val);
+                    Object.keys(newDroppedItems).forEach(zoneId => {
+                        newDroppedItems[zoneId] = newDroppedItems[zoneId].filter(val => val !== item.val);
                     });
-
-                    if (!newDroppedItems[targetZoneId]) {
-                        newDroppedItems[targetZoneId] = [];
+                    
+                    if (targetZoneId !== 'items') {
+                        if (!newDroppedItems[targetZoneId]) {
+                            newDroppedItems[targetZoneId] = [];
+                        }
+                        newDroppedItems[targetZoneId].push(item.val);
                     }
-                    newDroppedItems[targetZoneId].push(draggedItem.val);
-
+                    
                     setDroppedItems(newDroppedItems);
                 }
                 
                 setDraggedItem(null);
             };
 
-            // Check answer
             const checkAnswer = () => {
+                const currentLevel = CHAPTER_DATA[currentSection][currentLevelIndex];
                 setAttempts(prev => prev + 1);
                 
-                const solution = currentLevel.solution;
                 let allCorrect = true;
                 const newErrorLog = [...errorLog];
+                const zoneResults = {};
 
                 if (currentLevel.type === 'classification') {
-                    Object.keys(solution).forEach(zoneId => {
-                        const expected = solution[zoneId].sort();
-                        const actual = (droppedItems[zoneId] || []).sort();
+                    // 檢查每個分類框
+                    Object.keys(currentLevel.solution).forEach(zoneId => {
+                        const correctVals = currentLevel.solution[zoneId];
+                        const userVals = droppedItems[zoneId] || [];
                         
-                        if (JSON.stringify(expected) !== JSON.stringify(actual)) {
+                        // 檢查：該區域的所有項目的val都必須在正確答案中
+                        // 且該區域必須有項目（不能為空）
+                        const isCorrect = userVals.length > 0 &&
+                                        userVals.every(val => correctVals.includes(val));
+                        
+                        zoneResults[zoneId] = isCorrect;
+                        
+                        if (!isCorrect) {
                             allCorrect = false;
                             
-                            // Record errors
-                            actual.forEach(val => {
-                                if (!expected.includes(val)) {
-                                    const wrongItem = currentLevel.items.find(item => item.val === val);
-                                    const wrongZone = currentLevel.zones.find(zone => zone.id === zoneId);
-                                    const correctZoneId = Object.keys(solution).find(key => solution[key].includes(val));
-                                    const correctZone = currentLevel.zones.find(zone => zone.id === correctZoneId);
-                                    
-                                    if (wrongItem && wrongZone && correctZone) {
+                            // 記錄錯誤：找出不該在這個框的項目
+                            if (userVals.length > 0) {
+                                for (const val of userVals) {
+                                    if (!correctVals.includes(val)) {
+                                        const itemText = currentLevel.items.find(i => i.val === val)?.text;
+                                        const correctZone = Object.keys(currentLevel.solution).find(zId =>
+                                            currentLevel.solution[zId].includes(val)
+                                        );
+                                        const correctZoneTitle = correctZone ? 
+                                            currentLevel.zones.find(z => z.id === correctZone)?.title : '未知';
+                                        const wrongZoneTitle = currentLevel.zones.find(z => z.id === zoneId)?.title;
+                                        
                                         newErrorLog.push({
                                             levelTitle: currentLevel.title,
-                                            wrongAnswer: `${wrongItem.text} → ${wrongZone.title}`,
-                                            correctAnswer: `${wrongItem.text} → ${correctZone.title}`
+                                            wrongAnswer: `${itemText} → ${wrongZoneTitle}`,
+                                            correctAnswer: `${itemText} → ${correctZoneTitle}`
                                         });
                                     }
                                 }
-                            });
-                        }
-                    });
-                } else if (currentLevel.type === 'formula_match') {
-                    Object.keys(solution).forEach(leftId => {
-                        const expected = solution[leftId];
-                        const actual = droppedItems[leftId] || [];
-                        
-                        if (JSON.stringify(expected.sort()) !== JSON.stringify(actual.sort())) {
-                            allCorrect = false;
-                            
-                            const wrongLeft = currentLevel.leftOptions.find(opt => opt.val === leftId);
-                            if (wrongLeft) {
-                                const actualRights = actual.map(val => {
-                                    const right = currentLevel.rightOptions.find(opt => opt.val === val);
-                                    return right ? right.text : '';
-                                }).join(', ');
-                                
-                                const correctRights = expected.map(val => {
-                                    const right = currentLevel.rightOptions.find(opt => opt.val === val);
-                                    return right ? right.text : '';
-                                }).join(', ');
-                                
-                                newErrorLog.push({
-                                    levelTitle: currentLevel.title,
-                                    wrongAnswer: `${wrongLeft.text} → ${actualRights || '(未配對)'}`,
-                                    correctAnswer: `${wrongLeft.text} → ${correctRights}`
-                                });
                             }
                         }
                     });
-                } else if (currentLevel.type === 'formula') {
-                    Object.keys(solution).forEach(slotId => {
-                        const expected = solution[slotId].sort();
-                        const actual = (droppedItems[slotId] || []).sort();
-                        
-                        if (JSON.stringify(expected) !== JSON.stringify(actual)) {
-                            allCorrect = false;
-                            
-                            const slot = currentLevel.formulaSlots.find(s => s.id === slotId);
-                            if (slot) {
-                                const actualItems = actual.map(val => {
-                                    const item = currentLevel.items.find(i => i.val === val);
-                                    return item ? item.text : '';
-                                }).join(', ');
-                                
-                                const correctItems = expected.map(val => {
-                                    const item = currentLevel.items.find(i => i.val === val);
-                                    return item ? item.text : '';
-                                }).join(', ');
-                                
-                                newErrorLog.push({
-                                    levelTitle: currentLevel.title,
-                                    wrongAnswer: `${slot.placeholder} = ${actualItems || '(空白)'}`,
-                                    correctAnswer: `${slot.placeholder} = ${correctItems}`
-                                });
+                    
+                    // 額外檢查：確保所有項目都已分類
+                    const allItemsPlaced = Object.values(droppedItems).flat().length === currentLevel.items.length;
+                    if (!allItemsPlaced) {
+                        allCorrect = false;
+                    }
+                    
+                    // 顯示各分類框的狀態
+                    currentLevel.zones.forEach(zone => {
+                        const zoneElement = document.querySelector(`[data-zone-id="${zone.id}"]`);
+                        if (zoneElement) {
+                            zoneElement.classList.remove('correct-answer', 'wrong-answer');
+                            if (zoneResults[zone.id]) {
+                                zoneElement.classList.add('correct-answer');
+                            } else if ((droppedItems[zone.id] || []).length > 0) {
+                                // 只有在有項目但不正確時才顯示錯誤
+                                zoneElement.classList.add('wrong-answer');
                             }
+                            
+                            // 移除動畫類別
+                            setTimeout(() => {
+                                zoneElement.classList.remove('correct-answer', 'wrong-answer');
+                            }, 1500);
                         }
                     });
                 }
 
                 setErrorLog(newErrorLog);
-
+                
                 if (allCorrect) {
-                    setGameState('completed');
-                } else {
-                    setGameState('wrong');
+                    setFeedbackType('correct');
+                    setShowFeedback(true);
                     setTimeout(() => {
-                        setGameState('playing');
-                    }, 2000);
-                }
-            };
-
-            // Next level
-            const nextLevel = () => {
-                if (currentLevelIndex < totalLevels - 1) {
-                    setCurrentLevelIndex(prev => prev + 1);
-                    setGameState('playing');
-                    setDroppedItems({});
-                } else {
-                    // Section completed
-                    const totalTime = elapsedTime;
-                    const totalErrors = errorLog.length;
-                    
-                    const newStatus = {
-                        ...sectionCompletionStatus,
-                        [currentSection]: {
-                            completed: true,
-                            completedAt: new Date().toISOString(),
-                            totalTime: totalTime,
-                            attempts: attempts,
-                            errors: totalErrors,
-                            errorLog: errorLog
+                        setShowFeedback(false);
+                        if (currentLevelIndex < CHAPTER_DATA[currentSection].length - 1) {
+                            setCurrentLevelIndex(prev => prev + 1);
+                            setDroppedItems({});
+                        } else {
+                            const totalTime = Math.floor((new Date() - startTime) / 1000);
+                            const newStatus = {
+                                ...sectionCompletionStatus,
+                                [currentSection]: {
+                                    completed: true,
+                                    completedAt: new Date().toISOString(),
+                                    totalTime: totalTime,
+                                    attempts: attempts + 1,
+                                    errors: newErrorLog.length,
+                                    errorLog: newErrorLog
+                                }
+                            };
+                            setSectionCompletionStatus(newStatus);
+                            localStorage.setItem('chapter6_completion_status', JSON.stringify(newStatus));
+                            setScreen('section_complete');
+                            
+                            const allComplete = Object.keys(CHAPTER_DATA).every(
+                                sectionId => newStatus[sectionId]?.completed
+                            );
+                            if (allComplete) {
+                                setTimeout(() => setScreen('all_complete'), 2000);
+                            }
                         }
-                    };
-                    
-                    setSectionCompletionStatus(newStatus);
-                    localStorage.setItem('chapter6_completion_status', JSON.stringify(newStatus));
-                    
-                    setScreen('section_complete');
+                    }, 1500);
                 }
             };
 
-            // Download certificate
-            const downloadCertificate = (elementId, filename) => {
-                const element = document.getElementById(elementId);
-                if (!element) return;
-
-                html2canvas(element, { scale: 2 }).then(canvas => {
+            const downloadCertificate = async (elementId, filename) => {
+                try {
+                    const element = document.getElementById(elementId);
+                    if (!element) return;
+                    
+                    const canvas = await html2canvas(element, {
+                        scale: 2,
+                        backgroundColor: '#ffffff'
+                    });
+                    
                     const link = document.createElement('a');
                     link.download = filename;
                     link.href = canvas.toDataURL();
                     link.click();
-                });
-            };
-
-            // Clear all progress
-            const clearAllProgress = () => {
-                if (confirm('確定要清除所有完成記錄嗎？此操作無法復原。')) {
-                    localStorage.removeItem('chapter6_completion_status');
-                    setSectionCompletionStatus({});
-                    alert('所有記錄已清除！');
+                } catch (error) {
+                    console.error('下載證書失敗:', error);
+                    alert('下載證書時發生錯誤，請稍後再試');
                 }
             };
 
-            // Check if all placed
-            const checkAllPlaced = () => {
-                if (!currentLevel) return false;
-                
-                let totalItems = 0;
-                let placedItems = 0;
-                
-                if (currentLevel.type === 'classification') {
-                    totalItems = currentLevel.items ? currentLevel.items.length : 0;
-                    placedItems = Object.values(droppedItems).flat().filter(val => val !== 'items').length;
-                } else if (currentLevel.type === 'formula_match') {
-                    // For formula_match, count right options that need to be placed
-                    totalItems = currentLevel.rightOptions ? currentLevel.rightOptions.length : 0;
-                    placedItems = Object.keys(droppedItems).reduce((count, key) => {
-                        if (key !== 'options') {
-                            return count + droppedItems[key].length;
-                        }
-                        return count;
-                    }, 0);
-                } else if (currentLevel.type === 'formula') {
-                    totalItems = currentLevel.items ? currentLevel.items.length : 0;
-                    placedItems = Object.values(droppedItems).flat().filter(val => val !== 'items').length;
-                }
-                
-                return placedItems === totalItems;
-            };
-
-            const allPlaced = checkAllPlaced();
-            
-            let totalItems = 0;
-            let placedItems = 0;
-            
-            if (currentLevel) {
-                if (currentLevel.type === 'classification') {
-                    totalItems = currentLevel.items ? currentLevel.items.length : 0;
-                    placedItems = Object.values(droppedItems).flat().filter(val => val !== 'items').length;
-                } else if (currentLevel.type === 'formula_match') {
-                    totalItems = currentLevel.rightOptions ? currentLevel.rightOptions.length : 0;
-                    placedItems = Object.keys(droppedItems).reduce((count, key) => {
-                        if (key !== 'options') {
-                            return count + droppedItems[key].length;
-                        }
-                        return count;
-                    }, 0);
-                } else if (currentLevel.type === 'formula') {
-                    totalItems = currentLevel.items ? currentLevel.items.length : 0;
-                    placedItems = Object.values(droppedItems).flat().filter(val => val !== 'items').length;
-                }
-            }
-
-            // Check if all sections completed
-            const allSectionsCompleted = Object.keys(CHAPTER_DATA).every(
-                sectionId => sectionCompletionStatus[sectionId]?.completed
-            );
-
-            // ===========================================
-            // RENDER: SECTION SELECT
-            // ===========================================
             if (screen === 'section_select') {
                 const sections = [
-                    { id: '6-1', title: '6-1 元素的探索', icon: 'fa-flask', levels: 3, color: 'from-green-400 to-teal-600' },
-                    { id: '6-2', title: '6-2 元素週期表', icon: 'fa-table', levels: 2, color: 'from-blue-400 to-cyan-600' },
-                    { id: '6-3', title: '6-3 化合物與原子概念的發展', icon: 'fa-atom', levels: 3, color: 'from-purple-400 to-pink-600' },
-                    { id: '6-4', title: '6-4 分子與化學式', icon: 'fa-dna', levels: 3, color: 'from-orange-400 to-red-600' }
+                    { id: '6-1', title: '6-1 元素', icon: 'fa-flask', levels: 3, color: 'from-green-400 to-emerald-600' },
+                    { id: '6-2', title: '6-2 元素週期表', icon: 'fa-table', levels: 2, color: 'from-blue-400 to-blue-600' },
+                    { id: '6-3', title: '6-3 原子的結構', icon: 'fa-atom', levels: 3, color: 'from-purple-400 to-pink-600' },
+                    { id: '6-4', title: '6-4 分子與化學式', icon: 'fa-flask-vial', levels: 3, color: 'from-orange-400 to-red-600' }
                 ];
 
+                const allComplete = sections.every(s => sectionCompletionStatus[s.id]?.completed);
+
                 return (
-                    <div className="min-h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 p-4">
+                    <div className="min-h-screen bg-gradient-to-br from-purple-600 via-blue-600 to-cyan-500 p-4">
                         <div className="max-w-6xl mx-auto">
-                            {/* Header */}
-                            <div className="text-center mb-8 mt-8">
+                            <div className="text-center mb-8 fade-in">
                                 <div className="flex justify-between items-center mb-4">
-                                    <div className="flex-1"></div>
-                                    <h1 className="flex-1 text-4xl md:text-5xl font-black text-white drop-shadow-lg">
-                                        第6章 探索物質組成
-                                    </h1>
-                                    <div className="flex-1 flex justify-end items-center gap-2">
+                                    <div className="flex gap-2">
                                         <button
-                                            onClick={() => setFontScale(Math.max(70, fontScale - 10))}
-                                            className="bg-white/20 hover:bg-white/30 text-white px-3 py-2 rounded-lg backdrop-blur-sm transition-all"
+                                            onClick={decreaseFontSize}
+                                            className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg font-bold transition-all backdrop-blur-sm"
                                             title="縮小字體"
                                         >
                                             A⁻
                                         </button>
                                         <button
-                                            onClick={() => setFontScale(Math.min(150, fontScale + 10))}
-                                            className="bg-white/20 hover:bg-white/30 text-white px-3 py-2 rounded-lg backdrop-blur-sm transition-all"
+                                            onClick={increaseFontSize}
+                                            className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg font-bold transition-all backdrop-blur-sm"
                                             title="放大字體"
                                         >
                                             A⁺
                                         </button>
                                     </div>
+                                    <div className="flex gap-2">
+                                        {allComplete && (
+                                            <button
+                                                onClick={() => setScreen('all_complete')}
+                                                className="bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-2 rounded-lg font-bold transition-all"
+                                            >
+                                                <i className="fas fa-certificate mr-2"></i>
+                                                查看完成證書
+                                            </button>
+                                        )}
+                                        <button
+                                            onClick={clearAllProgress}
+                                            className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-bold transition-all"
+                                        >
+                                            <i className="fas fa-trash mr-2"></i>
+                                            清除記錄
+                                        </button>
+                                    </div>
                                 </div>
-                                <p className="text-xl text-white/90 mt-2">選擇小節開始闖關</p>
+                                <h1 className="text-6xl font-black text-white mb-4 drop-shadow-lg">
+                                    <i className="fas fa-atom mr-4"></i>
+                                    第6章 探索物質組成
+                                </h1>
+                                <p className="text-2xl text-white/90 font-bold">
+                                    選擇一個小節開始學習
+                                </p>
                             </div>
 
-                            {/* Sections Grid */}
-                            <div className="grid md:grid-cols-2 gap-6 mb-8">
+                            <div className="grid md:grid-cols-2 gap-6">
                                 {sections.map(section => {
-                                    const isCompleted = sectionCompletionStatus[section.id]?.completed;
+                                    const status = sectionCompletionStatus[section.id];
+                                    const isCompleted = status?.completed;
+                                    
                                     return (
                                         <div
                                             key={section.id}
+                                            className={`bg-gradient-to-br ${section.color} rounded-3xl p-8 shadow-2xl transform hover:scale-105 transition-all cursor-pointer fade-in`}
                                             onClick={() => startSection(section.id)}
-                                            className="glass-effect rounded-2xl p-6 cursor-pointer hover:scale-105 transition-transform relative overflow-hidden group"
                                         >
-                                            <div className={`absolute inset-0 bg-gradient-to-br ${section.color} opacity-20 group-hover:opacity-30 transition-opacity`}></div>
-                                            <div className="relative z-10">
-                                                <div className="flex items-center justify-between mb-4">
-                                                    <div className="flex items-center gap-3">
-                                                        <i className={`fas ${section.icon} text-3xl text-white`}></i>
-                                                        <h3 className="text-xl font-bold text-white">{section.title}</h3>
+                                            <div className="flex items-center justify-between mb-6">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-4">
+                                                        <i className={`fas ${section.icon} text-5xl text-white`}></i>
                                                     </div>
-                                                    {isCompleted && (
-                                                        <div className="bg-green-500 text-white px-3 py-1 rounded-full text-sm font-bold">
-                                                            <i className="fas fa-check mr-1"></i>
-                                                            已完成
-                                                        </div>
-                                                    )}
+                                                    <div className="text-white">
+                                                        <h2 className="text-3xl font-black mb-1">{section.title}</h2>
+                                                        <p className="text-lg opacity-90">{section.levels} 個關卡</p>
+                                                    </div>
                                                 </div>
-                                                <div className="text-white/80">
-                                                    <i className="fas fa-gamepad mr-2"></i>
-                                                    共 {section.levels} 個關卡
-                                                </div>
-                                                {isCompleted && sectionCompletionStatus[section.id] && (
-                                                    <div className="mt-3 text-sm text-white/70">
-                                                        <div>完成時間：{sectionCompletionStatus[section.id].totalTime} 秒</div>
-                                                        <div>嘗試次數：{sectionCompletionStatus[section.id].attempts} 次</div>
-                                                        <div>錯誤次數：{sectionCompletionStatus[section.id].errors} 次</div>
+                                                {isCompleted && (
+                                                    <div className="bg-yellow-400 rounded-full p-3 animate-bounce-slow">
+                                                        <i className="fas fa-check text-2xl text-white"></i>
                                                     </div>
                                                 )}
+                                            </div>
+                                            
+                                            {isCompleted && (
+                                                <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 text-white">
+                                                    <div className="grid grid-cols-3 gap-4 text-center">
+                                                        <div>
+                                                            <div className="text-2xl font-bold">{status.totalTime}秒</div>
+                                                            <div className="text-sm opacity-90">完成時間</div>
+                                                        </div>
+                                                        <div>
+                                                            <div className="text-2xl font-bold">{status.attempts}次</div>
+                                                            <div className="text-sm opacity-90">嘗試次數</div>
+                                                        </div>
+                                                        <div>
+                                                            <div className="text-2xl font-bold">{status.errors}</div>
+                                                            <div className="text-sm opacity-90">錯誤次數</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )}
+                                            
+                                            <div className="mt-4 text-center">
+                                                <button className="bg-white text-gray-800 px-8 py-3 rounded-xl font-bold hover:bg-gray-100 transition-all">
+                                                    {isCompleted ? '再次挑戰' : '開始遊戲'}
+                                                    <i className="fas fa-arrow-right ml-2"></i>
+                                                </button>
                                             </div>
                                         </div>
                                     );
                                 })}
-                            </div>
-
-                            {/* All Complete Certificate */}
-                            {allSectionsCompleted && (
-                                <div className="glass-effect rounded-2xl p-6 mb-8">
-                                    <div className="text-center">
-                                        <i className="fas fa-trophy text-6xl text-yellow-300 mb-4"></i>
-                                        <h2 className="text-3xl font-bold text-white mb-4">🎉 恭喜完成所有小節！</h2>
-                                        <button
-                                            onClick={() => setScreen('all_complete')}
-                                            className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-8 py-3 rounded-xl font-bold hover:scale-105 transition-transform"
-                                        >
-                                            <i className="fas fa-certificate mr-2"></i>
-                                            查看完成證書
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Clear Progress Button */}
-                            <div className="text-center">
-                                <button
-                                    onClick={clearAllProgress}
-                                    className="bg-red-500/80 hover:bg-red-600 text-white px-6 py-3 rounded-xl font-bold transition-all"
-                                >
-                                    <i className="fas fa-trash-alt mr-2"></i>
-                                    清除所有完成記錄
-                                </button>
                             </div>
                         </div>
                     </div>
                 );
             }
 
-            // ===========================================
-            // RENDER: GAME SCREEN
-            // ===========================================
-            if (screen === 'game' && currentLevel) {
-                const colors = themeColors[currentSection];
-                
+            if (screen === 'game') {
+                const currentLevel = CHAPTER_DATA[currentSection][currentLevelIndex];
+                const totalLevels = CHAPTER_DATA[currentSection].length;
+                const theme = themeColors[currentSection];
+
+                const totalItems = currentLevel.items.length;
+                const placedItems = Object.values(droppedItems).flat().length;
+                const allPlaced = placedItems === totalItems;
+
                 return (
-                    <div className={`min-h-screen bg-gradient-to-br ${colors.primary} p-4`}>
-                        <div className="max-w-6xl mx-auto">
-                            {/* Header */}
-                            <div className={`bg-gradient-to-r ${colors.header} rounded-2xl p-4 mb-6 shadow-lg`}>
+                    <div className={`min-h-screen bg-gradient-to-br ${theme.primary} p-4`}>
+                        <div className="max-w-7xl mx-auto">
+                            <div className={`bg-gradient-to-r ${theme.header} rounded-2xl p-4 mb-6 shadow-lg`}>
                                 <div className="flex flex-wrap items-center justify-between gap-4">
-                                    <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-4">
                                         <button
-                                            onClick={() => setFontScale(Math.max(70, fontScale - 10))}
-                                            className="bg-white/20 hover:bg-white/30 text-white px-2 py-1 rounded text-sm"
+                                            onClick={decreaseFontSize}
+                                            className="bg-white/20 hover:bg-white/30 text-white px-3 py-2 rounded-lg font-bold transition-all"
                                         >
                                             A⁻
                                         </button>
                                         <button
-                                            onClick={() => setFontScale(Math.min(150, fontScale + 10))}
-                                            className="bg-white/20 hover:bg-white/30 text-white px-2 py-1 rounded text-sm"
+                                            onClick={increaseFontSize}
+                                            className="bg-white/20 hover:bg-white/30 text-white px-3 py-2 rounded-lg font-bold transition-all"
                                         >
                                             A⁺
                                         </button>
-                                        <h2 className="text-2xl font-bold text-white ml-2">{currentLevel.title}</h2>
+                                        <div>
+                                            <h2 className="text-2xl font-black text-white">{currentLevel.title}</h2>
+                                            <p className="text-white/90">{currentLevel.description}</p>
+                                        </div>
                                     </div>
-                                    <div className="flex items-center gap-4 text-white">
-                                        <div className="progress-bar bg-white/20 rounded-full px-4 py-2">
-                                            <i className="fas fa-layer-group mr-2"></i>
-                                            關卡 {currentLevelIndex + 1}/{totalLevels}
+                                    
+                                    <div className="flex items-center gap-6">
+                                        <div className="progress-bar bg-white/20 rounded-full px-6 py-2 backdrop-blur-sm">
+                                            <span className="text-white font-bold">
+                                                關卡 {currentLevelIndex + 1}/{totalLevels}
+                                            </span>
                                         </div>
-                                        <div className="bg-white/20 rounded-full px-4 py-2">
-                                            <i className="fas fa-clock mr-2"></i>
-                                            {elapsedTime} 秒
+                                        <div className="bg-white/20 rounded-full px-6 py-2 backdrop-blur-sm">
+                                            <i className="fas fa-clock text-white mr-2"></i>
+                                            <span className="text-white font-bold">{elapsedTime}秒</span>
                                         </div>
-                                        <div className="bg-white/20 rounded-full px-4 py-2">
-                                            <i className="fas fa-redo mr-2"></i>
-                                            {attempts} 次
-                                        </div>
+                                        <button
+                                            onClick={() => setScreen('section_select')}
+                                            className="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-xl font-bold transition-all"
+                                        >
+                                            <i className="fas fa-home mr-2"></i>
+                                            返回
+                                        </button>
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Description */}
-                            <div className="bg-white rounded-xl p-6 mb-6 shadow-lg">
-                                <p className="text-lg text-gray-700">{currentLevel.description}</p>
-                            </div>
-
-                            {/* Classification Type */}
                             {currentLevel.type === 'classification' && (
                                 <>
-                                    {/* Layout based on zone count: 2-3 zones = left-right, 4+ zones = top-bottom */}
                                     {currentLevel.zones.length <= 3 ? (
-                                        // Left-Right Layout for 2-3 zones
-                                        <div className="grid md:grid-cols-2 gap-6 mb-6">
-                                            {/* Left: Items Pool */}
-                                            <div>
-                                                <h3 className="text-2xl font-bold text-white mb-4">待分類項目</h3>
-                                                <div
-                                                    data-zone="items"
-                                                    onDrop={(e) => handleDrop(e, 'items')}
-                                                    onDragOver={handleDragOver}
-                                                    onTouchEnd={(e) => handleTouchEnd(e, 'items')}
-                                                    className="drop-zone bg-white rounded-xl p-6 min-h-[400px] border-4 border-dashed border-gray-300"
-                                                >
-                                                    <div className="space-y-3">
-                                                        {currentLevel.items.filter(item => {
-                                                            const isPlaced = Object.values(droppedItems).flat().includes(item.val);
-                                                            return !isPlaced;
-                                                        }).map(item => (
-                                                            <div
-                                                                key={item.id}
-                                                                draggable
-                                                                onDragStart={(e) => handleDragStart(e, item)}
-                                                                onDragEnd={handleDragEnd}
-                                                                onTouchStart={(e) => handleTouchStart(e, item)}
-                                                                onTouchMove={handleTouchMove}
-                                                                className="drag-item bg-blue-500 text-white px-6 py-3 rounded-lg cursor-move hover:bg-blue-600 transition-colors font-medium text-center"
-                                                            >
-                                                                {item.text}
-                                                            </div>
-                                                        ))}
+                                        <div className="grid md:grid-cols-2 gap-6">
+                                            <div className="space-y-4">
+                                                <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4">
+                                                    <h3 className="text-xl font-bold text-white mb-4">
+                                                        <i className="fas fa-boxes mr-2"></i>
+                                                        待分類項目
+                                                    </h3>
+                                                    <div
+                                                        data-zone-id="items"
+                                                        onDrop={(e) => handleDrop(e, 'items')}
+                                                        onDragOver={handleDragOver}
+                                                        className="drop-zone bg-white/10 rounded-xl p-4 min-h-[120px] border-2 border-dashed border-white/30"
+                                                    >
+                                                        <div className="flex flex-wrap gap-3">
+                                                            {currentLevel.items.filter(item => {
+                                                                const isPlaced = Object.values(droppedItems).flat().includes(item.val);
+                                                                return !isPlaced;
+                                                            }).map(item => (
+                                                                <div
+                                                                    key={item.id}
+                                                                    draggable
+                                                                    onDragStart={(e) => handleDragStart(e, item)}
+                                                                    onDragEnd={handleDragEnd}
+                                                                    onTouchStart={(e) => handleTouchStartGlobal(e, item, null)}
+                                                                    onTouchMove={handleTouchMoveGlobal}
+                                                                    onTouchEnd={(e) => handleTouchEndGlobal(e, (data, targetZoneId) => {
+                                                                        handleDrop(null, targetZoneId);
+                                                                    })}
+                                                                    className="drag-item bg-blue-500 text-white px-6 py-3 rounded-lg cursor-move hover:bg-blue-600 transition-colors shadow-lg"
+                                                                >
+                                                                    {item.text}
+                                                                </div>
+                                                            ))}
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
 
-                                            {/* Right: Classification Zones */}
                                             <div className="space-y-4">
                                                 {currentLevel.zones.map(zone => (
                                                     <div
                                                         key={zone.id}
-                                                        data-zone={zone.id}
+                                                        data-zone-id={zone.id}
                                                         onDrop={(e) => handleDrop(e, zone.id)}
                                                         onDragOver={handleDragOver}
-                                                        onTouchEnd={(e) => handleTouchEnd(e, zone.id)}
-                                                        className={`drop-zone bg-white rounded-xl p-6 border-4 min-h-[120px] ${
-                                                            gameState === 'wrong' && 
-                                                            JSON.stringify((droppedItems[zone.id] || []).sort()) !== 
-                                                            JSON.stringify((currentLevel.solution[zone.id] || []).sort())
-                                                                ? 'border-red-500 shake' 
-                                                                : gameState === 'completed'
-                                                                ? 'border-green-500'
-                                                                : 'border-dashed border-gray-300'
-                                                        }`}
+                                                        className="drop-zone bg-white rounded-xl p-6 border-4 border-dashed border-gray-300 hover:border-blue-400 transition-all min-h-[120px]"
                                                     >
-                                                        <div className="flex items-center gap-3 mb-4">
-                                                            <i className={`fas ${zone.icon} text-2xl ${colors.badge} text-white p-3 rounded-lg`}></i>
-                                                            <h3 className="text-lg font-bold text-gray-800">{zone.title}</h3>
-                                                        </div>
-                                                        <div className="space-y-2">
+                                                        <h3 className="text-xl font-bold text-gray-800 mb-4">
+                                                            <i className={`fas ${zone.icon} mr-2`}></i>
+                                                            {zone.title}
+                                                        </h3>
+                                                        <div className="flex flex-wrap gap-2">
                                                             {(droppedItems[zone.id] || []).map(val => {
                                                                 const item = currentLevel.items.find(i => i.val === val);
                                                                 return item ? (
@@ -1011,9 +1100,16 @@
                                                                         draggable
                                                                         onDragStart={(e) => handleDragStart(e, item)}
                                                                         onDragEnd={handleDragEnd}
-                                                                        onTouchStart={(e) => handleTouchStart(e, item)}
-                                                                        onTouchMove={handleTouchMove}
-                                                                        className="drag-item bg-blue-500 text-white px-4 py-2 rounded-lg cursor-move hover:bg-blue-600 transition-colors text-sm"
+                                                                        onTouchStart={(e) => handleTouchStartGlobal(e, item, () => {
+                                                                            const newItems = {...droppedItems};
+                                                                            newItems[zone.id] = newItems[zone.id].filter(v => v !== item.val);
+                                                                            setDroppedItems(newItems);
+                                                                        })}
+                                                                        onTouchMove={handleTouchMoveGlobal}
+                                                                        onTouchEnd={(e) => handleTouchEndGlobal(e, (data, targetZoneId) => {
+                                                                            handleDrop(null, targetZoneId);
+                                                                        })}
+                                                                        className="drag-item bg-green-500 text-white px-4 py-2 rounded-lg cursor-move hover:bg-green-600 transition-colors shadow-md"
                                                                     >
                                                                         {item.text}
                                                                     </div>
@@ -1025,7 +1121,6 @@
                                             </div>
                                         </div>
                                     ) : (
-                                        // Top-Bottom Layout for 4+ zones
                                         <>
                                             <div className={`grid gap-6 mb-6 ${
                                                 currentLevel.zones.length === 4 ? 'md:grid-cols-2' : 'md:grid-cols-3'
@@ -1033,25 +1128,16 @@
                                                 {currentLevel.zones.map(zone => (
                                                     <div
                                                         key={zone.id}
-                                                        data-zone={zone.id}
+                                                        data-zone-id={zone.id}
                                                         onDrop={(e) => handleDrop(e, zone.id)}
                                                         onDragOver={handleDragOver}
-                                                        onTouchEnd={(e) => handleTouchEnd(e, zone.id)}
-                                                        className={`drop-zone bg-white rounded-xl p-4 border-4 min-h-[100px] ${
-                                                            gameState === 'wrong' && 
-                                                            JSON.stringify((droppedItems[zone.id] || []).sort()) !== 
-                                                            JSON.stringify((currentLevel.solution[zone.id] || []).sort())
-                                                                ? 'border-red-500 shake' 
-                                                                : gameState === 'completed'
-                                                                ? 'border-green-500'
-                                                                : 'border-dashed border-gray-300'
-                                                        }`}
+                                                        className="drop-zone bg-white rounded-xl p-6 border-4 border-dashed border-gray-300 hover:border-blue-400 transition-all min-h-[120px]"
                                                     >
-                                                        <div className="flex items-center gap-2 mb-3">
-                                                            <i className={`fas ${zone.icon} text-xl ${colors.badge} text-white p-2 rounded-lg`}></i>
-                                                            <h3 className="text-base font-bold text-gray-800">{zone.title}</h3>
-                                                        </div>
-                                                        <div className="space-y-2">
+                                                        <h3 className="text-lg font-bold text-gray-800 mb-3">
+                                                            <i className={`fas ${zone.icon} mr-2`}></i>
+                                                            {zone.title}
+                                                        </h3>
+                                                        <div className="flex flex-wrap gap-2">
                                                             {(droppedItems[zone.id] || []).map(val => {
                                                                 const item = currentLevel.items.find(i => i.val === val);
                                                                 return item ? (
@@ -1060,9 +1146,16 @@
                                                                         draggable
                                                                         onDragStart={(e) => handleDragStart(e, item)}
                                                                         onDragEnd={handleDragEnd}
-                                                                        onTouchStart={(e) => handleTouchStart(e, item)}
-                                                                        onTouchMove={handleTouchMove}
-                                                                        className="drag-item bg-blue-500 text-white px-3 py-2 rounded-lg cursor-move hover:bg-blue-600 transition-colors text-sm"
+                                                                        onTouchStart={(e) => handleTouchStartGlobal(e, item, () => {
+                                                                            const newItems = {...droppedItems};
+                                                                            newItems[zone.id] = newItems[zone.id].filter(v => v !== item.val);
+                                                                            setDroppedItems(newItems);
+                                                                        })}
+                                                                        onTouchMove={handleTouchMoveGlobal}
+                                                                        onTouchEnd={(e) => handleTouchEndGlobal(e, (data, targetZoneId) => {
+                                                                            handleDrop(null, targetZoneId);
+                                                                        })}
+                                                                        className="drag-item bg-green-500 text-white px-4 py-2 rounded-lg cursor-move hover:bg-green-600 transition-colors shadow-md text-sm"
                                                                     >
                                                                         {item.text}
                                                                     </div>
@@ -1073,15 +1166,16 @@
                                                 ))}
                                             </div>
 
-                                            {/* Items Pool at Bottom */}
-                                            <div>
-                                                <h3 className="text-2xl font-bold text-white mb-4">待分類項目</h3>
+                                            <div className="bg-white/20 backdrop-blur-sm rounded-xl p-6">
+                                                <h3 className="text-xl font-bold text-white mb-4">
+                                                    <i className="fas fa-boxes mr-2"></i>
+                                                    待分類項目
+                                                </h3>
                                                 <div
-                                                    data-zone="items"
+                                                    data-zone-id="items"
                                                     onDrop={(e) => handleDrop(e, 'items')}
                                                     onDragOver={handleDragOver}
-                                                    onTouchEnd={(e) => handleTouchEnd(e, 'items')}
-                                                    className="drop-zone bg-white rounded-xl p-6 min-h-[120px] border-4 border-dashed border-gray-300"
+                                                    className="drop-zone bg-white/10 rounded-xl p-4 min-h-[120px] border-2 border-dashed border-white/30"
                                                 >
                                                     <div className="flex flex-wrap gap-3">
                                                         {currentLevel.items.filter(item => {
@@ -1093,9 +1187,12 @@
                                                                 draggable
                                                                 onDragStart={(e) => handleDragStart(e, item)}
                                                                 onDragEnd={handleDragEnd}
-                                                                onTouchStart={(e) => handleTouchStart(e, item)}
-                                                                onTouchMove={handleTouchMove}
-                                                                className="drag-item bg-blue-500 text-white px-6 py-3 rounded-lg cursor-move hover:bg-blue-600 transition-colors font-medium"
+                                                                onTouchStart={(e) => handleTouchStartGlobal(e, item, null)}
+                                                                onTouchMove={handleTouchMoveGlobal}
+                                                                onTouchEnd={(e) => handleTouchEndGlobal(e, (data, targetZoneId) => {
+                                                                    handleDrop(null, targetZoneId);
+                                                                })}
+                                                                className="drag-item bg-blue-500 text-white px-6 py-3 rounded-lg cursor-move hover:bg-blue-600 transition-colors shadow-lg"
                                                             >
                                                                 {item.text}
                                                             </div>
@@ -1107,232 +1204,71 @@
                                     )}
                                 </>
                             )}
-                            {currentLevel.type === 'formula_match' && (
-                                <div className="grid md:grid-cols-2 gap-6 mb-6">
-                                    <div className="space-y-4">
-                                        <h3 className="text-xl font-bold text-white mb-4">左側選項</h3>
-                                        {currentLevel.leftOptions.map(left => (
-                                            <div
-                                                key={left.id}
-                                                data-zone={left.val}
-                                                onDrop={(e) => handleDrop(e, left.val)}
-                                                onDragOver={handleDragOver}
-                                                onTouchEnd={(e) => handleTouchEnd(e, left.val)}
-                                                className={`drop-zone bg-white rounded-xl p-4 border-4 ${
-                                                    gameState === 'wrong' && 
-                                                    JSON.stringify((droppedItems[left.val] || []).sort()) !== 
-                                                    JSON.stringify((currentLevel.solution[left.val] || []).sort())
-                                                        ? 'border-red-500 shake' 
-                                                        : gameState === 'completed'
-                                                        ? 'border-green-500'
-                                                        : 'border-dashed border-gray-300'
-                                                }`}
-                                            >
-                                                <div className="font-bold text-gray-800 mb-2">{left.text}</div>
-                                                <div className="min-h-[60px] space-y-2">
-                                                    {(droppedItems[left.val] || []).map(val => {
-                                                        const right = currentLevel.rightOptions.find(r => r.val === val);
-                                                        return right ? (
-                                                            <div
-                                                                key={right.id}
-                                                                draggable
-                                                                onDragStart={(e) => handleDragStart(e, right)}
-                                                                onDragEnd={handleDragEnd}
-                                                                onTouchStart={(e) => handleTouchStart(e, right)}
-                                                                onTouchMove={handleTouchMove}
-                                                                className="drag-item bg-purple-500 text-white px-3 py-2 rounded-lg cursor-move hover:bg-purple-600 transition-colors text-sm"
-                                                            >
-                                                                {right.text}
-                                                            </div>
-                                                        ) : null;
-                                                    })}
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                    <div>
-                                        <h3 className="text-xl font-bold text-white mb-4">右側選項</h3>
-                                        <div
-                                            data-zone="options"
-                                            onDrop={(e) => handleDrop(e, 'options')}
-                                            onDragOver={handleDragOver}
-                                            onTouchEnd={(e) => handleTouchEnd(e, 'options')}
-                                            className="drop-zone bg-white rounded-xl p-4 min-h-[200px] border-4 border-dashed border-gray-300"
-                                        >
-                                            <div className="space-y-2">
-                                                {currentLevel.rightOptions.filter(right => {
-                                                    const isPlaced = Object.values(droppedItems).flat().includes(right.val);
-                                                    return !isPlaced;
-                                                }).map(right => (
-                                                    <div
-                                                        key={right.id}
-                                                        draggable
-                                                        onDragStart={(e) => handleDragStart(e, right)}
-                                                        onDragEnd={handleDragEnd}
-                                                        onTouchStart={(e) => handleTouchStart(e, right)}
-                                                        onTouchMove={handleTouchMove}
-                                                        className="drag-item bg-purple-500 text-white px-4 py-3 rounded-lg cursor-move hover:bg-purple-600 transition-colors"
-                                                    >
-                                                        {right.text}
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
 
-                            {/* Formula Type */}
-                            {currentLevel.type === 'formula' && (
-                                <div className="space-y-6 mb-6">
-                                    <div className="grid md:grid-cols-3 gap-4">
-                                        {currentLevel.formulaSlots.map(slot => (
-                                            <div
-                                                key={slot.id}
-                                                data-zone={slot.id}
-                                                onDrop={(e) => handleDrop(e, slot.id)}
-                                                onDragOver={handleDragOver}
-                                                onTouchEnd={(e) => handleTouchEnd(e, slot.id)}
-                                                className={`drop-zone bg-white rounded-xl p-4 border-4 ${
-                                                    gameState === 'wrong' && 
-                                                    JSON.stringify((droppedItems[slot.id] || []).sort()) !== 
-                                                    JSON.stringify((currentLevel.solution[slot.id] || []).sort())
-                                                        ? 'border-red-500 shake' 
-                                                        : gameState === 'completed'
-                                                        ? 'border-green-500'
-                                                        : 'border-dashed border-gray-300'
-                                                }`}
-                                            >
-                                                <div className="font-bold text-gray-700 mb-2">{slot.placeholder}</div>
-                                                <div className="min-h-[60px] space-y-2">
-                                                    {(droppedItems[slot.id] || []).map(val => {
-                                                        const item = currentLevel.items.find(i => i.val === val);
-                                                        return item ? (
-                                                            <div
-                                                                key={item.id}
-                                                                draggable
-                                                                onDragStart={(e) => handleDragStart(e, item)}
-                                                                onDragEnd={handleDragEnd}
-                                                                onTouchStart={(e) => handleTouchStart(e, item)}
-                                                                onTouchMove={handleTouchMove}
-                                                                className="drag-item bg-orange-500 text-white px-3 py-2 rounded-lg cursor-move hover:bg-orange-600 transition-colors"
-                                                            >
-                                                                {item.text}
-                                                            </div>
-                                                        ) : null;
-                                                    })}
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                    <div>
-                                        <h3 className="text-xl font-bold text-white mb-4">待分類項目</h3>
-                                        <div
-                                            data-zone="items"
-                                            onDrop={(e) => handleDrop(e, 'items')}
-                                            onDragOver={handleDragOver}
-                                            onTouchEnd={(e) => handleTouchEnd(e, 'items')}
-                                            className="drop-zone bg-white rounded-xl p-4 min-h-[100px] border-4 border-dashed border-gray-300"
-                                        >
-                                            <div className="flex flex-wrap gap-2">
-                                                {currentLevel.items.filter(item => {
-                                                    const isPlaced = Object.values(droppedItems).flat().includes(item.val);
-                                                    return !isPlaced;
-                                                }).map(item => (
-                                                    <div
-                                                        key={item.id}
-                                                        draggable
-                                                        onDragStart={(e) => handleDragStart(e, item)}
-                                                        onDragEnd={handleDragEnd}
-                                                        onTouchStart={(e) => handleTouchStart(e, item)}
-                                                        onTouchMove={handleTouchMove}
-                                                        className="drag-item bg-orange-500 text-white px-4 py-3 rounded-lg cursor-move hover:bg-orange-600 transition-colors"
-                                                    >
-                                                        {item.text}
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Formula Match Type */}
-                            <div className="flex justify-center gap-4 mt-8">
+                            <div className="text-center mt-8">
                                 <button
-                                    onClick={() => {
-                                        setScreen('section_select');
-                                        setCurrentSection(null);
-                                    }}
-                                    className="bg-gray-500 hover:bg-gray-600 text-white px-8 py-4 rounded-xl font-bold transition-all"
+                                    onClick={checkAnswer}
+                                    disabled={!allPlaced}
+                                    className={`px-12 py-4 rounded-2xl text-xl font-black transition-all transform hover:scale-105 shadow-2xl ${
+                                        allPlaced
+                                            ? 'bg-green-500 hover:bg-green-600 text-white cursor-pointer'
+                                            : 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                                    }`}
                                 >
-                                    <i className="fas fa-home mr-2"></i>
-                                    返回選單
+                                    {allPlaced ? (
+                                        <>
+                                            <i className="fas fa-check-circle mr-2"></i>
+                                            檢查答案
+                                        </>
+                                    ) : (
+                                        <>
+                                            <i className="fas fa-exclamation-circle mr-2"></i>
+                                            尚未完成 ({placedItems}/{totalItems})
+                                        </>
+                                    )}
                                 </button>
-                                
-                                {gameState === 'playing' && (
-                                    <button
-                                        onClick={checkAnswer}
-                                        disabled={!allPlaced}
-                                        className={`px-8 py-4 rounded-xl font-bold transition-all ${
-                                            allPlaced 
-                                                ? 'bg-green-500 hover:bg-green-600 text-white cursor-pointer' 
-                                                : 'bg-gray-400 text-gray-200 cursor-not-allowed'
-                                        }`}
-                                    >
-                                        <i className="fas fa-check mr-2"></i>
-                                        {allPlaced ? '檢查答案' : `尚未完成 (${placedItems}/${totalItems})`}
-                                    </button>
-                                )}
-                                
-                                {gameState === 'completed' && (
-                                    <button
-                                        onClick={nextLevel}
-                                        className="bg-green-500 hover:bg-green-600 text-white px-8 py-4 rounded-xl font-bold transition-all"
-                                    >
-                                        <i className="fas fa-arrow-right mr-2"></i>
-                                        {currentLevelIndex < totalLevels - 1 ? '下一關' : '完成小節'}
-                                    </button>
-                                )}
                             </div>
+
+                            {showFeedback && (
+                                <div className={`fixed inset-0 flex items-center justify-center z-50 ${feedbackType === 'correct' ? 'bg-green-500/50' : 'bg-red-500/50'} backdrop-blur-sm`}>
+                                    <div className={`${feedbackType === 'correct' ? 'bg-green-500' : 'bg-red-500'} text-white px-16 py-12 rounded-3xl shadow-2xl text-center ${feedbackType === 'wrong' ? 'shake' : ''}`}>
+                                        <i className={`fas ${feedbackType === 'correct' ? 'fa-check-circle' : 'fa-times-circle'} text-8xl mb-4`}></i>
+                                        <p className="text-4xl font-black">
+                                            {feedbackType === 'correct' ? '答對了！' : '再試一次！'}
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
                 );
             }
 
-            // ===========================================
-            // RENDER: SECTION COMPLETE
-            // ===========================================
             if (screen === 'section_complete') {
-                const colors = themeColors[currentSection];
                 const status = sectionCompletionStatus[currentSection];
                 
                 return (
-                    <div className={`min-h-screen bg-gradient-to-br ${colors.primary} p-4 flex items-center justify-center`}>
+                    <div className="min-h-screen bg-gradient-to-br from-green-400 via-blue-500 to-purple-600 p-4 flex items-center justify-center">
                         <div className="max-w-2xl w-full">
-                            <div id="section-certificate" className="bg-white rounded-3xl p-8 shadow-2xl">
+                            <div id="section-certificate" className="bg-white rounded-3xl p-8 shadow-2xl fade-in">
                                 <div className="text-center mb-6">
-                                    <i className="fas fa-trophy text-6xl text-yellow-500 mb-4 float"></i>
-                                    <h1 className="text-4xl font-black text-gray-800 mb-2">
-                                        🎉 恭喜完成！
+                                    <i className="fas fa-trophy text-8xl text-yellow-500 mb-4 animate-bounce-slow"></i>
+                                    <h1 className="text-5xl font-black text-gray-800 mb-2">
+                                        完成 {currentSection}！
                                     </h1>
-                                    <p className="text-xl text-gray-600">
-                                        你已完成「{currentSection}」所有關卡
+                                    <p className="text-2xl text-gray-600">
+                                        恭喜你完成本小節所有關卡
                                     </p>
                                 </div>
-                                
-                                <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl p-6 mb-6">
-                                    <div className="grid grid-cols-2 gap-4 text-center">
+
+                                <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl p-6 mb-6">
+                                    <div className="grid grid-cols-3 gap-4 text-center">
                                         <div>
                                             <div className="text-3xl font-bold text-blue-600">{status.totalTime}</div>
-                                            <div className="text-gray-600">總時間（秒）</div>
+                                            <div className="text-gray-600">秒</div>
                                         </div>
                                         <div>
-                                            <div className="text-3xl font-bold text-green-600">{totalLevels}</div>
-                                            <div className="text-gray-600">完成關卡</div>
-                                        </div>
-                                        <div>
-                                            <div className="text-3xl font-bold text-orange-600">{status.attempts}</div>
+                                            <div className="text-3xl font-bold text-purple-600">{status.attempts}</div>
                                             <div className="text-gray-600">嘗試次數</div>
                                         </div>
                                         <div>
@@ -1386,9 +1322,6 @@
                 );
             }
 
-            // ===========================================
-            // RENDER: ALL COMPLETE
-            // ===========================================
             if (screen === 'all_complete') {
                 const allErrorLogs = Object.keys(sectionCompletionStatus).reduce((acc, sectionId) => {
                     const status = sectionCompletionStatus[sectionId];
@@ -1405,7 +1338,7 @@
                         <div className="max-w-3xl w-full">
                             <div id="all-complete-certificate" className="bg-white rounded-3xl p-8 shadow-2xl">
                                 <div className="text-center mb-6">
-                                    <i className="fas fa-medal text-8xl text-yellow-500 mb-4 float"></i>
+                                    <i className="fas fa-medal text-8xl text-yellow-500 mb-4 animate-bounce-slow"></i>
                                     <h1 className="text-5xl font-black text-gray-800 mb-2">
                                         🏆 全章完成！
                                     </h1>
@@ -1417,7 +1350,7 @@
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-4 gap-4 mb-6">
+                                <div className="grid grid-cols-2 gap-4 mb-6">
                                     {Object.keys(CHAPTER_DATA).map(sectionId => {
                                         const status = sectionCompletionStatus[sectionId];
                                         return (
@@ -1489,9 +1422,6 @@
             return null;
         }
 
-        // ===========================================
-        // RENDER TO DOM
-        // ===========================================
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
     </script>
