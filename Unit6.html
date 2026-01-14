@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Unit 6: Micro-Challenges</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Screenshot Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
+    <style>
+        /* 基礎設定 */
+        body {
+            overscroll-behavior: none;
+            touch-action: pan-y;
+            user-select: none;
+            -webkit-user-select: none;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f1f5f9;
+        }
+
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* 單字卡 */
+        .word-card {
+            touch-action: none;
+            transition: transform 0.1s;
+            cursor: grab;
+            font-size: 0.9rem;
+            padding: 5px 8px;
+            background-color: white;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            font-weight: 600;
+            color: #334155;
+            user-select: none;
+        }
+        .word-card:active { transform: scale(1.05); }
+        .word-card.selected {
+            background-color: #fbbf24;
+            border-color: #d97706;
+            color: #78350f;
+            transform: scale(1.05);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        /* 拖曳殘影 */
+        .dragging-clone {
+            position: fixed; pointer-events: none; z-index: 9999;
+            opacity: 0.9; transform: scale(1.1);
+            background-color: #e0e7ff; border: 2px solid #6366f1;
+            padding: 6px 10px; border-radius: 6px; font-weight: bold; color: #3730a3;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+        }
+
+        /* 放置區 */
+        .drop-zone {
+            transition: all 0.2s;
+            min-width: 36px; min-height: 32px;
+            display: inline-flex; align-items: center; justify-content: center;
+            margin: 0 2px; vertical-align: middle; cursor: pointer;
+            border-bottom: 2px solid #cbd5e1; background-color: #f8fafc;
+        }
+        .drop-zone.filled {
+            background-color: #e0e7ff; border: 1px solid #818cf8;
+            border-radius: 4px; padding: 0 6px; color: #4338ca;
+            cursor: grab; touch-action: none;
+        }
+        .drop-zone.slot-selected {
+            background-color: #fef3c7 !important; border-color: #f59e0b !important;
+            box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.5);
+        }
+
+        /* 提示字 */
+        .fixed-word { display: inline-block; padding: 0 2px; font-weight: 700; color: #64748b; }
+        
+        /* 動畫與標記 */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-4px); }
+            75% { transform: translateX(4px); }
+        }
+        .shake { animation: shake 0.3s ease-in-out; border-color: #ef4444 !important; background-color: #fee2e2 !important; }
+        .correct-lock {
+            background-color: #dcfce7 !important; border: 1px solid #22c55e !important;
+            color: #15803d; pointer-events: none; border-radius: 4px; padding: 0 6px;
+        }
+        .error-mark { color: #dc2626; text-decoration: underline; font-weight: bold; }
+
+        /* 選單按鈕 */
+        .task-group-title {
+            font-size: 0.85rem; font-weight: 700; color: #64748b; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.05em; padding-left: 0.25rem;
+        }
+        .level-btn {
+            background: white; border: 1px solid #e2e8f0; border-radius: 0.75rem;
+            padding: 0.75rem; margin-bottom: 0.5rem; text-align: left;
+            transition: all 0.2s; display: flex; align-items: center; justify-content: space-between;
+        }
+        .level-btn:active { transform: scale(0.98); background-color: #f8fafc; }
+        .level-btn.completed {
+            background-color: #f0fdf4; border-color: #86efac; color: #166534;
+        }
+        .level-btn.completed .check-icon { display: block; }
+        .check-icon { display: none; font-size: 1.2rem; }
+
+        /* Toggle */
+        .toggle-checkbox:checked { right: 0; border-color: #68D391; }
+        .toggle-checkbox:checked + .toggle-label { background-color: #68D391; }
+        .toggle-checkbox:checked + .toggle-label:before { transform: translateX(100%); }
+        .toggle-label {
+            width: 36px; height: 18px; position: relative; display: block;
+            background: #cbd5e1; border-radius: 20px; cursor: pointer; transition: 0.3s;
+        }
+        .toggle-label:before {
+            content: ''; position: absolute; left: 2px; top: 2px;
+            width: 14px; height: 14px; border-radius: 50%; background: #fff; transition: 0.3s;
+        }
+    </style>
+</head>
+<body class="h-[100dvh] flex flex-col overflow-hidden text-slate-800">
+
+    <!-- Header -->
+    <header class="bg-indigo-600 text-white py-2 px-4 shadow-md shrink-0 z-30 flex justify-between items-center">
+        <div class="flex items-center gap-2">
+            <button id="back-home-btn" onclick="goHome()" class="hidden text-xs bg-indigo-700 px-2 py-1 rounded hover:bg-indigo-500 font-bold border border-indigo-400">
+                ⬅ Menu
+            </button>
+            <h1 class="text-base font-bold truncate">Unit 6 Challenge</h1>
+        </div>
+        <div id="game-timer" class="font-mono text-base bg-indigo-800 px-2 py-0.5 rounded hidden shadow-inner border border-indigo-500">00:00</div>
+    </header>
+
+    <!-- 1. HOME SCREEN -->
+    <div id="home-screen" class="flex-1 overflow-y-auto p-4 flex flex-col max-w-md mx-auto w-full">
+        <div class="text-center mb-4 mt-2">
+            <h2 class="text-xl font-bold text-slate-800">Unit 6: Micro-Tasks</h2>
+            <p class="text-slate-500 text-xs">Complete all 8 tasks to finish!</p>
+        </div>
+
+        <div class="flex-1 pb-4">
+            <!-- Group 1: Dialogue 1 -->
+            <div class="mb-4">
+                <div class="task-group-title">Dialogue 1: Ugly Sweater</div>
+                <button onclick="startGame('d1_1')" id="btn-d1_1" class="level-btn w-full">
+                    <div>
+                        <div class="text-sm font-bold">Task 1: The Party</div>
+                        <div class="text-xs text-slate-400">Lines 1-4</div>
+                    </div>
+                    <span class="check-icon">✅</span>
+                </button>
+                <button onclick="startGame('d1_2')" id="btn-d1_2" class="level-btn w-full">
+                    <div>
+                        <div class="text-sm font-bold">Task 2: Saving Money</div>
+                        <div class="text-xs text-slate-400">Lines 5-8</div>
+                    </div>
+                    <span class="check-icon">✅</span>
+                </button>
+            </div>
+
+            <!-- Group 2: Dialogue 2 -->
+            <div class="mb-4">
+                <div class="task-group-title">Dialogue 2: Buying Gloves</div>
+                <button onclick="startGame('d2_1')" id="btn-d2_1" class="level-btn w-full">
+                    <div>
+                        <div class="text-sm font-bold">Task 3: On Sale</div>
+                        <div class="text-xs text-slate-400">Lines 1-4</div>
+                    </div>
+                    <span class="check-icon">✅</span>
+                </button>
+                <button onclick="startGame('d2_2')" id="btn-d2_2" class="level-btn w-full">
+                    <div>
+                        <div class="text-sm font-bold">Task 4: Payment</div>
+                        <div class="text-xs text-slate-400">Lines 5-8</div>
+                    </div>
+                    <span class="check-icon">✅</span>
+                </button>
+                <button onclick="startGame('d2_3')" id="btn-d2_3" class="level-btn w-full">
+                    <div>
+                        <div class="text-sm font-bold">Task 5: Train Trip</div>
+                        <div class="text-xs text-slate-400">Lines 9-12</div>
+                    </div>
+                    <span class="check-icon">✅</span>
+                </button>
+            </div>
+
+            <!-- Group 3: Reading -->
+            <div class="mb-4">
+                <div class="task-group-title">Reading: The Ugly Truth</div>
+                <button onclick="startGame('r_1')" id="btn-r_1" class="level-btn w-full">
+                    <div>
+                        <div class="text-sm font-bold">Task 6: Fast Fashion</div>
+                        <div class="text-xs text-slate-400">Lines 1-4</div>
+                    </div>
+                    <span class="check-icon">✅</span>
+                </button>
+                <button onclick="startGame('r_2')" id="btn-r_2" class="level-btn w-full">
+                    <div>
+                        <div class="text-sm font-bold">Task 7: Cheap Workers</div>
+                        <div class="text-xs text-slate-400">Lines 5-8</div>
+                    </div>
+                    <span class="check-icon">✅</span>
+                </button>
+                <button onclick="startGame('r_3')" id="btn-r_3" class="level-btn w-full">
+                    <div>
+                        <div class="text-sm font-bold">Task 8: Environment</div>
+                        <div class="text-xs text-slate-400">Lines 9-12</div>
+                    </div>
+                    <span class="check-icon">✅</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="mt-auto w-full border-t border-slate-200 pt-3 bg-white -mx-4 px-4 sticky bottom-0">
+            <div class="flex justify-between items-center mb-2">
+                <span class="text-xs text-slate-500 font-bold">Progress</span>
+                <span id="progress-text" class="text-xs font-bold text-indigo-600">0/8</span>
+            </div>
+            
+            <div id="final-certificate-area" class="hidden mb-2 bg-yellow-50 border border-yellow-200 rounded-lg p-2">
+                <h3 class="text-center text-yellow-800 font-bold text-sm mb-1">🏆 Challenge Complete!</h3>
+                <button onclick="downloadFullReport()" class="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-1.5 rounded shadow text-sm">
+                    📥 Download Report
+                </button>
+            </div>
+
+            <button onclick="clearProgress()" class="w-full py-1.5 text-[10px] text-slate-400 hover:text-red-500">
+                Reset Progress
+            </button>
+        </div>
+    </div>
+
+    <!-- 2. GAME AREA -->
+    <main id="game-container" class="flex-1 flex flex-col max-w-2xl mx-auto w-full overflow-hidden relative hidden bg-white">
+        <div id="level-content" class="flex-1 flex flex-col overflow-hidden">
+            
+            <div class="bg-indigo-50 border-b border-indigo-100 p-2 shrink-0">
+                <div id="translation-display" class="text-sm font-medium text-slate-800 leading-snug space-y-2"></div>
+            </div>
+
+            <div class="flex-1 bg-white p-3 overflow-y-auto no-scrollbar relative flex flex-col gap-4" id="sentence-area"></div>
+
+            <!-- Controls -->
+            <div class="h-10 flex items-center justify-between px-3 bg-slate-50 border-t border-slate-200 shrink-0 select-none">
+                <div class="flex items-center gap-2">
+                    <div class="relative inline-block w-9 mr-1 align-middle select-none">
+                        <input type="checkbox" id="quick-fill-toggle" class="toggle-checkbox absolute block w-4 h-4 rounded-full bg-white border-2 appearance-none cursor-pointer"/>
+                        <label for="quick-fill-toggle" class="toggle-label block overflow-hidden h-4 rounded-full bg-gray-300 cursor-pointer"></label>
+                    </div>
+                    <span class="text-[10px] font-bold text-slate-500 uppercase">Quick Fill</span>
+                </div>
+                <button onclick="checkLevel()" class="bg-green-600 text-white px-4 py-1.5 rounded text-xs font-bold shadow active:scale-95">
+                    Check ✓
+                </button>
+            </div>
+
+            <!-- Word Bank -->
+            <div class="h-[180px] bg-slate-100 border-t border-slate-300 p-2 shrink-0 flex flex-col">
+                <div class="flex justify-between items-center mb-1 px-1">
+                    <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Word Bank</span>
+                    <button onclick="resetCurrentLevel()" class="text-[10px] text-red-500 font-bold px-2 py-0.5 bg-white rounded border border-red-100">Reset</button>
+                </div>
+                <div id="word-bank" class="flex-1 flex flex-wrap content-start gap-1.5 overflow-y-auto pb-4 pr-1"></div>
+            </div>
+        </div>
+
+        <!-- 3. END SCREEN -->
+        <div id="end-screen" class="absolute inset-0 bg-white z-50 flex flex-col p-4 hidden overflow-y-auto">
+            <div class="text-center mb-4">
+                <div class="text-4xl mb-1">🎉</div>
+                <h2 class="text-xl font-bold text-indigo-700">Task Complete!</h2>
+            </div>
+            <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 mb-4 text-sm">
+                <div class="flex justify-between mb-1 text-slate-500">
+                    <span>Task:</span><span class="font-bold text-slate-800" id="result-level-name">-</span>
+                </div>
+                <div class="flex justify-between">
+                    <span>Time:</span><span class="font-mono font-bold" id="final-time">00:00</span>
+                </div>
+            </div>
+            <h3 class="font-bold text-slate-700 mb-2 border-b pb-1 text-sm">Review</h3>
+            <div id="review-content" class="text-sm leading-relaxed space-y-2 mb-4 font-serif text-slate-700"></div>
+            <div class="mt-auto flex gap-2">
+                <button onclick="downloadScreenshot()" class="flex-1 bg-indigo-600 text-white py-2 rounded-lg font-bold shadow text-sm">Save JPG</button>
+                <button onclick="goHome()" class="flex-1 bg-slate-200 text-slate-700 py-2 rounded-lg font-bold text-sm">Menu</button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Hidden Report -->
+    <div id="full-report-container" class="fixed top-0 left-[-9999px] w-[600px] bg-white p-8">
+        <h1 class="text-2xl font-bold text-center mb-6 text-indigo-800">Unit 6 Completion Report</h1>
+        <div id="report-stats" class="grid grid-cols-1 gap-2 mb-6 text-sm"></div>
+        <div class="text-center text-slate-400 text-xs">Generated by EdTech Tool</div>
+    </div>
+
+    <script>
+        // --- 8 Micro-Tasks Data ---
+        const levelsDB = {
+            'd1_1': {
+                title: "D1: The Party (1-4)",
+                sentences: [
+                    { en: "There will be an ugly Christmas sweater party tonight.", zh: "今晚將會有一個醜聖誕毛衣派對。" },
+                    { en: "Kim needs a sweater. What do you think of this one?", zh: "Kim 需要一件毛衣。你覺得這件如何？" },
+                    { en: "What a funny sweater! She'll be like a walking Christmas tree when she wears it.", zh: "真是一件滑稽的毛衣！當她穿上它時，她會像一棵會走路的聖誕樹。" },
+                    { en: "How much does it cost?", zh: "它要多少錢？" }
+                ]
+            },
+            'd1_2': {
+                title: "D1: Saving Money (5-8)",
+                sentences: [
+                    { en: "It costs five hundred NT dollars. Hmm, the price is a little high.", zh: "它要價新台幣五百元。嗯，價格有點高。" },
+                    { en: "Don't spend that much money on a sweater. I have a funny sweater at home.", zh: "不要在一件毛衣上花那麼多錢。我家有一件滑稽的毛衣。" },
+                    { en: "She can have it, and you can save some money.", zh: "她可以拿去穿，而你可以省點錢。" },
+                    { en: "How nice of you! Thanks.", zh: "你人真好！謝啦。" }
+                ]
+            },
+            'd2_1': {
+                title: "D2: On Sale (1-4)",
+                sentences: [
+                    { en: "I'm going to buy gloves for my grandpa.", zh: "我正要買手套給我爺爺。" },
+                    { en: "I spent an hour looking for gloves at another department store yesterday, but they were all too expensive.", zh: "我昨天花了一個小時在另一家百貨公司找手套，但它們都太貴了。" },
+                    { en: "Look at these gloves. They're on sale.", zh: "看看這些手套。它們正在特價。" },
+                    { en: "And they are warm and beautiful. I'll take two pairs.", zh: "而且它們既溫暖又漂亮。我要買兩雙。" }
+                ]
+            },
+            'd2_2': {
+                title: "D2: Payment (5-8)",
+                sentences: [
+                    { en: "The total is NT$510. How would you like to pay, in cash or by card?", zh: "總金額是新台幣 510 元。您想要如何付款，付現還是刷卡？" },
+                    { en: "In cash. Here is one thousand dollars.", zh: "付現。這裡是一千元。" },
+                    { en: "Here's your change. Have a nice day.", zh: "這是您的找零。祝您有美好的一天。" },
+                    { en: "Are you going to spend Christmas with your grandpa?", zh: "你打算和你爺爺一起過聖誕節嗎？" }
+                ]
+            },
+            'd2_3': {
+                title: "D2: Train Trip (9-12)",
+                sentences: [
+                    { en: "Yes. My family and I will go to his place by train tomorrow.", zh: "是的。我和我的家人明天將會搭火車去他的住處。" },
+                    { en: "How long does it take?", zh: "那要花多久時間？" },
+                    { en: "It takes about two hours. He lives in Taichung now.", zh: "大約要花兩個小時。他現在住在台中。" },
+                    { en: "I see.", zh: "我了解了。" }
+                ]
+            },
+            'r_1': {
+                title: "Read: Fast Fashion (1-4)",
+                sentences: [
+                    { en: "Thanks to fast fashion, people now can buy new clothes with nice designs at low prices.", zh: "多虧了快時尚，人們現在可以用低廉的價格買到設計好看的新衣服。" },
+                    { en: "However, the truth behind those beautiful clothes can be really ugly.", zh: "然而，那些美麗衣服背後的真相可能是非常醜陋的。" },
+                    { en: "To keep prices low but still make money, fast fashion companies will do anything.", zh: "為了壓低價格但仍能賺錢，快時尚公司會做任何事。" },
+                    { en: "They move factories to countries like India for cheap workers.", zh: "他們將工廠遷移至像印度這樣的國家以尋求廉價勞工。" }
+                ]
+            },
+            'r_2': {
+                title: "Read: Cheap Workers (5-8)",
+                sentences: [
+                    { en: "Those workers work long hours for very low pay.", zh: "那些勞工長時間工作，薪水卻非常低。" },
+                    { en: "In some countries, a worker makes only about 2.5 NT dollars for an hour's work.", zh: "在某些國家，一名工人的時薪只有約新台幣 2.5 元。" },
+                    { en: "What's more, most companies use polyester to make clothes because it is cheap.", zh: "而且，大多數公司使用聚酯纖維來做衣服，因為它很便宜。" },
+                    { en: "However, the polyester comes off the clothes little by little when you wash them.", zh: "然而，當你清洗衣服時，聚酯纖維會一點一點地脫落。" }
+                ]
+            },
+            'r_3': {
+                title: "Read: Environment (9-12)",
+                sentences: [
+                    { en: "In the end, it goes into the sea and hurts the environment.", zh: "最後，它會進入海洋並傷害環境。" },
+                    { en: "By using cheap workers and polyester, it doesn't cost much for those fast fashion companies to make cheap clothes in a short time.", zh: "藉由使用廉價勞工和聚酯纖維，快時尚公司可以在短時間內以低成本製造廉價衣服。" },
+                    { en: "However, this is bad for the workers and the environment.", zh: "然而，這對勞工和環境都是不好的。" },
+                    { en: "So, when you want to buy clothes from a fast fashion company, stop for a second and think—do I really need them?", zh: "所以，當你想向快時尚公司買衣服時，停下來想一想—我真的需要它們嗎？" }
+                ]
+            }
+        };
+
+        let currentLevelId = null;
+        let startTime = 0;
+        let timerInterval = null;
+        let errorLog = new Set();
+        let progressData = JSON.parse(localStorage.getItem('Unit6_Micro_v1') || '{}');
+        let selectedWord = null;
+        let selectedSlot = null;
+        let isQuickFill = false;
+
+        // Touch Vars
+        let dragSrcEl = null, dragClone = null, isDragging = false;
+        let touchStartX = 0, touchStartY = 0, touchOffsetX = 0, touchOffsetY = 0;
+
+        window.onload = function() {
+            updateHomeUI();
+            document.getElementById('quick-fill-toggle').addEventListener('change', function() {
+                isQuickFill = this.checked;
+            });
+        };
+
+        function updateHomeUI() {
+            const keys = Object.keys(progressData);
+            Object.keys(levelsDB).forEach(id => {
+                const btn = document.getElementById(`btn-${id}`);
+                if (btn) {
+                    if (progressData[id]) btn.classList.add('completed');
+                    else btn.classList.remove('completed');
+                }
+            });
+            document.getElementById('progress-text').innerText = `${keys.length}/8`;
+            const certArea = document.getElementById('final-certificate-area');
+            if (keys.length === 8) certArea.classList.remove('hidden');
+            else certArea.classList.add('hidden');
+        }
+
+        function goHome() {
+            clearInterval(timerInterval);
+            document.getElementById('game-container').classList.add('hidden');
+            document.getElementById('home-screen').classList.remove('hidden');
+            updateHomeUI();
+        }
+
+        function startGame(id) {
+            currentLevelId = id;
+            document.getElementById('home-screen').classList.add('hidden');
+            document.getElementById('game-container').classList.remove('hidden');
+            document.getElementById('level-content').classList.remove('hidden');
+            document.getElementById('end-screen').classList.add('hidden');
+            document.getElementById('back-home-btn').classList.remove('hidden');
+            document.getElementById('game-timer').classList.remove('hidden');
+            errorLog.clear();
+            deselectAll();
+            startTime = Date.now();
+            timerInterval = setInterval(updateTimer, 1000);
+            updateTimer();
+            loadLevelData(levelsDB[id]);
+        }
+
+        function updateTimer() {
+            const delta = Math.floor((Date.now() - startTime) / 1000);
+            const m = Math.floor(delta / 60).toString().padStart(2, '0');
+            const s = (delta % 60).toString().padStart(2, '0');
+            document.getElementById('game-timer').innerText = `${m}:${s}`;
+        }
+
+        function loadLevelData(data) {
+            document.getElementById('translation-display').innerHTML = data.sentences.map((s, i) => 
+                `<div class="flex items-start gap-2"><span class="bg-indigo-100 text-indigo-700 px-1 rounded text-[10px] font-bold mt-1 min-w-[15px] text-center">${i+1}</span><span class="text-xs text-slate-600">${s.zh}</span></div>`
+            ).join('');
+
+            const area = document.getElementById('sentence-area');
+            area.innerHTML = '';
+            let allWords = [];
+
+            data.sentences.forEach((s, sIdx) => {
+                const words = s.en.split(/\s+/);
+                const fixed = getFixedIndices(words.length, 0.3);
+                const row = document.createElement('div');
+                row.className = "border-b border-dashed border-slate-100 pb-2 last:border-0";
+                
+                const container = document.createElement('div');
+                container.className = "leading-loose text-base flex flex-wrap gap-y-2 gap-x-1 items-center";
+                container.innerHTML = `<span class="text-[10px] font-bold text-slate-300 mr-1 select-none">${sIdx+1}.</span>`;
+
+                words.forEach((w, wIdx) => {
+                    const match = w.match(/^([a-zA-Z0-9'-]+)(.*)$/);
+                    if (match) {
+                        const core = match[1], punc = match[2];
+                        if (fixed.has(wIdx)) {
+                            const sp = document.createElement('span');
+                            sp.className = "fixed-word"; sp.innerText = w;
+                            container.appendChild(sp);
+                        } else {
+                            const slot = document.createElement('div');
+                            slot.id = `s-${sIdx}-${wIdx}`; slot.className = "drop-zone";
+                            slot.style.width = Math.max(30, core.length*9)+'px';
+                            slot.dataset.sentenceIdx = sIdx; slot.dataset.correctWord = core;
+                            
+                            slot.addEventListener('click', () => handleSlotClick(slot));
+                            slot.addEventListener('dragover', (e)=>e.preventDefault());
+                            slot.addEventListener('drop', (e)=>handleDrop(e, slot));
+                            
+                            container.appendChild(slot);
+                            if (punc) {
+                                const p = document.createElement('span');
+                                p.className="text-slate-400 font-bold ml-px"; p.innerText=punc;
+                                container.appendChild(p);
+                            } else {
+                                const sp = document.createElement('span'); sp.className="mr-1"; container.appendChild(sp);
+                            }
+                            allWords.push({id: `w-${sIdx}-${wIdx}`, text: core});
+                        }
+                    } else {
+                        const sp = document.createElement('span'); sp.innerText=w; container.appendChild(sp);
+                    }
+                });
+                row.appendChild(container);
+                area.appendChild(row);
+            });
+            renderWordBank(allWords);
+        }
+
+        function getFixedIndices(len, ratio) {
+            const count = Math.max(1, Math.floor(len * ratio));
+            const idx = Array.from({length: len}, (_, i) => i);
+            for (let i=idx.length-1; i>0; i--) {
+                const j = Math.floor(Math.random()*(i+1));
+                [idx[i], idx[j]] = [idx[j], idx[i]];
+            }
+            return new Set(idx.slice(0, count));
+        }
+
+        function renderWordBank(words) {
+            const bank = document.getElementById('word-bank');
+            bank.innerHTML = '';
+            words.sort((a,b) => a.text.toLowerCase().localeCompare(b.text.toLowerCase()));
+            words.forEach(w => bank.appendChild(createWordCard(w.id, w.text)));
+        }
+
+        function createWordCard(id, text) {
+            const div = document.createElement('div');
+            div.id = id; div.className = "word-card"; div.innerText = text;
+            div.draggable = true; div.dataset.text = text;
+
+            div.addEventListener('click', (e) => handleInteraction(e, div));
+            div.addEventListener('dragstart', (e) => {
+                e.dataTransfer.setData('type', 'bank'); e.dataTransfer.setData('sid', id);
+                div.classList.add('opacity-50'); deselectAll();
+            });
+            div.addEventListener('dragend', () => div.classList.remove('opacity-50'));
+            
+            addTouchListeners(div);
+            return div;
+        }
+
+        // --- Interaction ---
+        function handleInteraction(e, el) {
+            e.stopPropagation();
+            const isSlot = el.classList.contains('drop-zone');
+            
+            if (isQuickFill && !isSlot) {
+                const empty = document.querySelector('.drop-zone:not(.filled)');
+                if (empty) {
+                    fillSlot(empty, {id: el.id, text: el.dataset.text});
+                    el.remove();
+                } else {
+                    el.classList.add('shake'); setTimeout(()=>el.classList.remove('shake'), 300);
+                }
+                return;
+            }
+
+            if (isSlot) {
+                if (selectedWord) {
+                    fillSlot(el, {id: selectedWord.id, text: selectedWord.dataset.text});
+                    selectedWord.remove(); deselectAll();
+                } else if (selectedSlot) {
+                    if (selectedSlot !== el) {
+                        fillSlot(el, {id: selectedSlot.dataset.filledId, text: selectedSlot.innerText});
+                        emptySlot(selectedSlot);
+                    }
+                    deselectAll();
+                } else if (el.classList.contains('filled')) {
+                    if (el.classList.contains('slot-selected')) deselectAll();
+                    else { deselectAll(); selectedSlot=el; el.classList.add('slot-selected'); }
+                }
+            } else {
+                if (selectedWord===el) deselectAll();
+                else { deselectAll(); selectedWord=el; el.classList.add('selected'); }
+            }
+        }
+
+        function handleSlotClick(slot) { handleInteraction({stopPropagation:()=>{}}, slot); }
+        function handleDragStart(e) { e.dataTransfer.setData('type','slot'); e.dataTransfer.setData('sid',e.target.id); }
+
+        function fillSlot(slot, data) {
+            if (slot.classList.contains('filled')) {
+                // Overwrite: return existing to bank
+                const bank = document.getElementById('word-bank');
+                const card = createWordCard(slot.dataset.filledId, slot.innerText);
+                bank.appendChild(card);
+                const cards = Array.from(bank.children);
+                cards.sort((a,b) => a.innerText.toLowerCase().localeCompare(b.innerText.toLowerCase()));
+                cards.forEach(c => bank.appendChild(c));
+            }
+            slot.innerText = data.text; slot.classList.add('filled');
+            slot.dataset.filledId = data.id; slot.draggable = true;
+            slot.removeEventListener('dragstart', handleDragStart);
+            slot.addEventListener('dragstart', handleDragStart);
+            removeTouchListeners(slot); addTouchListeners(slot);
+        }
+
+        function emptySlot(slot) {
+            slot.innerText = ""; slot.classList.remove('filled','slot-selected','shake');
+            delete slot.dataset.filledId; slot.draggable = false;
+            const newSlot = slot.cloneNode(true);
+            slot.parentNode.replaceChild(newSlot, slot);
+            newSlot.addEventListener('click', ()=>handleSlotClick(newSlot));
+            newSlot.addEventListener('dragover', (e)=>e.preventDefault());
+            newSlot.addEventListener('drop', (e)=>handleDrop(e, newSlot));
+        }
+
+        function handleDrop(e, slot) {
+            e.preventDefault();
+            const type = e.dataTransfer.getData('type');
+            const sid = e.dataTransfer.getData('sid');
+            if (type==='bank') {
+                const c = document.getElementById(sid);
+                if (c) { fillSlot(slot, {id:c.id, text:c.dataset.text}); c.remove(); }
+            } else if (type==='slot') {
+                const src = document.getElementById(sid);
+                if (src && src!==slot) {
+                    fillSlot(slot, {id:src.dataset.filledId, text:src.innerText});
+                    emptySlot(src);
+                }
+            }
+        }
+
+        function deselectAll() {
+            if(selectedWord) selectedWord.classList.remove('selected');
+            if(selectedSlot) selectedSlot.classList.remove('slot-selected');
+            selectedWord=null; selectedSlot=null;
+        }
+
+        // --- Touch ---
+        function addTouchListeners(el) {
+            el.addEventListener('touchstart', ts, {passive:false});
+            el.addEventListener('touchmove', tm, {passive:false});
+            el.addEventListener('touchend', te);
+        }
+        function removeTouchListeners(el) {
+            el.removeEventListener('touchstart', ts);
+            el.removeEventListener('touchmove', tm);
+            el.removeEventListener('touchend', te);
+        }
+        function ts(e) {
+            if(e.touches.length>1) return;
+            dragSrcEl=e.currentTarget; e.preventDefault();
+            touchStartX=e.touches[0].clientX; touchStartY=e.touches[0].clientY;
+            isDragging=false;
+            const r=dragSrcEl.getBoundingClientRect();
+            touchOffsetX=touchStartX-r.left; touchOffsetY=touchStartY-r.top;
+        }
+        function tm(e) {
+            if(!dragSrcEl) return; e.preventDefault();
+            const t=e.touches[0];
+            const dx=Math.abs(t.clientX-touchStartX), dy=Math.abs(t.clientY-touchStartY);
+            if(!isDragging && (dx>5||dy>5)) {
+                isDragging=true;
+                dragClone=dragSrcEl.cloneNode(true);
+                dragClone.classList.add('dragging-clone');
+                dragClone.style.width=dragSrcEl.offsetWidth+'px';
+                document.body.appendChild(dragClone);
+                dragSrcEl.style.opacity='0.4'; deselectAll();
+            }
+            if(isDragging && dragClone) {
+                dragClone.style.left=(t.clientX-touchOffsetX)+'px';
+                dragClone.style.top=(t.clientY-touchOffsetY)+'px';
+            }
+        }
+        function te(e) {
+            if(!isDragging) {
+                if(dragSrcEl) handleInteraction({stopPropagation:()=>{}}, dragSrcEl);
+                resetTouch(); return;
+            }
+            if(dragClone) {
+                dragClone.style.display='none';
+                const t=e.changedTouches[0];
+                const elBelow=document.elementFromPoint(t.clientX, t.clientY);
+                const dz=elBelow?elBelow.closest('.drop-zone'):null;
+                const wb=elBelow?elBelow.closest('#word-bank'):null;
+                
+                if(dz) {
+                    const isSrcSlot = dragSrcEl.classList.contains('drop-zone');
+                    if(isSrcSlot) {
+                        if(dz!==dragSrcEl) {
+                            fillSlot(dz, {id:dragSrcEl.dataset.filledId, text:dragSrcEl.innerText});
+                            emptySlot(dragSrcEl);
+                        }
+                    } else {
+                        fillSlot(dz, {id:dragSrcEl.id, text:dragSrcEl.dataset.text});
+                        dragSrcEl.remove();
+                    }
+                } else if (wb && dragSrcEl.classList.contains('drop-zone')) {
+                    // Return to bank
+                    const bank=document.getElementById('word-bank');
+                    const c=createWordCard(dragSrcEl.dataset.filledId, dragSrcEl.innerText);
+                    bank.appendChild(c);
+                    const cards=Array.from(bank.children);
+                    cards.sort((a,b)=>a.innerText.toLowerCase().localeCompare(b.innerText.toLowerCase()));
+                    cards.forEach(x=>bank.appendChild(x));
+                    emptySlot(dragSrcEl);
+                }
+                dragClone.remove(); if(dragSrcEl) dragSrcEl.style.opacity='1';
+            }
+            resetTouch();
+        }
+        function resetTouch() { dragSrcEl=null; dragClone=null; isDragging=false; }
+
+        function resetCurrentLevel() { if(confirm("Reset words?")) loadLevelData(levelsDB[currentLevelId]); }
+        function clearProgress() { if(confirm("Clear progress?")) { localStorage.removeItem('Unit6_Micro_v1'); progressData={}; updateHomeUI(); }}
+
+        function checkLevel() {
+            const slots = document.querySelectorAll('.drop-zone');
+            let allCorrect = true;
+            slots.forEach(s => {
+                if(s.classList.contains('correct-lock')) return;
+                const uw=s.innerText.trim(), tw=s.dataset.correctWord;
+                if(uw===tw) {
+                    s.classList.add('correct-lock'); s.classList.remove('filled','slot-selected');
+                    s.draggable=false; const ns=s.cloneNode(true); s.parentNode.replaceChild(ns, s);
+                } else {
+                    allCorrect=false; if(uw!=="") { s.classList.add('shake'); setTimeout(()=>s.classList.remove('shake'),300); errorLog.add(tw); }
+                }
+            });
+            if(allCorrect) setTimeout(showEndScreen, 500);
+        }
+
+        function showEndScreen() {
+            clearInterval(timerInterval);
+            const now=new Date(), tStr=document.getElementById('game-timer').innerText;
+            const dStr=`${now.getMonth()+1}/${now.getDate()} ${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')}`;
+            progressData[currentLevelId] = {time:tStr, date:dStr};
+            localStorage.setItem('Unit6_Micro_v1', JSON.stringify(progressData));
+
+            document.getElementById('level-content').classList.add('hidden');
+            document.getElementById('end-screen').classList.remove('hidden');
+            document.getElementById('result-level-name').innerText = levelsDB[currentLevelId].title;
+            document.getElementById('final-time').innerText = tStr;
+
+            const rDiv=document.getElementById('review-content'); rDiv.innerHTML='';
+            levelsDB[currentLevelId].sentences.forEach(s => {
+                const words=s.en.split(/\s+/).map(w=>{
+                    const m=w.match(/^([a-zA-Z0-9'-]+)(.*)$/);
+                    if(m && errorLog.has(m[1])) return `<span class="error-mark">${m[1]}</span>${m[2]}`;
+                    return w;
+                }).join(' ');
+                rDiv.innerHTML += `<div class="mb-2 border-b border-slate-100 pb-1"><div class="text-[10px] text-slate-400">${s.zh}</div><div class="font-medium">${words}</div></div>`;
+            });
+        }
+
+        async function downloadScreenshot() {
+            const el=document.getElementById('end-screen'), btns=el.querySelectorAll('button');
+            btns.forEach(b=>b.style.display='none');
+            const cl=el.cloneNode(true);
+            cl.style.width='400px'; cl.style.position='fixed'; cl.style.left='-9999px'; cl.classList.remove('hidden');
+            document.body.appendChild(cl);
+            try {
+                const cv=await html2canvas(cl,{scale:2});
+                const l=document.createElement('a'); l.href=cv.toDataURL('image/jpeg'); l.download=`Result_${currentLevelId}.jpg`; l.click();
+            } finally { cl.remove(); btns.forEach(b=>b.style.display='block'); }
+        }
+
+        async function downloadFullReport() {
+            const el=document.getElementById('full-report-container');
+            const st=document.getElementById('report-stats'); st.innerHTML='';
+            let tt=0;
+            Object.keys(levelsDB).forEach(id => {
+                const d=progressData[id];
+                if(d) {
+                    const ps=d.time.split(':'); tt+=parseInt(ps[0])*60+parseInt(ps[1]);
+                    st.innerHTML += `<div class="flex justify-between border-b border-slate-100 py-1"><span>${levelsDB[id].title}</span><span class="font-mono text-slate-600">${d.time}</span></div>`;
+                } else {
+                    st.innerHTML += `<div class="flex justify-between border-b border-slate-100 py-1"><span class="text-slate-400">${levelsDB[id].title}</span><span class="text-slate-300">-</span></div>`;
+                }
+            });
+            const mm=Math.floor(tt/60).toString().padStart(2,'0'), ss=(tt%60).toString().padStart(2,'0');
+            st.innerHTML += `<div class="mt-4 text-center font-bold text-indigo-600 border-t pt-2">Total Time: ${mm}:${ss}</div>`;
+
+            try {
+                const cv=await html2canvas(el,{scale:2});
+                const l=document.createElement('a'); l.href=cv.toDataURL('image/jpeg'); l.download='Unit6_Report.jpg'; l.click();
+            } catch(e) { alert("Error"); }
+        }
+    </script>
+</body>
+</html>
