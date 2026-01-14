@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>顏色字判斷 - 互動式學習遊戲</title>
+    
+    <!-- React -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            cursor: default;
+        }
+
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            overscroll-behavior: none;
+            overflow-x: hidden;
+        }
+
+        button, a, .clickable {
+            cursor: pointer !important;
+        }
+
+        .drag-item {
+            transition: all 0.2s ease;
+            cursor: grab !important;
+            touch-action: none;
+            -webkit-touch-callout: none;
+        }
+
+        .drag-item:active {
+            cursor: grabbing !important;
+        }
+
+        @media (hover: hover) {
+            .drag-item:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            }
+        }
+
+        .dragging {
+            opacity: 0.5;
+            transform: scale(1.05);
+            z-index: 1000;
+            position: fixed;
+            pointer-events: none;
+        }
+
+        .cursor-move {
+            cursor: move !important;
+            touch-action: none;
+            -webkit-touch-callout: none;
+        }
+
+        .cursor-move:active {
+            cursor: grabbing !important;
+        }
+
+        .drop-zone {
+            transition: all 0.2s ease;
+            min-height: 80px;
+        }
+
+        .drop-zone.drag-over {
+            background: rgba(59, 130, 246, 0.2);
+            border: 3px dashed #3b82f6 !important;
+            transform: scale(1.02);
+        }
+
+        .correct-answer {
+            animation: correctPulse 0.6s ease-out;
+            border: 3px solid #10b981 !important;
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        .wrong-answer {
+            animation: shake 0.5s ease-out;
+            border: 3px solid #ef4444 !important;
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        @keyframes correctPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* 顏色框底色 */
+        .color-red { background: rgba(248, 113, 113, 0.2); }
+        .color-yellow { background: rgba(250, 204, 21, 0.2); }
+        .color-black { background: rgba(107, 114, 128, 0.2); }
+        .color-white { background: rgba(243, 244, 246, 0.3); }
+        .color-green { background: rgba(134, 239, 172, 0.2); }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        // ===========================================
+        // 遊戲資料
+        // ===========================================
+        const GAME_DATA = {
+            "theme1-level1": {
+                id: "theme1-level1",
+                theme: 1,
+                title: "顏色別稱分類 - 第1關",
+                description: "請將以下顏色詞語拖曳到正確的顏色分類框",
+                zones: [
+                    { id: 'red', title: '🔴 紅色', color: 'color-red' },
+                    { id: 'yellow', title: '🟡 黃色', color: 'color-yellow' },
+                    { id: 'black', title: '⚫ 黑色', color: 'color-black' },
+                    { id: 'white', title: '⚪ 白色', color: 'color-white' },
+                    { id: 'green', title: '🟢 青/綠色', color: 'color-green' }
+                ],
+                items: [
+                    { id: 'item1', text: '「緋」櫻', val: 'red' },
+                    { id: 'item2', text: '「朱」砂', val: 'red' },
+                    { id: 'item3', text: '「絳」脣', val: 'red' },
+                    { id: 'item4', text: '「彤」雲', val: 'red' },
+                    { id: 'item5', text: '「金」榜', val: 'yellow' },
+                    { id: 'item6', text: '「鵝」絨', val: 'yellow' },
+                    { id: 'item7', text: '「橘」子', val: 'yellow' },
+                    { id: 'item8', text: '「淡」煙', val: 'yellow' },
+                    { id: 'item9', text: '「漆」器', val: 'black' },
+                    { id: 'item10', text: '「墨」汁', val: 'black' },
+                    { id: 'item11', text: '「烏」雲', val: 'black' },
+                    { id: 'item12', text: '「黝」暗', val: 'black' },
+                    { id: 'item13', text: '「雪」花', val: 'white' },
+                    { id: 'item14', text: '「皎」月', val: 'white' },
+                    { id: 'item15', text: '「蒼」顏', val: 'white' },
+                    { id: 'item16', text: '「銀」河', val: 'white' },
+                    { id: 'item17', text: '「墨」松', val: 'green' },
+                    { id: 'item18', text: '「嫩」芽', val: 'green' },
+                    { id: 'item19', text: '「青」苔', val: 'green' },
+                    { id: 'item20', text: '「碧」玉', val: 'green' },
+                    { id: 'item21', text: '「翠」竹', val: 'green' }
+                ],
+                solution: {
+                    red: ['red'],
+                    yellow: ['yellow'],
+                    black: ['black'],
+                    white: ['white'],
+                    green: ['green']
+                }
+            },
+            "theme1-level2": {
+                id: "theme1-level2",
+                theme: 1,
+                title: "顏色別稱分類 - 第2關",
+                description: "請將以下顏色詞語拖曳到正確的顏色分類框",
+                zones: [
+                    { id: 'red', title: '🔴 紅色', color: 'color-red' },
+                    { id: 'yellow', title: '🟡 黃色', color: 'color-yellow' },
+                    { id: 'black', title: '⚫ 黑色', color: 'color-black' },
+                    { id: 'white', title: '⚪ 白色', color: 'color-white' },
+                    { id: 'green', title: '🟢 青/綠色', color: 'color-green' }
+                ],
+                items: [
+                    { id: 'item1', text: '「殷」血', val: 'red' },
+                    { id: 'item2', text: '「嫣」然', val: 'red' },
+                    { id: 'item3', text: '「丹」楓', val: 'red' },
+                    { id: 'item4', text: '「赭」土', val: 'red' },
+                    { id: 'item5', text: '「焦」土', val: 'yellow' },
+                    { id: 'item6', text: '「杏」仁', val: 'yellow' },
+                    { id: 'item7', text: '「土」牆', val: 'yellow' },
+                    { id: 'item8', text: '「赭」石', val: 'yellow' },
+                    { id: 'item9', text: '「幽」谷', val: 'black' },
+                    { id: 'item10', text: '「玄」鐵', val: 'black' },
+                    { id: 'item11', text: '「黯」淡', val: 'black' },
+                    { id: 'item12', text: '「深」淵', val: 'black' },
+                    { id: 'item13', text: '「乳」液', val: 'white' },
+                    { id: 'item14', text: '「素」紙', val: 'white' },
+                    { id: 'item15', text: '「霜」鬢', val: 'white' },
+                    { id: 'item16', text: '「慘」顏', val: 'white' },
+                    { id: 'item17', text: '「蔥」蘢', val: 'green' },
+                    { id: 'item18', text: '「草」原', val: 'green' },
+                    { id: 'item19', text: '「靛」藍', val: 'green' },
+                    { id: 'item20', text: '「天」空', val: 'green' },
+                    { id: 'item21', text: '「湛」藍', val: 'green' }
+                ],
+                solution: {
+                    red: ['red'],
+                    yellow: ['yellow'],
+                    black: ['black'],
+                    white: ['white'],
+                    green: ['green']
+                }
+            },
+            "theme2-level1": {
+                id: "theme2-level1",
+                theme: 2,
+                title: "詞語意義配對 - 第1關（基礎）",
+                description: "請將含顏色字的詞語拖曳到正確的意義解釋框",
+                isMatching: true,
+                zones: [
+                    { id: 'profit', title: '利潤', category: 'red' },
+                    { id: 'embarrass', title: '尷尬', category: 'red' },
+                    { id: 'malnutrition', title: '營養不良', category: 'yellow' },
+                    { id: 'golden', title: '美好時期', category: 'yellow' },
+                    { id: 'clear', title: '清楚', category: 'black' },
+                    { id: 'evil', title: '奸詐', category: 'black' },
+                    { id: 'fromscratch', title: '從零開始', category: 'white' },
+                    { id: 'evidence', title: '證據', category: 'white' },
+                    { id: 'surpass', title: '超越', category: 'green' },
+                    { id: 'childhood', title: '玩伴', category: 'green' },
+                    { id: 'shortage', title: '短缺', category: 'green' },
+                    { id: 'pale', title: '無血色', category: 'green' }
+                ],
+                items: [
+                    { id: 'item1', text: '年終分「紅」', val: 'profit' },
+                    { id: 'item2', text: '面「紅」耳赤', val: 'embarrass' },
+                    { id: 'item3', text: '面「黃」肌瘦', val: 'malnutrition' },
+                    { id: 'item4', text: '「黃」金時代', val: 'golden' },
+                    { id: 'item5', text: '「黑」白分明', val: 'clear' },
+                    { id: 'item6', text: '「黑」心商人', val: 'evil' },
+                    { id: 'item7', text: '「白」手起家', val: 'fromscratch' },
+                    { id: 'item8', text: '「白」紙黑字', val: 'evidence' },
+                    { id: 'item9', text: '「青」出於藍', val: 'surpass' },
+                    { id: 'item10', text: '「青」梅竹馬', val: 'childhood' },
+                    { id: 'item11', text: '「青」黃不接', val: 'shortage' },
+                    { id: 'item12', text: '「蒼」白', val: 'pale' }
+                ],
+                solution: {}
+            },
+            "theme2-level2": {
+                id: "theme2-level2",
+                theme: 2,
+                title: "詞語意義配對 - 第2關（進階）",
+                description: "請將含顏色字的詞語拖曳到正確的意義解釋框",
+                isMatching: true,
+                zones: [
+                    { id: 'beauty', title: '美女', category: 'red' },
+                    { id: 'celebrate', title: '喜慶', category: 'red' },
+                    { id: 'erotic', title: '情色', category: 'yellow' },
+                    { id: 'goodday', title: '良辰', category: 'yellow' },
+                    { id: 'confuse', title: '混淆', category: 'black' },
+                    { id: 'ban', title: '禁止', category: 'black' },
+                    { id: 'daydream', title: '幻想', category: 'white' },
+                    { id: 'futile', title: '徒勞', category: 'white' },
+                    { id: 'unfaithful', title: '不忠', category: 'green' },
+                    { id: 'loyal', title: '忠誠', category: 'green' },
+                    { id: 'blueprint', title: '規劃', category: 'green' },
+                    { id: 'favor', title: '看重', category: 'green' }
+                ],
+                items: [
+                    { id: 'item1', text: '「紅」顏薄命', val: 'beauty' },
+                    { id: 'item2', text: '披「紅」掛彩', val: 'celebrate' },
+                    { id: 'item3', text: '「黃」色笑話', val: 'erotic' },
+                    { id: 'item4', text: '「黃」道吉日', val: 'goodday' },
+                    { id: 'item5', text: '「黑」白顛倒', val: 'confuse' },
+                    { id: 'item6', text: '「黑」名單', val: 'ban' },
+                    { id: 'item7', text: '「白」日夢', val: 'daydream' },
+                    { id: 'item8', text: '「白」費心機', val: 'futile' },
+                    { id: 'item9', text: '「綠」帽子', val: 'unfaithful' },
+                    { id: 'item10', text: '「碧」血丹心', val: 'loyal' },
+                    { id: 'item11', text: '「藍」圖', val: 'blueprint' },
+                    { id: 'item12', text: '「青」睞', val: 'favor' }
+                ],
+                solution: {}
+            },
+            "theme2-level3": {
+                id: "theme2-level3",
+                theme: 2,
+                title: "詞語意義配對 - 第3關（挑戰）",
+                description: "請將含顏色字的詞語拖曳到正確的意義解釋框",
+                isMatching: true,
+                zones: [
+                    { id: 'redlight', title: '色情場所', category: 'red' },
+                    { id: 'lucky', title: '吉利', category: 'red' },
+                    { id: 'dream', title: '虛幻', category: 'yellow' },
+                    { id: 'emperor', title: '稱帝', category: 'yellow' },
+                    { id: 'threat', title: '威脅信', category: 'black' },
+                    { id: 'darkhorse', title: '出人意料', category: 'black' },
+                    { id: 'despise', title: '輕視', category: 'white' },
+                    { id: 'funeral', title: '喪事', category: 'white' },
+                    { id: 'history', title: '流芳', category: 'green' },
+                    { id: 'despair', title: '失望', category: 'gray' },
+                    { id: 'mob', title: '混亂', category: 'gray' },
+                    { id: 'grayarea', title: '模糊', category: 'gray' }
+                ],
+                items: [
+                    { id: 'item1', text: '「紅」燈區', val: 'redlight' },
+                    { id: 'item2', text: '開門「紅」', val: 'lucky' },
+                    { id: 'item3', text: '「黃」粱一夢', val: 'dream' },
+                    { id: 'item4', text: '「黃」袍加身', val: 'emperor' },
+                    { id: 'item5', text: '「黑」函', val: 'threat' },
+                    { id: 'item6', text: '「黑」馬', val: 'darkhorse' },
+                    { id: 'item7', text: '「白」眼', val: 'despise' },
+                    { id: 'item8', text: '「白」事', val: 'funeral' },
+                    { id: 'item9', text: '「青」史留名', val: 'history' },
+                    { id: 'item10', text: '「灰」心喪志', val: 'despair' },
+                    { id: 'item11', text: '「烏」合之眾', val: 'mob' },
+                    { id: 'item12', text: '「灰」色地帶', val: 'grayarea' }
+                ],
+                solution: {}
+            }
+        };
+
+        // 為所有 theme2 關卡動態生成 solution
+        ['theme2-level1', 'theme2-level2', 'theme2-level3'].forEach(levelId => {
+            GAME_DATA[levelId].zones.forEach(zone => {
+                GAME_DATA[levelId].solution[zone.id] = [zone.id];
+            });
+        });
+
+        // 隨機排序函數
+        function shuffleArray(array) {
+            const newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        }
+
+        // 觸控拖曳支援
+        let touchDragData = null;
+        let touchDragElement = null;
+        let touchClone = null;
+        let touchRemoveCallback = null;
+        let touchSourceZoneId = null;
+        let isDragging = false;
+
+        function handleTouchStart(e, item, removeCallback) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            isDragging = true;
+            touchDragData = item;
+            touchDragElement = e.currentTarget;
+            touchRemoveCallback = removeCallback;
+            
+            document.body.style.overflow = 'hidden';
+            document.body.style.touchAction = 'none';
+            document.body.style.userSelect = 'none';
+            document.body.style.webkitUserSelect = 'none';
+            
+            const sourceZone = touchDragElement.closest('.drop-zone');
+            touchSourceZoneId = sourceZone ? sourceZone.getAttribute('data-zone-id') : null;
+            
+            const touch = e.touches[0];
+            
+            touchClone = touchDragElement.cloneNode(true);
+            touchClone.style.position = 'fixed';
+            touchClone.style.zIndex = '10000';
+            touchClone.style.opacity = '0.8';
+            touchClone.style.pointerEvents = 'none';
+            touchClone.style.width = touchDragElement.offsetWidth + 'px';
+            touchClone.style.left = (touch.clientX - touchDragElement.offsetWidth / 2) + 'px';
+            touchClone.style.top = (touch.clientY - touchDragElement.offsetHeight / 2) + 'px';
+            touchClone.style.transition = 'none';
+            touchClone.style.touchAction = 'none';
+            document.body.appendChild(touchClone);
+            
+            touchDragElement.style.opacity = '0.2';
+            touchDragElement.style.transform = 'scale(0.95)';
+            touchDragElement.style.transition = 'opacity 0.2s, transform 0.2s';
+        }
+
+        function handleTouchMove(e) {
+            if (!touchClone || !isDragging) return;
+            
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const touch = e.touches[0];
+            
+            touchClone.style.left = (touch.clientX - touchClone.offsetWidth / 2) + 'px';
+            touchClone.style.top = (touch.clientY - touchClone.offsetHeight / 2) + 'px';
+            
+            const dropZones = document.querySelectorAll('.drop-zone');
+            dropZones.forEach(zone => zone.classList.remove('drag-over'));
+            
+            const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+            if (elementBelow) {
+                const dropZone = elementBelow.closest('.drop-zone');
+                if (dropZone) {
+                    const targetZoneId = dropZone.getAttribute('data-zone-id');
+                    if (targetZoneId !== touchSourceZoneId) {
+                        dropZone.classList.add('drag-over');
+                    }
+                }
+            }
+        }
+
+        function handleTouchEnd(e, dropCallback) {
+            if (!touchClone) return;
+            
+            isDragging = false;
+            
+            const touch = e.changedTouches[0];
+            const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+            
+            let targetZone = null;
+            let targetZoneId = null;
+            if (elementBelow) {
+                targetZone = elementBelow.closest('.drop-zone');
+                if (targetZone) {
+                    targetZoneId = targetZone.getAttribute('data-zone-id');
+                }
+            }
+            
+            if (touchClone && touchClone.parentNode) {
+                touchClone.parentNode.removeChild(touchClone);
+            }
+            
+            document.body.style.overflow = '';
+            document.body.style.touchAction = '';
+            document.body.style.userSelect = '';
+            document.body.style.webkitUserSelect = '';
+            
+            const dropZones = document.querySelectorAll('.drop-zone');
+            dropZones.forEach(zone => zone.classList.remove('drag-over'));
+            
+            const isValidDrop = targetZone && targetZoneId && touchDragData && 
+                              targetZoneId !== touchSourceZoneId;
+            
+            if (isValidDrop && dropCallback) {
+                if (touchRemoveCallback) {
+                    touchRemoveCallback();
+                }
+                dropCallback(touchDragData, targetZoneId);
+            } else {
+                if (touchDragElement) {
+                    touchDragElement.style.opacity = '1';
+                    touchDragElement.style.transform = 'scale(1)';
+                }
+            }
+            
+            touchDragData = null;
+            touchDragElement = null;
+            touchClone = null;
+            touchRemoveCallback = null;
+            touchSourceZoneId = null;
+        }
+
+        if (typeof window !== 'undefined') {
+            document.addEventListener('touchcancel', function(e) {
+                if (isDragging) {
+                    isDragging = false;
+                    if (touchClone && touchClone.parentNode) {
+                        touchClone.parentNode.removeChild(touchClone);
+                    }
+                    if (touchDragElement) {
+                        touchDragElement.style.opacity = '1';
+                        touchDragElement.style.transform = 'scale(1)';
+                    }
+                    document.body.style.overflow = '';
+                    document.body.style.touchAction = '';
+                    document.body.style.userSelect = '';
+                    document.body.style.webkitUserSelect = '';
+                    touchClone = null;
+                    touchDragData = null;
+                    touchDragElement = null;
+                    touchRemoveCallback = null;
+                    touchSourceZoneId = null;
+                }
+            }, { passive: false });
+        }
+
+        // ===========================================
+        // 主應用程式
+        // ===========================================
+        function App() {
+            const [screen, setScreen] = useState('level_select');
+            const [currentLevelId, setCurrentLevelId] = useState(null);
+            const [gameState, setGameState] = useState('playing');
+            const [droppedItems, setDroppedItems] = useState({});
+            const [feedback, setFeedback] = useState({});
+            const [startTime, setStartTime] = useState(null);
+            const [elapsedTime, setElapsedTime] = useState(0);
+            const [score, setScore] = useState({ correct: 0, total: 0 });
+            const [shuffledItems, setShuffledItems] = useState([]);
+            const [completionStatus, setCompletionStatus] = useState(() => {
+                try {
+                    const saved = localStorage.getItem('color_words_completion');
+                    return saved ? JSON.parse(saved) : {};
+                } catch {
+                    return {};
+                }
+            });
+            const [fontScale, setFontScale] = useState(() => {
+                try {
+                    const saved = localStorage.getItem('color_words_font_scale');
+                    return saved ? parseFloat(saved) : 100;
+                } catch {
+                    return 100;
+                }
+            });
+
+            useEffect(() => {
+                document.documentElement.style.fontSize = `${fontScale}%`;
+            }, [fontScale]);
+
+            const increaseFontSize = () => {
+                const newScale = Math.min(fontScale + 10, 150);
+                setFontScale(newScale);
+                localStorage.setItem('color_words_font_scale', newScale.toString());
+            };
+
+            const decreaseFontSize = () => {
+                const newScale = Math.max(fontScale - 10, 70);
+                setFontScale(newScale);
+                localStorage.setItem('color_words_font_scale', newScale.toString());
+            };
+
+            useEffect(() => {
+                let timer;
+                if (gameState === 'playing' && startTime) {
+                    timer = setInterval(() => {
+                        setElapsedTime(Math.floor((new Date() - startTime) / 1000));
+                    }, 1000);
+                }
+                return () => {
+                    if (timer) clearInterval(timer);
+                };
+            }, [gameState, startTime]);
+
+            const initializeLevel = (levelId) => {
+                const level = GAME_DATA[levelId];
+                setShuffledItems(shuffleArray(level.items));
+            };
+
+            const selectLevel = (levelId) => {
+                setCurrentLevelId(levelId);
+                setScreen('playing');
+                setGameState('playing');
+                setStartTime(new Date());
+                setElapsedTime(0);
+                setDroppedItems({});
+                setFeedback({});
+                setScore({ correct: 0, total: 0 });
+                initializeLevel(levelId);
+            };
+
+            const handleDragStart = (e, item) => {
+                e.dataTransfer.setData('item', JSON.stringify(item));
+            };
+
+            const handleDragOver = (e) => {
+                e.preventDefault();
+            };
+
+            const handleDrop = (e, zoneId) => {
+                e.preventDefault();
+                const item = JSON.parse(e.dataTransfer.getData('item'));
+                
+                setDroppedItems(prev => ({
+                    ...prev,
+                    [zoneId]: [...(prev[zoneId] || []), item]
+                }));
+            };
+
+            const handleTouchDrop = (item, zoneId) => {
+                setDroppedItems(prev => ({
+                    ...prev,
+                    [zoneId]: [...(prev[zoneId] || []), item]
+                }));
+            };
+
+            const removeItem = (zoneId, itemId) => {
+                setDroppedItems(prev => ({
+                    ...prev,
+                    [zoneId]: prev[zoneId].filter(item => item.id !== itemId)
+                }));
+            };
+
+            const checkAnswers = () => {
+                const currentLevel = GAME_DATA[currentLevelId];
+                const newFeedback = {};
+                let correctCount = 0;
+                let totalZones = Object.keys(currentLevel.solution).length;
+
+                Object.keys(currentLevel.solution).forEach(zoneId => {
+                    const correctVals = currentLevel.solution[zoneId];
+                    const droppedVals = (droppedItems[zoneId] || []).map(item => item.val);
+                    
+                    const isCorrect = droppedVals.length > 0 &&
+                                    droppedVals.every(val => correctVals.includes(val));
+                    
+                    newFeedback[zoneId] = isCorrect;
+                    if (isCorrect) {
+                        correctCount++;
+                    }
+                });
+
+                const allItemsPlaced = Object.values(droppedItems).flat().length === currentLevel.items.length;
+
+                setFeedback(newFeedback);
+
+                if (correctCount === totalZones && allItemsPlaced) {
+                    setGameState('completed');
+                    setScore(prev => ({ 
+                        correct: prev.correct + 1, 
+                        total: prev.total + 1 
+                    }));
+                    
+                    const newStatus = {
+                        ...completionStatus,
+                        [currentLevelId]: {
+                            completed: true,
+                            completedAt: new Date().toISOString(),
+                            time: elapsedTime,
+                            attempts: score.total + 1
+                        }
+                    };
+                    setCompletionStatus(newStatus);
+                    localStorage.setItem('color_words_completion', JSON.stringify(newStatus));
+                } else {
+                    setScore(prev => ({ 
+                        ...prev, 
+                        total: prev.total + 1 
+                    }));
+                }
+            };
+
+            const formatTime = (seconds) => {
+                const mins = Math.floor(seconds / 60);
+                const secs = seconds % 60;
+                return `${mins}:${secs.toString().padStart(2, '0')}`;
+            };
+
+            const currentLevel = currentLevelId ? GAME_DATA[currentLevelId] : null;
+            const availableItems = currentLevel ? 
+                shuffledItems.filter(item => {
+                    const placedItemIds = Object.values(droppedItems).flat().map(i => i.id);
+                    return !placedItemIds.includes(item.id);
+                }) : [];
+
+            // ===========================================
+            // 關卡選擇畫面
+            // ===========================================
+            if (screen === 'level_select') {
+                const levels = [
+                    { 
+                        id: 'theme1-level1', 
+                        title: '主題1-第1關', 
+                        subtitle: '顏色別稱分類',
+                        icon: 'fa-palette',
+                        color: 'from-pink-400 to-rose-600' 
+                    },
+                    { 
+                        id: 'theme1-level2', 
+                        title: '主題1-第2關', 
+                        subtitle: '顏色別稱分類',
+                        icon: 'fa-palette',
+                        color: 'from-purple-400 to-indigo-600' 
+                    },
+                    { 
+                        id: 'theme2-level1', 
+                        title: '主題2-第1關', 
+                        subtitle: '詞語意義配對（基礎）',
+                        icon: 'fa-link',
+                        color: 'from-blue-400 to-cyan-600' 
+                    },
+                    { 
+                        id: 'theme2-level2', 
+                        title: '主題2-第2關', 
+                        subtitle: '詞語意義配對（進階）',
+                        icon: 'fa-link',
+                        color: 'from-teal-400 to-green-600' 
+                    },
+                    { 
+                        id: 'theme2-level3', 
+                        title: '主題2-第3關', 
+                        subtitle: '詞語意義配對（挑戰）',
+                        icon: 'fa-link',
+                        color: 'from-orange-400 to-red-600' 
+                    }
+                ];
+
+                return (
+                    <div className="min-h-screen flex items-center justify-center p-6">
+                        <div className="fixed top-4 right-4 z-50 flex items-center gap-2 glass-effect rounded-xl p-2 shadow-xl">
+                            <button
+                                onClick={decreaseFontSize}
+                                disabled={fontScale <= 70}
+                                className={`px-3 py-2 rounded-lg font-bold transition-all ${
+                                    fontScale <= 70
+                                        ? 'bg-white/10 text-white/30 cursor-not-allowed'
+                                        : 'bg-white/20 text-white hover:bg-white/30 hover:scale-110'
+                                }`}
+                            >
+                                <span className="text-sm">A<sup className="text-xs">-</sup></span>
+                            </button>
+                            
+                            <button
+                                onClick={increaseFontSize}
+                                disabled={fontScale >= 150}
+                                className={`px-3 py-2 rounded-lg font-bold transition-all ${
+                                    fontScale >= 150
+                                        ? 'bg-white/10 text-white/30 cursor-not-allowed'
+                                        : 'bg-white/20 text-white hover:bg-white/30 hover:scale-110'
+                                }`}
+                            >
+                                <span className="text-sm">A<sup className="text-xs">+</sup></span>
+                            </button>
+                        </div>
+                        
+                        <div className="max-w-4xl w-full">
+                            <div className="text-center mb-12 fade-in">
+                                <h1 className="text-5xl font-black text-white mb-4">
+                                    <i className="fas fa-palette mr-4"></i>
+                                    顏色字判斷
+                                </h1>
+                                <p className="text-xl text-white/90">選擇一個關卡開始學習</p>
+                            </div>
+
+                            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {levels.map((level, index) => {
+                                    const isCompleted = completionStatus[level.id]?.completed;
+                                    
+                                    return (
+                                        <div
+                                            key={level.id}
+                                            className="glass-effect rounded-2xl p-8 hover:scale-105 transition-all duration-300 cursor-pointer fade-in relative"
+                                            style={{ animationDelay: `${index * 0.1}s` }}
+                                            onClick={() => selectLevel(level.id)}
+                                        >
+                                            {isCompleted && (
+                                                <div className="absolute top-4 right-4 bg-green-500 text-white px-3 py-1 rounded-full text-sm font-bold flex items-center gap-1 shadow-lg">
+                                                    <i className="fas fa-check-circle"></i>
+                                                    已完成
+                                                </div>
+                                            )}
+                                            
+                                            <div className={`w-20 h-20 bg-gradient-to-br ${level.color} rounded-2xl flex items-center justify-center mb-6 mx-auto`}>
+                                                <i className={`${level.icon} text-4xl text-white`}></i>
+                                            </div>
+                                            
+                                            <h2 className="text-2xl font-bold text-white text-center mb-2">
+                                                {level.title}
+                                            </h2>
+                                            
+                                            <p className="text-white/80 text-center mb-2">
+                                                {level.subtitle}
+                                            </p>
+                                            
+                                            {isCompleted && completionStatus[level.id] && (
+                                                <div className="text-center text-white/70 text-xs mt-3">
+                                                    <div>⏱️ {formatTime(completionStatus[level.id].time)}</div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            // ===========================================
+            // 遊戲進行畫面
+            // ===========================================
+            if (screen === 'playing' && currentLevel) {
+                const totalItems = currentLevel.items.length;
+                const placedItems = Object.values(droppedItems).flat().length;
+                const allPlaced = placedItems === totalItems;
+
+                return (
+                    <div className="h-screen flex flex-col overflow-hidden">
+                        {/* 頂部標題列 */}
+                        <div className="flex-shrink-0 bg-gradient-to-r from-purple-600 to-indigo-700 p-3 text-white shadow-xl">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-1 bg-black/20 rounded-lg p-1">
+                                        <button
+                                            onClick={decreaseFontSize}
+                                            disabled={fontScale <= 70}
+                                            className={`px-1.5 py-0.5 rounded text-xs font-bold transition-all ${
+                                                fontScale <= 70 ? 'text-white/30' : 'text-white hover:bg-white/20'
+                                            }`}
+                                        >
+                                            A<sup style={{ fontSize: '8px' }}>-</sup>
+                                        </button>
+                                        <button
+                                            onClick={increaseFontSize}
+                                            disabled={fontScale >= 150}
+                                            className={`px-1.5 py-0.5 rounded text-xs font-bold transition-all ${
+                                                fontScale >= 150 ? 'text-white/30' : 'text-white hover:bg-white/20'
+                                            }`}
+                                        >
+                                            A<sup style={{ fontSize: '8px' }}>+</sup>
+                                        </button>
+                                    </div>
+                                    <h2 className="text-base md:text-lg font-bold">{currentLevel.title}</h2>
+                                </div>
+                                
+                                <div className="flex items-center gap-2">
+                                    <span className="text-sm">⏱️ {formatTime(elapsedTime)}</span>
+                                    <span className="text-sm bg-black/20 px-2 py-1 rounded">🎯 {score.total}</span>
+                                    <button
+                                        onClick={() => setScreen('level_select')}
+                                        className="bg-white/20 hover:bg-white/30 px-2 py-1 rounded transition-all text-sm"
+                                    >
+                                        <i className="fas fa-home"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* 遊戲內容 */}
+                        <div className="flex-1 overflow-y-auto p-4">
+                            <div className="max-w-7xl mx-auto">
+                                <p className="text-white text-center mb-4">{currentLevel.description}</p>
+                                
+                                <div className={`grid gap-4 ${currentLevel.isMatching ? 'lg:grid-cols-5' : 'lg:grid-cols-4'}`}>
+                                    {/* 待分類區 */}
+                                    <div className="lg:col-span-1">
+                                        <div className="glass-effect rounded-lg p-3 sticky top-2">
+                                            <h3 className="text-base font-bold text-white mb-3 flex items-center">
+                                                <i className="fas fa-cube mr-2"></i>
+                                                待分類項目
+                                            </h3>
+                                            <div 
+                                                data-zone-id="items"
+                                                onDrop={(e) => handleDrop(e, 'items')}
+                                                onDragOver={handleDragOver}
+                                                className="drop-zone grid grid-cols-2 md:grid-cols-3 lg:grid-cols-2 gap-2 min-h-[100px]"
+                                            >
+                                                {availableItems.map(item => (
+                                                    <div
+                                                        key={item.id}
+                                                        draggable
+                                                        onDragStart={(e) => handleDragStart(e, item)}
+                                                        onTouchStart={(e) => handleTouchStart(e, item, null)}
+                                                        onTouchMove={handleTouchMove}
+                                                        onTouchEnd={(e) => handleTouchEnd(e, handleTouchDrop)}
+                                                        className="drag-item bg-white rounded-lg p-2 shadow-lg"
+                                                    >
+                                                        <p className="text-gray-800 font-medium text-center text-xs md:text-sm">
+                                                            {item.text}
+                                                        </p>
+                                                    </div>
+                                                ))}
+                                                {availableItems.length === 0 && (
+                                                    <div className="text-center text-white/70 py-3 text-xs">
+                                                        所有項目都已分類
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* 分類框區 */}
+                                    <div className={currentLevel.isMatching ? 'lg:col-span-4' : 'lg:col-span-3'}>
+                                        <div className={`grid ${currentLevel.isMatching ? 'md:grid-cols-2 lg:grid-cols-3' : 'gap-3'}`}>
+                                            {currentLevel.zones.map(zone => (
+                                                <div
+                                                    key={zone.id}
+                                                    data-zone-id={zone.id}
+                                                    onDragOver={handleDragOver}
+                                                    onDrop={(e) => handleDrop(e, zone.id)}
+                                                    className={`
+                                                        drop-zone rounded-lg p-3 mb-3
+                                                        ${zone.color || 'glass-effect'}
+                                                        ${feedback[zone.id] === true ? 'correct-answer' : ''}
+                                                        ${feedback[zone.id] === false ? 'wrong-answer' : ''}
+                                                        ${!feedback[zone.id] ? 'border-2 border-white/30' : ''}
+                                                    `}
+                                                >
+                                                    <h4 className="text-base font-bold text-white mb-2 flex items-center justify-between">
+                                                        <span>{zone.title}</span>
+                                                        {feedback[zone.id] === true && (
+                                                            <i className="fas fa-check-circle text-green-400"></i>
+                                                        )}
+                                                        {feedback[zone.id] === false && (
+                                                            <i className="fas fa-times-circle text-red-400"></i>
+                                                        )}
+                                                    </h4>
+                                                    <div className="grid grid-cols-2 gap-2">
+                                                        {(droppedItems[zone.id] || []).map(item => (
+                                                            <div
+                                                                key={item.id}
+                                                                draggable
+                                                                onDragStart={(e) => {
+                                                                    handleDragStart(e, item);
+                                                                    setTimeout(() => removeItem(zone.id, item.id), 0);
+                                                                }}
+                                                                onTouchStart={(e) => handleTouchStart(e, item, () => removeItem(zone.id, item.id))}
+                                                                onTouchMove={handleTouchMove}
+                                                                onTouchEnd={(e) => handleTouchEnd(e, handleTouchDrop)}
+                                                                className="bg-white rounded-lg p-2 shadow-lg group relative cursor-move"
+                                                            >
+                                                                <p className="text-gray-800 font-medium text-center text-xs pr-5">
+                                                                    {item.text}
+                                                                </p>
+                                                                <button
+                                                                    onClick={() => removeItem(zone.id, item.id)}
+                                                                    className="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-xs"
+                                                                >
+                                                                    ×
+                                                                </button>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+
+                                        {/* 檢查按鈕 */}
+                                        <div className="mt-4 flex gap-2">
+                                            {gameState === 'playing' && (
+                                                <button
+                                                    onClick={checkAnswers}
+                                                    className={`flex-1 py-3 rounded-lg font-bold text-base transition-all shadow-xl ${
+                                                        allPlaced 
+                                                            ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:scale-105 cursor-pointer'
+                                                            : 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                                                    }`}
+                                                    disabled={!allPlaced}
+                                                >
+                                                    <i className="fas fa-check mr-2"></i>
+                                                    {allPlaced ? '檢查答案' : `尚未完成 (${placedItems}/${totalItems})`}
+                                                </button>
+                                            )}
+                                            {gameState === 'completed' && (
+                                                <button
+                                                    onClick={() => setScreen('level_select')}
+                                                    className="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 rounded-lg font-bold text-base hover:scale-105 transition-all shadow-xl"
+                                                >
+                                                    <i className="fas fa-home mr-2"></i>
+                                                    返回選單
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            return null;
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
