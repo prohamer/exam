@@ -423,16 +423,16 @@
                     { id: 'zone2', title: '偏重「後字」', icon: 'fa-arrow-right' }
                 ],
                 items: [
-                    { id: 'item1', text: '國家', val: 'guojia' },
-                    { id: 'item2', text: '忘懷', val: 'wanghuai' },
-                    { id: 'item3', text: '死生', val: 'sisheng' },
-                    { id: 'item4', text: '窗戶', val: 'chuanghu' },
-                    { id: 'item5', text: '異同', val: 'yitong' },
-                    { id: 'item6', text: '禍福', val: 'huofu' },
-                    { id: 'item7', text: '忘記', val: 'wangji' },
-                    { id: 'item8', text: '去留', val: 'quliu' },
-                    { id: 'item9', text: '是非', val: 'shifei' },
-                    { id: 'item10', text: '沐浴', val: 'muyu' }
+                    { id: 'item1', text: '為「國家」奉獻', val: 'guojia' },
+                    { id: 'item2', text: '難以「忘懷」', val: 'wanghuai' },
+                    { id: 'item3', text: '生「死」一瞬間', val: 'sisheng' },
+                    { id: 'item4', text: '推開「窗戶」', val: 'chuanghu' },
+                    { id: 'item5', text: '求同存「異」', val: 'yitong' },
+                    { id: 'item6', text: '逢凶化「吉」', val: 'huofu' },
+                    { id: 'item7', text: '請勿「忘記」', val: 'wangji' },
+                    { id: 'item8', text: '決定「去留」', val: 'quliu' },
+                    { id: 'item9', text: '招惹「是非」', val: 'shifei' },
+                    { id: 'item10', text: '「沐浴」更衣', val: 'muyu' }
                 ],
                 solution: {
                     zone1: ['guojia', 'wanghuai', 'sisheng', 'chuanghu'],
@@ -1182,7 +1182,9 @@
                                             data-zone-id="items"
                                             onDrop={(e) => handleDrop(e, 'items')}
                                             onDragOver={handleDragOver}
-                                            className="drop-zone grid grid-cols-3 gap-1.5 min-h-[100px]"
+                                            className={`drop-zone gap-1.5 min-h-[100px] ${
+                                                currentTest.id === 'test-4' ? 'grid grid-cols-2' : 'grid grid-cols-3'
+                                            }`}
                                         >
                                             {availableItems.map(item => (
                                                 <div
@@ -1195,13 +1197,17 @@
                                                     onTouchEnd={(e) => handleTouchEnd(e, handleTouchDrop)}
                                                     className="drag-item bg-white rounded-lg p-2 shadow-lg"
                                                 >
-                                                    <p className="text-gray-800 font-medium text-center text-xs md:text-sm">
+                                                    <p className={`text-gray-800 font-medium text-center ${
+                                                        currentTest.id === 'test-4' ? 'text-sm md:text-base' : 'text-xs md:text-sm'
+                                                    }`}>
                                                         {item.text}
                                                     </p>
                                                 </div>
                                             ))}
                                             {availableItems.length === 0 && (
-                                                <div className="col-span-3 text-center text-white/70 py-3 text-xs">
+                                                <div className={`text-center text-white/70 py-3 text-xs ${
+                                                    currentTest.id === 'test-4' ? 'col-span-2' : 'col-span-3'
+                                                }`}>
                                                     所有詞語都已分類
                                                 </div>
                                             )}
@@ -1234,7 +1240,9 @@
                                                         <i className="fas fa-times-circle text-red-400 text-base"></i>
                                                     )}
                                                 </h4>
-                                                <div className="grid grid-cols-3 gap-1.5">
+                                                <div className={`gap-1.5 ${
+                                                    currentTest.id === 'test-4' ? 'grid grid-cols-2' : 'grid grid-cols-3'
+                                                }`}>
                                                     {(droppedItems[zone.id] || []).map(item => (
                                                         <div
                                                             key={item.id}
@@ -1246,7 +1254,9 @@
                                                             onTouchEnd={(e) => handleTouchEnd(e, handleTouchDrop)}
                                                             className="bg-white rounded-lg p-2 shadow-lg group relative cursor-move"
                                                         >
-                                                            <p className="text-gray-800 font-medium text-xs text-center pr-5">
+                                                            <p className={`text-gray-800 font-medium text-center pr-5 ${
+                                                                currentTest.id === 'test-4' ? 'text-sm' : 'text-xs'
+                                                            }`}>
                                                                 {item.text}
                                                             </p>
                                                             <button
