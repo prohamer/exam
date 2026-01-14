@@ -84,10 +84,14 @@
             75% { transform: translateX(4px); }
         }
         .shake { animation: shake 0.3s ease-in-out; border-color: #ef4444 !important; background-color: #fee2e2 !important; }
+        
         .correct-lock {
             background-color: #dcfce7 !important; border: 1px solid #22c55e !important;
-            color: #15803d; pointer-events: none; border-radius: 4px; padding: 0 6px;
+            color: #15803d; 
+            border-radius: 4px; padding: 0 6px;
+            /* Removed pointer-events: none to allow interaction */
         }
+        
         .error-mark { color: #dc2626; text-decoration: underline; font-weight: bold; }
 
         /* 選單按鈕 */
@@ -578,7 +582,9 @@
                 cards.sort((a,b) => a.innerText.toLowerCase().localeCompare(b.innerText.toLowerCase()));
                 cards.forEach(c => bank.appendChild(c));
             }
-            slot.innerText = data.text; slot.classList.add('filled');
+            slot.innerText = data.text; 
+            slot.classList.add('filled');
+            slot.classList.remove('correct-lock'); // Reset lock on new fill
             slot.dataset.filledId = data.id; slot.draggable = true;
             slot.removeEventListener('dragstart', handleDragStart);
             slot.addEventListener('dragstart', handleDragStart);
@@ -586,13 +592,18 @@
         }
 
         function emptySlot(slot) {
-            slot.innerText = ""; slot.classList.remove('filled','slot-selected','shake');
+            slot.innerText = ""; 
+            slot.classList.remove('filled','slot-selected','shake', 'correct-lock'); // Reset lock on empty
             delete slot.dataset.filledId; slot.draggable = false;
+            
+            // Clone to strip listeners
             const newSlot = slot.cloneNode(true);
             slot.parentNode.replaceChild(newSlot, slot);
+            
             newSlot.addEventListener('click', ()=>handleSlotClick(newSlot));
             newSlot.addEventListener('dragover', (e)=>e.preventDefault());
             newSlot.addEventListener('drop', (e)=>handleDrop(e, newSlot));
+            // Empty slots don't need touch drag listeners, but standard click works for tap destination
         }
 
         function handleDrop(e, slot) {
@@ -699,13 +710,19 @@
             const slots = document.querySelectorAll('.drop-zone');
             let allCorrect = true;
             slots.forEach(s => {
-                if(s.classList.contains('correct-lock')) return;
+                // Don't disable interaction, just visual feedback
                 const uw=s.innerText.trim(), tw=s.dataset.correctWord;
                 if(uw===tw) {
-                    s.classList.add('correct-lock'); s.classList.remove('filled','slot-selected');
-                    s.draggable=false; const ns=s.cloneNode(true); s.parentNode.replaceChild(ns, s);
+                    s.classList.add('correct-lock'); 
+                    s.classList.remove('slot-selected'); 
+                    // Do NOT remove 'filled' or make draggable=false
                 } else {
-                    allCorrect=false; if(uw!=="") { s.classList.add('shake'); setTimeout(()=>s.classList.remove('shake'),300); errorLog.add(tw); }
+                    s.classList.remove('correct-lock');
+                    allCorrect=false; 
+                    if(uw!=="") { 
+                        s.classList.add('shake'); setTimeout(()=>s.classList.remove('shake'),300); 
+                        errorLog.add(tw); 
+                    }
                 }
             });
             if(allCorrect) setTimeout(showEndScreen, 500);
