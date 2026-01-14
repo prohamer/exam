@@ -235,32 +235,42 @@
                 }
             }
             
+            // 清除複製的視覺元素
             if (touchClone && touchClone.parentNode) {
                 touchClone.parentNode.removeChild(touchClone);
             }
+            touchClone = null;
             
+            // 恢復滾動容器
             const scrollContainer = document.querySelector('.overflow-y-auto');
             if (scrollContainer) {
                 scrollContainer.style.overflowY = 'auto';
                 scrollContainer.style.touchAction = '';
             }
             
+            // 清除所有高亮
             const dropZones = document.querySelectorAll('.drop-zone');
             dropZones.forEach(zone => zone.classList.remove('drag-over'));
             
             // 判斷是否成功放置到【不同】的區域
-            const isValidDrop = targetZone && targetZoneId && touchDragData && 
-                              targetZoneId !== touchSourceZoneId;
+            const isDifferentZone = targetZone && targetZoneId && touchDragData && 
+                                   targetZoneId !== touchSourceZoneId;
             
-            if (isValidDrop && dropCallback) {
-                // 放置到不同區域：先移除，再添加
+            if (isDifferentZone && dropCallback) {
+                // 成功放置到不同區域
+                
+                // 先從來源移除（如果有 removeCallback）
                 if (touchRemoveCallback) {
                     touchRemoveCallback();
                 }
-                dropCallback(touchDragData, targetZoneId);
                 
-                // 清除原元素的樣式（因為已經移除了）
-                if (touchDragElement) {
+                // 再添加到目標區域（但 items 區不需要添加，會自動顯示）
+                if (targetZoneId !== 'items') {
+                    dropCallback(touchDragData, targetZoneId);
+                }
+                
+                // 清除原元素的樣式
+                if (touchDragElement && touchDragElement.parentNode) {
                     touchDragElement.style.opacity = '';
                     touchDragElement.style.transform = '';
                 }
@@ -269,15 +279,15 @@
                 if (touchDragElement && touchDragElement.parentNode) {
                     touchDragElement.style.opacity = '1';
                     touchDragElement.style.transform = 'scale(1)';
+                    touchDragElement.style.transition = 'opacity 0.2s, transform 0.2s';
                     // 強制重繪
                     void touchDragElement.offsetHeight;
                 }
             }
             
-            // 重置
+            // 重置所有變數
             touchDragData = null;
             touchDragElement = null;
-            touchClone = null;
             touchRemoveCallback = null;
             touchSourceZoneId = null;
         }
