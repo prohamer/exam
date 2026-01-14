@@ -444,7 +444,7 @@
                         { id: 'item3', text: '太陽溫暖地球', val: 'radiation' },
                         { id: 'item4', text: '鍋柄變熱', val: 'conduction' },
                         { id: 'item5', text: '海風陸風形成', val: 'convection' },
-                        { id: 'item6', text: '坐在暖爐旁覺得熱', val: 'radiation' }
+                        { id: 'item6', text: '暖爐發出熱', val: 'radiation' }
                     ],
                     solution: {
                         zone1: ['conduction'],
@@ -1752,8 +1752,18 @@
                                             `}
                                         >
                                             {formulaSlots.left ? (
-                                                <div className="relative group">
-                                                    <div className="text-center">
+                                                <div 
+                                                    className="relative group"
+                                                    draggable
+                                                    onDragStart={(e) => {
+                                                        handleDragStart(e, formulaSlots.left);
+                                                        setTimeout(() => removeFormulaItem('left'), 0);
+                                                    }}
+                                                    onTouchStart={(e) => handleTouchStart(e, formulaSlots.left, () => removeFormulaItem('left'))}
+                                                    onTouchMove={handleTouchMove}
+                                                    onTouchEnd={(e) => handleTouchEnd(e, handleTouchFormulaDrop)}
+                                                >
+                                                    <div className="text-center cursor-move">
                                                         <div className="text-3xl font-bold">{formulaSlots.left.text}</div>
                                                     </div>
                                                     <button
@@ -1783,8 +1793,18 @@
                                             `}
                                         >
                                             {formulaSlots.right1 ? (
-                                                <div className="relative group">
-                                                    <div className="text-center">
+                                                <div 
+                                                    className="relative group"
+                                                    draggable
+                                                    onDragStart={(e) => {
+                                                        handleDragStart(e, formulaSlots.right1);
+                                                        setTimeout(() => removeFormulaItem('right1'), 0);
+                                                    }}
+                                                    onTouchStart={(e) => handleTouchStart(e, formulaSlots.right1, () => removeFormulaItem('right1'))}
+                                                    onTouchMove={handleTouchMove}
+                                                    onTouchEnd={(e) => handleTouchEnd(e, handleTouchFormulaDrop)}
+                                                >
+                                                    <div className="text-center cursor-move">
                                                         <div className="text-3xl font-bold">{formulaSlots.right1.text}</div>
                                                     </div>
                                                     <button
@@ -1814,8 +1834,18 @@
                                             `}
                                         >
                                             {formulaSlots.right2 ? (
-                                                <div className="relative group">
-                                                    <div className="text-center">
+                                                <div 
+                                                    className="relative group"
+                                                    draggable
+                                                    onDragStart={(e) => {
+                                                        handleDragStart(e, formulaSlots.right2);
+                                                        setTimeout(() => removeFormulaItem('right2'), 0);
+                                                    }}
+                                                    onTouchStart={(e) => handleTouchStart(e, formulaSlots.right2, () => removeFormulaItem('right2'))}
+                                                    onTouchMove={handleTouchMove}
+                                                    onTouchEnd={(e) => handleTouchEnd(e, handleTouchFormulaDrop)}
+                                                >
+                                                    <div className="text-center cursor-move">
                                                         <div className="text-3xl font-bold">{formulaSlots.right2.text}</div>
                                                     </div>
                                                     <button
@@ -1845,8 +1875,18 @@
                                             `}
                                         >
                                             {formulaSlots.right3 ? (
-                                                <div className="relative group">
-                                                    <div className="text-center">
+                                                <div 
+                                                    className="relative group"
+                                                    draggable
+                                                    onDragStart={(e) => {
+                                                        handleDragStart(e, formulaSlots.right3);
+                                                        setTimeout(() => removeFormulaItem('right3'), 0);
+                                                    }}
+                                                    onTouchStart={(e) => handleTouchStart(e, formulaSlots.right3, () => removeFormulaItem('right3'))}
+                                                    onTouchMove={handleTouchMove}
+                                                    onTouchEnd={(e) => handleTouchEnd(e, handleTouchFormulaDrop)}
+                                                >
+                                                    <div className="text-center cursor-move">
                                                         <div className="text-3xl font-bold">{formulaSlots.right3.text}</div>
                                                     </div>
                                                     <button
