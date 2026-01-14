@@ -28,7 +28,7 @@
 
         /* 單字卡 (Word Bank) */
         .word-card {
-            touch-action: none; /* 關鍵：防止觸控時捲動頁面 */
+            touch-action: none;
             transition: transform 0.1s;
             cursor: grab;
             font-size: 0.95rem;
@@ -49,19 +49,21 @@
             transform: scale(1.05);
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
-        /* 手機拖曳時的殘影樣式 */
+        
+        /* 拖曳時的殘影 (Clone) */
         .dragging-clone {
             position: fixed;
             pointer-events: none;
             z-index: 9999;
-            opacity: 0.8;
+            opacity: 0.9;
             transform: scale(1.1);
             background-color: #e0e7ff;
             border: 2px solid #6366f1;
             padding: 6px 10px;
             border-radius: 6px;
             font-weight: bold;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            color: #3730a3;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
         }
 
         /* 放置區 (Slot) */
@@ -90,16 +92,17 @@
             padding: 0 8px;
             color: #4338ca;
             cursor: grab;
+            touch-action: none; /* 關鍵：允許從格子拖曳 */
         }
 
-        /* 選取狀態 (準備移動) */
+        /* 選取狀態 */
         .drop-zone.slot-selected {
             background-color: #fef3c7 !important;
             border-color: #f59e0b !important;
             box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.5);
         }
         
-        /* 固定提示字 (30%) */
+        /* 固定提示字 */
         .fixed-word {
             display: inline-block;
             padding: 0 3px;
@@ -120,7 +123,7 @@
         }
         
         .correct-lock {
-            background-color: #dcfce7 !important; /* Green */
+            background-color: #dcfce7 !important;
             border: 1px solid #22c55e !important;
             color: #15803d;
             pointer-events: none;
@@ -134,13 +137,10 @@
             font-weight: bold;
         }
 
-        /* 主選單關卡按鈕樣式 */
-        .level-btn {
-            transition: all 0.2s;
-        }
+        /* Level Button */
         .level-btn.completed {
-            background-color: #ecfdf5; /* Green-50 */
-            border-color: #10b981; /* Green-500 */
+            background-color: #ecfdf5;
+            border-color: #10b981;
             color: #065f46;
         }
         .level-btn.completed::after {
@@ -150,37 +150,16 @@
         }
 
         /* Toggle Switch */
-        .toggle-checkbox:checked {
-            right: 0;
-            border-color: #68D391;
-        }
-        .toggle-checkbox:checked + .toggle-label {
-            background-color: #68D391;
-        }
-        .toggle-checkbox:checked + .toggle-label:before {
-            transform: translateX(100%);
-        }
-        
+        .toggle-checkbox:checked { right: 0; border-color: #68D391; }
+        .toggle-checkbox:checked + .toggle-label { background-color: #68D391; }
+        .toggle-checkbox:checked + .toggle-label:before { transform: translateX(100%); }
         .toggle-label {
-            width: 40px;
-            height: 20px;
-            position: relative;
-            display: block;
-            background: #cbd5e1;
-            border-radius: 20px;
-            cursor: pointer;
-            transition: 0.3s;
+            width: 40px; height: 20px; position: relative; display: block;
+            background: #cbd5e1; border-radius: 20px; cursor: pointer; transition: 0.3s;
         }
         .toggle-label:before {
-            content: '';
-            position: absolute;
-            left: 2px;
-            top: 2px;
-            width: 16px;
-            height: 16px;
-            border-radius: 50%;
-            background: #fff;
-            transition: 0.3s;
+            content: ''; position: absolute; left: 2px; top: 2px;
+            width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: 0.3s;
         }
     </style>
 </head>
@@ -197,7 +176,7 @@
         <div id="game-timer" class="font-mono text-lg bg-indigo-800 px-3 py-0.5 rounded hidden shadow-inner border border-indigo-500">00:00</div>
     </header>
 
-    <!-- 1. HOME SCREEN (Menu) -->
+    <!-- 1. HOME SCREEN -->
     <div id="home-screen" class="flex-1 overflow-y-auto p-4 flex flex-col items-center max-w-md mx-auto w-full">
         <div class="text-center mb-6 mt-2">
             <div class="text-6xl mb-2">🇬🇧</div>
@@ -205,23 +184,20 @@
             <p class="text-slate-500 text-sm">How Do We Go to the Hotel?</p>
         </div>
 
-        <!-- Level Buttons -->
         <div class="w-full space-y-3 flex-1 mb-6">
-            <button onclick="startGame('dialogue1')" id="btn-dialogue1" class="level-btn w-full bg-white border-2 border-slate-200 p-3 rounded-xl shadow-sm text-left flex items-center hover:border-indigo-400 active:scale-95">
+            <button onclick="startGame('dialogue1')" id="btn-dialogue1" class="level-btn w-full bg-white border-2 border-slate-200 p-3 rounded-xl shadow-sm text-left flex items-center hover:border-indigo-400 active:scale-95 transition">
                 <div class="flex flex-col">
                     <span class="text-xs font-bold text-indigo-500 uppercase tracking-wider">Part 1</span>
                     <span class="text-lg font-bold">Dialogue: Getting Lost</span>
                 </div>
             </button>
-
-            <button onclick="startGame('dialogue2')" id="btn-dialogue2" class="level-btn w-full bg-white border-2 border-slate-200 p-3 rounded-xl shadow-sm text-left flex items-center hover:border-indigo-400 active:scale-95">
+            <button onclick="startGame('dialogue2')" id="btn-dialogue2" class="level-btn w-full bg-white border-2 border-slate-200 p-3 rounded-xl shadow-sm text-left flex items-center hover:border-indigo-400 active:scale-95 transition">
                 <div class="flex flex-col">
                     <span class="text-xs font-bold text-indigo-500 uppercase tracking-wider">Part 2</span>
                     <span class="text-lg font-bold">Dialogue: At the Hotel</span>
                 </div>
             </button>
-
-            <button onclick="startGame('reading')" id="btn-reading" class="level-btn w-full bg-white border-2 border-slate-200 p-3 rounded-xl shadow-sm text-left flex items-center hover:border-indigo-400 active:scale-95">
+            <button onclick="startGame('reading')" id="btn-reading" class="level-btn w-full bg-white border-2 border-slate-200 p-3 rounded-xl shadow-sm text-left flex items-center hover:border-indigo-400 active:scale-95 transition">
                 <div class="flex flex-col">
                     <span class="text-xs font-bold text-pink-500 uppercase tracking-wider">Challenge</span>
                     <span class="text-lg font-bold">Reading: Travel Diary</span>
@@ -229,14 +205,12 @@
             </button>
         </div>
 
-        <!-- Progress Footer -->
         <div class="mt-auto w-full border-t border-slate-200 pt-4">
             <div class="flex justify-between items-center mb-3">
                 <span class="text-sm text-slate-500 font-bold">Total Progress</span>
                 <span id="progress-text" class="text-sm font-bold text-indigo-600">0/3</span>
             </div>
             
-            <!-- Final Certificate Area (Hidden until complete) -->
             <div id="final-certificate-area" class="hidden mb-4 bg-yellow-50 border border-yellow-200 rounded-lg p-3">
                 <h3 class="text-center text-yellow-800 font-bold mb-2">🏆 All Levels Completed!</h3>
                 <div id="cert-details" class="text-xs text-slate-600 mb-2 space-y-1"></div>
@@ -251,28 +225,17 @@
         </div>
     </div>
 
-    <!-- 2. GAME AREA (Hidden by default) -->
+    <!-- 2. GAME AREA -->
     <main id="game-container" class="flex-1 flex flex-col max-w-2xl mx-auto w-full overflow-hidden relative hidden">
-        
-        <!-- Level Content -->
         <div id="level-content" class="flex-1 flex flex-col overflow-hidden">
             
-            <!-- Translation (Top) -->
             <div class="bg-amber-50 border-b border-amber-200 p-3 shrink-0 shadow-sm z-10">
-                <div id="translation-display" class="text-sm font-medium text-slate-800 leading-snug space-y-2">
-                    <!-- Dynamic Content -->
-                </div>
+                <div id="translation-display" class="text-sm font-medium text-slate-800 leading-snug space-y-2"></div>
             </div>
 
-            <!-- Sentence Area (Middle) -->
-            <div class="flex-1 bg-white p-4 overflow-y-auto no-scrollbar relative flex flex-col gap-5" id="sentence-area">
-                <!-- Dynamic Content -->
-            </div>
+            <div class="flex-1 bg-white p-4 overflow-y-auto no-scrollbar relative flex flex-col gap-5" id="sentence-area"></div>
 
-            <!-- Controls Bar -->
             <div class="h-12 flex items-center justify-between px-3 bg-slate-50 border-t border-slate-200 shrink-0 select-none">
-                
-                <!-- Quick Fill Toggle -->
                 <div class="flex items-center gap-2">
                     <div class="relative inline-block w-10 mr-1 align-middle select-none transition duration-200 ease-in">
                         <input type="checkbox" name="toggle" id="quick-fill-toggle" class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer"/>
@@ -283,31 +246,26 @@
                         <span class="text-[9px] text-slate-400" id="quick-fill-status">OFF</span>
                     </span>
                 </div>
-
                 <button onclick="checkLevel()" class="bg-green-600 text-white px-5 py-2 rounded-lg text-sm font-bold shadow-lg active:scale-95 hover:bg-green-700 transition">
                     Check Answer ✓
                 </button>
             </div>
 
-            <!-- Word Bank (Bottom) -->
             <div class="h-[200px] bg-slate-100 border-t border-slate-300 p-2 shrink-0 flex flex-col">
                 <div class="flex justify-between items-center mb-2 px-1">
                     <span class="text-xs text-slate-500 font-bold uppercase tracking-wider">Word Bank</span>
                     <button onclick="resetCurrentLevel()" class="text-xs text-red-500 hover:text-red-700 font-bold bg-white px-2 py-0.5 rounded border border-red-100">Reset</button>
                 </div>
-                <div id="word-bank" class="flex-1 flex flex-wrap content-start gap-2 overflow-y-auto pb-8 pr-1">
-                    <!-- Dynamic Content -->
-                </div>
+                <div id="word-bank" class="flex-1 flex flex-wrap content-start gap-2 overflow-y-auto pb-8 pr-1"></div>
             </div>
         </div>
 
-        <!-- 3. END SCREEN (Result) -->
+        <!-- 3. END SCREEN -->
         <div id="end-screen" class="absolute inset-0 bg-white z-50 flex flex-col p-5 hidden overflow-y-auto">
             <div class="text-center mb-6">
                 <div class="text-5xl mb-2">🎉</div>
                 <h2 class="text-2xl font-bold text-indigo-700">Level Complete!</h2>
             </div>
-            
             <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 mb-6 shadow-sm">
                 <div class="flex justify-between mb-2 text-sm border-b border-slate-200 pb-2">
                     <span class="text-slate-500">Level:</span>
@@ -322,25 +280,16 @@
                     <span class="font-mono text-xs mt-1" id="final-date">-</span>
                 </div>
             </div>
-
             <h3 class="font-bold text-slate-700 mb-2 border-b pb-1">Review</h3>
-            <div id="review-content" class="text-sm leading-loose space-y-3 mb-6 font-serif text-slate-700">
-                <!-- Dynamic Content -->
-            </div>
-
+            <div id="review-content" class="text-sm leading-loose space-y-3 mb-6 font-serif text-slate-700"></div>
             <div class="mt-auto flex gap-3 pb-4">
-                <button onclick="downloadScreenshot('level')" class="flex-1 bg-indigo-600 text-white py-3 rounded-xl font-bold shadow text-sm active:scale-95">
-                    📥 Save Image
-                </button>
-                <button onclick="goHome()" class="flex-1 bg-slate-200 text-slate-700 py-3 rounded-xl font-bold text-sm active:scale-95 hover:bg-slate-300">
-                    🏠 Menu
-                </button>
+                <button onclick="downloadScreenshot('level')" class="flex-1 bg-indigo-600 text-white py-3 rounded-xl font-bold shadow text-sm active:scale-95">📥 Save Image</button>
+                <button onclick="goHome()" class="flex-1 bg-slate-200 text-slate-700 py-3 rounded-xl font-bold text-sm active:scale-95 hover:bg-slate-300">🏠 Menu</button>
             </div>
         </div>
-
     </main>
 
-    <!-- Hidden Container for Full Report Generation -->
+    <!-- Hidden Report -->
     <div id="full-report-container" class="fixed top-0 left-[-9999px] w-[600px] bg-white p-8">
         <h1 class="text-3xl font-bold text-center mb-6 text-indigo-800">🇬🇧 London Trip Certificate</h1>
         <div id="report-stats" class="grid grid-cols-1 gap-4 mb-8"></div>
@@ -379,58 +328,48 @@
             }
         };
 
-        // --- STATE ---
         let currentLevelId = null;
         let startTime = 0;
         let timerInterval = null;
         let errorLog = new Set();
-        // New Data Structure: Object storing details: { 'levelId': { time: '00:12', date: '...' } }
         let progressData = JSON.parse(localStorage.getItem('londonTripData_v2') || '{}');
-
         let selectedWord = null;
         let selectedSlot = null;
         let isQuickFill = false;
 
-        // --- INIT ---
+        // --- Custom Touch Handling Variables ---
+        let dragSrcEl = null;
+        let dragClone = null;
+        let touchStartX = 0;
+        let touchStartY = 0;
+        let touchOffsetX = 0;
+        let touchOffsetY = 0;
+        let isDragging = false; 
+
         window.onload = function() {
             updateHomeUI();
-            
-            // Toggle Listener
             const toggle = document.getElementById('quick-fill-toggle');
             toggle.addEventListener('change', function() {
                 isQuickFill = this.checked;
-                document.getElementById('quick-fill-status').innerText = isQuickFill ? "ON" : "OFF";
-                // Color change logic
-                document.getElementById('quick-fill-status').className = isQuickFill ? 
-                    "text-[9px] text-green-600 font-bold" : "text-[9px] text-slate-400";
+                const status = document.getElementById('quick-fill-status');
+                status.innerText = isQuickFill ? "ON" : "OFF";
+                status.className = isQuickFill ? "text-[9px] text-green-600 font-bold" : "text-[9px] text-slate-400";
             });
         };
 
-        // --- HOME SCREEN LOGIC ---
         function updateHomeUI() {
             const completedKeys = Object.keys(progressData);
-            
-            // Update Buttons
             ['dialogue1', 'dialogue2', 'reading'].forEach(id => {
                 const btn = document.getElementById(`btn-${id}`);
-                if (progressData[id]) {
-                    btn.classList.add('completed');
-                } else {
-                    btn.classList.remove('completed');
-                }
+                if (progressData[id]) btn.classList.add('completed');
+                else btn.classList.remove('completed');
             });
-
-            // Update Text
             document.getElementById('progress-text').innerText = `${completedKeys.length}/3 Completed`;
-
-            // Check for Full Completion
             const certArea = document.getElementById('final-certificate-area');
             const certDetails = document.getElementById('cert-details');
-            
             if (completedKeys.length === 3) {
                 certArea.classList.remove('hidden');
                 certDetails.innerHTML = '';
-                // Generate simple list
                 for (const [id, data] of Object.entries(progressData)) {
                     certDetails.innerHTML += `<div class="flex justify-between"><span>${levelsDB[id].title}</span><span class="font-mono">${data.time}</span></div>`;
                 }
@@ -446,26 +385,20 @@
             updateHomeUI();
         }
 
-        // --- GAME START ---
         function startGame(levelId) {
             currentLevelId = levelId;
-            const levelData = levelsDB[levelId];
-            
             document.getElementById('home-screen').classList.add('hidden');
             document.getElementById('game-container').classList.remove('hidden');
             document.getElementById('level-content').classList.remove('hidden');
             document.getElementById('end-screen').classList.add('hidden');
-            
             document.getElementById('back-home-btn').classList.remove('hidden');
             document.getElementById('game-timer').classList.remove('hidden');
-            
             errorLog.clear();
             deselectAll();
-            
             startTime = Date.now();
             timerInterval = setInterval(updateTimer, 1000);
             updateTimer();
-            loadLevelData(levelData);
+            loadLevelData(levelsDB[levelId]);
         }
 
         function updateTimer() {
@@ -475,15 +408,11 @@
             document.getElementById('game-timer').innerText = `${m}:${s}`;
         }
 
-        // --- RENDERING ---
         function loadLevelData(data) {
-            // Translation
-            const translationHTML = data.sentences.map((s, i) => 
+            document.getElementById('translation-display').innerHTML = data.sentences.map((s, i) => 
                 `<div class="flex items-start gap-2"><span class="bg-indigo-100 text-indigo-700 px-1.5 rounded text-xs font-bold mt-0.5">${i+1}</span><span>${s.zh}</span></div>`
             ).join('');
-            document.getElementById('translation-display').innerHTML = translationHTML;
 
-            // Sentences
             const sentenceArea = document.getElementById('sentence-area');
             sentenceArea.innerHTML = '';
             let allWords = [];
@@ -491,15 +420,10 @@
             data.sentences.forEach((s, sIdx) => {
                 const words = s.en.split(/\s+/);
                 const fixedIndices = getFixedIndices(words.length, 0.3);
-
                 const row = document.createElement('div');
                 row.className = "border-b border-dashed border-slate-200 pb-3 last:border-0";
-                
-                // Sentence container
                 const slotContainer = document.createElement('div');
                 slotContainer.className = "leading-loose text-lg flex flex-wrap gap-y-3 gap-x-1 items-center";
-                
-                // Add number
                 const num = document.createElement('span');
                 num.className = "text-xs font-bold text-slate-400 mr-1 select-none";
                 num.innerText = `${sIdx+1}.`;
@@ -510,7 +434,6 @@
                     if (match) {
                         const coreWord = match[1];
                         const punctuation = match[2];
-
                         if (fixedIndices.has(wIdx)) {
                             const span = document.createElement('span');
                             span.className = "fixed-word mr-1";
@@ -523,39 +446,35 @@
                             slot.style.width = Math.max(40, coreWord.length * 10) + "px";
                             slot.dataset.sentenceIdx = sIdx;
                             slot.dataset.correctWord = coreWord;
-
-                            // Events
+                            
+                            // Base Events
                             slot.addEventListener('click', () => handleSlotClick(slot));
-                            // Desktop Drag
                             slot.addEventListener('dragover', (e) => e.preventDefault());
                             slot.addEventListener('drop', (e) => handleDrop(e, slot));
                             
                             slotContainer.appendChild(slot);
-
                             if (punctuation) {
-                                const puncSpan = document.createElement('span');
-                                puncSpan.className = "mr-1 text-slate-500 font-bold";
-                                puncSpan.innerText = punctuation;
-                                slotContainer.appendChild(puncSpan);
+                                const p = document.createElement('span');
+                                p.className = "mr-1 text-slate-500 font-bold";
+                                p.innerText = punctuation;
+                                slotContainer.appendChild(p);
                             } else {
                                 const spacer = document.createElement('span');
                                 spacer.className = "mr-1";
                                 slotContainer.appendChild(spacer);
                             }
-
                             allWords.push({ id: `w-${sIdx}-${wIdx}`, text: coreWord });
                         }
                     } else {
-                        const span = document.createElement('span');
-                        span.className = "mr-1";
-                        span.innerText = word;
-                        slotContainer.appendChild(span);
+                        const s = document.createElement('span');
+                        s.className = "mr-1";
+                        s.innerText = word;
+                        slotContainer.appendChild(s);
                     }
                 });
                 row.appendChild(slotContainer);
                 sentenceArea.appendChild(row);
             });
-
             renderWordBank(allWords);
         }
 
@@ -569,15 +488,11 @@
             return new Set(indices.slice(0, count));
         }
 
-        // --- WORD BANK & DRAG LOGIC ---
-
         function renderWordBank(words) {
             const bank = document.getElementById('word-bank');
             bank.innerHTML = '';
             words.sort((a, b) => a.text.toLowerCase().localeCompare(b.text.toLowerCase()));
-            words.forEach(w => {
-                bank.appendChild(createWordCard(w.id, w.text));
-            });
+            words.forEach(w => bank.appendChild(createWordCard(w.id, w.text)));
         }
 
         function createWordCard(id, text) {
@@ -588,10 +503,8 @@
             div.draggable = true;
             div.dataset.text = text;
 
-            // Click Handler
-            div.addEventListener('click', (e) => handleWordBankClick(e, div));
-            
-            // Desktop Drag
+            // Desktop
+            div.addEventListener('click', (e) => handleInteraction(e, div));
             div.addEventListener('dragstart', (e) => {
                 e.dataTransfer.setData('type', 'bank');
                 e.dataTransfer.setData('sourceId', id);
@@ -600,176 +513,94 @@
             });
             div.addEventListener('dragend', () => div.classList.remove('opacity-50'));
 
-            // MOBILE TOUCH DRAG IMPLEMENTATION
-            div.addEventListener('touchstart', handleTouchStart, {passive: false});
-            div.addEventListener('touchmove', handleTouchMove, {passive: false});
-            div.addEventListener('touchend', handleTouchEnd);
-
+            // Mobile Touch
+            addTouchListeners(div);
             return div;
         }
 
-        // --- CUSTOM TOUCH HANDLERS (Mobile Drag Fix) ---
-        let dragSrcEl = null;
-        let dragClone = null;
-        let touchOffsetX = 0;
-        let touchOffsetY = 0;
-
-        function handleTouchStart(e) {
-            if (e.touches.length > 1) return; // Ignore multi-touch
-            
-            dragSrcEl = e.target;
-            // Prevent scrolling
-            e.preventDefault(); 
-            
-            // Create a clone for visual feedback
-            dragClone = dragSrcEl.cloneNode(true);
-            dragClone.classList.add('dragging-clone');
-            
-            const touch = e.touches[0];
-            const rect = dragSrcEl.getBoundingClientRect();
-            
-            // Calculate offset to keep finger relative to element
-            touchOffsetX = touch.clientX - rect.left;
-            touchOffsetY = touch.clientY - rect.top;
-            
-            // Position clone
-            dragClone.style.left = (rect.left) + 'px';
-            dragClone.style.top = (rect.top) + 'px';
-            
-            document.body.appendChild(dragClone);
-            dragSrcEl.style.opacity = '0.4';
-            
-            deselectAll(); // Clear specific selection
-        }
-
-        function handleTouchMove(e) {
-            if (!dragClone) return;
-            e.preventDefault(); // Stop scroll
-            
-            const touch = e.touches[0];
-            dragClone.style.left = (touch.clientX - touchOffsetX) + 'px';
-            dragClone.style.top = (touch.clientY - touchOffsetY) + 'px';
-        }
-
-        function handleTouchEnd(e) {
-            if (!dragClone) return;
-            
-            // Hide clone to detect element underneath
-            dragClone.style.display = 'none';
-            const touch = e.changedTouches[0];
-            const elemBelow = document.elementFromPoint(touch.clientX, touch.clientY);
-            
-            // Find closest drop zone
-            const dropZone = elemBelow ? elemBelow.closest('.drop-zone') : null;
-            
-            if (dropZone) {
-                // Logic same as 'Drop'
-                fillSlot(dropZone, { id: dragSrcEl.id, text: dragSrcEl.dataset.text });
-                dragSrcEl.remove();
-            } else {
-                // Return to normal
-                dragSrcEl.style.opacity = '1';
-            }
-
-            // Cleanup
-            dragClone.remove();
-            dragClone = null;
-            dragSrcEl = null;
-        }
-
-        // --- INTERACTION LOGIC (Click & Quick Fill) ---
-
-        function handleWordBankClick(e, card) {
+        // --- UNIFIED INTERACTION HANDLER ---
+        function handleInteraction(e, element) {
             e.stopPropagation();
+            const isSlot = element.classList.contains('drop-zone');
 
-            if (isQuickFill) {
-                // ⚡ Quick Fill Logic
+            if (isQuickFill && !isSlot) { 
                 const emptySlots = Array.from(document.querySelectorAll('.drop-zone:not(.filled)'));
                 if (emptySlots.length > 0) {
-                    // Fill the first empty slot
-                    fillSlot(emptySlots[0], { id: card.id, text: card.dataset.text });
-                    card.remove();
-                    // Animation feedback could go here
+                    fillSlot(emptySlots[0], { id: element.id, text: element.dataset.text });
+                    element.remove();
                 } else {
-                    // No slots available, maybe shake?
-                    card.classList.add('shake');
-                    setTimeout(() => card.classList.remove('shake'), 300);
+                    element.classList.add('shake');
+                    setTimeout(() => element.classList.remove('shake'), 300);
+                }
+                return;
+            }
+
+            if (isSlot) {
+                 if (selectedWord) {
+                    fillSlot(element, { id: selectedWord.id, text: selectedWord.dataset.text });
+                    selectedWord.remove();
+                    deselectAll();
+                } else if (selectedSlot) {
+                    if (selectedSlot !== element) {
+                        const sourceData = { id: selectedSlot.dataset.filledWordId, text: selectedSlot.innerText };
+                        fillSlot(element, sourceData);
+                        emptySlot(selectedSlot);
+                    }
+                    deselectAll();
+                } else if (element.classList.contains('filled')) {
+                    if (element.classList.contains('slot-selected')) deselectAll();
+                    else {
+                        deselectAll();
+                        selectedSlot = element;
+                        element.classList.add('slot-selected');
+                    }
                 }
             } else {
-                // 👆 Standard Selection Logic
-                if (selectedWord === card) {
+                if (selectedWord === element) deselectAll();
+                else {
                     deselectAll();
-                } else {
-                    deselectAll();
-                    selectedWord = card;
-                    card.classList.add('selected');
+                    selectedWord = element;
+                    element.classList.add('selected');
                 }
             }
         }
 
         function handleSlotClick(slot) {
-            // 1. Fill from selected Bank Word
-            if (selectedWord) {
-                fillSlot(slot, { id: selectedWord.id, text: selectedWord.dataset.text });
-                selectedWord.remove();
-                deselectAll();
-            }
-            // 2. Move from another Slot
-            else if (selectedSlot) {
-                if (selectedSlot !== slot) {
-                    const sourceData = { id: selectedSlot.dataset.filledWordId, text: selectedSlot.innerText };
-                    fillSlot(slot, sourceData);
-                    emptySlot(selectedSlot);
-                }
-                deselectAll();
-            }
-            // 3. Select Slot (to move)
-            else if (slot.classList.contains('filled') && !slot.classList.contains('correct-lock')) {
-                if (slot.classList.contains('slot-selected')) {
-                    deselectAll();
-                } else {
-                    deselectAll();
-                    selectedSlot = slot;
-                    slot.classList.add('slot-selected');
-                }
-            }
+            handleInteraction({ stopPropagation: () => {} }, slot);
         }
 
-        function handleDrop(e, slot) {
-            e.preventDefault();
-            const type = e.dataTransfer.getData('type');
-            const sourceId = e.dataTransfer.getData('sourceId');
-
-            if (type === 'bank') {
-                const card = document.getElementById(sourceId);
-                if (card) {
-                    fillSlot(slot, { id: card.id, text: card.dataset.text });
-                    card.remove();
-                }
-            }
+        function handleDragStart(e) {
+            e.dataTransfer.setData('type', 'slot');
+            e.dataTransfer.setData('sourceId', e.target.id);
         }
 
-        // --- CORE SLOT OPERATIONS ---
-
+        // --- CORE LOGIC WITH OVERWRITE FIX ---
         function fillSlot(slot, wordData) {
-            // Overwrite existing? Return to bank
+            // FIXED: If slot is filled, manually move existing word to bank 
+            // WITHOUT calling emptySlot() which would destroy the slot node.
             if (slot.classList.contains('filled')) {
-                returnWordToBank(slot);
+                if (slot.dataset.filledWordId) {
+                    const bank = document.getElementById('word-bank');
+                    const card = createWordCard(slot.dataset.filledWordId, slot.innerText);
+                    bank.appendChild(card);
+                    
+                    const cards = Array.from(bank.children);
+                    cards.sort((a, b) => a.innerText.toLowerCase().localeCompare(b.innerText.toLowerCase()));
+                    cards.forEach(c => bank.appendChild(c));
+                }
             }
 
             slot.innerText = wordData.text;
             slot.classList.add('filled');
             slot.dataset.filledWordId = wordData.id;
-            
-            // Make slot draggable for future moves (desktop)
             slot.draggable = true;
-            slot.addEventListener('dragstart', (e) => {
-                e.dataTransfer.setData('type', 'slot');
-                e.dataTransfer.setData('sourceId', e.target.id);
-            });
             
-            // Add Touch support for Slot moving (Optional advanced feature, skipping for simplicity to focus on Bank->Slot)
-            // But we can add basic return-on-tap logic via handleSlotClick
+            // Manage Listeners to prevent duplicates
+            slot.removeEventListener('dragstart', handleDragStart);
+            slot.addEventListener('dragstart', handleDragStart);
+            
+            removeTouchListeners(slot);
+            addTouchListeners(slot);
         }
 
         function emptySlot(slot) {
@@ -777,21 +608,145 @@
             slot.classList.remove('filled', 'slot-selected', 'shake');
             delete slot.dataset.filledWordId;
             slot.draggable = false;
+            
+            // Replace node to clear all event listeners
+            const newSlot = slot.cloneNode(true);
+            slot.parentNode.replaceChild(newSlot, slot);
+            
+            // Re-attach base listeners
+            newSlot.addEventListener('click', () => handleSlotClick(newSlot));
+            newSlot.addEventListener('dragover', (e) => e.preventDefault());
+            newSlot.addEventListener('drop', (e) => handleDrop(e, newSlot));
         }
 
         function returnWordToBank(slot) {
             if (!slot.dataset.filledWordId) return;
             const bank = document.getElementById('word-bank');
-            // Re-create card
             const card = createWordCard(slot.dataset.filledWordId, slot.innerText);
             bank.appendChild(card);
             
-            // Sort
             const cards = Array.from(bank.children);
             cards.sort((a, b) => a.innerText.toLowerCase().localeCompare(b.innerText.toLowerCase()));
             cards.forEach(c => bank.appendChild(c));
-            
             emptySlot(slot);
+        }
+
+        // --- MOBILE TOUCH LISTENERS ---
+        function addTouchListeners(element) {
+            element.addEventListener('touchstart', handleTouchStart, {passive: false});
+            element.addEventListener('touchmove', handleTouchMove, {passive: false});
+            element.addEventListener('touchend', handleTouchEnd);
+        }
+
+        function removeTouchListeners(element) {
+            element.removeEventListener('touchstart', handleTouchStart);
+            element.removeEventListener('touchmove', handleTouchMove);
+            element.removeEventListener('touchend', handleTouchEnd);
+        }
+
+        function handleTouchStart(e) {
+            if (e.touches.length > 1) return;
+            
+            dragSrcEl = e.currentTarget;
+            e.preventDefault(); 
+            
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+            isDragging = false; 
+
+            const rect = dragSrcEl.getBoundingClientRect();
+            touchOffsetX = touchStartX - rect.left;
+            touchOffsetY = touchStartY - rect.top;
+        }
+
+        function handleTouchMove(e) {
+            if (!dragSrcEl) return;
+            e.preventDefault();
+
+            const touch = e.touches[0];
+            const dx = Math.abs(touch.clientX - touchStartX);
+            const dy = Math.abs(touch.clientY - touchStartY);
+
+            if (!isDragging && (dx > 5 || dy > 5)) {
+                isDragging = true;
+                dragClone = dragSrcEl.cloneNode(true);
+                dragClone.classList.add('dragging-clone');
+                dragClone.style.width = dragSrcEl.offsetWidth + 'px';
+                document.body.appendChild(dragClone);
+                dragSrcEl.style.opacity = '0.4';
+                deselectAll();
+            }
+
+            if (isDragging && dragClone) {
+                dragClone.style.left = (touch.clientX - touchOffsetX) + 'px';
+                dragClone.style.top = (touch.clientY - touchOffsetY) + 'px';
+            }
+        }
+
+        function handleTouchEnd(e) {
+            if (!isDragging) {
+                if (dragSrcEl) {
+                    handleInteraction({ stopPropagation: () => {} }, dragSrcEl);
+                }
+                resetTouchState();
+                return;
+            }
+
+            if (dragClone) {
+                dragClone.style.display = 'none'; 
+                const touch = e.changedTouches[0];
+                const elemBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+                
+                const dropZone = elemBelow ? elemBelow.closest('.drop-zone') : null;
+                const wordBank = elemBelow ? elemBelow.closest('#word-bank') : null;
+
+                if (dropZone) {
+                    const isSourceSlot = dragSrcEl.classList.contains('drop-zone');
+                    
+                    if (isSourceSlot) {
+                         if (dropZone !== dragSrcEl) {
+                            const sourceData = { id: dragSrcEl.dataset.filledWordId, text: dragSrcEl.innerText };
+                            fillSlot(dropZone, sourceData);
+                            emptySlot(dragSrcEl);
+                        }
+                    } else {
+                        fillSlot(dropZone, { id: dragSrcEl.id, text: dragSrcEl.dataset.text });
+                        dragSrcEl.remove();
+                    }
+                } 
+                else if (wordBank && dragSrcEl.classList.contains('drop-zone')) {
+                    returnWordToBank(dragSrcEl);
+                }
+                
+                dragClone.remove();
+                if (dragSrcEl) dragSrcEl.style.opacity = '1';
+            }
+            resetTouchState();
+        }
+
+        function resetTouchState() {
+            dragSrcEl = null;
+            dragClone = null;
+            isDragging = false;
+        }
+
+        function handleDrop(e, slot) {
+            e.preventDefault();
+            const type = e.dataTransfer.getData('type');
+            const sourceId = e.dataTransfer.getData('sourceId');
+            if (type === 'bank') {
+                const card = document.getElementById(sourceId);
+                if (card) {
+                    fillSlot(slot, { id: card.id, text: card.dataset.text });
+                    card.remove();
+                }
+            } else if (type === 'slot') {
+                const srcSlot = document.getElementById(sourceId);
+                if (srcSlot && srcSlot !== slot) {
+                    fillSlot(slot, { id: srcSlot.dataset.filledWordId, text: srcSlot.innerText });
+                    emptySlot(srcSlot);
+                }
+            }
         }
 
         function deselectAll() {
@@ -805,25 +760,19 @@
             if(confirm("Reset words?")) loadLevelData(levelsDB[currentLevelId]);
         }
 
-        // --- COMPLETION LOGIC ---
-
         function checkLevel() {
             const slots = document.querySelectorAll('.drop-zone');
             let allCorrect = true;
-
             slots.forEach(slot => {
                 if (slot.classList.contains('correct-lock')) return;
-
                 const userWord = slot.innerText.trim();
                 const targetWord = slot.dataset.correctWord;
-
                 if (userWord === targetWord) {
                     slot.classList.add('correct-lock');
                     slot.classList.remove('filled', 'slot-selected');
                     slot.draggable = false;
-                    // Remove listeners by cloning
                     const newSlot = slot.cloneNode(true);
-                    slot.replaceWith(newSlot);
+                    slot.parentNode.replaceChild(newSlot, slot);
                 } else {
                     allCorrect = false;
                     if (userWord !== "") {
@@ -833,45 +782,29 @@
                     }
                 }
             });
-
-            if (allCorrect) {
-                setTimeout(showEndScreen, 500);
-            }
+            if (allCorrect) setTimeout(showEndScreen, 500);
         }
 
         function showEndScreen() {
             clearInterval(timerInterval);
-            
             const now = new Date();
             const dateStr = `${now.getFullYear()}/${(now.getMonth()+1).toString().padStart(2,'0')}/${now.getDate()} ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
             const timeStr = document.getElementById('game-timer').innerText;
-
-            // Save Data
-            progressData[currentLevelId] = {
-                time: timeStr,
-                date: dateStr
-            };
+            progressData[currentLevelId] = { time: timeStr, date: dateStr };
             localStorage.setItem('londonTripData_v2', JSON.stringify(progressData));
-
-            // UI
             document.getElementById('level-content').classList.add('hidden');
             document.getElementById('end-screen').classList.remove('hidden');
-
             const levelData = levelsDB[currentLevelId];
             document.getElementById('result-level-name').innerText = levelData.title;
             document.getElementById('final-time').innerText = timeStr;
             document.getElementById('final-date').innerText = dateStr;
-
-            // Review Generation
             const reviewDiv = document.getElementById('review-content');
             reviewDiv.innerHTML = '';
             levelData.sentences.forEach(s => {
                 const words = s.en.split(/\s+/);
                 const htmlWords = words.map(w => {
                     const match = w.match(/^([a-zA-Z0-9'-]+)(.*)$/);
-                    if(match && errorLog.has(match[1])) {
-                        return `<span class="error-mark">${match[1]}</span>${match[2]}`;
-                    }
+                    if(match && errorLog.has(match[1])) return `<span class="error-mark">${match[1]}</span>${match[2]}`;
                     return w;
                 }).join(' ');
                 reviewDiv.innerHTML += `<div class="mb-2 border-b border-slate-100 pb-1"><div class="text-xs text-slate-400">${s.zh}</div><div class="font-medium">${htmlWords}</div></div>`;
@@ -886,25 +819,15 @@
             }
         }
 
-        // --- DOWNLOADS ---
-
         async function downloadScreenshot(mode) {
-            let target, filename;
-            if (mode === 'level') {
-                target = document.getElementById('end-screen');
-                filename = `Result_${currentLevelId}.jpg`;
-            }
-
-            // Hide buttons momentarily
+            let target = document.getElementById('end-screen');
+            let filename = `Result_${currentLevelId}.jpg`;
             const buttons = target.querySelectorAll('button');
             buttons.forEach(b => b.style.display = 'none');
-            
             const clone = target.cloneNode(true);
-            clone.style.width = '600px'; 
-            clone.style.position = 'fixed'; clone.style.left = '-9999px'; clone.style.top = '0';
+            clone.style.width = '600px'; clone.style.position = 'fixed'; clone.style.left = '-9999px'; clone.style.top = '0';
             clone.classList.remove('hidden');
             document.body.appendChild(clone);
-
             try {
                 const canvas = await html2canvas(clone, { scale: 2 });
                 const link = document.createElement('a');
@@ -920,49 +843,23 @@
         async function downloadFullReport() {
             const container = document.getElementById('full-report-container');
             const statsDiv = document.getElementById('report-stats');
-            
-            // Build Report HTML
             statsDiv.innerHTML = '';
             let totalSeconds = 0;
-            
             for (const [id, data] of Object.entries(progressData)) {
-                // Parse time to seconds for total
                 const parts = data.time.split(':');
                 totalSeconds += parseInt(parts[0])*60 + parseInt(parts[1]);
-
-                const levelTitle = levelsDB[id].title;
-                const html = `
-                    <div class="border-b-2 border-slate-200 pb-4">
-                        <h3 class="font-bold text-lg text-slate-700">${levelTitle}</h3>
-                        <div class="flex justify-between mt-2 text-sm">
-                            <span class="bg-indigo-100 text-indigo-800 px-2 py-1 rounded">Time: ${data.time}</span>
-                            <span class="text-slate-500">${data.date}</span>
-                        </div>
-                    </div>
-                `;
-                statsDiv.innerHTML += html;
+                statsDiv.innerHTML += `<div class="border-b-2 border-slate-200 pb-4"><h3 class="font-bold text-lg text-slate-700">${levelsDB[id].title}</h3><div class="flex justify-between mt-2 text-sm"><span class="bg-indigo-100 text-indigo-800 px-2 py-1 rounded">Time: ${data.time}</span><span class="text-slate-500">${data.date}</span></div></div>`;
             }
-
-            // Add Total Time
             const totalM = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
             const totalS = (totalSeconds % 60).toString().padStart(2, '0');
-            statsDiv.innerHTML += `
-                <div class="mt-4 text-center bg-slate-100 p-4 rounded-lg">
-                    <span class="text-slate-500 font-bold uppercase text-xs">Total Time</span>
-                    <div class="text-2xl font-mono font-bold text-indigo-600">${totalM}:${totalS}</div>
-                </div>
-            `;
-
-            // Capture
+            statsDiv.innerHTML += `<div class="mt-4 text-center bg-slate-100 p-4 rounded-lg"><span class="text-slate-500 font-bold uppercase text-xs">Total Time</span><div class="text-2xl font-mono font-bold text-indigo-600">${totalM}:${totalS}</div></div>`;
             try {
                 const canvas = await html2canvas(container, { scale: 2 });
                 const link = document.createElement('a');
                 link.href = canvas.toDataURL('image/jpeg', 0.9);
                 link.download = `London_Trip_Full_Report.jpg`;
                 link.click();
-            } catch(e) {
-                alert("Error generating report");
-            }
+            } catch(e) { alert("Error generating report"); }
         }
     </script>
 </body>
