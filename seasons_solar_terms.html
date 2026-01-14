@@ -1,0 +1,1559 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>四季節氣 - 互動式測驗系統</title>
+    
+    <!-- React -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+    
+    <!-- html2canvas -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            cursor: default;
+        }
+
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background: linear-gradient(135deg, #FFB6C1 0%, #DDA0DD 50%, #B0E0E6 100%);
+            min-height: 100vh;
+            overscroll-behavior: none;
+            -webkit-user-select: none;
+            user-select: none;
+            overflow-x: hidden;
+        }
+
+        input, textarea {
+            -webkit-user-select: text;
+            -moz-user-select: text;
+            -ms-user-select: text;
+            user-select: text;
+            cursor: text;
+        }
+
+        button, a, .clickable {
+            cursor: pointer !important;
+        }
+
+        .drag-item {
+            transition: all 0.2s ease;
+            cursor: grab !important;
+            touch-action: none;
+            -webkit-touch-callout: none;
+        }
+
+        .drag-item:active {
+            cursor: grabbing !important;
+        }
+
+        @media (hover: hover) {
+            .drag-item:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            }
+        }
+
+        .dragging {
+            opacity: 0.5;
+            transform: scale(1.05);
+            z-index: 1000;
+            position: fixed;
+            pointer-events: none;
+        }
+
+        .cursor-move {
+            cursor: move !important;
+            touch-action: none;
+            -webkit-touch-callout: none;
+        }
+
+        .cursor-move:active {
+            cursor: grabbing !important;
+        }
+
+        .drop-zone {
+            transition: all 0.2s ease;
+            min-height: 80px;
+        }
+
+        .drop-zone.drag-over {
+            background: rgba(59, 130, 246, 0.2);
+            border: 3px dashed #3b82f6 !important;
+            transform: scale(1.02);
+        }
+
+        .saying-slot {
+            transition: all 0.2s ease;
+            min-height: 60px;
+            min-width: 80px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            vertical-align: middle;
+        }
+
+        .saying-slot.drag-over {
+            background: rgba(59, 130, 246, 0.3);
+            border: 3px dashed #3b82f6 !important;
+            transform: scale(1.05);
+        }
+
+        .correct-answer {
+            animation: correctPulse 0.6s ease-out;
+            border: 3px solid #10b981 !important;
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        .wrong-answer {
+            animation: shake 0.5s ease-out;
+            border: 3px solid #ef4444 !important;
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        @keyframes correctPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes bounce-slow {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .animate-bounce-slow {
+            animation: bounce-slow 2s ease-in-out infinite;
+        }
+
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        // 觸控拖曳支援變數
+        let touchDragData = null;
+        let touchDragElement = null;
+        let touchClone = null;
+        let touchRemoveCallback = null;
+        let touchSourceZoneId = null;
+
+        function handleTouchStart(e, item, removeCallback) {
+            e.preventDefault();
+            touchDragData = item;
+            touchDragElement = e.currentTarget;
+            touchRemoveCallback = removeCallback;
+            
+            const scrollContainer = document.querySelector('.overflow-y-auto');
+            if (scrollContainer) {
+                scrollContainer.style.overflowY = 'hidden';
+                scrollContainer.style.touchAction = 'none';
+            }
+            
+            const sourceZone = touchDragElement.closest('.drop-zone, .saying-slot');
+            touchSourceZoneId = sourceZone ? sourceZone.getAttribute('data-zone-id') : null;
+            
+            const touch = e.touches[0];
+            touchClone = touchDragElement.cloneNode(true);
+            touchClone.style.position = 'fixed';
+            touchClone.style.zIndex = '10000';
+            touchClone.style.opacity = '0.8';
+            touchClone.style.pointerEvents = 'none';
+            touchClone.style.width = touchDragElement.offsetWidth + 'px';
+            touchClone.style.left = (touch.clientX - touchDragElement.offsetWidth / 2) + 'px';
+            touchClone.style.top = (touch.clientY - touchDragElement.offsetHeight / 2) + 'px';
+            touchClone.style.transition = 'none';
+            document.body.appendChild(touchClone);
+            
+            touchDragElement.style.opacity = '0.2';
+            touchDragElement.style.transform = 'scale(0.95)';
+            touchDragElement.style.transition = 'opacity 0.2s, transform 0.2s';
+        }
+
+        function handleTouchMove(e) {
+            if (!touchClone) return;
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const touch = e.touches[0];
+            touchClone.style.left = (touch.clientX - touchClone.offsetWidth / 2) + 'px';
+            touchClone.style.top = (touch.clientY - touchClone.offsetHeight / 2) + 'px';
+            
+            const dropZones = document.querySelectorAll('.drop-zone, .saying-slot');
+            dropZones.forEach(zone => zone.classList.remove('drag-over'));
+            
+            const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+            if (elementBelow) {
+                const dropZone = elementBelow.closest('.drop-zone, .saying-slot');
+                if (dropZone) {
+                    const targetZoneId = dropZone.getAttribute('data-zone-id');
+                    if (targetZoneId !== touchSourceZoneId) {
+                        dropZone.classList.add('drag-over');
+                    }
+                }
+            }
+        }
+
+        function handleTouchEnd(e, dropCallback) {
+            if (!touchClone) return;
+            
+            const touch = e.changedTouches[0];
+            const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+            
+            let targetZone = null;
+            let targetZoneId = null;
+            if (elementBelow) {
+                targetZone = elementBelow.closest('.drop-zone, .saying-slot');
+                if (targetZone) {
+                    targetZoneId = targetZone.getAttribute('data-zone-id');
+                }
+            }
+            
+            if (touchClone && touchClone.parentNode) {
+                touchClone.parentNode.removeChild(touchClone);
+            }
+            touchClone = null;
+            
+            const scrollContainer = document.querySelector('.overflow-y-auto');
+            if (scrollContainer) {
+                scrollContainer.style.overflowY = 'auto';
+                scrollContainer.style.touchAction = '';
+            }
+            
+            const dropZones = document.querySelectorAll('.drop-zone, .saying-slot');
+            dropZones.forEach(zone => zone.classList.remove('drag-over'));
+            
+            const isDifferentZone = targetZone && targetZoneId && touchDragData && 
+                                   targetZoneId !== touchSourceZoneId;
+            
+            if (isDifferentZone && dropCallback) {
+                if (touchRemoveCallback) {
+                    touchRemoveCallback();
+                }
+                
+                if (targetZoneId !== 'items') {
+                    dropCallback(touchDragData, targetZoneId);
+                }
+                
+                if (touchDragElement && touchDragElement.parentNode) {
+                    touchDragElement.style.opacity = '';
+                    touchDragElement.style.transform = '';
+                }
+            } else {
+                if (touchDragElement && touchDragElement.parentNode) {
+                    touchDragElement.style.opacity = '1';
+                    touchDragElement.style.transform = 'scale(1)';
+                    touchDragElement.style.transition = 'opacity 0.2s, transform 0.2s';
+                    void touchDragElement.offsetHeight;
+                }
+            }
+            
+            touchDragData = null;
+            touchDragElement = null;
+            touchRemoveCallback = null;
+            touchSourceZoneId = null;
+        }
+
+        function shuffleArray(array) {
+            const newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        }
+
+        // 題目資料
+        const TESTS_DATA = {
+            "test-1": {
+                id: "test-1",
+                title: "四季特色辨識",
+                subtitle: "景物與物候",
+                difficulty: "⭐⭐",
+                itemCount: 16,
+                description: "請將以下景物、活動、物候分類到對應的季節",
+                color: "from-pink-200 to-rose-300",
+                icon: "fa-leaf",
+                type: "classification",
+                zones: [
+                    { id: 'spring', title: '春季', icon: 'fa-seedling' },
+                    { id: 'summer', title: '夏季', icon: 'fa-sun' },
+                    { id: 'autumn', title: '秋季', icon: 'fa-wind' },
+                    { id: 'winter', title: '冬季', icon: 'fa-snowflake' }
+                ],
+                items: [
+                    { id: 'item1', text: '桃花盛開', val: 'taohua' },
+                    { id: 'item2', text: '春耕播種', val: 'chungeng' },
+                    { id: 'item3', text: '燕子歸來', val: 'yanzi' },
+                    { id: 'item4', text: '柳樹發芽', val: 'liushu' },
+                    { id: 'item5', text: '蟬鳴蛙叫', val: 'chanming' },
+                    { id: 'item6', text: '荷花盛開', val: 'hehua' },
+                    { id: 'item7', text: '午後雷陣雨', val: 'leizhenyu' },
+                    { id: 'item8', text: '西瓜成熟', val: 'xigua' },
+                    { id: 'item9', text: '楓葉轉紅', val: 'fengye' },
+                    { id: 'item10', text: '稻穗金黃', val: 'daosui' },
+                    { id: 'item11', text: '秋收農忙', val: 'qiushou' },
+                    { id: 'item12', text: '大雁南飛', val: 'dayan' },
+                    { id: 'item13', text: '梅花綻放', val: 'meihua' },
+                    { id: 'item14', text: '候鳥過境', val: 'houniao' },
+                    { id: 'item15', text: '寒風刺骨', val: 'hanfeng' },
+                    { id: 'item16', text: '白雪飄飄', val: 'baixue' }
+                ],
+                solution: {
+                    spring: ['taohua', 'chungeng', 'yanzi', 'liushu'],
+                    summer: ['chanming', 'hehua', 'leizhenyu', 'xigua'],
+                    autumn: ['fengye', 'daosui', 'qiushou', 'dayan'],
+                    winter: ['meihua', 'houniao', 'hanfeng', 'baixue']
+                }
+            },
+            "test-2": {
+                id: "test-2",
+                title: "節氣與季節對應",
+                subtitle: "二十四節氣",
+                difficulty: "⭐⭐",
+                itemCount: 12,
+                description: "請將以下節氣分類到對應的季節",
+                color: "from-yellow-200 to-amber-300",
+                icon: "fa-calendar-days",
+                type: "classification",
+                zones: [
+                    { id: 'spring', title: '春季節氣', icon: 'fa-seedling' },
+                    { id: 'summer', title: '夏季節氣', icon: 'fa-sun' },
+                    { id: 'autumn', title: '秋季節氣', icon: 'fa-wind' },
+                    { id: 'winter', title: '冬季節氣', icon: 'fa-snowflake' }
+                ],
+                items: [
+                    { id: 'item1', text: '立春', val: 'lichun' },
+                    { id: 'item2', text: '驚蟄', val: 'jingzhe' },
+                    { id: 'item3', text: '清明', val: 'qingming' },
+                    { id: 'item4', text: '立夏', val: 'lixia' },
+                    { id: 'item5', text: '芒種', val: 'mangzhong' },
+                    { id: 'item6', text: '夏至', val: 'xiazhi' },
+                    { id: 'item7', text: '立秋', val: 'liqiu' },
+                    { id: 'item8', text: '白露', val: 'bailu' },
+                    { id: 'item9', text: '秋分', val: 'qiufen' },
+                    { id: 'item10', text: '立冬', val: 'lidong' },
+                    { id: 'item11', text: '大雪', val: 'daxue' },
+                    { id: 'item12', text: '冬至', val: 'dongzhi' }
+                ],
+                solution: {
+                    spring: ['lichun', 'jingzhe', 'qingming'],
+                    summer: ['lixia', 'mangzhong', 'xiazhi'],
+                    autumn: ['liqiu', 'bailu', 'qiufen'],
+                    winter: ['lidong', 'daxue', 'dongzhi']
+                }
+            },
+            "test-3": {
+                id: "test-3",
+                title: "節氣俗諺配對",
+                subtitle: "農諺智慧",
+                difficulty: "⭐⭐⭐",
+                itemCount: 18,
+                description: "請將節氣拖曳到對應的俗諺空格中",
+                color: "from-orange-200 to-red-300",
+                icon: "fa-book-open",
+                type: "saying_match",
+                terms: [
+                    { id: 'term1', text: '立春', val: 'lichun' },
+                    { id: 'term2', text: '雨水', val: 'yushui' },
+                    { id: 'term3', text: '驚蟄', val: 'jingzhe' },
+                    { id: 'term4', text: '春分', val: 'chunfen' },
+                    { id: 'term5', text: '清明', val: 'qingming' },
+                    { id: 'term6', text: '立夏', val: 'lixia' },
+                    { id: 'term7', text: '小滿', val: 'xiaoman' },
+                    { id: 'term8', text: '芒種', val: 'mangzhong' },
+                    { id: 'term9', text: '夏至', val: 'xiazhi' },
+                    { id: 'term10', text: '大暑', val: 'dashu' },
+                    { id: 'term11', text: '立秋', val: 'liqiu' },
+                    { id: 'term12', text: '白露', val: 'bailu' },
+                    { id: 'term13', text: '秋分', val: 'qiufen' },
+                    { id: 'term14', text: '霜降', val: 'shuangjiang' },
+                    { id: 'term15', text: '立冬', val: 'lidong' },
+                    { id: 'term16', text: '小雪', val: 'xiaoxue' },
+                    { id: 'term17', text: '大雪', val: 'daxue' },
+                    { id: 'term18', text: '冬至', val: 'dongzhi' }
+                ],
+                sayings: [
+                    { id: 'say1', before: '「', after: '」一日，百草回芽', correctVal: 'lichun', slotId: 'slot1' },
+                    { id: 'say2', before: '「', after: '」連綿是豐年，農民不用力耕田', correctVal: 'yushui', slotId: 'slot2' },
+                    { id: 'say3', before: '「', after: '」過，暖和和，蛤蟆老角唱山歌', correctVal: 'jingzhe', slotId: 'slot3' },
+                    { id: 'say4', before: '「', after: '」有雨病人稀', correctVal: 'chunfen', slotId: 'slot4' },
+                    { id: 'say5', before: '「', after: '」時節雨紛紛', correctVal: 'qingming', slotId: 'slot5' },
+                    { id: 'say6', before: '「', after: '」補老父，一年轉頭顧', correctVal: 'lixia', slotId: 'slot6' },
+                    { id: 'say7', before: '「', after: '」雨水相趕，芒種火燒埔', correctVal: 'xiaoman', slotId: 'slot7' },
+                    { id: 'say8', before: '「', after: '」夏至天，走路要人牽', correctVal: 'mangzhong', slotId: 'slot8' },
+                    { id: 'say9', before: '「', after: '」不過不熱，冬至不過不冷', correctVal: 'xiazhi', slotId: 'slot9' },
+                    { id: 'say10', before: '小暑不算熱，「', after: '」三伏天', correctVal: 'dashu', slotId: 'slot10' },
+                    { id: 'say11', before: '「', after: '」後十日遍地紅', correctVal: 'liqiu', slotId: 'slot11' },
+                    { id: 'say12', before: '「', after: '」秋分夜，一夜冷一夜', correctVal: 'bailu', slotId: 'slot12' },
+                    { id: 'say13', before: '「', after: '」天氣白雲來，處處好歌吹', correctVal: 'qiufen', slotId: 'slot13' },
+                    { id: 'say14', before: '「', after: '」有霜，穀米滿倉', correctVal: 'shuangjiang', slotId: 'slot14' },
+                    { id: 'say15', before: '「', after: '」晴，一冬凌；立冬陰，一冬溫', correctVal: 'lidong', slotId: 'slot15' },
+                    { id: 'say16', before: '「', after: '」雪滿天，來年必豐年', correctVal: 'xiaoxue', slotId: 'slot16' },
+                    { id: 'say17', before: '「', after: '」不寒明年旱，冬至不冷明年旱', correctVal: 'daxue', slotId: 'slot17' },
+                    { id: 'say18', before: '「', after: '」吃湯圓，一年又一年', correctVal: 'dongzhi', slotId: 'slot18' }
+                ],
+                solution: {
+                    slot1: 'lichun',
+                    slot2: 'yushui',
+                    slot3: 'jingzhe',
+                    slot4: 'chunfen',
+                    slot5: 'qingming',
+                    slot6: 'lixia',
+                    slot7: 'xiaoman',
+                    slot8: 'mangzhong',
+                    slot9: 'xiazhi',
+                    slot10: 'dashu',
+                    slot11: 'liqiu',
+                    slot12: 'bailu',
+                    slot13: 'qiufen',
+                    slot14: 'shuangjiang',
+                    slot15: 'lidong',
+                    slot16: 'xiaoxue',
+                    slot17: 'daxue',
+                    slot18: 'dongzhi'
+                }
+            },
+            "test-4": {
+                id: "test-4",
+                title: "季節成語分類",
+                subtitle: "成語與季節",
+                difficulty: "⭐⭐⭐",
+                itemCount: 16,
+                description: "請將描寫季節的成語分類到對應的季節",
+                color: "from-sky-200 to-blue-300",
+                icon: "fa-book",
+                type: "classification",
+                zones: [
+                    { id: 'spring', title: '春季成語', icon: 'fa-seedling' },
+                    { id: 'summer', title: '夏季成語', icon: 'fa-sun' },
+                    { id: 'autumn', title: '秋季成語', icon: 'fa-wind' },
+                    { id: 'winter', title: '冬季成語', icon: 'fa-snowflake' }
+                ],
+                items: [
+                    { id: 'item1', text: '春暖花開', val: 'chunnuanhuakai' },
+                    { id: 'item2', text: '鳥語花香', val: 'niaoyuhuaxiang' },
+                    { id: 'item3', text: '春意盎然', val: 'chunyiangran' },
+                    { id: 'item4', text: '萬紫千紅', val: 'wanziqianhong' },
+                    { id: 'item5', text: '烈日炎炎', val: 'lieriyanyan' },
+                    { id: 'item6', text: '揮汗如雨', val: 'huihanruyu' },
+                    { id: 'item7', text: '夏日炎炎', val: 'xiariyanyan' },
+                    { id: 'item8', text: '綠樹成蔭', val: 'lvshuchengyin' },
+                    { id: 'item9', text: '秋高氣爽', val: 'qiugaoqishuang' },
+                    { id: 'item10', text: '秋風落葉', val: 'qiufengluoye' },
+                    { id: 'item11', text: '一葉知秋', val: 'yiyezhiqiu' },
+                    { id: 'item12', text: '金風送爽', val: 'jinfengsongshuang' },
+                    { id: 'item13', text: '冰天雪地', val: 'bingti anxuedi' },
+                    { id: 'item14', text: '寒風刺骨', val: 'hanfengcigu' },
+                    { id: 'item15', text: '滴水成冰', val: 'dishuichengbing' },
+                    { id: 'item16', text: '天寒地凍', val: 'tianhandidong' }
+                ],
+                solution: {
+                    spring: ['chunnuanhuakai', 'niaoyuhuaxiang', 'chunyiangran', 'wanziqianhong'],
+                    summer: ['lieriyanyan', 'huihanruyu', 'xiariyanyan', 'lvshuchengyin'],
+                    autumn: ['qiugaoqishuang', 'qiufengluoye', 'yiyezhiqiu', 'jinfengsongshuang'],
+                    winter: ['bingtianxuedi', 'hanfengcigu', 'dishuichengbing', 'tianhandidong']
+                }
+            }
+        };
+
+        function App() {
+            const [screen, setScreen] = useState('home');
+            const [currentTest, setCurrentTest] = useState(null);
+            const [gameState, setGameState] = useState('playing');
+            const [droppedItems, setDroppedItems] = useState({});
+            const [sayingSlots, setSayingSlots] = useState({});
+            const [feedback, setFeedback] = useState({});
+            const [startTime, setStartTime] = useState(null);
+            const [elapsedTime, setElapsedTime] = useState(0);
+            const [attempts, setAttempts] = useState(0);
+            const [shuffledItems, setShuffledItems] = useState([]);
+            const [shuffledZones, setShuffledZones] = useState([]);
+            const [draggedItem, setDraggedItem] = useState(null);
+            const [dragSourceZone, setDragSourceZone] = useState(null);
+            
+            const [completionStatus, setCompletionStatus] = useState(() => {
+                try {
+                    const saved = localStorage.getItem('seasons_tests_status');
+                    return saved ? JSON.parse(saved) : {};
+                } catch {
+                    return {};
+                }
+            });
+            
+            const [fontScale, setFontScale] = useState(() => {
+                try {
+                    const saved = localStorage.getItem('seasons_font_scale');
+                    return saved ? parseFloat(saved) : 100;
+                } catch {
+                    return 100;
+                }
+            });
+            
+            useEffect(() => {
+                document.documentElement.style.fontSize = `${fontScale}%`;
+            }, [fontScale]);
+            
+            const increaseFontSize = () => {
+                const newScale = Math.min(fontScale + 10, 150);
+                setFontScale(newScale);
+                localStorage.setItem('seasons_font_scale', newScale.toString());
+            };
+            
+            const decreaseFontSize = () => {
+                const newScale = Math.max(fontScale - 10, 70);
+                setFontScale(newScale);
+                localStorage.setItem('seasons_font_scale', newScale.toString());
+            };
+
+            useEffect(() => {
+                let timer;
+                if (gameState === 'playing' && startTime) {
+                    timer = setInterval(() => {
+                        setElapsedTime(Math.floor((new Date() - startTime) / 1000));
+                    }, 1000);
+                }
+                return () => {
+                    if (timer) clearInterval(timer);
+                };
+            }, [gameState, startTime]);
+
+            const selectTest = (testId) => {
+                const test = TESTS_DATA[testId];
+                setCurrentTest(test);
+                setScreen('playing');
+                setGameState('playing');
+                setStartTime(new Date());
+                setElapsedTime(0);
+                setAttempts(0);
+                setDroppedItems({});
+                setSayingSlots({});
+                setFeedback({});
+                setDraggedItem(null);
+                setDragSourceZone(null);
+                
+                if (test.type === 'classification') {
+                    setShuffledItems(shuffleArray(test.items));
+                    setShuffledZones(shuffleArray(test.zones));
+                } else if (test.type === 'saying_match') {
+                    setShuffledItems(shuffleArray(test.terms));
+                }
+            };
+
+            const handleDragStart = (e, item, sourceZone) => {
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('application/json', JSON.stringify({ item, sourceZone }));
+                setDraggedItem(item);
+                setDragSourceZone(sourceZone);
+            };
+
+            const handleDragOver = (e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+            };
+
+            const handleDragEnd = (e) => {
+                setDraggedItem(null);
+                setDragSourceZone(null);
+            };
+
+            const handleDrop = (e, targetZone) => {
+                e.preventDefault();
+                
+                try {
+                    const data = JSON.parse(e.dataTransfer.getData('application/json'));
+                    const { item, sourceZone } = data;
+                    
+                    if (sourceZone === targetZone) {
+                        return;
+                    }
+                    
+                    if (currentTest.type === 'classification') {
+                        if (sourceZone && sourceZone !== 'items') {
+                            setDroppedItems(prev => ({
+                                ...prev,
+                                [sourceZone]: (prev[sourceZone] || []).filter(i => i.id !== item.id)
+                            }));
+                        }
+                        
+                        if (targetZone !== 'items') {
+                            setDroppedItems(prev => {
+                                const existing = prev[targetZone] || [];
+                                if (existing.some(i => i.id === item.id)) {
+                                    return prev;
+                                }
+                                return {
+                                    ...prev,
+                                    [targetZone]: [...existing, item]
+                                };
+                            });
+                        }
+                    } else if (currentTest.type === 'saying_match') {
+                        if (sourceZone && sourceZone !== 'items') {
+                            setSayingSlots(prev => ({
+                                ...prev,
+                                [sourceZone]: null
+                            }));
+                        }
+                        
+                        if (targetZone !== 'items') {
+                            setSayingSlots(prev => ({
+                                ...prev,
+                                [targetZone]: item
+                            }));
+                        }
+                    }
+                } catch (error) {
+                    console.error('Drop error:', error);
+                }
+            };
+
+            const handleTouchDrop = (item, targetZone) => {
+                if (currentTest.type === 'classification') {
+                    const currentItems = droppedItems[targetZone] || [];
+                    const alreadyExists = currentItems.some(i => i.id === item.id);
+                    
+                    if (!alreadyExists) {
+                        setDroppedItems(prev => ({
+                            ...prev,
+                            [targetZone]: [...(prev[targetZone] || []), item]
+                        }));
+                    }
+                } else if (currentTest.type === 'saying_match') {
+                    setSayingSlots(prev => ({
+                        ...prev,
+                        [targetZone]: item
+                    }));
+                }
+            };
+
+            const removeItem = (zoneId, itemId) => {
+                setDroppedItems(prev => ({
+                    ...prev,
+                    [zoneId]: prev[zoneId].filter(item => item.id !== itemId)
+                }));
+            };
+
+            const removeSayingSlot = (slotId) => {
+                setSayingSlots(prev => ({
+                    ...prev,
+                    [slotId]: null
+                }));
+            };
+
+            const checkAnswers = () => {
+                setAttempts(prev => prev + 1);
+                const newFeedback = {};
+                let allCorrect = true;
+
+                if (currentTest.type === 'classification') {
+                    Object.keys(currentTest.solution).forEach(zoneId => {
+                        const correctVals = currentTest.solution[zoneId];
+                        const userVals = (droppedItems[zoneId] || []).map(item => item.val);
+                        
+                        const isCorrect = userVals.length > 0 &&
+                                        userVals.every(val => correctVals.includes(val));
+                        
+                        newFeedback[zoneId] = isCorrect;
+                        if (!isCorrect && userVals.length > 0) {
+                            allCorrect = false;
+                        }
+                    });
+
+                    const allItemsPlaced = Object.values(droppedItems).flat().length === currentTest.items.length;
+                    if (!allItemsPlaced) {
+                        allCorrect = false;
+                    }
+                } else if (currentTest.type === 'saying_match') {
+                    Object.keys(currentTest.solution).forEach(slotId => {
+                        const correctVal = currentTest.solution[slotId];
+                        const userItem = sayingSlots[slotId];
+                        
+                        const isCorrect = userItem && userItem.val === correctVal;
+                        newFeedback[slotId] = isCorrect;
+                        
+                        if (!isCorrect) {
+                            allCorrect = false;
+                        }
+                    });
+                }
+
+                setFeedback(newFeedback);
+
+                if (allCorrect) {
+                    const completionTime = elapsedTime;
+                    const newStatus = {
+                        ...completionStatus,
+                        [currentTest.id]: {
+                            completed: true,
+                            completedAt: new Date().toISOString(),
+                            time: completionTime,
+                            attempts: attempts + 1
+                        }
+                    };
+                    setCompletionStatus(newStatus);
+                    localStorage.setItem('seasons_tests_status', JSON.stringify(newStatus));
+                    setGameState('completed');
+                }
+            };
+
+            const restart = () => {
+                setGameState('playing');
+                setStartTime(new Date());
+                setElapsedTime(0);
+                setAttempts(0);
+                setDroppedItems({});
+                setSayingSlots({});
+                setFeedback({});
+                
+                if (currentTest.type === 'classification') {
+                    setShuffledItems(shuffleArray(currentTest.items));
+                    setShuffledZones(shuffleArray(currentTest.zones));
+                } else if (currentTest.type === 'saying_match') {
+                    setShuffledItems(shuffleArray(currentTest.terms));
+                }
+            };
+
+            const formatTime = (seconds) => {
+                const mins = Math.floor(seconds / 60);
+                const secs = seconds % 60;
+                return `${mins}:${secs.toString().padStart(2, '0')}`;
+            };
+
+            // 首頁
+            if (screen === 'home') {
+                const allTests = Object.values(TESTS_DATA);
+                const completedCount = allTests.filter(test => completionStatus[test.id]?.completed).length;
+                const allCompleted = completedCount === allTests.length;
+
+                const downloadAllCertificate = () => {
+                    const element = document.getElementById('all-certificate-content');
+                    html2canvas(element, {
+                        backgroundColor: '#FFB6C1',
+                        scale: 2,
+                        width: 1200
+                    }).then(canvas => {
+                        const link = document.createElement('a');
+                        const date = new Date();
+                        link.download = `四季節氣-全部完成證書-${date.getFullYear()}${(date.getMonth()+1).toString().padStart(2,'0')}${date.getDate().toString().padStart(2,'0')}.png`;
+                        link.href = canvas.toDataURL();
+                        link.click();
+                    });
+                };
+
+                return (
+                    <div className="min-h-screen flex items-center justify-center p-4 md:p-6">
+                        <div className="fixed top-4 right-4 z-50 flex items-center gap-2 glass-effect rounded-xl p-2 shadow-xl">
+                            <button
+                                onClick={decreaseFontSize}
+                                disabled={fontScale <= 70}
+                                className={`px-3 py-2 rounded-lg font-bold transition-all ${
+                                    fontScale <= 70
+                                        ? 'bg-white/10 text-white/30 cursor-not-allowed'
+                                        : 'bg-white/20 text-white hover:bg-white/30 hover:scale-110'
+                                }`}
+                            >
+                                <span className="text-sm">A<sup className="text-xs">-</sup></span>
+                            </button>
+                            
+                            <button
+                                onClick={increaseFontSize}
+                                disabled={fontScale >= 150}
+                                className={`px-3 py-2 rounded-lg font-bold transition-all ${
+                                    fontScale >= 150
+                                        ? 'bg-white/10 text-white/30 cursor-not-allowed'
+                                        : 'bg-white/20 text-white hover:bg-white/30 hover:scale-110'
+                                }`}
+                            >
+                                <span className="text-sm">A<sup className="text-xs">+</sup></span>
+                            </button>
+                        </div>
+                        
+                        <div className="max-w-4xl w-full">
+                            <div className="text-center mb-8 md:mb-12 fade-in">
+                                <h1 className="text-4xl md:text-5xl font-black text-white mb-4">
+                                    <i className="fas fa-cloud-sun mr-3 md:mr-4"></i>
+                                    四季節氣
+                                </h1>
+                                <p className="text-lg md:text-xl text-white/90 mb-2">國中國文 傳統文化</p>
+                                <p className="text-sm md:text-base text-white/70">
+                                    完成進度：{completedCount} / {allTests.length}
+                                </p>
+                                
+                                {allCompleted && (
+                                    <div className="mt-4 glass-effect rounded-2xl p-4 md:p-6 animate-bounce-slow inline-block">
+                                        <div className="text-3xl md:text-4xl mb-2">🏆</div>
+                                        <div className="text-lg md:text-xl font-bold text-yellow-300 mb-3">
+                                            恭喜完成所有測驗！
+                                        </div>
+                                        <button
+                                            onClick={downloadAllCertificate}
+                                            className="bg-gradient-to-r from-yellow-300 to-orange-400 text-white px-6 md:px-8 py-3 md:py-4 rounded-xl font-bold text-base md:text-lg hover:scale-110 transition-all shadow-2xl"
+                                        >
+                                            <i className="fas fa-download mr-2"></i>
+                                            下載完整學習證書
+                                        </button>
+                                    </div>
+                                )}
+                                
+                                {Object.keys(completionStatus).length > 0 && (
+                                    <button
+                                        onClick={() => {
+                                            if (confirm('⚠️ 確定要清除所有完成記錄嗎？')) {
+                                                setCompletionStatus({});
+                                                localStorage.removeItem('seasons_tests_status');
+                                                alert('✅ 已清除所有記錄！');
+                                            }
+                                        }}
+                                        className="mt-4 bg-red-400/80 hover:bg-red-500 text-white px-4 py-2 rounded-lg text-sm font-bold transition-all shadow-lg hover:scale-105"
+                                    >
+                                        <i className="fas fa-trash-alt mr-2"></i>
+                                        清除所有記錄
+                                    </button>
+                                )}
+                            </div>
+
+                            <div className="grid md:grid-cols-2 gap-4 md:gap-6">
+                                {allTests.map((test, index) => {
+                                    const isCompleted = completionStatus[test.id]?.completed;
+                                    const status = completionStatus[test.id];
+                                    
+                                    return (
+                                        <div
+                                            key={test.id}
+                                            className="glass-effect rounded-2xl p-6 md:p-8 hover:scale-105 transition-all duration-300 cursor-pointer fade-in relative"
+                                            style={{ animationDelay: `${index * 0.1}s` }}
+                                            onClick={() => selectTest(test.id)}
+                                        >
+                                            {isCompleted && (
+                                                <div className="absolute top-3 md:top-4 right-3 md:right-4 bg-green-400 text-white px-2 md:px-3 py-1 rounded-full text-xs md:text-sm font-bold flex items-center gap-1 shadow-lg">
+                                                    <i className="fas fa-check-circle"></i>
+                                                    已完成
+                                                </div>
+                                            )}
+                                            
+                                            <div className="flex items-center gap-3 md:gap-4 mb-4">
+                                                <div className={`w-14 h-14 md:w-16 md:h-16 bg-gradient-to-br ${test.color} rounded-xl md:rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg`}>
+                                                    <i className={`${test.icon} text-2xl md:text-3xl text-white`}></i>
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-center gap-2 mb-1">
+                                                        <h2 className="text-lg md:text-xl font-bold text-white truncate">
+                                                            {test.title}
+                                                        </h2>
+                                                        <span className="text-xs md:text-sm text-yellow-300 whitespace-nowrap">
+                                                            {test.difficulty}
+                                                        </span>
+                                                    </div>
+                                                    <p className="text-xs md:text-sm text-white/70">
+                                                        {test.subtitle}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            
+                                            <div className="text-white/80 text-sm md:text-base mb-3">
+                                                題數：{test.itemCount} 題
+                                            </div>
+                                            
+                                            {isCompleted && status && (
+                                                <div className="text-white/60 text-xs md:text-sm space-y-1">
+                                                    <div>⏱️ 用時：{formatTime(status.time)}</div>
+                                                    <div>🎯 嘗試：{status.attempts} 次</div>
+                                                </div>
+                                            )}
+                                            
+                                            {!isCompleted && (
+                                                <div className="text-white/60 text-xs md:text-sm">
+                                                    點擊開始測驗
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                            
+                            {/* 全部完成證書（隱藏） */}
+                            {allCompleted && (
+                                <div 
+                                    id="all-certificate-content" 
+                                    style={{
+                                        position: 'fixed',
+                                        left: '-9999px',
+                                        width: '1200px',
+                                        backgroundColor: '#FFB6C1',
+                                        padding: '60px',
+                                        fontFamily: 'Noto Sans TC, sans-serif'
+                                    }}
+                                >
+                                    <div style={{textAlign: 'center', marginBottom: '40px'}}>
+                                        <div style={{fontSize: '80px', marginBottom: '20px'}}>🏆</div>
+                                        <h1 style={{fontSize: '48px', fontWeight: '900', color: 'white', marginBottom: '10px'}}>
+                                            學習完成證書
+                                        </h1>
+                                        <h2 style={{fontSize: '36px', fontWeight: 'bold', color: '#fff3cd', marginBottom: '20px'}}>
+                                            四季節氣 - 全部通關
+                                        </h2>
+                                    </div>
+
+                                    <div style={{display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px', marginBottom: '40px'}}>
+                                        <div style={{backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: '16px', padding: '30px', textAlign: 'center'}}>
+                                            <div style={{fontSize: '40px', marginBottom: '10px'}}>📚</div>
+                                            <div style={{fontSize: '14px', color: 'rgba(255,255,255,0.8)', marginBottom: '8px'}}>完成測驗</div>
+                                            <div style={{fontSize: '32px', fontWeight: 'bold', color: '#4ade80'}}>4 / 4</div>
+                                        </div>
+                                        <div style={{backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: '16px', padding: '30px', textAlign: 'center'}}>
+                                            <div style={{fontSize: '40px', marginBottom: '10px'}}>📝</div>
+                                            <div style={{fontSize: '14px', color: 'rgba(255,255,255,0.8)', marginBottom: '8px'}}>總題數</div>
+                                            <div style={{fontSize: '32px', fontWeight: 'bold', color: 'white'}}>
+                                                {allTests.reduce((sum, test) => sum + test.itemCount, 0)}
+                                            </div>
+                                        </div>
+                                        <div style={{backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: '16px', padding: '30px', textAlign: 'center'}}>
+                                            <div style={{fontSize: '40px', marginBottom: '10px'}}>⏱️</div>
+                                            <div style={{fontSize: '14px', color: 'rgba(255,255,255,0.8)', marginBottom: '8px'}}>總時間</div>
+                                            <div style={{fontSize: '32px', fontWeight: 'bold', color: 'white'}}>
+                                                {formatTime(allTests.reduce((sum, test) => {
+                                                    const status = completionStatus[test.id];
+                                                    return sum + (status?.time || 0);
+                                                }, 0))}
+                                            </div>
+                                        </div>
+                                        <div style={{backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: '16px', padding: '30px', textAlign: 'center'}}>
+                                            <div style={{fontSize: '40px', marginBottom: '10px'}}>🎯</div>
+                                            <div style={{fontSize: '14px', color: 'rgba(255,255,255,0.8)', marginBottom: '8px'}}>總嘗試</div>
+                                            <div style={{fontSize: '32px', fontWeight: 'bold', color: 'white'}}>
+                                                {allTests.reduce((sum, test) => {
+                                                    const status = completionStatus[test.id];
+                                                    return sum + (status?.attempts || 0);
+                                                }, 0)}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div style={{backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: '16px', padding: '30px', marginBottom: '30px'}}>
+                                        <h3 style={{fontSize: '24px', fontWeight: 'bold', color: 'white', marginBottom: '20px'}}>
+                                            📋 各測驗完成詳情
+                                        </h3>
+                                        {allTests.map((test, idx) => {
+                                            const status = completionStatus[test.id];
+                                            return (
+                                                <div key={idx} style={{
+                                                    backgroundColor: 'rgba(255,255,255,0.1)',
+                                                    borderRadius: '12px',
+                                                    padding: '20px',
+                                                    marginBottom: '15px',
+                                                    display: 'flex',
+                                                    justifyContent: 'space-between',
+                                                    alignItems: 'center'
+                                                }}>
+                                                    <div style={{display: 'flex', alignItems: 'center', gap: '15px'}}>
+                                                        <div style={{
+                                                            width: '50px',
+                                                            height: '50px',
+                                                            backgroundColor: '#22c55e',
+                                                            borderRadius: '12px',
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'center',
+                                                            fontSize: '24px',
+                                                            color: 'white',
+                                                            fontWeight: 'bold'
+                                                        }}>✓</div>
+                                                        <div>
+                                                            <div style={{fontSize: '20px', fontWeight: 'bold', color: 'white', marginBottom: '5px'}}>
+                                                                {test.title}
+                                                            </div>
+                                                            <div style={{fontSize: '14px', color: 'rgba(255,255,255,0.7)'}}>
+                                                                {test.subtitle} · {test.itemCount}題 · 嘗試 {status?.attempts} 次
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div style={{fontSize: '20px', color: 'rgba(255,255,255,0.8)', fontFamily: 'monospace'}}>
+                                                        {formatTime(status?.time || 0)}
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+
+                                    <div style={{backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: '16px', padding: '30px', textAlign: 'center', marginBottom: '30px'}}>
+                                        <h3 style={{fontSize: '24px', fontWeight: 'bold', color: 'white', marginBottom: '20px'}}>
+                                            🌟 總體評級
+                                        </h3>
+                                        <div style={{fontSize: '80px', marginBottom: '15px'}}>
+                                            {allTests.every(test => completionStatus[test.id]?.attempts === 1) ? '🏆' :
+                                             allTests.every(test => completionStatus[test.id]?.attempts <= 2) ? '🥇' : '🥈'}
+                                        </div>
+                                        <div style={{fontSize: '32px', fontWeight: 'bold', color: 'white', marginBottom: '10px'}}>
+                                            {allTests.every(test => completionStatus[test.id]?.attempts === 1) ? '完美大師' :
+                                             allTests.every(test => completionStatus[test.id]?.attempts <= 2) ? '優秀學習者' : '認真學習者'}
+                                        </div>
+                                        <div style={{fontSize: '16px', color: 'rgba(255,255,255,0.8)'}}>
+                                            {allTests.every(test => completionStatus[test.id]?.attempts === 1) ? '所有測驗一次通過，真正的四季節氣專家！' :
+                                             allTests.every(test => completionStatus[test.id]?.attempts <= 2) ? '優秀的學習表現，對節氣知識掌握良好！' :
+                                             '完成就是勝利，對傳統文化有深入理解！'}
+                                        </div>
+                                    </div>
+
+                                    <div style={{marginTop: '40px', textAlign: 'center', fontSize: '14px', color: 'rgba(255,255,255,0.6)'}}>
+                                        此證書證明學習者已完成四季節氣所有測驗的學習與測驗
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                );
+            }
+
+            // 測驗進行中 - 分類題型
+            if (screen === 'playing' && currentTest && currentTest.type === 'classification') {
+                const placedItemIds = Object.values(droppedItems).flat().map(item => item.id);
+                const availableItems = shuffledItems.filter(item => !placedItemIds.includes(item.id));
+                const totalItems = currentTest.items.length;
+                const placedCount = placedItemIds.length;
+                const allPlaced = placedCount === totalItems;
+
+                return (
+                    <div className="h-screen flex flex-col overflow-hidden">
+                        <div className={`flex-shrink-0 bg-gradient-to-r ${currentTest.color} p-2 md:p-3 text-white shadow-xl`}>
+                            <div className="flex items-center gap-2 mb-2">
+                                <div className="flex items-center gap-2 flex-shrink-0">
+                                    <div className="flex items-center gap-1 bg-black/20 rounded-lg p-1">
+                                        <button onClick={decreaseFontSize} disabled={fontScale <= 70}
+                                            className={`px-1.5 py-0.5 rounded text-xs font-bold transition-all ${
+                                                fontScale <= 70 ? 'text-white/30 cursor-not-allowed' : 'text-white hover:bg-white/20'
+                                            }`}>
+                                            A<sup style={{ fontSize: '8px' }}>-</sup>
+                                        </button>
+                                        <button onClick={increaseFontSize} disabled={fontScale >= 150}
+                                            className={`px-1.5 py-0.5 rounded text-xs font-bold transition-all ${
+                                                fontScale >= 150 ? 'text-white/30 cursor-not-allowed' : 'text-white hover:bg-white/20'
+                                            }`}>
+                                            A<sup style={{ fontSize: '8px' }}>+</sup>
+                                        </button>
+                                    </div>
+                                    <h2 className="text-sm md:text-base font-bold truncate leading-tight">{currentTest.title}</h2>
+                                </div>
+                                
+                                <div className="flex-1 min-w-0"></div>
+                                
+                                <div className="flex items-center gap-2 flex-shrink-0">
+                                    <span className="text-xs opacity-80 whitespace-nowrap hidden sm:inline">⏱️ {formatTime(elapsedTime)}</span>
+                                    <span className="text-xs bg-black/20 px-2 py-0.5 rounded whitespace-nowrap">🎯 {attempts}</span>
+                                    <button onClick={() => setScreen('home')}
+                                        className="bg-white/20 hover:bg-white/30 px-2 py-1 rounded transition-all text-xs">
+                                        <i className="fas fa-home"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="flex-1 overflow-y-auto p-2 md:p-4" style={{WebkitOverflowScrolling: 'touch', maxHeight: '90%'}}>
+                            <div className="grid lg:grid-cols-3 gap-2 md:gap-3">
+                                <div className="lg:col-span-1">
+                                    <div className="glass-effect rounded-lg p-2 md:p-3 lg:sticky lg:top-2">
+                                        <h3 className="text-sm md:text-base font-bold text-white mb-2 flex items-center">
+                                            <i className="fas fa-cube mr-1 text-xs"></i>
+                                            待分類項目
+                                        </h3>
+                                        <div 
+                                            data-zone-id="items"
+                                            onDragOver={handleDragOver}
+                                            onDrop={(e) => handleDrop(e, 'items')}
+                                            className="drop-zone space-y-1.5 min-h-[100px]"
+                                        >
+                                            {availableItems.map(item => (
+                                                <div
+                                                    key={item.id}
+                                                    draggable
+                                                    onDragStart={(e) => handleDragStart(e, item, 'items')}
+                                                    onDragEnd={handleDragEnd}
+                                                    onTouchStart={(e) => handleTouchStart(e, item, null)}
+                                                    onTouchMove={handleTouchMove}
+                                                    onTouchEnd={(e) => handleTouchEnd(e, handleTouchDrop)}
+                                                    className="drag-item bg-white rounded-lg p-2 shadow-lg"
+                                                >
+                                                    <p className="text-gray-800 font-medium text-center text-xs md:text-sm">
+                                                        {item.text}
+                                                    </p>
+                                                </div>
+                                            ))}
+                                            {availableItems.length === 0 && (
+                                                <div className="text-center text-white/70 py-3 text-xs">
+                                                    所有項目都已分類
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="lg:col-span-2">
+                                    <div className="grid gap-2">
+                                        {shuffledZones.map(zone => (
+                                            <div
+                                                key={zone.id}
+                                                data-zone-id={zone.id}
+                                                onDragOver={handleDragOver}
+                                                onDrop={(e) => handleDrop(e, zone.id)}
+                                                className={`drop-zone glass-effect rounded-lg p-2 md:p-3
+                                                    ${feedback[zone.id] === true ? 'correct-answer' : ''}
+                                                    ${feedback[zone.id] === false ? 'wrong-answer' : ''}
+                                                    ${!feedback[zone.id] ? 'border-2 border-white/30' : ''}`}
+                                            >
+                                                <h4 className="text-sm md:text-base font-bold text-white mb-2 flex items-center">
+                                                    <i className={`${zone.icon} mr-1 text-xs`}></i>
+                                                    <span className="flex-1 text-xs md:text-sm">{zone.title}</span>
+                                                    {feedback[zone.id] === true && (
+                                                        <i className="fas fa-check-circle text-green-400 text-base"></i>
+                                                    )}
+                                                    {feedback[zone.id] === false && (
+                                                        <i className="fas fa-times-circle text-red-400 text-base"></i>
+                                                    )}
+                                                </h4>
+                                                <div className="grid grid-cols-2 gap-1.5">
+                                                    {(droppedItems[zone.id] || []).map(item => (
+                                                        <div
+                                                            key={item.id}
+                                                            draggable
+                                                            onDragStart={(e) => {
+                                                                handleDragStart(e, item, zone.id);
+                                                            }}
+                                                            onDragEnd={handleDragEnd}
+                                                            onTouchStart={(e) => handleTouchStart(e, item, () => removeItem(zone.id, item.id))}
+                                                            onTouchMove={handleTouchMove}
+                                                            onTouchEnd={(e) => handleTouchEnd(e, handleTouchDrop)}
+                                                            className="bg-white rounded-lg p-2 shadow-lg group relative cursor-move"
+                                                        >
+                                                            <p className="text-gray-800 font-medium text-xs text-center pr-5">
+                                                                {item.text}
+                                                            </p>
+                                                            <button
+                                                                onClick={() => removeItem(zone.id, item.id)}
+                                                                className="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-xs"
+                                                            >
+                                                                ×
+                                                            </button>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    <div className="mt-2 flex gap-2">
+                                        {gameState === 'playing' && (
+                                            <button
+                                                onClick={checkAnswers}
+                                                className={`flex-1 py-2.5 rounded-lg font-bold text-sm transition-all shadow-xl ${
+                                                    allPlaced 
+                                                        ? 'bg-gradient-to-r from-green-400 to-emerald-500 text-white hover:scale-105 cursor-pointer'
+                                                        : 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                                                }`}
+                                                disabled={!allPlaced}
+                                            >
+                                                <i className="fas fa-check mr-1"></i>
+                                                {allPlaced ? '檢查答案' : `尚未完成 (${placedCount}/${totalItems})`}
+                                            </button>
+                                        )}
+                                        <button
+                                            onClick={restart}
+                                            className="bg-white/20 text-white px-3 py-2.5 rounded-lg hover:bg-white/30 transition-all text-sm"
+                                        >
+                                            <i className="fas fa-redo"></i>
+                                            <span className="ml-1 hidden sm:inline">重來</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            // 測驗進行中 - 節氣俗諺配對題型
+            if (screen === 'playing' && currentTest && currentTest.type === 'saying_match') {
+                const placedTerms = Object.values(sayingSlots).filter(term => term !== null);
+                const availableTerms = shuffledItems.filter(term => 
+                    !placedTerms.some(placed => placed.id === term.id)
+                );
+                const totalSlots = currentTest.sayings.length;
+                const filledSlots = Object.keys(sayingSlots).filter(key => sayingSlots[key] !== null).length;
+                const allFilled = filledSlots === totalSlots;
+
+                return (
+                    <div className="h-screen flex flex-col overflow-hidden">
+                        <div className={`flex-shrink-0 bg-gradient-to-r ${currentTest.color} p-2 md:p-3 text-white shadow-xl`}>
+                            <div className="flex items-center gap-2 mb-2">
+                                <div className="flex items-center gap-2 flex-shrink-0">
+                                    <div className="flex items-center gap-1 bg-black/20 rounded-lg p-1">
+                                        <button onClick={decreaseFontSize} disabled={fontScale <= 70}
+                                            className={`px-1.5 py-0.5 rounded text-xs font-bold transition-all ${
+                                                fontScale <= 70 ? 'text-white/30 cursor-not-allowed' : 'text-white hover:bg-white/20'
+                                            }`}>
+                                            A<sup style={{ fontSize: '8px' }}>-</sup>
+                                        </button>
+                                        <button onClick={increaseFontSize} disabled={fontScale >= 150}
+                                            className={`px-1.5 py-0.5 rounded text-xs font-bold transition-all ${
+                                                fontScale >= 150 ? 'text-white/30 cursor-not-allowed' : 'text-white hover:bg-white/20'
+                                            }`}>
+                                            A<sup style={{ fontSize: '8px' }}>+</sup>
+                                        </button>
+                                    </div>
+                                    <h2 className="text-sm md:text-base font-bold truncate leading-tight">{currentTest.title}</h2>
+                                </div>
+                                
+                                <div className="flex-1 min-w-0"></div>
+                                
+                                <div className="flex items-center gap-2 flex-shrink-0">
+                                    <span className="text-xs opacity-80 whitespace-nowrap hidden sm:inline">⏱️ {formatTime(elapsedTime)}</span>
+                                    <span className="text-xs bg-black/20 px-2 py-0.5 rounded whitespace-nowrap">🎯 {attempts}</span>
+                                    <button onClick={() => setScreen('home')}
+                                        className="bg-white/20 hover:bg-white/30 px-2 py-1 rounded transition-all text-xs">
+                                        <i className="fas fa-home"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="flex-1 overflow-y-auto p-2 md:p-4" style={{WebkitOverflowScrolling: 'touch'}}>
+                            <div className="max-w-7xl mx-auto">
+                                {/* 左右配置：左側待選節氣，右側俗諺配對 */}
+                                <div className="grid lg:grid-cols-3 gap-3">
+                                    {/* 左側：待選節氣 (1/3寬度) */}
+                                    <div className="lg:col-span-1">
+                                        <div className="glass-effect rounded-lg p-3 lg:sticky lg:top-2">
+                                            <h3 className="text-sm md:text-base font-bold text-gray-900 mb-3 flex items-center">
+                                                <i className="fas fa-calendar-alt mr-2"></i>
+                                                待選節氣
+                                            </h3>
+                                            <div 
+                                                data-zone-id="items"
+                                                onDragOver={handleDragOver}
+                                                onDrop={(e) => handleDrop(e, 'items')}
+                                                className="drop-zone grid grid-cols-2 gap-2"
+                                            >
+                                                {availableTerms.map(term => (
+                                                    <div
+                                                        key={term.id}
+                                                        draggable
+                                                        onDragStart={(e) => handleDragStart(e, term, 'items')}
+                                                        onDragEnd={handleDragEnd}
+                                                        onTouchStart={(e) => handleTouchStart(e, term, null)}
+                                                        onTouchMove={handleTouchMove}
+                                                        onTouchEnd={(e) => handleTouchEnd(e, handleTouchDrop)}
+                                                        className="drag-item bg-white rounded-lg px-3 py-2 shadow-lg"
+                                                    >
+                                                        <p className="text-gray-900 font-bold text-sm text-center">
+                                                            {term.text}
+                                                        </p>
+                                                    </div>
+                                                ))}
+                                                {availableTerms.length === 0 && (
+                                                    <div className="col-span-2 text-center text-gray-600 py-2 text-xs">
+                                                        所有節氣都已使用
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* 右側：俗諺配對 (2/3寬度) */}
+                                    <div className="lg:col-span-2">
+                                        <div className="glass-effect rounded-lg p-3 mb-3">
+                                            <h3 className="text-sm md:text-base font-bold text-gray-900 mb-3 flex items-center">
+                                                <i className="fas fa-comment-dots mr-2"></i>
+                                                俗諺配對
+                                            </h3>
+                                            <div className="space-y-2">
+                                                {currentTest.sayings.map((saying, index) => {
+                                                    const isCorrect = feedback[saying.slotId];
+                                                    const currentTerm = sayingSlots[saying.slotId];
+                                                    
+                                                    return (
+                                                        <div 
+                                                            key={saying.id}
+                                                            className={`bg-white/20 rounded-lg p-2 md:p-3 ${
+                                                                isCorrect === true ? 'correct-answer' : ''
+                                                            } ${isCorrect === false ? 'wrong-answer' : ''}`}
+                                                        >
+                                                            <div className="flex items-center gap-2 text-gray-900 text-sm md:text-base flex-wrap">
+                                                                <span className="text-gray-700 font-bold">{index + 1}.</span>
+                                                                <span className="font-medium">{saying.before}</span>
+                                                                <div
+                                                                    data-zone-id={saying.slotId}
+                                                                    onDragOver={handleDragOver}
+                                                                    onDrop={(e) => handleDrop(e, saying.slotId)}
+                                                                    className="saying-slot border-2 border-dashed border-gray-400 rounded-lg px-3 py-1.5 bg-white/30 inline-flex"
+                                                                >
+                                                                    {currentTerm ? (
+                                                                        <div
+                                                                            draggable
+                                                                            onDragStart={(e) => handleDragStart(e, currentTerm, saying.slotId)}
+                                                                            onDragEnd={handleDragEnd}
+                                                                            onTouchStart={(e) => handleTouchStart(e, currentTerm, () => removeSayingSlot(saying.slotId))}
+                                                                            onTouchMove={handleTouchMove}
+                                                                            onTouchEnd={(e) => handleTouchEnd(e, handleTouchDrop)}
+                                                                            className="bg-yellow-400 text-gray-900 font-bold px-2 py-1 rounded cursor-move group relative"
+                                                                        >
+                                                                            {currentTerm.text}
+                                                                            <button
+                                                                                onClick={() => removeSayingSlot(saying.slotId)}
+                                                                                className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-xs"
+                                                                            >
+                                                                                ×
+                                                                            </button>
+                                                                        </div>
+                                                                    ) : (
+                                                                        <span className="text-gray-500 text-xs">拖曳節氣至此</span>
+                                                                    )}
+                                                                </div>
+                                                                <span className="font-medium">{saying.after}</span>
+                                                                {isCorrect === true && (
+                                                                    <i className="fas fa-check-circle text-green-500 ml-2"></i>
+                                                                )}
+                                                                {isCorrect === false && (
+                                                                    <i className="fas fa-times-circle text-red-500 ml-2"></i>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+
+                                        <div className="flex gap-2">
+                                            {gameState === 'playing' && (
+                                                <button
+                                                    onClick={checkAnswers}
+                                                    className={`flex-1 py-3 rounded-lg font-bold text-base transition-all shadow-xl ${
+                                                        allFilled 
+                                                            ? 'bg-gradient-to-r from-green-400 to-emerald-500 text-white hover:scale-105 cursor-pointer'
+                                                            : 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                                                    }`}
+                                                    disabled={!allFilled}
+                                                >
+                                                    <i className="fas fa-check mr-2"></i>
+                                                    {allFilled ? '檢查答案' : `尚未完成 (${filledSlots}/${totalSlots})`}
+                                                </button>
+                                            )}
+                                            <button
+                                                onClick={restart}
+                                                className="bg-white/20 text-white px-6 py-3 rounded-lg hover:bg-white/30 transition-all"
+                                            >
+                                                <i className="fas fa-redo mr-2"></i>
+                                                重來
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            // 測驗完成畫面
+            if (screen === 'playing' && gameState === 'completed' && currentTest) {
+                const status = completionStatus[currentTest.id];
+                const achievementEmoji = status.attempts === 1 ? '🏆' : 
+                                        status.attempts === 2 ? '🥇' : 
+                                        status.attempts === 3 ? '🥈' : '🥉';
+                const achievementTitle = status.attempts === 1 ? '完美通關' : 
+                                        status.attempts === 2 ? '優秀表現' : 
+                                        status.attempts === 3 ? '表現良好' : '繼續加油';
+                const achievementDesc = status.attempts === 1 ? '一次就完成所有題目，太厲害了！' : 
+                                       status.attempts === 2 ? '只嘗試少數次就完成，非常棒！' : 
+                                       status.attempts === 3 ? '穩定完成測驗，繼續保持！' : '完成就是勝利，下次會更好！';
+
+                const downloadCertificate = () => {
+                    const element = document.getElementById('certificate-content');
+                    html2canvas(element, {
+                        backgroundColor: '#FFB6C1',
+                        scale: 2,
+                        width: 1000
+                    }).then(canvas => {
+                        const link = document.createElement('a');
+                        const date = new Date();
+                        link.download = `${currentTest.title}-完成證書-${date.getFullYear()}${(date.getMonth()+1).toString().padStart(2,'0')}${date.getDate().toString().padStart(2,'0')}.png`;
+                        link.href = canvas.toDataURL();
+                        link.click();
+                    });
+                };
+
+                return (
+                    <div className="min-h-screen flex items-center justify-center p-4 md:p-6">
+                        <div className="max-w-2xl w-full glass-effect rounded-3xl p-8 md:p-12 text-center fade-in">
+                            <div className="text-6xl md:text-8xl mb-4 md:mb-6">🎉</div>
+                            <h2 className="text-3xl md:text-5xl font-black text-white mb-3 md:mb-4">
+                                測驗完成！
+                            </h2>
+                            <p className="text-xl md:text-2xl text-white/90 mb-6 md:mb-8">
+                                {currentTest.title}
+                            </p>
+                            
+                            <div className="grid grid-cols-3 gap-3 md:gap-6 mb-6 md:mb-8">
+                                <div className="bg-white/10 rounded-2xl p-4 md:p-6">
+                                    <div className="text-3xl md:text-4xl font-bold text-white mb-2">
+                                        {formatTime(status.time)}
+                                    </div>
+                                    <div className="text-white/80 text-xs md:text-sm">完成時間</div>
+                                </div>
+                                <div className="bg-white/10 rounded-2xl p-4 md:p-6">
+                                    <div className="text-3xl md:text-4xl font-bold text-white mb-2">
+                                        {currentTest.itemCount}
+                                    </div>
+                                    <div className="text-white/80 text-xs md:text-sm">題目數量</div>
+                                </div>
+                                <div className="bg-white/10 rounded-2xl p-4 md:p-6">
+                                    <div className="text-3xl md:text-4xl font-bold text-white mb-2">
+                                        {status.attempts}
+                                    </div>
+                                    <div className="text-white/80 text-xs md:text-sm">嘗試次數</div>
+                                </div>
+                            </div>
+
+                            <div className="bg-white/10 rounded-2xl p-4 md:p-6 mb-6 md:mb-8">
+                                <div className="text-4xl md:text-6xl mb-2 md:mb-3">{achievementEmoji}</div>
+                                <div className="text-xl md:text-2xl font-bold text-white mb-2">{achievementTitle}</div>
+                                <div className="text-sm md:text-base text-white/80">{achievementDesc}</div>
+                            </div>
+
+                            <div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center">
+                                <button
+                                    onClick={downloadCertificate}
+                                    className="bg-gradient-to-r from-blue-400 to-purple-500 text-white px-6 md:px-8 py-3 md:py-4 rounded-xl font-bold text-base md:text-lg hover:scale-105 transition-all shadow-xl"
+                                >
+                                    <i className="fas fa-download mr-2"></i>
+                                    下載證書
+                                </button>
+                                <button
+                                    onClick={restart}
+                                    className="bg-gradient-to-r from-green-400 to-emerald-500 text-white px-6 md:px-8 py-3 md:py-4 rounded-xl font-bold text-base md:text-lg hover:scale-105 transition-all shadow-xl"
+                                >
+                                    <i className="fas fa-redo mr-2"></i>
+                                    再測一次
+                                </button>
+                                <button
+                                    onClick={() => setScreen('home')}
+                                    className="bg-white/20 text-white px-6 md:px-8 py-3 md:py-4 rounded-xl font-bold text-base md:text-lg hover:bg-white/30 transition-all"
+                                >
+                                    <i className="fas fa-home mr-2"></i>
+                                    返回首頁
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* 證書內容（隱藏） */}
+                        <div 
+                            id="certificate-content" 
+                            style={{
+                                position: 'fixed',
+                                left: '-9999px',
+                                width: '1000px',
+                                backgroundColor: '#FFB6C1',
+                                padding: '60px',
+                                fontFamily: 'Noto Sans TC, sans-serif'
+                            }}
+                        >
+                            <div style={{textAlign: 'center', marginBottom: '40px'}}>
+                                <div style={{fontSize: '80px', marginBottom: '20px'}}>🎓</div>
+                                <h1 style={{fontSize: '48px', fontWeight: '900', color: 'white', marginBottom: '10px'}}>
+                                    測驗完成證書
+                                </h1>
+                                <h2 style={{fontSize: '36px', fontWeight: 'bold', color: '#fff', marginBottom: '10px'}}>
+                                    {currentTest.title}
+                                </h2>
+                                <p style={{fontSize: '20px', color: 'rgba(255,255,255,0.8)'}}>
+                                    {currentTest.subtitle} {currentTest.difficulty}
+                                </p>
+                            </div>
+
+                            <div style={{display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', marginBottom: '40px'}}>
+                                <div style={{backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: '16px', padding: '30px', textAlign: 'center'}}>
+                                    <div style={{fontSize: '14px', color: 'rgba(255,255,255,0.8)', marginBottom: '8px'}}>完成時間</div>
+                                    <div style={{fontSize: '36px', fontWeight: 'bold', color: 'white'}}>
+                                        {formatTime(status.time)}
+                                    </div>
+                                </div>
+                                <div style={{backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: '16px', padding: '30px', textAlign: 'center'}}>
+                                    <div style={{fontSize: '14px', color: 'rgba(255,255,255,0.8)', marginBottom: '8px'}}>題目數量</div>
+                                    <div style={{fontSize: '36px', fontWeight: 'bold', color: 'white'}}>
+                                        {currentTest.itemCount}
+                                    </div>
+                                </div>
+                                <div style={{backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: '16px', padding: '30px', textAlign: 'center'}}>
+                                    <div style={{fontSize: '14px', color: 'rgba(255,255,255,0.8)', marginBottom: '8px'}}>嘗試次數</div>
+                                    <div style={{fontSize: '36px', fontWeight: 'bold', color: 'white'}}>
+                                        {status.attempts}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div style={{backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: '16px', padding: '40px', textAlign: 'center', marginBottom: '30px'}}>
+                                <div style={{fontSize: '80px', marginBottom: '15px'}}>{achievementEmoji}</div>
+                                <div style={{fontSize: '32px', fontWeight: 'bold', color: 'white', marginBottom: '10px'}}>
+                                    {achievementTitle}
+                                </div>
+                                <div style={{fontSize: '18px', color: 'rgba(255,255,255,0.8)'}}>
+                                    {achievementDesc}
+                                </div>
+                            </div>
+
+                            <div style={{marginTop: '40px', textAlign: 'center', fontSize: '14px', color: 'rgba(255,255,255,0.6)'}}>
+                                完成時間：{new Date(status.completedAt).toLocaleString('zh-TW')}
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            return null;
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
