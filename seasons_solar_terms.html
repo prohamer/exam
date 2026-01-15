@@ -173,29 +173,47 @@
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
 
-        // 觸控拖曳支援變數
+        // 觸控拖曳支援 - 修復版本（解決整個畫面被拖動的問題）
         let touchDragData = null;
         let touchDragElement = null;
         let touchClone = null;
         let touchRemoveCallback = null;
         let touchSourceZoneId = null;
+        let isDragging = false;  // ⭐ 新增：拖動狀態標記
 
         function handleTouchStart(e, item, removeCallback) {
+            // ⭐ 最重要：立即阻止所有預設行為
             e.preventDefault();
+            e.stopPropagation();
+            
+            // 設置拖動狀態
+            isDragging = true;
+            
+            // 儲存數據
             touchDragData = item;
             touchDragElement = e.currentTarget;
             touchRemoveCallback = removeCallback;
             
+            // ⭐ 禁用整個頁面的滾動和觸控動作
+            document.body.style.overflow = 'hidden';
+            document.body.style.touchAction = 'none';
+            document.body.style.userSelect = 'none';
+            document.body.style.webkitUserSelect = 'none';
+            
+            // 禁用滾動容器
             const scrollContainer = document.querySelector('.overflow-y-auto');
             if (scrollContainer) {
                 scrollContainer.style.overflowY = 'hidden';
                 scrollContainer.style.touchAction = 'none';
             }
             
+            // 記錄來源分類區
             const sourceZone = touchDragElement.closest('.drop-zone, .saying-slot');
             touchSourceZoneId = sourceZone ? sourceZone.getAttribute('data-zone-id') : null;
             
             const touch = e.touches[0];
+            
+            // 立即創建視覺複製
             touchClone = touchDragElement.cloneNode(true);
             touchClone.style.position = 'fixed';
             touchClone.style.zIndex = '10000';
@@ -205,22 +223,29 @@
             touchClone.style.left = (touch.clientX - touchDragElement.offsetWidth / 2) + 'px';
             touchClone.style.top = (touch.clientY - touchDragElement.offsetHeight / 2) + 'px';
             touchClone.style.transition = 'none';
+            touchClone.style.touchAction = 'none';
             document.body.appendChild(touchClone);
             
+            // 原元素只是變透明，不移除
             touchDragElement.style.opacity = '0.2';
             touchDragElement.style.transform = 'scale(0.95)';
             touchDragElement.style.transition = 'opacity 0.2s, transform 0.2s';
         }
 
         function handleTouchMove(e) {
-            if (!touchClone) return;
+            if (!touchClone || !isDragging) return;
+            
+            // ⭐ 強制阻止頁面滾動和下拉刷新
             e.preventDefault();
             e.stopPropagation();
             
             const touch = e.touches[0];
+            
+            // 更新複製位置
             touchClone.style.left = (touch.clientX - touchClone.offsetWidth / 2) + 'px';
             touchClone.style.top = (touch.clientY - touchClone.offsetHeight / 2) + 'px';
             
+            // 高亮可放置區域
             const dropZones = document.querySelectorAll('.drop-zone, .saying-slot');
             dropZones.forEach(zone => zone.classList.remove('drag-over'));
             
@@ -229,6 +254,7 @@
                 const dropZone = elementBelow.closest('.drop-zone, .saying-slot');
                 if (dropZone) {
                     const targetZoneId = dropZone.getAttribute('data-zone-id');
+                    // 只有不同區域才高亮
                     if (targetZoneId !== touchSourceZoneId) {
                         dropZone.classList.add('drag-over');
                     }
@@ -239,9 +265,13 @@
         function handleTouchEnd(e, dropCallback) {
             if (!touchClone) return;
             
+            // 結束拖動狀態
+            isDragging = false;
+            
             const touch = e.changedTouches[0];
             const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
             
+            // 找到放置區域
             let targetZone = null;
             let targetZoneId = null;
             if (elementBelow) {
@@ -251,49 +281,92 @@
                 }
             }
             
+            // 清除視覺效果
             if (touchClone && touchClone.parentNode) {
                 touchClone.parentNode.removeChild(touchClone);
             }
-            touchClone = null;
             
+            // ⭐ 恢復所有滾動和觸控設定
+            document.body.style.overflow = '';
+            document.body.style.touchAction = '';
+            document.body.style.userSelect = '';
+            document.body.style.webkitUserSelect = '';
+            
+            // 恢復滾動容器
             const scrollContainer = document.querySelector('.overflow-y-auto');
             if (scrollContainer) {
                 scrollContainer.style.overflowY = 'auto';
                 scrollContainer.style.touchAction = '';
             }
             
+            // 清除高亮
             const dropZones = document.querySelectorAll('.drop-zone, .saying-slot');
             dropZones.forEach(zone => zone.classList.remove('drag-over'));
             
-            const isDifferentZone = targetZone && targetZoneId && touchDragData && 
-                                   targetZoneId !== touchSourceZoneId;
+            // 判斷是否成功放置到【不同】的區域
+            const isValidDrop = targetZone && targetZoneId && touchDragData && 
+                              targetZoneId !== touchSourceZoneId;
             
-            if (isDifferentZone && dropCallback) {
+            if (isValidDrop && dropCallback) {
+                // 放置到不同區域：先移除，再添加
                 if (touchRemoveCallback) {
                     touchRemoveCallback();
                 }
                 
+                // 特殊處理：如果目標是 items 區，不執行 dropCallback
                 if (targetZoneId !== 'items') {
                     dropCallback(touchDragData, targetZoneId);
                 }
                 
+                // 恢復原元素狀態
                 if (touchDragElement && touchDragElement.parentNode) {
                     touchDragElement.style.opacity = '';
                     touchDragElement.style.transform = '';
                 }
             } else {
-                if (touchDragElement && touchDragElement.parentNode) {
+                // 放回原位或無效放置：恢復原元素
+                if (touchDragElement) {
                     touchDragElement.style.opacity = '1';
                     touchDragElement.style.transform = 'scale(1)';
-                    touchDragElement.style.transition = 'opacity 0.2s, transform 0.2s';
-                    void touchDragElement.offsetHeight;
                 }
             }
             
+            // 重置
             touchDragData = null;
             touchDragElement = null;
+            touchClone = null;
             touchRemoveCallback = null;
             touchSourceZoneId = null;
+        }
+
+        // ⭐ 新增：全域觸控取消處理（防止當機）
+        if (typeof window !== 'undefined') {
+            document.addEventListener('touchcancel', function(e) {
+                if (isDragging) {
+                    isDragging = false;
+                    if (touchClone && touchClone.parentNode) {
+                        touchClone.parentNode.removeChild(touchClone);
+                    }
+                    if (touchDragElement) {
+                        touchDragElement.style.opacity = '1';
+                        touchDragElement.style.transform = 'scale(1)';
+                    }
+                    document.body.style.overflow = '';
+                    document.body.style.touchAction = '';
+                    document.body.style.userSelect = '';
+                    document.body.style.webkitUserSelect = '';
+                    const scrollContainer = document.querySelector('.overflow-y-auto');
+                    if (scrollContainer) {
+                        scrollContainer.style.overflowY = 'auto';
+                        scrollContainer.style.touchAction = '';
+                    }
+                    touchClone = null;
+                    touchDragData = null;
+                    touchDragElement = null;
+                    touchRemoveCallback = null;
+                    touchSourceZoneId = null;
+                }
+            }, { passive: false });  // ⭐ passive: false 很重要！
         }
 
         function shuffleArray(array) {
@@ -312,7 +385,7 @@
                 title: "四季特色辨識",
                 subtitle: "景物與物候",
                 difficulty: "⭐⭐",
-                itemCount: 16,
+                itemCount: 15,
                 description: "請將以下景物、活動、物候分類到對應的季節",
                 color: "from-pink-200 to-rose-300",
                 icon: "fa-leaf",
@@ -337,15 +410,14 @@
                     { id: 'item11', text: '秋收農忙', val: 'qiushou' },
                     { id: 'item12', text: '大雁南飛', val: 'dayan' },
                     { id: 'item13', text: '梅花綻放', val: 'meihua' },
-                    { id: 'item14', text: '候鳥過境', val: 'houniao' },
-                    { id: 'item15', text: '寒風刺骨', val: 'hanfeng' },
-                    { id: 'item16', text: '白雪飄飄', val: 'baixue' }
+                    { id: 'item14', text: '寒風刺骨', val: 'hanfeng' },
+                    { id: 'item15', text: '白雪飄飄', val: 'baixue' }
                 ],
                 solution: {
                     spring: ['taohua', 'chungeng', 'yanzi', 'liushu'],
                     summer: ['chanming', 'hehua', 'leizhenyu', 'xigua'],
                     autumn: ['fengye', 'daosui', 'qiushou', 'dayan'],
-                    winter: ['meihua', 'houniao', 'hanfeng', 'baixue']
+                    winter: ['meihua', 'hanfeng', 'baixue']
                 }
             },
             "test-2": {
@@ -485,7 +557,7 @@
                     { id: 'item10', text: '秋風落葉', val: 'qiufengluoye' },
                     { id: 'item11', text: '一葉知秋', val: 'yiyezhiqiu' },
                     { id: 'item12', text: '金風送爽', val: 'jinfengsongshuang' },
-                    { id: 'item13', text: '冰天雪地', val: 'bingti anxuedi' },
+                    { id: 'item13', text: '冰天雪地', val: 'bingtianxuedi' },
                     { id: 'item14', text: '寒風刺骨', val: 'hanfengcigu' },
                     { id: 'item15', text: '滴水成冰', val: 'dishuichengbing' },
                     { id: 'item16', text: '天寒地凍', val: 'tianhandidong' }
@@ -495,6 +567,133 @@
                     summer: ['lieriyanyan', 'huihanruyu', 'xiariyanyan', 'lvshuchengyin'],
                     autumn: ['qiugaoqishuang', 'qiufengluoye', 'yiyezhiqiu', 'jinfengsongshuang'],
                     winter: ['bingtianxuedi', 'hanfengcigu', 'dishuichengbing', 'tianhandidong']
+                }
+            },
+            "test-5-1": {
+                id: "test-5-1",
+                title: "四季動物辨識",
+                subtitle: "動物與季節",
+                difficulty: "⭐⭐",
+                itemCount: 16,
+                description: "請將以下動物或相關現象分類到對應的季節",
+                color: "from-green-200 to-emerald-300",
+                icon: "fa-dove",
+                type: "classification",
+                zones: [
+                    { id: 'spring', title: '春季動物', icon: 'fa-seedling' },
+                    { id: 'summer', title: '夏季動物', icon: 'fa-sun' },
+                    { id: 'autumn', title: '秋季動物', icon: 'fa-wind' },
+                    { id: 'winter', title: '冬季動物', icon: 'fa-snowflake' }
+                ],
+                items: [
+                    { id: 'item1', text: '鶯啼', val: 'yingti' },
+                    { id: 'item2', text: '燕語', val: 'yanyu' },
+                    { id: 'item3', text: '燕子歸來', val: 'yanzi' },
+                    { id: 'item4', text: '蟬鳴', val: 'chanming' },
+                    { id: 'item5', text: '蛙鳴', val: 'waming' },
+                    { id: 'item6', text: '螢火蟲', val: 'yinghuochong' },
+                    { id: 'item7', text: '寒蟬', val: 'hanchan' },
+                    { id: 'item8', text: '蟋蟀', val: 'xishuai' },
+                    { id: 'item9', text: '雁南飛', val: 'yannanfei' },
+                    { id: 'item10', text: '鴻雁南飛', val: 'hongyan' },
+                    { id: 'item11', text: '候鳥北返', val: 'houniao_spring' },
+                    { id: 'item12', text: '大雁南飛', val: 'dayan' },
+                    { id: 'item13', text: '黑面琵鷺', val: 'heimimianpilu' },
+                    { id: 'item14', text: '小水鴨', val: 'xiaoshuiya' },
+                    { id: 'item15', text: '花嘴鴨', val: 'huazuiya' },
+                    { id: 'item16', text: '鸕鶿', val: 'luci' }
+                ],
+                solution: {
+                    spring: ['yingti', 'yanyu', 'yanzi', 'houniao_spring'],
+                    summer: ['chanming', 'waming', 'yinghuochong'],
+                    autumn: ['hanchan', 'xishuai', 'yannanfei', 'hongyan', 'dayan'],
+                    winter: ['heimimianpilu', 'xiaoshuiya', 'huazuiya', 'luci']
+                }
+            },
+            "test-5-2": {
+                id: "test-5-2",
+                title: "四季自然現象",
+                subtitle: "天象與季節",
+                difficulty: "⭐⭐⭐",
+                itemCount: 16,
+                description: "請將以下自然現象分類到對應的季節",
+                color: "from-cyan-200 to-sky-300",
+                icon: "fa-cloud-sun",
+                type: "classification",
+                zones: [
+                    { id: 'spring', title: '春季現象', icon: 'fa-seedling' },
+                    { id: 'summer', title: '夏季現象', icon: 'fa-sun' },
+                    { id: 'autumn', title: '秋季現象', icon: 'fa-wind' },
+                    { id: 'winter', title: '冬季現象', icon: 'fa-snowflake' }
+                ],
+                items: [
+                    { id: 'item1', text: '東風', val: 'dongfeng' },
+                    { id: 'item2', text: '楊柳風', val: 'yangliufeng' },
+                    { id: 'item3', text: '杏花雨', val: 'xinghuayu' },
+                    { id: 'item4', text: '南風', val: 'nanfeng' },
+                    { id: 'item5', text: '薰風', val: 'xunfeng' },
+                    { id: 'item6', text: '荷風', val: 'hefeng' },
+                    { id: 'item7', text: '梅雨', val: 'meiyu' },
+                    { id: 'item8', text: '西風', val: 'xifeng' },
+                    { id: 'item9', text: '金風', val: 'jinfeng' },
+                    { id: 'item10', text: '白霜', val: 'baishuang' },
+                    { id: 'item11', text: '北風', val: 'beifeng' },
+                    { id: 'item12', text: '朔風', val: 'shuofeng' },
+                    { id: 'item13', text: '白雪', val: 'baixue' },
+                    { id: 'item14', text: '歲暮', val: 'suimu' },
+                    { id: 'item15', text: '六出冰花', val: 'liuchubinghua' },
+                    { id: 'item16', text: '年終', val: 'nianzhong' }
+                ],
+                solution: {
+                    spring: ['dongfeng', 'yangliufeng', 'xinghuayu'],
+                    summer: ['nanfeng', 'xunfeng', 'hefeng', 'meiyu'],
+                    autumn: ['xifeng', 'jinfeng', 'baishuang'],
+                    winter: ['beifeng', 'shuofeng', 'baixue', 'suimu', 'liuchubinghua', 'nianzhong']
+                }
+            },
+            "test-5-3": {
+                id: "test-5-3",
+                title: "四季植物辨識",
+                subtitle: "花卉與季節",
+                difficulty: "⭐⭐⭐",
+                itemCount: 20,
+                description: "請將以下植物或相關現象分類到對應的季節",
+                color: "from-lime-200 to-green-300",
+                icon: "fa-tree",
+                type: "classification",
+                zones: [
+                    { id: 'spring', title: '春季植物', icon: 'fa-seedling' },
+                    { id: 'summer', title: '夏季植物', icon: 'fa-sun' },
+                    { id: 'autumn', title: '秋季植物', icon: 'fa-wind' },
+                    { id: 'winter', title: '冬季植物', icon: 'fa-snowflake' }
+                ],
+                items: [
+                    { id: 'item1', text: '李花', val: 'lihua' },
+                    { id: 'item2', text: '梨花', val: 'lihua2' },
+                    { id: 'item3', text: '杏花', val: 'xinghua' },
+                    { id: 'item4', text: '桃花', val: 'taohua' },
+                    { id: 'item5', text: '杜鵑花', val: 'dujuan' },
+                    { id: 'item6', text: '柳暗花明', val: 'liuanhuaming' },
+                    { id: 'item7', text: '荷花', val: 'hehua' },
+                    { id: 'item8', text: '菖蒲', val: 'changpu' },
+                    { id: 'item9', text: '石榴花', val: 'shiliuhua' },
+                    { id: 'item10', text: '向日葵', val: 'xiangrikui' },
+                    { id: 'item11', text: '桂花', val: 'guihua' },
+                    { id: 'item12', text: '菊花', val: 'juhua' },
+                    { id: 'item13', text: '茱萸', val: 'zhuyu' },
+                    { id: 'item14', text: '殘荷', val: 'canhe' },
+                    { id: 'item15', text: '蘆葦花', val: 'luweihua' },
+                    { id: 'item16', text: '梧桐葉落', val: 'wutongyeluo' },
+                    { id: 'item17', text: '梅花', val: 'meihua' },
+                    { id: 'item18', text: '松柏', val: 'songbai' },
+                    { id: 'item19', text: '聖誕紅', val: 'shengdanhong' },
+                    { id: 'item20', text: '橙黃橘綠', val: 'chenghuangjulv' }
+                ],
+                solution: {
+                    spring: ['lihua', 'lihua2', 'xinghua', 'taohua', 'dujuan', 'liuanhuaming'],
+                    summer: ['hehua', 'changpu', 'shiliuhua', 'xiangrikui'],
+                    autumn: ['guihua', 'juhua', 'zhuyu', 'canhe', 'luweihua', 'wutongyeluo'],
+                    winter: ['meihua', 'songbai', 'shengdanhong', 'chenghuangjulv']
                 }
             }
         };
@@ -1102,7 +1301,7 @@
                                             data-zone-id="items"
                                             onDragOver={handleDragOver}
                                             onDrop={(e) => handleDrop(e, 'items')}
-                                            className="drop-zone space-y-1.5 min-h-[100px]"
+                                            className="drop-zone grid grid-cols-2 gap-1.5 min-h-[100px]"
                                         >
                                             {availableItems.map(item => (
                                                 <div
@@ -1113,15 +1312,15 @@
                                                     onTouchStart={(e) => handleTouchStart(e, item, null)}
                                                     onTouchMove={handleTouchMove}
                                                     onTouchEnd={(e) => handleTouchEnd(e, handleTouchDrop)}
-                                                    className="drag-item bg-white rounded-lg p-2 shadow-lg"
+                                                    className="drag-item bg-white rounded-lg p-1.5 shadow-lg"
                                                 >
-                                                    <p className="text-gray-800 font-medium text-center text-xs md:text-sm">
+                                                    <p className="text-gray-800 font-medium text-center text-xs">
                                                         {item.text}
                                                     </p>
                                                 </div>
                                             ))}
                                             {availableItems.length === 0 && (
-                                                <div className="text-center text-white/70 py-3 text-xs">
+                                                <div className="col-span-2 text-center text-white/70 py-3 text-xs">
                                                     所有項目都已分類
                                                 </div>
                                             )}
