@@ -143,6 +143,59 @@
         const { useState, useEffect, useRef } = React;
 
         // ===========================================
+        // 詞語詞庫（共31個詞）
+        // ===========================================
+        const ALL_WORDS = [
+            // 第1關原始詞語（15個）- 拿掉「綠葉」
+            { id: 'r1', text: '「緋」雲', val: 'red' },
+            { id: 'r2', text: '「丹」楓', val: 'red' },
+            { id: 'r3', text: '「朱」砂', val: 'red' },
+            { id: 'r4', text: '「赤」誠', val: 'red' },
+            { id: 'y1', text: '「黃」土', val: 'yellow' },
+            { id: 'b1', text: '「玄」鐵', val: 'black' },
+            { id: 'b2', text: '「烏」雲', val: 'black' },
+            { id: 'b3', text: '「墨」汁', val: 'black' },
+            { id: 'w1', text: '「素」帳', val: 'white' },
+            { id: 'w2', text: '「皎」月', val: 'white' },
+            { id: 'w3', text: '「鶴」髮', val: 'white' },
+            { id: 'w4', text: '「銀」河', val: 'white' },
+            { id: 'g1', text: '「碧」玉', val: 'green' },
+            { id: 'g2', text: '「翠」竹', val: 'green' },
+            { id: 'g3', text: '「蒼」松', val: 'green' },
+            // 第2關原始詞語（16個）
+            { id: 'r5', text: '「彤」雲', val: 'red' },
+            { id: 'r6', text: '「絳」脣', val: 'red' },
+            { id: 'r7', text: '「赭」土', val: 'red' },
+            { id: 'r8', text: '「殷」血', val: 'red' },
+            { id: 'r9', text: '「翡」翠', val: 'red' },
+            { id: 'y2', text: '「金」榜', val: 'yellow' },
+            { id: 'b4', text: '「黝」暗處', val: 'black' },
+            { id: 'b5', text: '「黯」淡光', val: 'black' },
+            { id: 'b6', text: '「皂」衣', val: 'black' },
+            { id: 'w5', text: '「皚」雪', val: 'white' },
+            { id: 'w6', text: '「縞」衣', val: 'white' },
+            { id: 'w7', text: '「霜」鬢', val: 'white' },
+            { id: 'g4', text: '「蒼」翠', val: 'green' },
+            { id: 'g5', text: '「碧」草', val: 'green' },
+            { id: 'g6', text: '「滄」海', val: 'green' }
+        ];
+
+        // Fisher-Yates 隨機打亂演算法
+        function shuffleArray(array) {
+            const newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        }
+
+        // 頁面載入時隨機分配詞語到兩關
+        const shuffledWords = shuffleArray(ALL_WORDS);
+        const level1Words = shuffledWords.slice(0, 16);  // 前16個給第1關
+        const level2Words = shuffledWords.slice(16, 31); // 後15個給第2關
+
+        // ===========================================
         // 遊戲資料
         // ===========================================
         const GAME_DATA = {
@@ -150,37 +203,15 @@
                 id: "theme1-level1",
                 theme: 1,
                 title: "顏色別稱分類 - 第1關",
-                description: "請將以下顏色詞語拖曳到正確的顏色分類框",
+                description: "請將以下顏色詞語拖曳到正確的顏色分類框（本次隨機分配：16個詞）",
                 zones: [
                     { id: 'red', title: '🔴 紅色', color: 'color-red' },
                     { id: 'yellow', title: '🟡 黃色', color: 'color-yellow' },
                     { id: 'black', title: '⚫ 黑色', color: 'color-black' },
                     { id: 'white', title: '⚪ 白色', color: 'color-white' },
-                    { id: 'green', title: '🟢 青/綠色', color: 'color-green' }
+                    { id: 'green', title: '🟢 綠色', color: 'color-green' }
                 ],
-                items: [
-                    { id: 'item1', text: '「緋」櫻', val: 'red' },
-                    { id: 'item2', text: '「朱」砂', val: 'red' },
-                    { id: 'item3', text: '「絳」脣', val: 'red' },
-                    { id: 'item4', text: '「彤」雲', val: 'red' },
-                    { id: 'item5', text: '「金」榜', val: 'yellow' },
-                    { id: 'item6', text: '「鵝」絨', val: 'yellow' },
-                    { id: 'item7', text: '「橘」子', val: 'yellow' },
-                    { id: 'item8', text: '「淡」煙', val: 'yellow' },
-                    { id: 'item9', text: '「漆」器', val: 'black' },
-                    { id: 'item10', text: '「墨」汁', val: 'black' },
-                    { id: 'item11', text: '「烏」雲', val: 'black' },
-                    { id: 'item12', text: '「黝」暗', val: 'black' },
-                    { id: 'item13', text: '「雪」花', val: 'white' },
-                    { id: 'item14', text: '「皎」月', val: 'white' },
-                    { id: 'item15', text: '「蒼」顏', val: 'white' },
-                    { id: 'item16', text: '「銀」河', val: 'white' },
-                    { id: 'item17', text: '「墨」松', val: 'green' },
-                    { id: 'item18', text: '「嫩」芽', val: 'green' },
-                    { id: 'item19', text: '「青」苔', val: 'green' },
-                    { id: 'item20', text: '「碧」玉', val: 'green' },
-                    { id: 'item21', text: '「翠」竹', val: 'green' }
-                ],
+                items: level1Words,
                 solution: {
                     red: ['red'],
                     yellow: ['yellow'],
@@ -193,37 +224,15 @@
                 id: "theme1-level2",
                 theme: 1,
                 title: "顏色別稱分類 - 第2關",
-                description: "請將以下顏色詞語拖曳到正確的顏色分類框",
+                description: "請將以下顏色詞語拖曳到正確的顏色分類框（本次隨機分配：15個詞）",
                 zones: [
                     { id: 'red', title: '🔴 紅色', color: 'color-red' },
                     { id: 'yellow', title: '🟡 黃色', color: 'color-yellow' },
                     { id: 'black', title: '⚫ 黑色', color: 'color-black' },
                     { id: 'white', title: '⚪ 白色', color: 'color-white' },
-                    { id: 'green', title: '🟢 青/綠色', color: 'color-green' }
+                    { id: 'green', title: '🟢 綠色', color: 'color-green' }
                 ],
-                items: [
-                    { id: 'item1', text: '「殷」血', val: 'red' },
-                    { id: 'item2', text: '「嫣」然', val: 'red' },
-                    { id: 'item3', text: '「丹」楓', val: 'red' },
-                    { id: 'item4', text: '「赭」土', val: 'red' },
-                    { id: 'item5', text: '「焦」土', val: 'yellow' },
-                    { id: 'item6', text: '「杏」仁', val: 'yellow' },
-                    { id: 'item7', text: '「土」牆', val: 'yellow' },
-                    { id: 'item8', text: '「赭」石', val: 'yellow' },
-                    { id: 'item9', text: '「幽」谷', val: 'black' },
-                    { id: 'item10', text: '「玄」鐵', val: 'black' },
-                    { id: 'item11', text: '「黯」淡', val: 'black' },
-                    { id: 'item12', text: '「深」淵', val: 'black' },
-                    { id: 'item13', text: '「乳」液', val: 'white' },
-                    { id: 'item14', text: '「素」紙', val: 'white' },
-                    { id: 'item15', text: '「霜」鬢', val: 'white' },
-                    { id: 'item16', text: '「慘」顏', val: 'white' },
-                    { id: 'item17', text: '「蔥」蘢', val: 'green' },
-                    { id: 'item18', text: '「草」原', val: 'green' },
-                    { id: 'item19', text: '「靛」藍', val: 'green' },
-                    { id: 'item20', text: '「天」空', val: 'green' },
-                    { id: 'item21', text: '「湛」藍', val: 'green' }
-                ],
+                items: level2Words,
                 solution: {
                     red: ['red'],
                     yellow: ['yellow'],
@@ -348,16 +357,6 @@
                 GAME_DATA[levelId].solution[zone.id] = [zone.id];
             });
         });
-
-        // 隨機排序函數
-        function shuffleArray(array) {
-            const newArray = [...array];
-            for (let i = newArray.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
-            }
-            return newArray;
-        }
 
         // 觸控拖曳支援
         let touchDragData = null;
