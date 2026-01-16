@@ -622,9 +622,9 @@
                 container.appendChild(wrapper);
             });
 
-            // Populate Word Bank (Shuffle)
-            wordBankList.sort((a, b) => a.text.localeCompare(b.text)); 
-            wordBankList.sort(() => Math.random() - 0.5);
+            // Populate Word Bank (Sort Alphabetically A-Z)
+            // Modified: Removed random sort, enforced case-insensitive alphabetical sort
+            wordBankList.sort((a, b) => a.text.toLowerCase().localeCompare(b.text.toLowerCase()));
 
             const bankContainer = $('word-bank');
             wordBankList.forEach(item => {
