@@ -11,12 +11,15 @@
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Noto+Sans+TC:wght@400;500;700&display=swap');
+
+        :root {
+            --game-font-size: 18px; /* Default Font Size */
+        }
 
         body {
             font-family: 'Nunito', 'Noto Sans TC', sans-serif;
-            background-color: #f0f9ff;
-            /* Prevent pull-to-refresh and elastic scrolling on mobile */
+            background-color: #f8fafc;
             overscroll-behavior: none;
             touch-action: pan-y;
             user-select: none;
@@ -25,98 +28,108 @@
 
         /* Custom Scrollbar */
         ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
+            width: 4px; /* Thinner scrollbar */
+            height: 4px;
         }
         ::-webkit-scrollbar-track {
-            background: #f1f1f1;
+            background: transparent;
         }
         ::-webkit-scrollbar-thumb {
             background: #cbd5e1;
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8;
+            border-radius: 99px;
         }
 
-        /* Game Elements */
+        /* --- Dynamic Font Size Wrapper --- */
+        .dynamic-text-area {
+            font-size: var(--game-font-size);
+            line-height: 1.6; /* Tighter line height */
+        }
+
+        /* --- Game Elements --- */
         .slot {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            min-width: 60px;
-            height: 42px;
-            background-color: #e2e8f0;
-            border-bottom: 3px solid #94a3b8;
-            border-radius: 8px;
-            margin: 0 4px;
-            padding: 0 8px;
+            min-width: 2.5em; /* Tighter width */
+            min-height: 1.8em; /* Tighter height */
+            background-color: #f1f5f9;
+            border: 2px dashed #cbd5e1;
+            border-radius: 0.4em;
+            margin: 0 0.15em; /* Tighter margin */
+            padding: 0 0.3em;
             vertical-align: middle;
-            transition: all 0.2s ease;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             cursor: pointer;
             color: #334155;
-            font-weight: 600;
+            font-weight: 700;
         }
 
         .slot.filled {
             background-color: #ffffff;
-            border-bottom: 3px solid #3b82f6;
-            color: #1e40af;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            border: 2px solid #6366f1;
+            border-bottom-width: 3px; /* Slightly less 3D height */
+            color: #4338ca;
+            box-shadow: 0 2px 4px -1px rgba(99, 102, 241, 0.1);
         }
 
         .slot.correct-lock {
-            background-color: #dcfce7;
-            border-bottom-color: #22c55e;
-            color: #15803d;
+            background-color: #ecfdf5;
+            border-color: #10b981;
+            color: #047857;
+            border-style: solid;
         }
 
         .slot.wrong-shake {
             animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
-            border-bottom-color: #ef4444;
-            background-color: #fee2e2;
+            border-color: #ef4444;
+            background-color: #fef2f2;
             color: #b91c1c;
+            border-style: solid;
         }
 
         .word-card {
             display: inline-block;
-            padding: 8px 16px;
+            padding: 0.35rem 0.75rem; /* Tighter padding */
             background-color: white;
-            border: 2px solid #e2e8f0;
-            border-radius: 9999px;
-            font-weight: 600;
+            border: 1px solid #e2e8f0;
+            border-bottom: 3px solid #cbd5e1;
+            border-radius: 0.6rem;
+            font-weight: 700;
             color: #475569;
             cursor: grab;
-            touch-action: none; /* Critical for custom drag */
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            transition: transform 0.1s, box-shadow 0.1s;
+            touch-action: none;
+            transition: transform 0.1s, border-color 0.1s;
+            font-size: 0.95rem; 
         }
 
         .word-card:active {
             cursor: grabbing;
-            transform: scale(0.95);
+            transform: translateY(2px);
+            border-bottom-width: 1px;
+            margin-bottom: 2px;
         }
 
         .word-card.used {
-            opacity: 0.3;
+            opacity: 0.4;
             pointer-events: none;
             background-color: #f1f5f9;
-            border-color: #cbd5e1;
+            border-color: #e2e8f0;
+            transform: scale(0.95);
+            border-bottom-width: 1px;
         }
 
-        /* Dragging Ghost */
         .dragging-ghost {
             position: fixed;
             pointer-events: none;
             z-index: 9999;
-            opacity: 0.9;
-            transform: scale(1.1);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            opacity: 0.95;
+            transform: scale(1.1) rotate(-2deg);
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.2);
             background: white;
-            padding: 8px 16px;
-            border-radius: 9999px;
-            border: 2px solid #3b82f6;
-            color: #1e40af;
+            padding: 0.4rem 0.8rem;
+            border-radius: 0.6rem;
+            border: 2px solid #6366f1;
+            color: #4338ca;
             font-weight: bold;
         }
 
@@ -129,10 +142,10 @@
 
         .toggle-checkbox:checked {
             right: 0;
-            border-color: #3b82f6;
+            border-color: #6366f1;
         }
         .toggle-checkbox:checked + .toggle-label {
-            background-color: #3b82f6;
+            background-color: #6366f1;
         }
         
         #end-screen, #game-screen {
@@ -143,162 +156,174 @@
             display: flex !important;
         }
 
-        /* Custom scrollbar for word bank to ensure it scrolls horizontally easily */
         #word-bank-container {
             -webkit-overflow-scrolling: touch;
         }
     </style>
 </head>
-<body class="h-screen w-screen overflow-hidden text-slate-700 flex flex-col">
+<body class="h-screen w-screen overflow-hidden text-slate-700 flex flex-col bg-slate-50">
 
     <!-- HOME SCREEN -->
-    <div id="home-screen" class="active-screen flex-1 flex flex-col items-center justify-start p-6 overflow-y-auto bg-white">
-        <header class="w-full max-w-2xl mb-8 text-center">
-            <h1 class="text-3xl font-extrabold text-blue-600 mb-2">Sentence Scramble</h1>
-            <p class="text-slate-500">Lesson 6: Are You One of the Customers Who Businesses Trick?</p>
+    <div id="home-screen" class="active-screen flex-1 flex flex-col items-center justify-start p-4 overflow-y-auto">
+        <!-- Compact Header -->
+        <header class="w-full max-w-2xl mb-4 text-center mt-2">
+            <h1 class="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-sky-500 mb-1 drop-shadow-sm">Sentence Scramble</h1>
+            <p class="text-slate-500 font-medium text-sm">Lesson 6: Business Tricks</p>
         </header>
 
-        <!-- Difficulty Selector -->
-        <div class="w-full max-w-md bg-blue-50 p-4 rounded-xl mb-8 border border-blue-100">
-            <label class="block text-sm font-bold text-blue-800 mb-2 flex items-center gap-2">
-                <i data-lucide="bar-chart-2" class="w-4 h-4"></i> Difficulty (Blank Ratio)
+        <!-- Compact Difficulty Selector -->
+        <div class="w-full max-w-md bg-white p-4 rounded-xl shadow-sm border border-slate-100 mb-6">
+            <label class="block text-xs font-bold text-slate-700 mb-2 flex items-center gap-2">
+                <div class="p-1 bg-indigo-100 text-indigo-600 rounded-md"><i data-lucide="bar-chart-2" class="w-3 h-3"></i></div>
+                DIFFICULTY
             </label>
-            <div class="flex items-center gap-4">
+            <div class="flex items-center gap-3">
+                <span class="text-[10px] text-slate-400 font-bold">EASY</span>
                 <input type="range" id="diff-slider" min="40" max="100" step="10" value="70" 
-                       class="w-full h-2 bg-blue-200 rounded-lg appearance-none cursor-pointer accent-blue-600">
-                <span id="diff-display" class="font-bold text-blue-700 w-12 text-right">70%</span>
+                       class="flex-1 h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600">
+                <span class="text-[10px] text-slate-400 font-bold">HARD</span>
             </div>
-            <p class="text-xs text-blue-400 mt-2 text-center">Higher percentage = More blanks to fill</p>
+            <div class="mt-1 text-center">
+                <span id="diff-display" class="inline-block px-2 py-0.5 bg-indigo-50 text-indigo-700 text-xs font-bold rounded-full">70% Blanks</span>
+            </div>
         </div>
 
-        <!-- Levels List -->
-        <div id="level-list" class="w-full max-w-md space-y-6 pb-12">
+        <!-- Compact Levels List -->
+        <div id="level-list" class="w-full max-w-md space-y-5 pb-10">
             <!-- Group 1 -->
             <div>
-                <h3 class="text-lg font-bold text-slate-800 mb-3 flex items-center">
-                    <span class="w-8 h-8 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mr-2 text-sm">R</span>
+                <h3 class="text-base font-bold text-slate-700 mb-2 flex items-center">
+                    <span class="w-6 h-6 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mr-2 text-xs font-bold shadow-sm">R</span>
                     Reading: BOGO Deals
                 </h3>
-                <div class="grid grid-cols-2 gap-3">
-                    <button onclick="startGame('r1')" class="level-btn group relative p-4 bg-white border-2 border-slate-200 rounded-xl hover:border-indigo-400 hover:shadow-md transition text-left" data-id="r1">
-                        <div class="text-xs text-slate-400 font-bold uppercase tracking-wider mb-1">Task 1</div>
-                        <div class="font-bold text-slate-700">Introduction</div>
-                        <div class="status-icon absolute top-3 right-3 opacity-0 text-green-500"><i data-lucide="check-circle-2" class="w-5 h-5"></i></div>
+                <div class="grid grid-cols-2 gap-2">
+                    <button onclick="startGame('r1')" class="level-btn group relative p-3 bg-white border border-slate-200 rounded-xl hover:border-indigo-400 hover:shadow-md transition-all text-left" data-id="r1">
+                        <div class="text-[9px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Task 1</div>
+                        <div class="font-bold text-slate-700 text-sm group-hover:text-indigo-600">Introduction</div>
+                        <div class="status-icon absolute top-2 right-2 opacity-0 text-emerald-500"><i data-lucide="check-circle-2" class="w-4 h-4 fill-emerald-50"></i></div>
                     </button>
-                    <button onclick="startGame('r2')" class="level-btn group relative p-4 bg-white border-2 border-slate-200 rounded-xl hover:border-indigo-400 hover:shadow-md transition text-left" data-id="r2">
-                        <div class="text-xs text-slate-400 font-bold uppercase tracking-wider mb-1">Task 2</div>
-                        <div class="font-bold text-slate-700">The Trick</div>
-                        <div class="status-icon absolute top-3 right-3 opacity-0 text-green-500"><i data-lucide="check-circle-2" class="w-5 h-5"></i></div>
+                    <button onclick="startGame('r2')" class="level-btn group relative p-3 bg-white border border-slate-200 rounded-xl hover:border-indigo-400 hover:shadow-md transition-all text-left" data-id="r2">
+                        <div class="text-[9px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Task 2</div>
+                        <div class="font-bold text-slate-700 text-sm group-hover:text-indigo-600">The Trick</div>
+                        <div class="status-icon absolute top-2 right-2 opacity-0 text-emerald-500"><i data-lucide="check-circle-2" class="w-4 h-4 fill-emerald-50"></i></div>
                     </button>
-                    <button onclick="startGame('r3')" class="level-btn group relative p-4 bg-white border-2 border-slate-200 rounded-xl hover:border-indigo-400 hover:shadow-md transition text-left" data-id="r3">
-                        <div class="text-xs text-slate-400 font-bold uppercase tracking-wider mb-1">Task 3</div>
-                        <div class="font-bold text-slate-700">Profit Secret</div>
-                        <div class="status-icon absolute top-3 right-3 opacity-0 text-green-500"><i data-lucide="check-circle-2" class="w-5 h-5"></i></div>
+                    <button onclick="startGame('r3')" class="level-btn group relative p-3 bg-white border border-slate-200 rounded-xl hover:border-indigo-400 hover:shadow-md transition-all text-left" data-id="r3">
+                        <div class="text-[9px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Task 3</div>
+                        <div class="font-bold text-slate-700 text-sm group-hover:text-indigo-600">Profit Secret</div>
+                        <div class="status-icon absolute top-2 right-2 opacity-0 text-emerald-500"><i data-lucide="check-circle-2" class="w-4 h-4 fill-emerald-50"></i></div>
                     </button>
-                    <button onclick="startGame('r4')" class="level-btn group relative p-4 bg-white border-2 border-slate-200 rounded-xl hover:border-indigo-400 hover:shadow-md transition text-left" data-id="r4">
-                        <div class="text-xs text-slate-400 font-bold uppercase tracking-wider mb-1">Task 4</div>
-                        <div class="font-bold text-slate-700">Conclusion</div>
-                        <div class="status-icon absolute top-3 right-3 opacity-0 text-green-500"><i data-lucide="check-circle-2" class="w-5 h-5"></i></div>
+                    <button onclick="startGame('r4')" class="level-btn group relative p-3 bg-white border border-slate-200 rounded-xl hover:border-indigo-400 hover:shadow-md transition-all text-left" data-id="r4">
+                        <div class="text-[9px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Task 4</div>
+                        <div class="font-bold text-slate-700 text-sm group-hover:text-indigo-600">Conclusion</div>
+                        <div class="status-icon absolute top-2 right-2 opacity-0 text-emerald-500"><i data-lucide="check-circle-2" class="w-4 h-4 fill-emerald-50"></i></div>
                     </button>
                 </div>
             </div>
 
             <!-- Group 2 -->
             <div>
-                <h3 class="text-lg font-bold text-slate-800 mb-3 flex items-center">
-                    <span class="w-8 h-8 bg-pink-100 text-pink-600 rounded-full flex items-center justify-center mr-2 text-sm">D</span>
+                <h3 class="text-base font-bold text-slate-700 mb-2 flex items-center">
+                    <span class="w-6 h-6 bg-pink-100 text-pink-600 rounded-full flex items-center justify-center mr-2 text-xs font-bold shadow-sm">D</span>
                     Dialogue: Shopping
                 </h3>
-                <div class="grid grid-cols-2 gap-3">
-                    <button onclick="startGame('d1')" class="level-btn group relative p-4 bg-white border-2 border-slate-200 rounded-xl hover:border-pink-400 hover:shadow-md transition text-left" data-id="d1">
-                        <div class="text-xs text-slate-400 font-bold uppercase tracking-wider mb-1">Task 1</div>
-                        <div class="font-bold text-slate-700">The Cost</div>
-                        <div class="status-icon absolute top-3 right-3 opacity-0 text-green-500"><i data-lucide="check-circle-2" class="w-5 h-5"></i></div>
+                <div class="grid grid-cols-2 gap-2">
+                    <button onclick="startGame('d1')" class="level-btn group relative p-3 bg-white border border-slate-200 rounded-xl hover:border-pink-400 hover:shadow-md transition-all text-left" data-id="d1">
+                        <div class="text-[9px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Task 1</div>
+                        <div class="font-bold text-slate-700 text-sm group-hover:text-pink-600">The Cost</div>
+                        <div class="status-icon absolute top-2 right-2 opacity-0 text-emerald-500"><i data-lucide="check-circle-2" class="w-4 h-4 fill-emerald-50"></i></div>
                     </button>
-                    <button onclick="startGame('d2')" class="level-btn group relative p-4 bg-white border-2 border-slate-200 rounded-xl hover:border-pink-400 hover:shadow-md transition text-left" data-id="d2">
-                        <div class="text-xs text-slate-400 font-bold uppercase tracking-wider mb-1">Task 2</div>
-                        <div class="font-bold text-slate-700">Temptation</div>
-                        <div class="status-icon absolute top-3 right-3 opacity-0 text-green-500"><i data-lucide="check-circle-2" class="w-5 h-5"></i></div>
+                    <button onclick="startGame('d2')" class="level-btn group relative p-3 bg-white border border-slate-200 rounded-xl hover:border-pink-400 hover:shadow-md transition-all text-left" data-id="d2">
+                        <div class="text-[9px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Task 2</div>
+                        <div class="font-bold text-slate-700 text-sm group-hover:text-pink-600">Temptation</div>
+                        <div class="status-icon absolute top-2 right-2 opacity-0 text-emerald-500"><i data-lucide="check-circle-2" class="w-4 h-4 fill-emerald-50"></i></div>
                     </button>
-                    <button onclick="startGame('d3')" class="level-btn group relative p-4 bg-white border-2 border-slate-200 rounded-xl hover:border-pink-400 hover:shadow-md transition text-left" data-id="d3">
-                        <div class="text-xs text-slate-400 font-bold uppercase tracking-wider mb-1">Task 3</div>
-                        <div class="font-bold text-slate-700">Where's Rice?</div>
-                        <div class="status-icon absolute top-3 right-3 opacity-0 text-green-500"><i data-lucide="check-circle-2" class="w-5 h-5"></i></div>
+                    <button onclick="startGame('d3')" class="level-btn group relative p-3 bg-white border border-slate-200 rounded-xl hover:border-pink-400 hover:shadow-md transition-all text-left" data-id="d3">
+                        <div class="text-[9px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Task 3</div>
+                        <div class="font-bold text-slate-700 text-sm group-hover:text-pink-600">Where's Rice?</div>
+                        <div class="status-icon absolute top-2 right-2 opacity-0 text-emerald-500"><i data-lucide="check-circle-2" class="w-4 h-4 fill-emerald-50"></i></div>
                     </button>
-                    <button onclick="startGame('d4')" class="level-btn group relative p-4 bg-white border-2 border-slate-200 rounded-xl hover:border-pink-400 hover:shadow-md transition text-left" data-id="d4">
-                        <div class="text-xs text-slate-400 font-bold uppercase tracking-wider mb-1">Task 4</div>
-                        <div class="font-bold text-slate-700">Eye Level Rule</div>
-                        <div class="status-icon absolute top-3 right-3 opacity-0 text-green-500"><i data-lucide="check-circle-2" class="w-5 h-5"></i></div>
+                    <button onclick="startGame('d4')" class="level-btn group relative p-3 bg-white border border-slate-200 rounded-xl hover:border-pink-400 hover:shadow-md transition-all text-left" data-id="d4">
+                        <div class="text-[9px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Task 4</div>
+                        <div class="font-bold text-slate-700 text-sm group-hover:text-pink-600">Eye Level Rule</div>
+                        <div class="status-icon absolute top-2 right-2 opacity-0 text-emerald-500"><i data-lucide="check-circle-2" class="w-4 h-4 fill-emerald-50"></i></div>
                     </button>
                 </div>
             </div>
 
             <!-- Group 3 -->
             <div>
-                <h3 class="text-lg font-bold text-slate-800 mb-3 flex items-center">
-                    <span class="w-8 h-8 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mr-2 text-sm">F</span>
+                <h3 class="text-base font-bold text-slate-700 mb-2 flex items-center">
+                    <span class="w-6 h-6 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mr-2 text-xs font-bold shadow-sm">F</span>
                     Adv: Fair Trade
                 </h3>
-                <div class="grid grid-cols-2 gap-3">
-                    <button onclick="startGame('f1')" class="level-btn group relative p-4 bg-white border-2 border-slate-200 rounded-xl hover:border-amber-400 hover:shadow-md transition text-left" data-id="f1">
-                        <div class="text-xs text-slate-400 font-bold uppercase tracking-wider mb-1">Task 1</div>
-                        <div class="font-bold text-slate-700">Tom's Story</div>
-                        <div class="status-icon absolute top-3 right-3 opacity-0 text-green-500"><i data-lucide="check-circle-2" class="w-5 h-5"></i></div>
+                <div class="grid grid-cols-2 gap-2">
+                    <button onclick="startGame('f1')" class="level-btn group relative p-3 bg-white border border-slate-200 rounded-xl hover:border-amber-400 hover:shadow-md transition-all text-left" data-id="f1">
+                        <div class="text-[9px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Task 1</div>
+                        <div class="font-bold text-slate-700 text-sm group-hover:text-amber-600">Tom's Story</div>
+                        <div class="status-icon absolute top-2 right-2 opacity-0 text-emerald-500"><i data-lucide="check-circle-2" class="w-4 h-4 fill-emerald-50"></i></div>
                     </button>
-                    <button onclick="startGame('f2')" class="level-btn group relative p-4 bg-white border-2 border-slate-200 rounded-xl hover:border-amber-400 hover:shadow-md transition text-left" data-id="f2">
-                        <div class="text-xs text-slate-400 font-bold uppercase tracking-wider mb-1">Task 2</div>
-                        <div class="font-bold text-slate-700">Lucy's Success</div>
-                        <div class="status-icon absolute top-3 right-3 opacity-0 text-green-500"><i data-lucide="check-circle-2" class="w-5 h-5"></i></div>
+                    <button onclick="startGame('f2')" class="level-btn group relative p-3 bg-white border border-slate-200 rounded-xl hover:border-amber-400 hover:shadow-md transition-all text-left" data-id="f2">
+                        <div class="text-[9px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Task 2</div>
+                        <div class="font-bold text-slate-700 text-sm group-hover:text-amber-600">Lucy's Success</div>
+                        <div class="status-icon absolute top-2 right-2 opacity-0 text-emerald-500"><i data-lucide="check-circle-2" class="w-4 h-4 fill-emerald-50"></i></div>
                     </button>
                 </div>
             </div>
             
-            <div class="mt-8 text-center">
-                <button onclick="resetProgress()" class="text-sm text-red-400 underline hover:text-red-600">Reset Progress</button>
+            <div class="mt-6 text-center">
+                <button onclick="resetProgress()" class="text-xs text-rose-400 underline hover:text-rose-600 transition">Reset Progress</button>
             </div>
         </div>
     </div>
 
     <!-- GAME SCREEN -->
     <div id="game-screen" class="flex-col h-full bg-slate-50 relative">
-        <!-- Header -->
-        <div class="bg-white px-4 py-3 shadow-sm border-b border-slate-200 flex items-center justify-between shrink-0 z-20">
-            <button onclick="goHome()" class="p-2 -ml-2 text-slate-500 hover:bg-slate-100 rounded-full">
-                <i data-lucide="arrow-left" class="w-6 h-6"></i>
+        <!-- Ultra Compact Header -->
+        <div class="bg-white px-3 py-2 shadow-sm border-b border-slate-200 flex items-center justify-between shrink-0 z-20">
+            <button onclick="goHome()" class="p-1.5 -ml-1 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-full transition">
+                <i data-lucide="arrow-left" class="w-5 h-5"></i>
             </button>
-            <div class="text-center">
-                <div class="text-xs text-slate-400 uppercase font-bold tracking-widest" id="game-level-id">TASK R1</div>
-                <div class="font-bold text-slate-800" id="game-timer">00:00</div>
+            
+            <!-- Title & Timer -->
+            <div class="text-center flex flex-col items-center">
+                <div class="text-[9px] text-indigo-400 uppercase font-bold tracking-widest leading-none" id="game-level-id">TASK R1</div>
+                <div class="font-mono font-bold text-slate-700 text-base tabular-nums tracking-tight leading-none mt-0.5" id="game-timer">00:00</div>
             </div>
-            <div class="w-8"></div> <!-- Spacer for centering -->
+
+            <!-- Compact Font Control -->
+            <div class="flex items-center gap-0.5 bg-slate-100 rounded p-0.5">
+                <button onclick="adjustFontSize(-2)" class="w-7 h-7 flex items-center justify-center rounded bg-white text-slate-500 shadow-sm border border-slate-200 active:scale-95 hover:text-indigo-600 font-serif font-bold text-xs">A-</button>
+                <button onclick="adjustFontSize(2)" class="w-7 h-7 flex items-center justify-center rounded bg-white text-slate-500 shadow-sm border border-slate-200 active:scale-95 hover:text-indigo-600 font-serif font-bold text-base">A+</button>
+            </div>
         </div>
 
         <!-- Scrollable Game Area -->
-        <!-- Modified: Changed pb-80 to pb-[50vh] to ensure the last sentence can be scrolled to the middle of the screen -->
-        <div id="game-container" class="flex-1 overflow-y-auto p-4 pb-[50vh] space-y-6">
+        <!-- Added dynamic-text-area class to wrapper -->
+        <!-- pb-[50vh] ensures last item can be scrolled to view -->
+        <div id="game-container" class="dynamic-text-area flex-1 overflow-y-auto p-2 pb-[50vh] space-y-2">
             <!-- Sentences will be injected here -->
         </div>
 
-        <!-- Controls & Word Bank (Fixed Bottom) -->
-        <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] z-30 flex flex-col transition-transform duration-300" style="max-height: 40vh;">
+        <!-- Controls & Word Bank (Fixed Bottom, Compact) -->
+        <div class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur shadow-[0_-4px_20px_-5px_rgba(0,0,0,0.1)] z-30 flex flex-col border-t border-indigo-100">
             
             <!-- Toolbar -->
-            <div class="flex items-center justify-between px-4 py-2 border-b border-slate-100 bg-slate-50">
+            <div class="flex items-center justify-between px-3 py-2 border-b border-slate-100">
                 <div class="flex items-center gap-2">
-                    <div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
-                        <input type="checkbox" name="toggle" id="quick-fill-toggle" class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 border-gray-300 appearance-none cursor-pointer transition-all duration-300 left-0"/>
-                        <label for="quick-fill-toggle" class="toggle-label block overflow-hidden h-5 rounded-full bg-gray-300 cursor-pointer"></label>
+                    <div class="relative inline-block w-9 h-5 align-middle select-none">
+                        <input type="checkbox" name="toggle" id="quick-fill-toggle" class="toggle-checkbox absolute block w-4 h-4 rounded-full bg-white border-[3px] border-slate-300 appearance-none cursor-pointer transition-all duration-300 top-0.5 left-0.5"/>
+                        <label for="quick-fill-toggle" class="toggle-label block overflow-hidden h-5 rounded-full bg-slate-300 cursor-pointer transition-colors duration-300"></label>
                     </div>
-                    <span class="text-xs font-bold text-slate-500">Quick Fill</span>
+                    <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Quick Fill</span>
                 </div>
-                <button onclick="checkAnswers()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-1.5 rounded-full font-bold shadow-sm active:transform active:scale-95 transition flex items-center gap-2">
-                    <i data-lucide="check" class="w-4 h-4"></i> Check
+                <button onclick="checkAnswers()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-1.5 rounded-full font-bold shadow-md shadow-indigo-200 active:transform active:scale-95 transition flex items-center gap-1.5 text-sm">
+                    <i data-lucide="check" class="w-3.5 h-3.5"></i> Check
                 </button>
             </div>
 
-            <!-- Word Bank -->
-            <div id="word-bank-container" class="p-4 overflow-y-auto bg-slate-100" style="height: 180px;">
-                <div id="word-bank" class="flex flex-wrap gap-2 justify-center pb-8">
+            <!-- Word Bank (Reduced Height) -->
+            <div id="word-bank-container" class="p-2 overflow-y-auto bg-slate-50/80" style="height: 150px;">
+                <div id="word-bank" class="flex flex-wrap gap-1.5 justify-center pb-6 pt-1">
                     <!-- Words injected here -->
                 </div>
             </div>
@@ -307,46 +332,51 @@
 
     <!-- END SCREEN -->
     <div id="end-screen" class="flex-col items-center justify-center p-6 bg-white z-50 overflow-y-auto">
-        <div class="w-full max-w-lg bg-white p-6 text-center space-y-6">
-            <div class="w-20 h-20 bg-green-100 text-green-500 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce">
-                <i data-lucide="trophy" class="w-10 h-10"></i>
+        <div class="w-full max-w-lg bg-white p-6 rounded-2xl shadow-xl border border-slate-100 text-center space-y-4">
+            <div class="w-20 h-20 bg-emerald-100 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-2 animate-bounce ring-4 ring-emerald-50">
+                <i data-lucide="trophy" class="w-10 h-10 stroke-[1.5]"></i>
             </div>
             
-            <h2 class="text-3xl font-extrabold text-slate-800">Excellent!</h2>
-            <p class="text-slate-500">You completed the task.</p>
+            <div>
+                <h2 class="text-2xl font-extrabold text-slate-800 mb-1">Excellent!</h2>
+                <p class="text-slate-500 text-sm">You completed the task successfully.</p>
+            </div>
 
-            <div class="grid grid-cols-2 gap-4 my-6">
-                <div class="bg-slate-50 p-4 rounded-xl">
-                    <div class="text-xs text-slate-400 uppercase font-bold">Time</div>
-                    <div class="text-xl font-bold text-slate-700" id="result-time">00:45</div>
+            <div class="grid grid-cols-2 gap-3 my-4">
+                <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                    <div class="text-[9px] text-slate-400 uppercase font-bold tracking-wider mb-0.5">Time</div>
+                    <div class="text-xl font-bold text-slate-700 font-mono" id="result-time">00:45</div>
                 </div>
-                <div class="bg-slate-50 p-4 rounded-xl">
-                    <div class="text-xs text-slate-400 uppercase font-bold">Difficulty</div>
-                    <div class="text-xl font-bold text-blue-600" id="result-diff">70%</div>
+                <div class="bg-indigo-50 p-3 rounded-xl border border-indigo-100">
+                    <div class="text-[9px] text-indigo-400 uppercase font-bold tracking-wider mb-0.5">Difficulty</div>
+                    <div class="text-xl font-bold text-indigo-600" id="result-diff">70%</div>
                 </div>
             </div>
 
-            <div id="result-review" class="text-left bg-yellow-50 p-5 rounded-xl border border-yellow-100 text-sm text-slate-700 leading-relaxed max-h-48 overflow-y-auto mb-4 font-serif">
+            <div id="result-review" class="text-left bg-yellow-50 p-4 rounded-xl border border-yellow-100 text-sm text-slate-700 leading-relaxed max-h-48 overflow-y-auto mb-4 font-serif shadow-inner">
                 <!-- Full text review -->
             </div>
 
-            <div class="flex gap-3">
-                <button onclick="goHome()" class="flex-1 py-3 rounded-xl border-2 border-slate-200 font-bold text-slate-500 hover:bg-slate-50">Back</button>
-                <button onclick="downloadReport()" class="flex-1 py-3 rounded-xl bg-indigo-600 text-white font-bold shadow-lg hover:bg-indigo-700 flex items-center justify-center gap-2">
-                    <i data-lucide="camera" class="w-4 h-4"></i> Save
+            <div class="flex gap-2">
+                <button onclick="goHome()" class="flex-1 py-3 rounded-lg border-2 border-slate-200 font-bold text-slate-500 hover:bg-slate-50 hover:text-slate-700 transition text-sm">Back</button>
+                <button onclick="downloadReport()" class="flex-1 py-3 rounded-lg bg-indigo-600 text-white font-bold shadow-lg shadow-indigo-200 hover:bg-indigo-700 hover:-translate-y-0.5 transition flex items-center justify-center gap-1.5 text-sm">
+                    <i data-lucide="download" class="w-4 h-4"></i> Save
                 </button>
             </div>
         </div>
         <!-- Hidden capture area -->
-        <div id="capture-area" class="fixed top-0 left-0 -z-50 bg-white p-8 w-[600px] pointer-events-none opacity-0">
-            <h1 class="text-2xl font-bold mb-4 text-center text-blue-800">Learning Report</h1>
-            <div class="border-t-2 border-b-2 border-blue-100 py-4 my-4">
-                <p class="mb-2"><strong>Level:</strong> <span id="cap-level"></span></p>
-                <p class="mb-2"><strong>Date:</strong> <span id="cap-date"></span></p>
+        <div id="capture-area" class="fixed top-0 left-0 -z-50 bg-white p-12 w-[600px] pointer-events-none opacity-0 font-serif">
+            <div class="text-center border-b-2 border-indigo-100 pb-6 mb-6">
+                <h1 class="text-3xl font-extrabold text-indigo-800 mb-2">Learning Report</h1>
+                <p class="text-slate-400">English Sentence Scramble</p>
+            </div>
+            <div class="flex justify-between text-sm text-slate-500 mb-8 font-sans">
+                <p><strong>Level:</strong> <span id="cap-level"></span></p>
+                <p><strong>Date:</strong> <span id="cap-date"></span></p>
                 <p><strong>Time:</strong> <span id="cap-time"></span></p>
             </div>
-            <div id="cap-content" class="text-lg leading-relaxed font-serif text-slate-700 bg-slate-50 p-4 rounded"></div>
-            <div class="mt-6 text-center text-sm text-slate-400">Generated by English Scramble Game</div>
+            <div id="cap-content" class="text-lg leading-relaxed text-slate-800 bg-slate-50 p-8 rounded-xl border border-slate-100"></div>
+            <div class="mt-8 text-center text-xs text-slate-300 uppercase tracking-widest">Keep Learning</div>
         </div>
     </div>
 
@@ -446,9 +476,12 @@
         let currentLevelId = null;
         let timerInterval = null;
         let startTime = 0;
-        let activeWords = []; // { id, word, originalIndex }
+        let activeWords = []; 
         let quickFillMode = false;
-        let selectedWordId = null; // For Quick Fill OFF mode
+        let selectedWordId = null; 
+        
+        // Font Size State
+        let currentFontSize = 18; // px
 
         // --- 3. DOM HELPERS ---
         const $ = id => document.getElementById(id);
@@ -465,7 +498,7 @@
             loadProgress();
             
             $('diff-slider').addEventListener('input', (e) => {
-                $('diff-display').textContent = e.target.value + '%';
+                $('diff-display').textContent = e.target.value + '% Blanks';
             });
 
             $('quick-fill-toggle').addEventListener('change', (e) => {
@@ -473,7 +506,7 @@
                 // Clear selection if switching modes
                 if (selectedWordId) {
                     const el = document.querySelector(`.word-card[data-id="${selectedWordId}"]`);
-                    if(el) el.classList.remove('ring-2', 'ring-blue-500', 'bg-blue-50');
+                    if(el) el.classList.remove('ring-2', 'ring-indigo-500', 'bg-indigo-50');
                     selectedWordId = null;
                 }
             });
@@ -485,7 +518,7 @@
                 const id = btn.getAttribute('data-id');
                 if (progress[id]) {
                     btn.querySelector('.status-icon').classList.remove('opacity-0');
-                    btn.classList.add('border-green-200', 'bg-green-50');
+                    btn.classList.add('border-emerald-200', 'bg-emerald-50');
                 }
             });
         }
@@ -497,7 +530,18 @@
             }
         }
 
-        // --- 5. GAME LOGIC ---
+        // --- 5. FONT SIZE LOGIC ---
+        function adjustFontSize(change) {
+            currentFontSize += change;
+            // Limit range: 14px to 32px
+            if (currentFontSize < 14) currentFontSize = 14;
+            if (currentFontSize > 32) currentFontSize = 32;
+            
+            // Apply to CSS Variable
+            document.documentElement.style.setProperty('--game-font-size', currentFontSize + 'px');
+        }
+
+        // --- 6. GAME LOGIC ---
         function startGame(levelId) {
             currentLevelId = levelId;
             const diff = parseInt($('diff-slider').value) / 100;
@@ -513,28 +557,25 @@
             let globalWordIdCounter = 0;
 
             levelData.sentences.forEach((sent, sIdx) => {
-                // Pre-process sentence: split by spaces but keep punctuation attached
-                // Simple regex split: whitespace
+                // Pre-process sentence
                 const words = sent.en.split(/\s+/);
                 
+                // Tightened wrapper padding and margin
                 const wrapper = document.createElement('div');
-                wrapper.className = "bg-white p-4 rounded-xl shadow-sm border border-slate-100";
+                wrapper.className = "bg-white p-3 rounded-xl shadow-sm border border-slate-100 mb-1 transition-all hover:shadow-md";
                 
-                // Chinese Translation
+                // Chinese Translation - Reduced margin
                 const chDiv = document.createElement('div');
-                chDiv.className = "text-sm text-slate-400 mb-3 font-medium";
-                chDiv.innerHTML = `<span class="bg-slate-100 px-2 py-0.5 rounded text-xs mr-2 text-slate-500">#${sIdx+1}</span>${sent.ch}`;
+                chDiv.className = "text-sm text-slate-400 mb-2 font-medium flex items-center";
+                chDiv.innerHTML = `<span class="bg-indigo-50 text-indigo-500 px-1.5 py-0.5 rounded text-[10px] font-bold mr-2">#${sIdx+1}</span> ${sent.ch}`;
                 wrapper.appendChild(chDiv);
 
-                // English Area
+                // English Area - Tighter gap
                 const enDiv = document.createElement('div');
-                enDiv.className = "leading-loose text-lg flex flex-wrap items-center";
+                enDiv.className = "flex flex-wrap items-center gap-y-2 leading-relaxed text-slate-700";
                 
                 // Determine blanks based on difficulty
-                // We want to keep at least 1 word if possible, unless 100%
                 words.forEach((w, wIdx) => {
-                    // Randomly decide if this word is a blank
-                    // Always make long words more likely to be blanks? No, simple random.
                     const isBlank = Math.random() < diff;
 
                     if (isBlank) {
@@ -543,11 +584,11 @@
                         // Create Slot
                         const slot = document.createElement('span');
                         slot.className = "slot empty";
-                        slot.dataset.answer = w.replace(/[^\w']/g, ''); // strip punctuation for flexible check if needed, but here we require exact match visually
-                        slot.dataset.fullWord = w; // The actual text to display
+                        slot.dataset.answer = w.replace(/[^\w']/g, ''); 
+                        slot.dataset.fullWord = w; 
                         slot.dataset.slotId = wordId;
                         
-                        // Touch/Click handler for slot (Placement)
+                        // Touch/Click handler
                         slot.addEventListener('click', (e) => handleSlotClick(e, slot));
 
                         enDiv.appendChild(slot);
@@ -560,7 +601,7 @@
                     } else {
                         // Fixed Word
                         const fixed = document.createElement('span');
-                        fixed.className = "mx-1 font-medium text-slate-800";
+                        fixed.className = "mx-1 font-semibold";
                         fixed.textContent = w;
                         enDiv.appendChild(fixed);
                     }
@@ -571,19 +612,17 @@
             });
 
             // Populate Word Bank (Shuffle)
-            wordBankList.sort((a, b) => a.text.localeCompare(b.text)); // Alphabetical sort helps finding words
-            // Or Random sort? Usually random in games. Let's do Random.
+            wordBankList.sort((a, b) => a.text.localeCompare(b.text)); 
             wordBankList.sort(() => Math.random() - 0.5);
 
             const bankContainer = $('word-bank');
             wordBankList.forEach(item => {
                 const btn = document.createElement('div');
-                btn.className = "word-card";
+                btn.className = "word-card shadow-sm";
                 btn.textContent = item.text;
                 btn.dataset.id = item.id;
                 btn.dataset.text = item.text;
                 
-                // Event Listeners for Drag/Click
                 initDraggable(btn);
                 
                 bankContainer.appendChild(btn);
@@ -602,121 +641,100 @@
             showScreen('game-screen');
         }
 
-        // --- 6. INTERACTION LOGIC (Touch/Mouse/Click) ---
+        // --- 7. INTERACTION LOGIC ---
 
-        // A. WORD CARD CLICK (Selection for Quick Fill / Manual Place)
         function handleWordClick(e) {
-            if(e.defaultPrevented) return; // handled by drag
+            if(e.defaultPrevented) return;
 
             const card = e.currentTarget;
             if(card.classList.contains('used')) return;
 
             if (quickFillMode) {
-                // Auto fill first empty
                 const firstEmpty = document.querySelector('.slot:not(.filled)');
                 if (firstEmpty) {
                     fillSlot(firstEmpty, card);
                 } else {
-                    // Shake to indicate full
+                    // Shake effect
                     card.animate([
                         { transform: 'translateX(0)' },
-                        { transform: 'translateX(-5px)' },
-                        { transform: 'translateX(5px)' },
+                        { transform: 'translateX(-4px)' },
+                        { transform: 'translateX(4px)' },
                         { transform: 'translateX(0)' }
-                    ], { duration: 200 });
+                    ], { duration: 300 });
                 }
             } else {
                 // Select Mode
                 if (selectedWordId === card.dataset.id) {
-                    // Deselect
                     selectedWordId = null;
-                    card.classList.remove('ring-2', 'ring-blue-500', 'bg-blue-50');
+                    card.classList.remove('ring-2', 'ring-indigo-500', 'bg-indigo-50');
                 } else {
-                    // Remove prev selection
                     if (selectedWordId) {
                         const prev = document.querySelector(`.word-card[data-id="${selectedWordId}"]`);
-                        if(prev) prev.classList.remove('ring-2', 'ring-blue-500', 'bg-blue-50');
+                        if(prev) prev.classList.remove('ring-2', 'ring-indigo-500', 'bg-indigo-50');
                     }
-                    // Select new
                     selectedWordId = card.dataset.id;
-                    card.classList.add('ring-2', 'ring-blue-500', 'bg-blue-50');
+                    card.classList.add('ring-2', 'ring-indigo-500', 'bg-indigo-50');
                 }
             }
         }
 
-        // B. SLOT CLICK (Recieve Word or Return Word)
         function handleSlotClick(e, slot) {
-            // If slot is filled, return word to bank
             if (slot.classList.contains('filled')) {
                 returnWordFromSlot(slot);
                 return;
             }
 
-            // If empty and we have a selected word
             if (!slot.classList.contains('filled') && selectedWordId && !quickFillMode) {
                 const card = document.querySelector(`.word-card[data-id="${selectedWordId}"]`);
                 if (card && !card.classList.contains('used')) {
                     fillSlot(slot, card);
-                    // Clear selection
                     selectedWordId = null;
-                    card.classList.remove('ring-2', 'ring-blue-500', 'bg-blue-50');
+                    card.classList.remove('ring-2', 'ring-indigo-500', 'bg-indigo-50');
                 }
             }
         }
 
-        // C. CORE ACTION: Fill Slot
         function fillSlot(slot, cardElement) {
-            // Mark card as used
             cardElement.classList.add('used');
 
-            // Update Slot
             slot.textContent = cardElement.dataset.text;
-            slot.classList.add('filled', 'bg-white');
+            slot.classList.add('filled');
             slot.classList.remove('empty');
             slot.dataset.filledId = cardElement.dataset.id;
 
-            // Optional: Animation
             slot.animate([
-                { transform: 'scale(0.8)', opacity: 0.5 },
+                { transform: 'scale(0.9)', opacity: 0.8 },
                 { transform: 'scale(1.05)', opacity: 1 },
                 { transform: 'scale(1)', opacity: 1 }
-            ], { duration: 200 });
+            ], { duration: 250, easing: 'cubic-bezier(0.175, 0.885, 0.32, 1.275)' });
         }
 
-        // D. CORE ACTION: Return Word
         function returnWordFromSlot(slot) {
             const wordId = slot.dataset.filledId;
             if (!wordId) return;
 
-            // Reset Slot
             slot.textContent = '';
-            slot.classList.remove('filled', 'bg-white', 'correct-lock', 'wrong-shake');
+            slot.classList.remove('filled', 'correct-lock', 'wrong-shake');
             slot.classList.add('empty');
             delete slot.dataset.filledId;
 
-            // Reset Card in Bank
             const card = document.querySelector(`.word-card[data-id="${wordId}"]`);
             if (card) {
                 card.classList.remove('used');
             }
         }
 
-        // E. DRAG & DROP IMPLEMENTATION (Ghost Element)
+        // --- DRAG & DROP ---
         let dragSrcEl = null;
         let ghostEl = null;
         let dragOffsetX = 0;
         let dragOffsetY = 0;
 
         function initDraggable(el) {
-            // Touch
             el.addEventListener('touchstart', handleDragStart, { passive: false });
             el.addEventListener('touchmove', handleDragMove, { passive: false });
             el.addEventListener('touchend', handleDragEnd);
-            
-            // Mouse
             el.addEventListener('mousedown', handleDragStart);
-            
-            // Click fallback logic inside DragEnd/MouseUp check
         }
 
         function handleDragStart(e) {
@@ -726,15 +744,11 @@
             const pageX = isTouch ? e.touches[0].pageX : e.pageX;
             const pageY = isTouch ? e.touches[0].pageY : e.pageY;
             
-            // Wait a tiny bit to distinguish tap from drag? 
-            // Better: Create ghost immediately but only move it on move.
-            
             dragSrcEl = e.currentTarget;
             const rect = dragSrcEl.getBoundingClientRect();
             dragOffsetX = pageX - rect.left;
             dragOffsetY = pageY - rect.top;
 
-            // Create Ghost
             ghostEl = dragSrcEl.cloneNode(true);
             ghostEl.classList.add('dragging-ghost');
             ghostEl.style.width = rect.width + 'px';
@@ -750,7 +764,7 @@
 
         function handleDragMove(e) {
             if (!ghostEl) return;
-            e.preventDefault(); // Stop scrolling
+            e.preventDefault(); 
 
             const isTouch = e.type === 'touchmove';
             const pageX = isTouch ? e.touches[0].pageX : e.pageX;
@@ -758,9 +772,8 @@
 
             ghostEl.style.left = (pageX - dragOffsetX) + 'px';
             ghostEl.style.top = (pageY - dragOffsetY) + 'px';
-            ghostEl.style.display = 'none'; // Hide momentarily to find element below
+            ghostEl.style.display = 'none'; 
             
-            // Highlight drop zone
             const elemBelow = document.elementFromPoint(
                 isTouch ? e.touches[0].clientX : e.clientX,
                 isTouch ? e.touches[0].clientY : e.clientY
@@ -774,16 +787,11 @@
         }
 
         function handleDragEnd(e) {
-            // Cleanup listeners
             document.removeEventListener('mousemove', handleDragMove);
             document.removeEventListener('mouseup', handleDragEnd);
 
             if (!ghostEl) return;
 
-            // Determine if it was a Click (Drag distance very small)
-            // Implementation: Simple check - if ghost didn't move much? 
-            // Actually, let's just use the Drop logic. If no drop target, trigger click logic.
-            
             const isTouch = e.type === 'touchend';
             const clientX = isTouch ? e.changedTouches[0].clientX : e.clientX;
             const clientY = isTouch ? e.changedTouches[0].clientY : e.clientY;
@@ -793,7 +801,6 @@
             
             let dropped = false;
             if (elemBelow && elemBelow.classList.contains('slot')) {
-                // If slot filled, clear it first (Overwrite)
                 if (elemBelow.classList.contains('filled')) {
                     returnWordFromSlot(elemBelow);
                 }
@@ -805,11 +812,7 @@
             ghostEl = null;
             document.querySelectorAll('.slot').forEach(s => s.style.transform = 'scale(1)');
 
-            // If not dropped and didn't move far, treat as Click
             if (!dropped) {
-                // Approximate click detection
-                // Ideally we track start vs end coordinates. 
-                // For simplicity here, we just call the click handler if not dropped.
                  handleWordClick({ currentTarget: dragSrcEl, defaultPrevented: false });
             }
             
@@ -817,7 +820,7 @@
         }
 
 
-        // --- 7. CHECK & END GAME ---
+        // --- 8. CHECK & END ---
         function checkAnswers() {
             const slots = document.querySelectorAll('.slot');
             let allCorrect = true;
@@ -840,7 +843,6 @@
                     allCorrect = false;
                     slot.classList.add('wrong-shake');
                     setTimeout(() => slot.classList.remove('wrong-shake'), 500);
-                    // Record mistake? (Optional)
                 }
             });
 
@@ -854,44 +856,39 @@
             const timeStr = $('game-timer').textContent;
             const diffStr = $('diff-display').textContent;
             
-            // Save Progress
             const progress = JSON.parse(localStorage.getItem('eng_game_progress') || '{}');
             progress[currentLevelId] = { time: timeStr, date: new Date().toLocaleDateString(), diff: diffStr };
             localStorage.setItem('eng_game_progress', JSON.stringify(progress));
 
-            // Setup End Screen
             $('result-time').textContent = timeStr;
             $('result-diff').textContent = diffStr;
             
-            // Build Review Text
             const levelData = levelsDB[currentLevelId];
             let reviewHtml = '';
             levelData.sentences.forEach(s => {
-                reviewHtml += `<p class="mb-2"><span class="font-bold text-blue-600">${s.en}</span> <br><span class="text-xs text-gray-500">${s.ch}</span></p>`;
+                reviewHtml += `<p class="mb-3"><span class="font-bold text-indigo-700">${s.en}</span> <br><span class="text-xs text-slate-500">${s.ch}</span></p>`;
             });
             $('result-review').innerHTML = reviewHtml;
 
-            // Prepare Capture Data
             $('cap-level').textContent = levelData.title;
             $('cap-date').textContent = new Date().toLocaleDateString();
             $('cap-time').textContent = timeStr;
             $('cap-content').innerHTML = reviewHtml;
 
             showScreen('end-screen');
-            lucide.createIcons(); // Re-init icons on new screen
+            lucide.createIcons();
         }
 
         function goHome() {
             clearInterval(timerInterval);
-            loadProgress(); // Refresh checks
+            loadProgress(); 
             showScreen('home-screen');
         }
 
-        // --- 8. REPORT GENERATION ---
         function downloadReport() {
             const captureArea = $('capture-area');
             captureArea.style.opacity = '1';
-            captureArea.style.zIndex = '100'; // Bring to front briefly
+            captureArea.style.zIndex = '100'; 
 
             html2canvas(captureArea, { scale: 2 }).then(canvas => {
                 const link = document.createElement('a');
@@ -903,7 +900,6 @@
                 captureArea.style.zIndex = '-50';
             });
         }
-
     </script>
 </body>
 </html>
