@@ -75,7 +75,7 @@
         }
 
         /* 提示字 */
-        .fixed-word { display: inline-block; padding: 0 2px; font-weight: 700; color: #64748b; }
+        .fixed-word { display: inline-block; padding: 0 2px; font-weight: 700; color: #94a3b8; }
         
         /* 動畫與標記 */
         @keyframes shake {
@@ -89,7 +89,6 @@
             background-color: #dcfce7 !important; border: 1px solid #22c55e !important;
             color: #15803d; 
             border-radius: 4px; padding: 0 6px;
-            /* Removed pointer-events: none to allow interaction */
         }
         
         .error-mark { color: #dc2626; text-decoration: underline; font-weight: bold; }
@@ -142,6 +141,24 @@
         <div class="text-center mb-4 mt-2">
             <h2 class="text-xl font-bold text-slate-800">Unit 6: Micro-Tasks</h2>
             <p class="text-slate-500 text-xs">Complete all 8 tasks to finish!</p>
+        </div>
+
+        <!-- 難度選擇器 -->
+        <div class="bg-white p-3 rounded-xl border border-indigo-100 mb-4 shadow-sm">
+            <label class="flex justify-between items-center text-sm font-bold text-slate-700 mb-1">
+                <span>🔧 填空比例 (Difficulty)</span>
+                <span id="diff-display" class="text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">70%</span>
+            </label>
+            <select id="difficulty-select" class="w-full p-2 border border-slate-300 rounded-lg text-sm bg-slate-50 focus:border-indigo-500 focus:outline-none">
+                <option value="0.4">40% (Easy)</option>
+                <option value="0.5">50%</option>
+                <option value="0.6">60%</option>
+                <option value="0.7" selected>70% (Default)</option>
+                <option value="0.8">80%</option>
+                <option value="0.9">90%</option>
+                <option value="1.0">100% (Hard)</option>
+            </select>
+            <p class="text-[10px] text-slate-400 mt-1">* 比例越高，挖空的字越多。</p>
         </div>
 
         <div class="flex-1 pb-4">
@@ -281,6 +298,9 @@
                 <div class="flex justify-between mb-1 text-slate-500">
                     <span>Task:</span><span class="font-bold text-slate-800" id="result-level-name">-</span>
                 </div>
+                <div class="flex justify-between mb-1 text-slate-500">
+                    <span>Difficulty:</span><span class="font-bold text-indigo-600" id="result-difficulty">-</span>
+                </div>
                 <div class="flex justify-between">
                     <span>Time:</span><span class="font-mono font-bold" id="final-time">00:00</span>
                 </div>
@@ -386,6 +406,9 @@
         let selectedWord = null;
         let selectedSlot = null;
         let isQuickFill = false;
+        
+        // Difficulty Setting (Hollow Ratio: 0.7 means 70% blank)
+        let currentDifficulty = 0.7;
 
         // Touch Vars
         let dragSrcEl = null, dragClone = null, isDragging = false;
@@ -393,8 +416,20 @@
 
         window.onload = function() {
             updateHomeUI();
+            
+            // Toggle Logic
             document.getElementById('quick-fill-toggle').addEventListener('change', function() {
                 isQuickFill = this.checked;
+            });
+
+            // Difficulty Logic
+            const diffSelect = document.getElementById('difficulty-select');
+            const diffDisplay = document.getElementById('diff-display');
+            
+            diffSelect.addEventListener('change', function() {
+                currentDifficulty = parseFloat(this.value);
+                const percent = Math.round(currentDifficulty * 100);
+                diffDisplay.innerText = `${percent}%`;
             });
         };
 
@@ -452,9 +487,13 @@
             area.innerHTML = '';
             let allWords = [];
 
+            // Calculate keep ratio based on difficulty (hole ratio)
+            // If diff is 0.7 (70% holes), keep ratio is 0.3
+            const keepRatio = 1 - currentDifficulty;
+
             data.sentences.forEach((s, sIdx) => {
                 const words = s.en.split(/\s+/);
-                const fixed = getFixedIndices(words.length, 0.3);
+                const fixed = getFixedIndices(words.length, keepRatio);
                 const row = document.createElement('div');
                 row.className = "border-b border-dashed border-slate-100 pb-2 last:border-0";
                 
@@ -501,7 +540,13 @@
         }
 
         function getFixedIndices(len, ratio) {
-            const count = Math.max(1, Math.floor(len * ratio));
+            // Ensure at least 0 fixed words if ratio is 0 (100% difficulty)
+            // If ratio is tiny but not 0, at least 1 word if len > 0
+            let count = Math.floor(len * ratio);
+            // Edge case: if 100% difficulty (ratio 0), count is 0.
+            // If < 100%, try to keep at least 1 unless word is super short
+            if (ratio > 0 && count === 0 && len > 1) count = 1;
+
             const idx = Array.from({length: len}, (_, i) => i);
             for (let i=idx.length-1; i>0; i--) {
                 const j = Math.floor(Math.random()*(i+1));
@@ -732,12 +777,16 @@
             clearInterval(timerInterval);
             const now=new Date(), tStr=document.getElementById('game-timer').innerText;
             const dStr=`${now.getMonth()+1}/${now.getDate()} ${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')}`;
-            progressData[currentLevelId] = {time:tStr, date:dStr};
+            // Store difficulty info
+            const diffPercent = Math.round(currentDifficulty * 100) + '%';
+            
+            progressData[currentLevelId] = {time:tStr, date:dStr, diff: diffPercent};
             localStorage.setItem('Unit6_Micro_v1', JSON.stringify(progressData));
 
             document.getElementById('level-content').classList.add('hidden');
             document.getElementById('end-screen').classList.remove('hidden');
             document.getElementById('result-level-name').innerText = levelsDB[currentLevelId].title;
+            document.getElementById('result-difficulty').innerText = diffPercent;
             document.getElementById('final-time').innerText = tStr;
 
             const rDiv=document.getElementById('review-content'); rDiv.innerHTML='';
@@ -771,7 +820,12 @@
                 const d=progressData[id];
                 if(d) {
                     const ps=d.time.split(':'); tt+=parseInt(ps[0])*60+parseInt(ps[1]);
-                    st.innerHTML += `<div class="flex justify-between border-b border-slate-100 py-1"><span>${levelsDB[id].title}</span><span class="font-mono text-slate-600">${d.time}</span></div>`;
+                    // Show difficulty
+                    const diffBadge = d.diff ? `<span class="text-[10px] bg-slate-100 px-1 rounded ml-1 text-slate-500">${d.diff}</span>` : '';
+                    st.innerHTML += `<div class="flex justify-between border-b border-slate-100 py-1">
+                        <div><span>${levelsDB[id].title}</span>${diffBadge}</div>
+                        <span class="font-mono text-slate-600">${d.time}</span>
+                    </div>`;
                 } else {
                     st.innerHTML += `<div class="flex justify-between border-b border-slate-100 py-1"><span class="text-slate-400">${levelsDB[id].title}</span><span class="text-slate-300">-</span></div>`;
                 }
