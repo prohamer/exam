@@ -456,7 +456,86 @@
                     id: "1-3-3",
                     section: "1-3",
                     type: "classification",
-                    title: "第三關：顯微鏡的各部位",
+                    title: "第三關：實驗器材使用注意",
+                    description: "請判斷下列操作是否正確",
+                    zones: [
+                        { id: 'zone1', title: '正確操作', icon: 'fa-thumbs-up' },
+                        { id: 'zone2', title: '錯誤操作', icon: 'fa-thumbs-down' }
+                    ],
+                    items: [
+                        { id: 'item1', text: '量筒可以加熱', val: 'wrong' },
+                        { id: 'item2', text: '滴管可以倒持', val: 'wrong' },
+                        { id: 'item3', text: '用另一酒精燈點燃酒精燈', val: 'wrong' },
+                        { id: 'item4', text: '用火柴點燃酒精燈', val: 'correct' },
+                        { id: 'item5', text: '用燈帽熄滅酒精燈', val: 'correct' },
+                        { id: 'item6', text: '試管加熱時試管口朝向人', val: 'wrong' },
+                        { id: 'item7', text: '量筒平放桌面讀取刻度', val: 'correct' },
+                        { id: 'item8', text: '試管夾夾在試管中上段', val: 'correct' }
+                    ],
+                    solution: {
+                        zone1: ['correct'],
+                        zone2: ['wrong']
+                    }
+                },
+                {
+                    id: "1-3-4",
+                    section: "1-3",
+                    type: "classification",
+                    title: "第四關：實驗器材清潔保養",
+                    description: "請將下列保養方式分類",
+                    zones: [
+                        { id: 'zone1', title: '玻璃器材', icon: 'fa-flask' },
+                        { id: 'zone2', title: '金屬器材', icon: 'fa-wrench' }
+                    ],
+                    items: [
+                        { id: 'item1', text: '用刷子和清水清洗', val: 'glass' },
+                        { id: 'item2', text: '避免碰撞破損', val: 'glass' },
+                        { id: 'item3', text: '保持乾燥防止生鏽', val: 'metal' },
+                        { id: 'item4', text: '倒置晾乾', val: 'glass' },
+                        { id: 'item5', text: '使用後擦拭乾淨', val: 'metal' },
+                        { id: 'item6', text: '避免接觸酸鹼溶液', val: 'metal' }
+                    ],
+                    solution: {
+                        zone1: ['glass'],
+                        zone2: ['metal']
+                    }
+                }
+            ],
+            "1-4": [
+                {
+                    id: "1-4-1",
+                    section: "1-4",
+                    type: "classification",
+                    title: "第一關：解剖顯微鏡 vs 複式顯微鏡",
+                    description: "請將下列特徵分類到正確的顯微鏡類型",
+                    zones: [
+                        { id: 'zone1', title: '解剖顯微鏡', icon: 'fa-eye' },
+                        { id: 'zone2', title: '複式顯微鏡', icon: 'fa-microscope' },
+                        { id: 'zone3', title: '兩者皆有', icon: 'fa-check-double' }
+                    ],
+                    items: [
+                        { id: 'item1', text: '觀察較大的生物體', val: 'dissecting' },
+                        { id: 'item2', text: '觀察細胞等微小構造', val: 'compound' },
+                        { id: 'item3', text: '放大倍率較低（約40倍）', val: 'dissecting' },
+                        { id: 'item4', text: '放大倍率較高（約400倍）', val: 'compound' },
+                        { id: 'item5', text: '影像為正立', val: 'dissecting' },
+                        { id: 'item6', text: '影像為倒立', val: 'compound' },
+                        { id: 'item7', text: '可觀察昆蟲外型', val: 'dissecting' },
+                        { id: 'item8', text: '需製作玻片標本', val: 'compound' },
+                        { id: 'item9', text: '具有物鏡和目鏡', val: 'both' },
+                        { id: 'item10', text: '需要光源照明', val: 'both' }
+                    ],
+                    solution: {
+                        zone1: ['dissecting'],
+                        zone2: ['compound'],
+                        zone3: ['both']
+                    }
+                },
+                {
+                    id: "1-4-2",
+                    section: "1-4",
+                    type: "classification",
+                    title: "第二關：複式顯微鏡的各部位",
                     description: "請將複式顯微鏡的各部位依功能分類",
                     zones: [
                         { id: 'zone1', title: '放大影像', icon: 'fa-search-plus' },
@@ -478,10 +557,10 @@
                     }
                 },
                 {
-                    id: "1-3-4",
-                    section: "1-3",
+                    id: "1-4-3",
+                    section: "1-4",
                     type: "classification",
-                    title: "第四關：正確使用顯微鏡",
+                    title: "第三關：正確使用顯微鏡",
                     description: "請判斷下列操作是否正確",
                     zones: [
                         { id: 'zone1', title: '正確操作', icon: 'fa-thumbs-up' },
@@ -492,10 +571,10 @@
                         { id: 'item2', text: '只用一手提拿顯微鏡', val: 'wrong' },
                         { id: 'item3', text: '用拭鏡紙擦拭鏡頭', val: 'correct' },
                         { id: 'item4', text: '先用低倍率物鏡觀察', val: 'correct' },
-                        { id: 'item5', text: '量筒可以加熱', val: 'wrong' },
-                        { id: 'item6', text: '滴管可以倒持', val: 'wrong' },
-                        { id: 'item7', text: '用另一酒精燈點燃酒精燈', val: 'wrong' },
-                        { id: 'item8', text: '使用完畢調回低倍率', val: 'correct' }
+                        { id: 'item5', text: '直接用高倍率開始觀察', val: 'wrong' },
+                        { id: 'item6', text: '使用完畢調回低倍率', val: 'correct' },
+                        { id: 'item7', text: '用手指擦拭鏡頭', val: 'wrong' },
+                        { id: 'item8', text: '放置時遠離桌緣', val: 'correct' }
                     ],
                     solution: {
                         zone1: ['correct'],
@@ -503,10 +582,10 @@
                     }
                 },
                 {
-                    id: "1-3-5",
-                    section: "1-3",
+                    id: "1-4-4",
+                    section: "1-4",
                     type: "classification",
-                    title: "第五關：放大倍率的影響",
+                    title: "第四關:放大倍率的影響",
                     description: "請將下列特徵分類到正確的倍率條件",
                     zones: [
                         { id: 'zone1', title: '低倍率（如40倍）', icon: 'fa-search' },
@@ -528,10 +607,10 @@
                     }
                 },
                 {
-                    id: "1-3-6",
-                    section: "1-3",
+                    id: "1-4-5",
+                    section: "1-4",
                     type: "classification",
-                    title: "第六關：光線與影像品質",
+                    title: "第五關：光線與影像品質",
                     description: "請將下列現象分類到對應的倍率條件",
                     zones: [
                         { id: 'zone1', title: '低倍率觀察', icon: 'fa-sun' },
@@ -551,10 +630,10 @@
                     }
                 },
                 {
-                    id: "1-3-7",
-                    section: "1-3",
+                    id: "1-4-6",
+                    section: "1-4",
                     type: "classification",
-                    title: "第七關：正確的觀察步驟",
+                    title: "第六關：正確的觀察步驟",
                     description: "請將下列操作步驟分類為低倍鏡或高倍鏡階段",
                     zones: [
                         { id: 'zone1', title: '低倍鏡階段', icon: 'fa-1' },
@@ -576,10 +655,10 @@
                     }
                 },
                 {
-                    id: "1-3-8",
-                    section: "1-3",
+                    id: "1-4-7",
+                    section: "1-4",
                     type: "classification",
-                    title: "第八關：成像特性大不同",
+                    title: "第七關：成像特性大不同",
                     description: "請判斷下列成像特性屬於哪種倍率",
                     zones: [
                         { id: 'zone1', title: '低倍鏡特性', icon: 'fa-binoculars' },
@@ -601,6 +680,31 @@
                         zone2: ['high_feature'],
                         zone3: ['both']
                     }
+                },
+                {
+                    id: "1-4-8",
+                    section: "1-4",
+                    type: "classification",
+                    title: "第八關：顯微鏡觀察應用",
+                    description: "請將下列觀察對象選擇適合的顯微鏡類型",
+                    zones: [
+                        { id: 'zone1', title: '解剖顯微鏡', icon: 'fa-eye' },
+                        { id: 'zone2', title: '複式顯微鏡', icon: 'fa-microscope' }
+                    ],
+                    items: [
+                        { id: 'item1', text: '觀察蝴蝶翅膀鱗片', val: 'dissecting_use' },
+                        { id: 'item2', text: '觀察洋蔥表皮細胞', val: 'compound_use' },
+                        { id: 'item3', text: '觀察花朵構造', val: 'dissecting_use' },
+                        { id: 'item4', text: '觀察口腔皮膜細胞', val: 'compound_use' },
+                        { id: 'item5', text: '觀察昆蟲外型', val: 'dissecting_use' },
+                        { id: 'item6', text: '觀察血球細胞', val: 'compound_use' },
+                        { id: 'item7', text: '觀察種子發芽', val: 'dissecting_use' },
+                        { id: 'item8', text: '觀察細菌', val: 'compound_use' }
+                    ],
+                    solution: {
+                        zone1: ['dissecting_use'],
+                        zone2: ['compound_use']
+                    }
                 }
             ]
         };
@@ -621,6 +725,11 @@
                 primary: 'from-purple-500 to-pink-600',
                 header: 'from-purple-600 to-pink-700', 
                 badge: 'bg-purple-500' 
+            },
+            '1-4': { 
+                primary: 'from-orange-500 to-red-600',
+                header: 'from-orange-600 to-red-700', 
+                badge: 'bg-orange-500' 
             }
         };
 
@@ -1228,7 +1337,7 @@
                     localStorage.setItem('chapter1_completion_status', JSON.stringify(newStatus));
                     
                     // 檢查是否全部完成
-                    const allSections = ['1-1', '1-2', '1-3'];
+                    const allSections = ['1-1', '1-2', '1-3', '1-4'];
                     const allCompleted = allSections.every(sec => newStatus[sec]?.completed);
                     
                     if (allCompleted) {
@@ -1271,7 +1380,8 @@
                 const sections = [
                     { id: '1-1', title: '1-1 多彩多姿的生命世界', icon: 'fa-leaf', levels: 4, color: 'from-green-400 to-teal-600' },
                     { id: '1-2', title: '1-2 探究自然的科學方法', icon: 'fa-flask', levels: 4, color: 'from-blue-400 to-indigo-600' },
-                    { id: '1-3', title: '1-3 進入實驗室', icon: 'fa-microscope', levels: 8, color: 'from-purple-400 to-pink-600' }
+                    { id: '1-3', title: '1-3 進入實驗室', icon: 'fa-vial', levels: 4, color: 'from-purple-400 to-pink-600' },
+                    { id: '1-4', title: '1-4 顯微鏡的世界', icon: 'fa-microscope', levels: 6, color: 'from-orange-400 to-red-600' }
                 ];
 
                 // 檢查是否全部完成
@@ -1884,9 +1994,12 @@
             // 全部完成畫面 (三個小節都完成)
             // ===========================================
             if (screen === 'all_complete') {
-                const allSectionData = ['1-1', '1-2', '1-3'].map(id => ({
+                const allSectionData = ['1-1', '1-2', '1-3', '1-4'].map(id => ({
                     id,
-                    title: id === '1-1' ? '1-1 多彩多姿的生命世界' : id === '1-2' ? '1-2 探究自然的科學方法' : '1-3 進入實驗室',
+                    title: id === '1-1' ? '1-1 多彩多姿的生命世界' : 
+                           id === '1-2' ? '1-2 探究自然的科學方法' : 
+                           id === '1-3' ? '1-3 進入實驗室' : 
+                           '1-4 顯微鏡的世界',
                     ...sectionCompletionStatus[id]
                 }));
                 
