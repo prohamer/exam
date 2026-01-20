@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>國中自然 CH2 生物體的組成 - 互動闖關 v4.0</title>
+    <!-- 
+      v4.0 Specification Compliant
+      - React 18 Core
+      - Tailwind CSS
+      - FontAwesome
+      - Google Fonts: Noto Sans TC
+      - html2canvas (Certificate)
+      - Touch Optimized
+      - Error Logging System
+    -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <!-- Core Libraries -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* Infrastructure: Prevent Scroll & Selection */
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            overscroll-behavior: none;
+            user-select: none;
+            -webkit-user-select: none;
+            background-color: #f3f4f6;
+            touch-action: pan-x pan-y; /* Allow default touch but customized in app */
+        }
+        
+        /* Hide Scrollbar */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* Animations */
+        @keyframes correctPulse {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+            70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        .animate-correct { animation: correctPulse 0.5s ease-out; }
+        .animate-shake { animation: shake 0.3s ease-in-out; }
+
+        /* Glass Effect */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+    </style>
+
+    <script type="text/babel">
+        /**
+         * 2. 資料結構定義 (Data Schema)
+         * 基於上傳的 PDF "03-114國中自然1上課本-CH2" 分析提取
+         */
+        
+        const CHAPTER_DATA = {
+            "2-1": [
+                {
+                    id: "2-1-1",
+                    section: "2-1",
+                    type: "classification",
+                    title: "細胞的發現與學說",
+                    description: "請將科學家與其貢獻，或是細胞學說的內容進行正確分類。",
+                    zones: [
+                        { id: "z1", title: "虎克 (Hooke)", icon: "fa-solid fa-microscope" },
+                        { id: "z2", title: "細胞學說", icon: "fa-solid fa-book-open" }
+                    ],
+                    items: [
+                        { id: "i1", text: "發現並命名細胞 (Cell)", val: "hooke" },
+                        { id: "i2", text: "觀察軟木栓薄片", val: "hooke" },
+                        { id: "i3", text: "生物體皆由細胞組成", val: "theory" },
+                        { id: "i4", text: "細胞是生物體構造與功能的基本單位", val: "theory" },
+                        { id: "i5", text: "看到的其實是細胞壁", val: "hooke" }
+                    ],
+                    solution: {
+                        z1: ["hooke"],
+                        z2: ["theory"]
+                    }
+                },
+                {
+                    id: "2-1-2",
+                    section: "2-1",
+                    type: "classification",
+                    title: "顯微鏡下的細胞形態",
+                    description: "根據課本內容，判斷下列細胞形態對應的功能或位置。",
+                    zones: [
+                        { id: "z1", title: "保護功能", icon: "fa-solid fa-shield-halved" },
+                        { id: "z2", title: "輸送功能", icon: "fa-solid fa-truck-fast" },
+                        { id: "z3", title: "控制收縮", icon: "fa-solid fa-dumbbell" }
+                    ],
+                    items: [
+                        { id: "i1", text: "扁平排列緊密", val: "protect" },
+                        { id: "i2", text: "口腔皮膜細胞", val: "protect" },
+                        { id: "i3", text: "圓球狀", val: "transport" },
+                        { id: "i4", text: "紅血球", val: "transport" },
+                        { id: "i5", text: "細長形狀", val: "control" },
+                        { id: "i6", text: "肌肉細胞", val: "control" }
+                    ],
+                    solution: {
+                        z1: ["protect"],
+                        z2: ["transport"],
+                        z3: ["control"]
+                    }
+                }
+            ],
+            "2-2": [
+                {
+                    id: "2-2-1",
+                    section: "2-2",
+                    type: "classification",
+                    title: "動植物細胞比較",
+                    description: "將構造拖曳至正確的分類中（植物特有、動物特有或兩者共有）。",
+                    zones: [
+                        { id: "z1", title: "植物特有", icon: "fa-solid fa-leaf" },
+                        { id: "z2", title: "兩者共有", icon: "fa-solid fa-circle-check" }
+                        // 國中階段通常強調植物有細胞壁/葉綠體，動物沒有特有構造(中心粒視版本而定，此處依通則)
+                    ],
+                    items: [
+                        { id: "i1", text: "細胞壁", val: "plant" },
+                        { id: "i2", text: "葉綠體", val: "plant" },
+                        { id: "i3", text: "細胞膜", val: "both" },
+                        { id: "i4", text: "細胞核", val: "both" },
+                        { id: "i5", text: "粒線體", val: "both" },
+                        { id: "i6", text: "液泡", val: "both" }
+                    ],
+                    solution: {
+                        z1: ["plant"],
+                        z2: ["both"]
+                    }
+                },
+                {
+                    id: "2-2-2",
+                    section: "2-2",
+                    type: "classification",
+                    title: "胞器的功能",
+                    description: "請將下列功能描述配對至正確的胞器。",
+                    zones: [
+                        { id: "z1", title: "細胞核", icon: "fa-solid fa-dna" },
+                        { id: "z2", title: "粒線體", icon: "fa-solid fa-bolt" },
+                        { id: "z3", title: "葉綠體", icon: "fa-solid fa-sun" },
+                        { id: "z4", title: "液泡", icon: "fa-solid fa-bucket" }
+                    ],
+                    items: [
+                        { id: "i1", text: "含遺傳物質 DNA", val: "nucleus" },
+                        { id: "i2", text: "細胞的生命中樞", val: "nucleus" },
+                        { id: "i3", text: "行呼吸作用", val: "mitochondria" },
+                        { id: "i4", text: "產生能量 (能量工廠)", val: "mitochondria" },
+                        { id: "i5", text: "行光合作用", val: "chloroplast" },
+                        { id: "i6", text: "製造養分", val: "chloroplast" },
+                        { id: "i7", text: "儲存水分與廢物", val: "vacuole" },
+                        { id: "i8", text: "植物細胞中較大", val: "vacuole" }
+                    ],
+                    solution: {
+                        z1: ["nucleus"],
+                        z2: ["mitochondria"],
+                        z3: ["chloroplast"],
+                        z4: ["vacuole"]
+                    }
+                }
+            ],
+            "2-3": [
+                {
+                    id: "2-3-1",
+                    section: "2-3",
+                    type: "classification",
+                    title: "擴散與滲透",
+                    description: "判斷物質進出細胞的方式或現象。",
+                    zones: [
+                        { id: "z1", title: "擴散作用", icon: "fa-solid fa-wind" },
+                        { id: "z2", title: "滲透作用", icon: "fa-solid fa-droplet" }
+                    ],
+                    items: [
+                        { id: "i1", text: "氣體分子(氧氣/二氧化碳)進出", val: "diffusion" },
+                        { id: "i2", text: "聞到花香", val: "diffusion" },
+                        { id: "i3", text: "水分子通過細胞膜", val: "osmosis" },
+                        { id: "i4", text: "濃食鹽水中紅血球萎縮", val: "osmosis" },
+                        { id: "i5", text: "清水中紅血球脹破", val: "osmosis" }
+                    ],
+                    solution: {
+                        z1: ["diffusion"],
+                        z2: ["osmosis"]
+                    }
+                }
+            ],
+            "2-4": [
+                {
+                    id: "2-4-1",
+                    section: "2-4",
+                    type: "formula",
+                    title: "生物體的組成層次 (動物)",
+                    description: "請依序排列動物體的組成層次（由簡到繁）。",
+                    zones: [
+                        { id: "z1", title: "層次順序", icon: "fa-solid fa-layer-group" }
+                    ],
+                    items: [
+                        { id: "i1", text: "細胞", val: "1" },
+                        { id: "i2", text: "組織", val: "2" },
+                        { id: "i3", text: "器官", val: "3" },
+                        { id: "i4", text: "系統", val: "4" },
+                        { id: "i5", text: "個體", val: "5" }
+                    ],
+                    solution: {
+                        z1: ["1", "2", "3", "4", "5"]
+                    }
+                },
+                {
+                    id: "2-4-2",
+                    section: "2-4",
+                    type: "classification",
+                    title: "組織與器官分辨",
+                    description: "區分下列例子屬於組織還是器官。",
+                    zones: [
+                        { id: "z1", title: "組織 (Tissue)", icon: "fa-solid fa-shapes" },
+                        { id: "z2", title: "器官 (Organ)", icon: "fa-solid fa-heart" }
+                    ],
+                    items: [
+                        { id: "i1", text: "葉肉組織", val: "tissue" },
+                        { id: "i2", text: "輸導組織(維管束)", val: "tissue" },
+                        { id: "i3", text: "血液", val: "tissue" },
+                        { id: "i4", text: "葉子", val: "organ" },
+                        { id: "i5", text: "根/莖/花/果實", val: "organ" },
+                        { id: "i6", text: "心臟", val: "organ" },
+                        { id: "i7", text: "胃", val: "organ" }
+                    ],
+                    solution: {
+                        z1: ["tissue"],
+                        z2: ["organ"]
+                    }
+                }
+            ]
+        };
+
+        const sections = [
+            { 
+                id: "2-1", 
+                title: "2-1 細胞的發現", 
+                icon: "fa-microscope", 
+                levels: 2, 
+                color: "from-blue-400 to-blue-600" 
+            },
+            { 
+                id: "2-2", 
+                title: "2-2 細胞的構造", 
+                icon: "fa-dna", 
+                levels: 2, 
+                color: "from-emerald-400 to-emerald-600" 
+            },
+            { 
+                id: "2-3", 
+                title: "2-3 物質進出細胞", 
+                icon: "fa-right-left", 
+                levels: 1, 
+                color: "from-amber-400 to-amber-600" 
+            },
+            { 
+                id: "2-4", 
+                title: "2-4 組成層次", 
+                icon: "fa-layer-group", 
+                levels: 2, 
+                color: "from-purple-400 to-purple-600" 
+            }
+        ];
+
+        const themeColors = {
+            "2-1": { primary: "from-blue-50 to-blue-100", header: "from-blue-600 to-blue-800", badge: "bg-blue-600" },
+            "2-2": { primary: "from-emerald-50 to-emerald-100", header: "from-emerald-600 to-emerald-800", badge: "bg-emerald-600" },
+            "2-3": { primary: "from-amber-50 to-amber-100", header: "from-amber-600 to-amber-800", badge: "bg-amber-600" },
+            "2-4": { primary: "from-purple-50 to-purple-100", header: "from-purple-600 to-purple-800", badge: "bg-purple-600" }
+        };
+
+        const { useState, useEffect, useRef } = React;
+
+        // --- Components ---
+
+        // 1. Navbar Component (UI/UX Optimized)
+        const Navbar = ({ title, onHome, fontScale, setFontScale }) => {
+            return (
+                <div className="flex justify-between items-center p-4 bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50">
+                    <div className="flex items-center gap-3">
+                        <button onClick={onHome} className="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-all active:scale-95">
+                            <i className="fa-solid fa-house text-gray-600"></i>
+                        </button>
+                        <h1 className="text-lg font-bold text-gray-800 truncate max-w-[200px] sm:max-w-none">{title}</h1>
+                    </div>
+                    <div className="flex items-center bg-gray-100 rounded-lg p-1">
+                        <button 
+                            onClick={() => setFontScale(prev => Math.max(70, prev - 10))}
+                            className="w-8 h-8 flex items-center justify-center rounded hover:bg-white text-gray-600 font-bold"
+                        >
+                            A-
+                        </button>
+                        <span className="text-xs text-gray-500 w-10 text-center">{fontScale}%</span>
+                        <button 
+                            onClick={() => setFontScale(prev => Math.min(150, prev + 10))}
+                            className="w-8 h-8 flex items-center justify-center rounded hover:bg-white text-gray-600 font-bold"
+                        >
+                            A+
+                        </button>
+                    </div>
+                </div>
+            );
+        };
+
+        // 2. Certificate Component (Data Persistence & feedback)
+        const Certificate = ({ errorLog, onHome }) => {
+            const certRef = useRef(null);
+
+            const downloadCert = async () => {
+                if (certRef.current) {
+                    const canvas = await html2canvas(certRef.current, { scale: 2 });
+                    const link = document.createElement('a');
+                    link.download = '生物學習證書.png';
+                    link.href = canvas.toDataURL();
+                    link.click();
+                }
+            };
+
+            const uniqueErrors = Array.from(new Set(errorLog.map(e => JSON.stringify({q: e.title, a: e.itemText, c: e.correctZone})) ))
+                .map(s => JSON.parse(s));
+
+            return (
+                <div className="min-h-screen bg-gray-100 p-4 flex flex-col items-center justify-center overflow-y-auto">
+                    <div ref={certRef} className="bg-white p-8 rounded-2xl shadow-xl max-w-2xl w-full border-8 border-double border-yellow-500 relative overflow-hidden">
+                        <div className="absolute top-0 right-0 p-4 opacity-10">
+                            <i className="fa-solid fa-award text-9xl text-yellow-500"></i>
+                        </div>
+                        <div className="text-center z-10 relative">
+                            <h1 className="text-4xl font-bold text-gray-800 mb-2">榮譽證書</h1>
+                            <p className="text-gray-500 mb-6">Certificate of Completion</p>
+                            <div className="w-full h-1 bg-gray-200 mb-6"></div>
+                            <p className="text-lg text-gray-700 mb-4">恭喜您完成了</p>
+                            <h2 className="text-2xl font-bold text-indigo-600 mb-4">國中自然 CH2 生物體的組成</h2>
+                            <p className="text-gray-600">全章節闖關成功！</p>
+                            <p className="text-sm text-gray-400 mt-8">發證日期：{new Date().toLocaleDateString()}</p>
+                        </div>
+
+                        {uniqueErrors.length > 0 && (
+                            <div className="mt-8 border-t-2 border-dashed border-gray-300 pt-4">
+                                <h3 className="text-lg font-bold text-red-500 mb-3"><i className="fa-solid fa-triangle-exclamation mr-2"></i>待加強觀念分析</h3>
+                                <div className="bg-red-50 rounded-lg p-4 text-left">
+                                    <table className="w-full text-sm">
+                                        <thead>
+                                            <tr className="border-b border-red-200">
+                                                <th className="pb-2 text-gray-600">題目/觀念</th>
+                                                <th className="pb-2 text-gray-600">你的錯誤選擇</th>
+                                                <th className="pb-2 text-gray-600">應屬分類</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {uniqueErrors.slice(0, 5).map((err, idx) => (
+                                                <tr key={idx} className="border-b border-red-100 last:border-0">
+                                                    <td className="py-2 text-gray-800 font-medium">{err.q}</td>
+                                                    <td className="py-2 text-red-600">{err.a}</td>
+                                                    <td className="py-2 text-green-600">{err.c}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                    {uniqueErrors.length > 5 && <p className="text-xs text-center text-gray-500 mt-2">...以及其他 {uniqueErrors.length - 5} 個錯誤</p>}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                    
+                    <div className="mt-8 flex gap-4">
+                        <button onClick={downloadCert} className="bg-blue-600 text-white px-6 py-3 rounded-xl shadow-lg hover:bg-blue-700 active:scale-95 transition-all font-bold">
+                            <i className="fa-solid fa-download mr-2"></i>下載證書
+                        </button>
+                        <button onClick={onHome} className="bg-gray-500 text-white px-6 py-3 rounded-xl shadow-lg hover:bg-gray-600 active:scale-95 transition-all font-bold">
+                            回主選單
+                        </button>
+                    </div>
+                </div>
+            );
+        };
+
+        // 3. Level Game Component (Core Logic)
+        const LevelGame = ({ levelData, onComplete, onBack, theme, onErrorRecord }) => {
+            const [placedItems, setPlacedItems] = useState({}); // { itemId: zoneId }
+            const [draggedItem, setDraggedItem] = useState(null);
+            const [feedback, setFeedback] = useState(null); // 'correct', 'wrong', null
+            const [shakeItem, setShakeItem] = useState(null);
+            
+            // New state for Zone Status visualization
+            const [zoneStatus, setZoneStatus] = useState({}); // { zoneId: 'correct' | 'wrong' }
+
+            // Filter unplaced items
+            const unplacedItems = levelData.items.filter(item => !placedItems[item.id]);
+            
+            // Formula sorting specific state
+            const isFormula = levelData.type === 'formula';
+
+            // Reset validation state on interaction
+            const resetValidation = () => {
+                if (Object.keys(zoneStatus).length > 0) {
+                    setZoneStatus({});
+                    setFeedback(null);
+                }
+            };
+
+            const handleDragStart = (e, item) => {
+                resetValidation(); // Clear visual validation
+                setDraggedItem(item);
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/plain', item.id);
+            };
+
+            const handleDrop = (e, zoneId) => {
+                e.preventDefault();
+                if (draggedItem) {
+                    setPlacedItems(prev => ({
+                        ...prev,
+                        [draggedItem.id]: zoneId
+                    }));
+                    setDraggedItem(null);
+                }
+            };
+
+            const handleDragOver = (e) => {
+                e.preventDefault(); 
+            };
+
+            const [selectedItem, setSelectedItem] = useState(null);
+
+            const handleItemClick = (item) => {
+                resetValidation(); // Clear visual validation
+                if (selectedItem && selectedItem.id === item.id) {
+                    setSelectedItem(null); 
+                } else {
+                    setSelectedItem(item);
+                }
+            };
+
+            const handleZoneClick = (zoneId) => {
+                resetValidation(); // Clear visual validation
+                if (selectedItem) {
+                    setPlacedItems(prev => ({
+                        ...prev,
+                        [selectedItem.id]: zoneId
+                    }));
+                    setSelectedItem(null);
+                }
+            };
+
+            const handleReset = (itemId) => {
+                 resetValidation(); // Clear visual validation
+                 const newPlaced = {...placedItems};
+                 delete newPlaced[itemId];
+                 setPlacedItems(newPlaced);
+            };
+
+            const checkAnswer = () => {
+                // 1. Check Completeness
+                if (Object.keys(placedItems).length < levelData.items.length) {
+                    alert("請先將所有選項分類完畢！");
+                    return;
+                }
+
+                let allGlobalCorrect = true;
+                const errors = [];
+                const newZoneStatus = {};
+
+                // 2. Validate per zone
+                levelData.zones.forEach(zone => {
+                    // Get items placed in this zone
+                    const itemsInZone = levelData.items.filter(item => placedItems[item.id] === zone.id);
+                    
+                    // Get valid values for this zone
+                    const validVals = levelData.solution[zone.id] || [];
+                    
+                    // Check if there are ANY wrong items in this zone
+                    const hasWrongItem = itemsInZone.some(item => !validVals.includes(item.val));
+
+                    if (hasWrongItem) {
+                        newZoneStatus[zone.id] = 'wrong';
+                        allGlobalCorrect = false;
+
+                        // Log specific errors for certificate
+                        itemsInZone.forEach(item => {
+                            if (!validVals.includes(item.val)) {
+                                let correctZoneId = Object.keys(levelData.solution).find(zid => levelData.solution[zid].includes(item.val));
+                                let correctZoneName = levelData.zones.find(z => z.id === correctZoneId)?.title || "其他分類";
+                                errors.push({
+                                    title: levelData.title,
+                                    itemText: item.text,
+                                    correctZone: correctZoneName,
+                                    timestamp: new Date().toISOString()
+                                });
+                            }
+                        });
+                    } else {
+                        // If no wrong items, mark as correct (even if strictly partial, it's "clean")
+                        newZoneStatus[zone.id] = 'correct';
+                    }
+                });
+
+                setZoneStatus(newZoneStatus);
+
+                if (allGlobalCorrect) {
+                    setFeedback('correct');
+                    setTimeout(() => {
+                        onComplete();
+                    }, 1500);
+                } else {
+                    setFeedback('wrong');
+                    onErrorRecord(errors);
+                    // Do NOT auto clear, let user see which zones are wrong
+                }
+            };
+
+            const progress = Object.keys(placedItems).length;
+            const total = levelData.items.length;
+
+            return (
+                <div className={`min-h-[90vh] flex flex-col pb-10`}>
+                    {/* Header Info */}
+                    <div className={`bg-gradient-to-r ${theme.header} text-white p-4 shadow-md`}>
+                        <div className="flex justify-between items-start mb-2">
+                            <h2 className="text-xl font-bold">{levelData.title}</h2>
+                            <span className="bg-white/20 px-3 py-1 rounded-full text-sm backdrop-blur-sm">
+                                {progress} / {total}
+                            </span>
+                        </div>
+                        <p className="text-white/90 text-sm">{levelData.description}</p>
+                    </div>
+
+                    {/* Game Area */}
+                    <div className="flex-1 p-4 max-w-4xl mx-auto w-full flex flex-col gap-6">
+                        
+                        {/* Zones */}
+                        <div className={`grid gap-4 ${levelData.zones.length === 1 ? 'grid-cols-1' : 'grid-cols-2 md:grid-cols-2'}`}>
+                            {levelData.zones.map(zone => {
+                                const status = zoneStatus[zone.id]; // 'correct' | 'wrong' | undefined
+                                let borderClass = 'border-gray-300 bg-white/50';
+                                if (status === 'correct') borderClass = 'border-green-500 bg-green-50 ring-2 ring-green-200';
+                                if (status === 'wrong') borderClass = 'border-red-500 bg-red-50 ring-2 ring-red-200';
+                                if (selectedItem) borderClass = 'border-blue-500 bg-blue-50 animate-pulse';
+
+                                return (
+                                    <div 
+                                        key={zone.id}
+                                        onClick={() => handleZoneClick(zone.id)}
+                                        onDragOver={handleDragOver} 
+                                        onDrop={(e) => handleDrop(e, zone.id)}
+                                        className={`
+                                            min-h-[160px] rounded-2xl border-2 border-dashed transition-all p-4 relative flex flex-col
+                                            ${borderClass} cursor-pointer
+                                        `}
+                                    >
+                                        <div className="flex items-center justify-between text-gray-500 mb-3 font-bold border-b pb-2">
+                                            <div className="flex items-center gap-2">
+                                                <i className={zone.icon}></i>
+                                                <span>{zone.title}</span>
+                                            </div>
+                                            {/* Status Icon */}
+                                            {status === 'correct' && <i className="fa-solid fa-circle-check text-green-500 text-xl"></i>}
+                                            {status === 'wrong' && <i className="fa-solid fa-circle-exclamation text-red-500 text-xl animate-bounce"></i>}
+                                        </div>
+                                        
+                                        <div className="flex flex-wrap gap-2 content-start flex-1">
+                                            {Object.entries(placedItems)
+                                                .filter(([_, zId]) => zId === zone.id)
+                                                .map(([itemId, _]) => {
+                                                    const item = levelData.items.find(i => i.id === itemId);
+                                                    return (
+                                                        <div 
+                                                            key={itemId}
+                                                            draggable={true}
+                                                            onDragStart={(e) => handleDragStart(e, item)}
+                                                            onClick={(e) => { e.stopPropagation(); handleReset(itemId); }}
+                                                            className={`
+                                                                bg-white shadow-sm border border-gray-200 px-3 py-2 rounded-lg text-sm font-medium 
+                                                                cursor-grab active:cursor-grabbing hover:bg-red-50 hover:text-red-500 group transition-all
+                                                            `}
+                                                        >
+                                                            {item.text}
+                                                            <i className="fa-solid fa-xmark ml-2 opacity-0 group-hover:opacity-100 text-xs"></i>
+                                                        </div>
+                                                    )
+                                                })
+                                            }
+                                            {/* Placeholder text if empty */}
+                                            {Object.values(placedItems).filter(z => z === zone.id).length === 0 && (
+                                                <div className="w-full h-full flex items-center justify-center text-gray-300 text-sm pointer-events-none opacity-50">
+                                                    點擊選項放入此處
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        {/* Item Pool */}
+                        <div className="bg-white/80 backdrop-blur rounded-2xl p-4 shadow-sm border border-gray-200 mt-auto">
+                            <h3 className="text-gray-500 text-sm font-bold mb-3">待選項目</h3>
+                            <div className="flex flex-wrap gap-3 justify-center min-h-[80px]">
+                                {unplacedItems.length === 0 ? (
+                                    <div className="text-green-600 font-bold flex items-center gap-2 py-4">
+                                        <i className="fa-solid fa-check-circle text-xl"></i>
+                                        全部分類完成！請檢查答案
+                                    </div>
+                                ) : (
+                                    unplacedItems.map(item => (
+                                        <button
+                                            key={item.id}
+                                            draggable={true}
+                                            onDragStart={(e) => handleDragStart(e, item)}
+                                            onClick={() => handleItemClick(item)}
+                                            className={`
+                                                px-4 py-3 rounded-xl shadow-sm border text-sm font-bold transition-all transform
+                                                active:scale-95 touch-manipulation cursor-grab active:cursor-grabbing
+                                                ${selectedItem?.id === item.id 
+                                                    ? 'bg-blue-600 text-white ring-4 ring-blue-200 scale-105 z-10' 
+                                                    : 'bg-white text-gray-700 hover:bg-gray-50 border-gray-200'}
+                                            `}
+                                        >
+                                            {item.text}
+                                        </button>
+                                    ))
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Action Bar */}
+                        <button 
+                            onClick={checkAnswer}
+                            disabled={unplacedItems.length > 0}
+                            className={`
+                                w-full py-4 rounded-xl font-bold text-lg shadow-lg transition-all
+                                ${unplacedItems.length > 0 
+                                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+                                    : 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:scale-[1.02] active:scale-95'}
+                            `}
+                        >
+                            {unplacedItems.length > 0 ? `尚未完成 (${progress}/${total})` : '檢查答案'}
+                        </button>
+                    </div>
+
+                    {/* Feedback Overlay */}
+                    {feedback === 'correct' && (
+                        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/20 backdrop-blur-sm pointer-events-none">
+                            <div className="bg-white p-6 rounded-full shadow-2xl animate-correct">
+                                <i className="fa-solid fa-check text-6xl text-green-500"></i>
+                            </div>
+                        </div>
+                    )}
+                     {feedback === 'wrong' && (
+                        <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
+                             <div className="bg-red-500 text-white px-6 py-3 rounded-xl shadow-xl font-bold animate-shake">
+                                <i className="fa-solid fa-triangle-exclamation mr-2"></i>
+                                答案有誤，請再檢查看看！
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        // 4. Main App Container
+        const App = () => {
+            const [view, setView] = useState('home'); // home, game, cert
+            const [currentSectionId, setCurrentSectionId] = useState(null);
+            const [currentLevelIndex, setCurrentLevelIndex] = useState(0);
+            
+            // Persisted State
+            const [fontScale, setFontScale] = useState(() => parseInt(localStorage.getItem('chapter2_font_scale')) || 100);
+            const [completedLevels, setCompletedLevels] = useState(() => JSON.parse(localStorage.getItem('chapter2_completion_status')) || []);
+            const [errorLog, setErrorLog] = useState(() => JSON.parse(localStorage.getItem('chapter2_error_log')) || []);
+
+            // Effects
+            useEffect(() => {
+                document.documentElement.style.fontSize = `${fontScale}%`;
+                localStorage.setItem('chapter2_font_scale', fontScale);
+            }, [fontScale]);
+
+            useEffect(() => {
+                localStorage.setItem('chapter2_completion_status', JSON.stringify(completedLevels));
+            }, [completedLevels]);
+
+            useEffect(() => {
+                localStorage.setItem('chapter2_error_log', JSON.stringify(errorLog));
+            }, [errorLog]);
+
+            // Handlers
+            const startSection = (secId) => {
+                setCurrentSectionId(secId);
+                setCurrentLevelIndex(0);
+                setView('game');
+            };
+
+            const handleLevelComplete = () => {
+                // Mark complete
+                const levelId = CHAPTER_DATA[currentSectionId][currentLevelIndex].id;
+                if (!completedLevels.includes(levelId)) {
+                    setCompletedLevels(prev => [...prev, levelId]);
+                }
+
+                // Next level or finish section
+                if (currentLevelIndex + 1 < CHAPTER_DATA[currentSectionId].length) {
+                    setCurrentLevelIndex(prev => prev + 1);
+                } else {
+                    alert("恭喜！本小節全數通過！");
+                    setView('home');
+                }
+            };
+
+            const handleErrorRecord = (errors) => {
+                setErrorLog(prev => [...prev, ...errors]);
+            };
+
+            const clearData = () => {
+                if(confirm("確定要清除所有學習進度與錯誤記錄嗎？")) {
+                    localStorage.removeItem('chapter2_completion_status');
+                    localStorage.removeItem('chapter2_error_log');
+                    localStorage.removeItem('chapter2_font_scale');
+                    window.location.reload();
+                }
+            };
+
+            // Check if all levels in all sections are complete for certificate
+            const totalLevels = Object.values(CHAPTER_DATA).reduce((acc, arr) => acc + arr.length, 0);
+            const isAllComplete = completedLevels.length >= totalLevels;
+
+            return (
+                <div className="min-h-screen no-scrollbar">
+                    <Navbar 
+                        title={view === 'game' ? CHAPTER_DATA[currentSectionId][currentLevelIndex].title : "國中自然 CH2"} 
+                        onHome={() => setView('home')} 
+                        fontScale={fontScale}
+                        setFontScale={setFontScale}
+                    />
+
+                    {view === 'home' && (
+                        <div className="p-4 max-w-lg mx-auto pb-20">
+                            {/* Hero Section */}
+                            <div className="text-center py-8">
+                                <h1 className="text-3xl font-bold text-gray-800 mb-2">生物體的組成</h1>
+                                <p className="text-gray-500">第二章 互動式闖關教材</p>
+                                
+                                {/* Progress Bar */}
+                                <div className="mt-6 bg-gray-200 rounded-full h-4 w-full overflow-hidden relative">
+                                    <div 
+                                        className="absolute left-0 top-0 h-full bg-gradient-to-r from-blue-500 to-indigo-500 transition-all duration-1000"
+                                        style={{ width: `${(completedLevels.length / totalLevels) * 100}%` }}
+                                    ></div>
+                                </div>
+                                <p className="text-xs text-gray-400 mt-2">總進度 {completedLevels.length} / {totalLevels}</p>
+                            </div>
+
+                            {/* Section Grid */}
+                            <div className="grid gap-4">
+                                {sections.map(sec => {
+                                    const secLevels = CHAPTER_DATA[sec.id] || [];
+                                    const secCompleted = secLevels.filter(l => completedLevels.includes(l.id)).length;
+                                    const isDone = secCompleted === secLevels.length;
+
+                                    return (
+                                        <div 
+                                            key={sec.id}
+                                            onClick={() => startSection(sec.id)}
+                                            className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex items-center gap-4 cursor-pointer hover:shadow-md transition-all active:scale-98 relative overflow-hidden group"
+                                        >
+                                            <div className={`w-2 absolute left-0 top-0 bottom-0 bg-gradient-to-b ${sec.color}`}></div>
+                                            <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${sec.color} flex items-center justify-center text-white text-xl shadow-md group-hover:scale-110 transition-transform`}>
+                                                <i className={`fa-solid ${sec.icon}`}></i>
+                                            </div>
+                                            <div className="flex-1">
+                                                <h3 className="font-bold text-gray-800">{sec.title}</h3>
+                                                <p className="text-xs text-gray-500 mt-1">
+                                                    完成度: {secCompleted}/{sec.levels}
+                                                </p>
+                                            </div>
+                                            {isDone ? (
+                                                <i className="fa-solid fa-circle-check text-2xl text-green-500"></i>
+                                            ) : (
+                                                <i className="fa-solid fa-chevron-right text-gray-300"></i>
+                                            )}
+                                        </div>
+                                    )
+                                })}
+                            </div>
+
+                            {/* Certificate Banner */}
+                            {isAllComplete && (
+                                <div className="mt-8 p-1 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-2xl shadow-lg cursor-pointer transform hover:scale-105 transition-all" onClick={() => setView('cert')}>
+                                    <div className="bg-white/90 backdrop-blur rounded-xl p-4 flex items-center gap-4">
+                                        <i className="fa-solid fa-trophy text-3xl text-yellow-500"></i>
+                                        <div>
+                                            <h3 className="font-bold text-orange-600">領取結業證書</h3>
+                                            <p className="text-xs text-gray-600">恭喜完成所有關卡！點擊查看分析</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Footer */}
+                            <div className="mt-12 text-center">
+                                <button onClick={clearData} className="text-xs text-gray-400 underline hover:text-red-500">
+                                    清除本機紀錄 (重置)
+                                </button>
+                                <p className="text-[10px] text-gray-300 mt-2">v4.0 國中自然教材產生器</p>
+                            </div>
+                        </div>
+                    )}
+
+                    {view === 'game' && (
+                        <LevelGame 
+                            levelData={CHAPTER_DATA[currentSectionId][currentLevelIndex]}
+                            theme={themeColors[currentSectionId]}
+                            onComplete={handleLevelComplete}
+                            onBack={() => setView('home')}
+                            onErrorRecord={handleErrorRecord}
+                        />
+                    )}
+
+                    {view === 'cert' && (
+                        <Certificate errorLog={errorLog} onHome={() => setView('home')} />
+                    )}
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</head>
+<body>
+    <div id="root"></div>
+</body>
+</html>
