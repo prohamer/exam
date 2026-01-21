@@ -1,0 +1,2131 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第4章 運輸 - 互動式闖關系統</title>
+    
+    <!-- React -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+    
+    <!-- html2canvas for screenshot -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            /* 禁用文字選取 */
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            /* 禁用文字游標 */
+            cursor: default;
+        }
+
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            /* 禁用下拉刷新 */
+            overscroll-behavior: none;
+            -webkit-user-select: none;
+            user-select: none;
+            overflow-x: hidden;
+        }
+
+        /* 允許輸入框選取(如果未來有的話) */
+        input, textarea {
+            -webkit-user-select: text;
+            -moz-user-select: text;
+            -ms-user-select: text;
+            user-select: text;
+            cursor: text;
+        }
+
+        /* 按鈕保持指標游標 */
+        button, a, .clickable {
+            cursor: pointer !important;
+        }
+
+        .drag-item {
+            transition: all 0.2s ease;
+            cursor: grab !important;
+            /* 拖曳時完全禁用所有手勢 */
+            touch-action: none;
+            -webkit-touch-callout: none;
+        }
+
+        .drag-item:active {
+            cursor: grabbing !important;
+        }
+
+        @media (hover: hover) {
+            .drag-item:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            }
+        }
+
+        /* 行動裝置專用:正在拖曳的項目 */
+        .dragging {
+            opacity: 0.5;
+            transform: scale(1.05);
+            z-index: 1000;
+            position: fixed;
+            pointer-events: none;
+        }
+
+        /* 可移動的項目 */
+        .cursor-move {
+            cursor: move !important;
+            touch-action: none;
+            -webkit-touch-callout: none;
+        }
+
+        .cursor-move:active {
+            cursor: grabbing !important;
+        }
+
+        .drop-zone {
+            transition: all 0.2s ease;
+            min-height: 80px;
+        }
+
+        .drop-zone.drag-over {
+            background: rgba(59, 130, 246, 0.2);
+            border: 3px dashed #3b82f6 !important;
+            transform: scale(1.02);
+        }
+
+        .formula-slot {
+            transition: all 0.2s ease;
+            min-height: 70px;
+            min-width: 100px;
+        }
+
+        .formula-slot.drag-over {
+            background: rgba(59, 130, 246, 0.3);
+            border: 3px dashed #3b82f6 !important;
+            transform: scale(1.05);
+        }
+
+        .correct-answer {
+            animation: correctPulse 0.6s ease-out;
+            border: 3px solid #10b981 !important;
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        .wrong-answer {
+            animation: shake 0.5s ease-out;
+            border: 3px solid #ef4444 !important;
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        @keyframes correctPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes bounce-slow {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .animate-bounce-slow {
+            animation: bounce-slow 2s ease-in-out infinite;
+        }
+
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .formula-display {
+            font-size: 1.5rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+	const { useState, useEffect, useRef } = React;
+
+        // ===========================================
+        // GAME DATA - 所有關卡數據
+        // ===========================================
+        const CHAPTER_DATA = {
+            "4-1": [
+                {
+                    id: "4-1-1",
+                    section: "4-1",
+                    type: "classification",
+                    title: "第一關:植物運輸組織的分類",
+                    description: "請將不同的植物組織依據其運輸功能分類",
+                    zones: [
+                        { id: 'zone1', title: '運輸水分', icon: 'fa-droplet' },
+                        { id: 'zone2', title: '運輸養分', icon: 'fa-leaf' }
+                    ],
+                    items: [
+                        { id: 'item1', text: '木質部', val: 'water' },
+                        { id: 'item2', text: '韌皮部', val: 'nutrient' },
+                        { id: 'item3', text: '導管', val: 'water' },
+                        { id: 'item4', text: '篩管', val: 'nutrient' },
+                        { id: 'item5', text: '管胞', val: 'water' },
+                        { id: 'item6', text: '伴細胞', val: 'nutrient' }
+                    ],
+                    solution: {
+                        zone1: ['water'],
+                        zone2: ['nutrient']
+                    }
+                },
+                {
+                    id: "4-1-2",
+                    section: "4-1",
+                    type: "classification",
+                    title: "第二關:維管束的構造位置",
+                    description: "請依據維管束在莖部的位置分類",
+                    zones: [
+                        { id: 'zone1', title: '木質部位置', icon: 'fa-circle' },
+                        { id: 'zone2', title: '韌皮部位置', icon: 'fa-circle-notch' }
+                    ],
+                    items: [
+                        { id: 'item1', text: '位於維管束內側', val: 'xylem' },
+                        { id: 'item2', text: '位於維管束外側', val: 'phloem' },
+                        { id: 'item3', text: '靠近莖的中心', val: 'xylem' },
+                        { id: 'item4', text: '靠近莖的外圍', val: 'phloem' },
+                        { id: 'item5', text: '運輸水分和礦物質', val: 'xylem' },
+                        { id: 'item6', text: '運輸光合產物', val: 'phloem' }
+                    ],
+                    solution: {
+                        zone1: ['xylem'],
+                        zone2: ['phloem']
+                    }
+                },
+                {
+                    id: "4-1-3",
+                    section: "4-1",
+                    type: "classification",
+                    title: "第三關:根、莖、葉的維管束分布",
+                    description: "請將不同器官的維管束特徵分類",
+                    zones: [
+                        { id: 'zone1', title: '根部特徵', icon: 'fa-seedling' },
+                        { id: 'zone2', title: '莖部特徵', icon: 'fa-tree' },
+                        { id: 'zone3', title: '葉部特徵', icon: 'fa-leaf' }
+                    ],
+                    items: [
+                        { id: 'item1', text: '維管束呈放射狀排列', val: 'root' },
+                        { id: 'item2', text: '維管束呈環狀排列', val: 'stem' },
+                        { id: 'item3', text: '維管束形成葉脈', val: 'leaf' },
+                        { id: 'item4', text: '木質部呈星狀', val: 'root' },
+                        { id: 'item5', text: '有形成層', val: 'stem' },
+                        { id: 'item6', text: '有網狀脈或平行脈', val: 'leaf' }
+                    ],
+                    solution: {
+                        zone1: ['root'],
+                        zone2: ['stem'],
+                        zone3: ['leaf']
+                    }
+                }
+            ],
+            "4-2": [
+                {
+                    id: "4-2-1",
+                    section: "4-2",
+                    type: "classification",
+                    title: "第一關:蒸散作用的影響因素",
+                    description: "請判斷各因素對蒸散作用速率的影響",
+                    zones: [
+                        { id: 'zone1', title: '加快蒸散作用', icon: 'fa-arrow-up' },
+                        { id: 'zone2', title: '減慢蒸散作用', icon: 'fa-arrow-down' }
+                    ],
+                    items: [
+                        { id: 'item1', text: '溫度升高', val: 'increase' },
+                        { id: 'item2', text: '濕度增加', val: 'decrease' },
+                        { id: 'item3', text: '風速加快', val: 'increase' },
+                        { id: 'item4', text: '光線增強', val: 'increase' },
+                        { id: 'item5', text: '氣孔關閉', val: 'decrease' },
+                        { id: 'item6', text: '葉面積增大', val: 'increase' }
+                    ],
+                    solution: {
+                        zone1: ['increase'],
+                        zone2: ['decrease']
+                    }
+                },
+                {
+                    id: "4-2-2",
+                    section: "4-2",
+                    type: "classification",
+                    title: "第二關:水分上升的機制",
+                    description: "請將水分上升的原因分類",
+                    zones: [
+                        { id: 'zone1', title: '根壓作用', icon: 'fa-compress' },
+                        { id: 'zone2', title: '蒸散拉力', icon: 'fa-arrow-up-long' },
+                        { id: 'zone3', title: '毛細現象', icon: 'fa-droplet' }
+                    ],
+                    items: [
+                        { id: 'item1', text: '根部主動吸水產生壓力', val: 'root_pressure' },
+                        { id: 'item2', text: '葉片蒸散產生拉力', val: 'transpiration' },
+                        { id: 'item3', text: '導管細小產生作用', val: 'capillary' },
+                        { id: 'item4', text: '夜晚或清晨較明顯', val: 'root_pressure' },
+                        { id: 'item5', text: '白天陽光下最強', val: 'transpiration' },
+                        { id: 'item6', text: '與管徑大小有關', val: 'capillary' }
+                    ],
+                    solution: {
+                        zone1: ['root_pressure'],
+                        zone2: ['transpiration'],
+                        zone3: ['capillary']
+                    }
+                },
+                {
+                    id: "4-2-3",
+                    section: "4-2",
+                    type: "classification",
+                    title: "第三關:植物運輸物質的種類",
+                    description: "請依據運輸路徑分類不同物質",
+                    zones: [
+                        { id: 'zone1', title: '木質部運輸', icon: 'fa-water' },
+                        { id: 'zone2', title: '韌皮部運輸', icon: 'fa-wheat-awn' }
+                    ],
+                    items: [
+                        { id: 'item1', text: '水分', val: 'xylem' },
+                        { id: 'item2', text: '葡萄糖', val: 'phloem' },
+                        { id: 'item3', text: '礦物質', val: 'xylem' },
+                        { id: 'item4', text: '蔗糖', val: 'phloem' },
+                        { id: 'item5', text: '氮化合物', val: 'xylem' },
+                        { id: 'item6', text: '胺基酸', val: 'phloem' }
+                    ],
+                    solution: {
+                        zone1: ['xylem'],
+                        zone2: ['phloem']
+                    }
+                }
+            ],
+            "4-3": [
+                {
+                    id: "4-3-1",
+                    section: "4-3",
+                    type: "classification",
+                    title: "第一關:血液組成成分",
+                    description: "請將血液的各組成成分分類",
+                    zones: [
+                        { id: 'zone1', title: '血漿成分', icon: 'fa-flask' },
+                        { id: 'zone2', title: '血球成分', icon: 'fa-circle' }
+                    ],
+                    items: [
+                        { id: 'item1', text: '水', val: 'plasma' },
+                        { id: 'item2', text: '紅血球', val: 'cell' },
+                        { id: 'item3', text: '白血球', val: 'cell' },
+                        { id: 'item4', text: '血小板', val: 'cell' },
+                        { id: 'item5', text: '葡萄糖', val: 'plasma' },
+                        { id: 'item6', text: '蛋白質', val: 'plasma' }
+                    ],
+                    solution: {
+                        zone1: ['plasma'],
+                        zone2: ['cell']
+                    }
+                },
+                {
+                    id: "4-3-2",
+                    section: "4-3",
+                    type: "classification",
+                    title: "第二關:血球的功能",
+                    description: "請依據功能分類不同的血球",
+                    zones: [
+                        { id: 'zone1', title: '紅血球', icon: 'fa-heart' },
+                        { id: 'zone2', title: '白血球', icon: 'fa-shield-virus' },
+                        { id: 'zone3', title: '血小板', icon: 'fa-bandage' }
+                    ],
+                    items: [
+                        { id: 'item1', text: '運輸氧氣', val: 'rbc' },
+                        { id: 'item2', text: '吞噬病菌', val: 'wbc' },
+                        { id: 'item3', text: '凝血作用', val: 'platelet' },
+                        { id: 'item4', text: '含血紅素', val: 'rbc' },
+                        { id: 'item5', text: '產生抗體', val: 'wbc' },
+                        { id: 'item6', text: '修補傷口', val: 'platelet' }
+                    ],
+                    solution: {
+                        zone1: ['rbc'],
+                        zone2: ['wbc'],
+                        zone3: ['platelet']
+                    }
+                },
+				{
+                    id: "4-3-3",
+                    section: "4-3",
+                    type: "classification",
+                    title: "第三關:血管的種類與特徵",
+                    description: "請依據血管特徵分類",
+                    zones: [
+                        { id: 'zone1', title: '動脈', icon: 'fa-angles-right' },
+                        { id: 'zone2', title: '靜脈', icon: 'fa-angles-left' },
+                        { id: 'zone3', title: '微血管', icon: 'fa-grip-lines' }
+                    ],
+                    items: [
+                        { id: 'item1', text: '管壁厚且有彈性', val: 'artery' },
+                        { id: 'item2', text: '管壁薄有瓣膜', val: 'vein' },
+                        { id: 'item3', text: '管壁極薄僅一層細胞', val: 'capillary' },
+                        { id: 'item4', text: '血液由心臟送出', val: 'artery' },
+                        { id: 'item5', text: '血液流回心臟', val: 'vein' },
+                        { id: 'item6', text: '進行物質交換', val: 'capillary' }
+                    ],
+                    solution: {
+                        zone1: ['artery'],
+                        zone2: ['vein'],
+                        zone3: ['capillary']
+                    }
+                }
+            ],
+            "4-4": [
+                {
+                    id: "4-4-1",
+                    section: "4-4",
+                    type: "classification",
+                    title: "第一關:淋巴系統的組成",
+                    description: "請將淋巴系統的組成部分分類",
+                    zones: [
+                        { id: 'zone1', title: '淋巴液', icon: 'fa-droplet' },
+                        { id: 'zone2', title: '淋巴管', icon: 'fa-route' },
+                        { id: 'zone3', title: '淋巴器官', icon: 'fa-building' }
+                    ],
+                    items: [
+                        { id: 'item1', text: '組織液', val: 'lymph' },
+                        { id: 'item2', text: '淋巴結', val: 'organ' },
+                        { id: 'item3', text: '運輸管道', val: 'vessel' },
+                        { id: 'item4', text: '脾臟', val: 'organ' },
+                        { id: 'item5', text: '胸管', val: 'vessel' },
+                        { id: 'item6', text: '扁桃腺', val: 'organ' }
+                    ],
+                    solution: {
+                        zone1: ['lymph'],
+                        zone2: ['vessel'],
+                        zone3: ['organ']
+                    }
+                },
+                {
+                    id: "4-4-2",
+                    section: "4-4",
+                    type: "classification",
+                    title: "第二關:淋巴系統的功能",
+                    description: "請依據功能分類",
+                    zones: [
+                        { id: 'zone1', title: '運輸功能', icon: 'fa-truck' },
+                        { id: 'zone2', title: '防禦功能', icon: 'fa-shield' }
+                    ],
+                    items: [
+                        { id: 'item1', text: '運送組織液回血液', val: 'transport' },
+                        { id: 'item2', text: '產生淋巴球', val: 'defense' },
+                        { id: 'item3', text: '運送脂肪', val: 'transport' },
+                        { id: 'item4', text: '過濾病原體', val: 'defense' },
+                        { id: 'item5', text: '吸收養分', val: 'transport' },
+                        { id: 'item6', text: '產生抗體', val: 'defense' }
+                    ],
+                    solution: {
+                        zone1: ['transport'],
+                        zone2: ['defense']
+                    }
+                },
+                {
+                    id: "4-4-3",
+                    section: "4-4",
+                    type: "classification",
+                    title: "第三關:循環系統與淋巴系統的比較",
+                    description: "請區分兩個系統的特徵",
+                    zones: [
+                        { id: 'zone1', title: '循環系統特徵', icon: 'fa-heart-pulse' },
+                        { id: 'zone2', title: '淋巴系統特徵', icon: 'fa-water' }
+                    ],
+                    items: [
+                        { id: 'item1', text: '有心臟作為動力', val: 'circulatory' },
+                        { id: 'item2', text: '依靠肌肉擠壓流動', val: 'lymphatic' },
+                        { id: 'item3', text: '是封閉式循環', val: 'circulatory' },
+                        { id: 'item4', text: '是開放式循環', val: 'lymphatic' },
+                        { id: 'item5', text: '含有紅血球', val: 'circulatory' },
+                        { id: 'item6', text: '只含淋巴球', val: 'lymphatic' }
+                    ],
+                    solution: {
+                        zone1: ['circulatory'],
+                        zone2: ['lymphatic']
+                    }
+                }
+            ]
+        };
+
+        // 主題配色
+        const themeColors = {
+            '4-1': { 
+                primary: 'from-green-500 to-emerald-600',
+                header: 'from-green-600 to-emerald-700', 
+                badge: 'bg-green-500' 
+            },
+            '4-2': { 
+                primary: 'from-blue-500 to-cyan-600',
+                header: 'from-blue-600 to-cyan-700', 
+                badge: 'bg-blue-500' 
+            },
+            '4-3': { 
+                primary: 'from-red-500 to-pink-600',
+                header: 'from-red-600 to-pink-700', 
+                badge: 'bg-red-500' 
+            },
+            '4-4': { 
+                primary: 'from-purple-500 to-indigo-600',
+                header: 'from-purple-600 to-indigo-700', 
+                badge: 'bg-purple-500' 
+            }
+        };
+
+        // ===========================================
+        // 輔助函數
+        // ===========================================
+        
+        // 隨機排序函數(Fisher-Yates shuffle)
+        function shuffleArray(array) {
+            const newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        }
+
+        // 觸控拖曳支援 - 修復版本(解決整個畫面被拖動的問題)
+        let touchDragData = null;
+        let touchDragElement = null;
+        let touchClone = null;
+        let touchRemoveCallback = null;
+        let touchSourceZoneId = null;
+        let isDragging = false;  // ⭐ 新增:拖動狀態標記
+
+        function handleTouchStart(e, item, removeCallback) {
+            // ⭐ 最重要:立即阻止所有預設行為
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // 設置拖動狀態
+            isDragging = true;
+            
+            // 儲存數據
+            touchDragData = item;
+            touchDragElement = e.currentTarget;
+            touchRemoveCallback = removeCallback;
+            
+            // ⭐ 禁用整個頁面的滾動和觸控動作
+            document.body.style.overflow = 'hidden';
+            document.body.style.touchAction = 'none';
+            document.body.style.userSelect = 'none';
+            document.body.style.webkitUserSelect = 'none';
+            
+            // 禁用滾動容器
+            const scrollContainer = document.querySelector('.overflow-y-auto');
+            if (scrollContainer) {
+                scrollContainer.style.overflowY = 'hidden';
+                scrollContainer.style.touchAction = 'none';
+            }
+            
+            // 記錄來源分類區
+            const sourceZone = touchDragElement.closest('.drop-zone, .formula-slot');
+            touchSourceZoneId = sourceZone ? sourceZone.getAttribute('data-zone-id') : null;
+            
+            const touch = e.touches[0];
+            
+            // 立即創建視覺複製
+            touchClone = touchDragElement.cloneNode(true);
+            touchClone.style.position = 'fixed';
+            touchClone.style.zIndex = '10000';
+            touchClone.style.opacity = '0.8';
+            touchClone.style.pointerEvents = 'none';
+            touchClone.style.width = touchDragElement.offsetWidth + 'px';
+            touchClone.style.left = (touch.clientX - touchDragElement.offsetWidth / 2) + 'px';
+            touchClone.style.top = (touch.clientY - touchDragElement.offsetHeight / 2) + 'px';
+            touchClone.style.transition = 'none';
+            touchClone.style.touchAction = 'none';
+            document.body.appendChild(touchClone);
+            
+            // 原元素只是變透明,不移除
+            touchDragElement.style.opacity = '0.2';
+            touchDragElement.style.transform = 'scale(0.95)';
+            touchDragElement.style.transition = 'opacity 0.2s, transform 0.2s';
+        }
+
+        function handleTouchMove(e) {
+            if (!touchClone || !isDragging) return;
+            
+            // ⭐ 強制阻止頁面滾動和下拉刷新
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const touch = e.touches[0];
+            
+            // 更新複製位置
+            touchClone.style.left = (touch.clientX - touchClone.offsetWidth / 2) + 'px';
+            touchClone.style.top = (touch.clientY - touchClone.offsetHeight / 2) + 'px';
+            
+            // 高亮可放置區域
+            const dropZones = document.querySelectorAll('.drop-zone, .formula-slot');
+            dropZones.forEach(zone => zone.classList.remove('drag-over'));
+            
+            const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+            if (elementBelow) {
+                const dropZone = elementBelow.closest('.drop-zone, .formula-slot');
+                if (dropZone) {
+                    const targetZoneId = dropZone.getAttribute('data-zone-id');
+                    // 只有不同區域才高亮
+                    if (targetZoneId !== touchSourceZoneId) {
+                        dropZone.classList.add('drag-over');
+                    }
+                }
+            }
+        }
+
+        function handleTouchEnd(e, dropCallback) {
+            if (!touchClone) return;
+            
+            // 結束拖動狀態
+            isDragging = false;
+            
+            const touch = e.changedTouches[0];
+            const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+            
+            // 找到放置區域
+            let targetZone = null;
+            let targetZoneId = null;
+            if (elementBelow) {
+                targetZone = elementBelow.closest('.drop-zone, .formula-slot');
+                if (targetZone) {
+                    targetZoneId = targetZone.getAttribute('data-zone-id');
+                }
+            }
+            
+            // 清除視覺效果
+            if (touchClone && touchClone.parentNode) {
+                touchClone.parentNode.removeChild(touchClone);
+            }
+            
+            // ⭐ 恢復所有滾動和觸控設定
+            document.body.style.overflow = '';
+            document.body.style.touchAction = '';
+            document.body.style.userSelect = '';
+            document.body.style.webkitUserSelect = '';
+            
+            // 恢復滾動容器
+            const scrollContainer = document.querySelector('.overflow-y-auto');
+            if (scrollContainer) {
+                scrollContainer.style.overflowY = 'auto';
+                scrollContainer.style.touchAction = '';
+            }
+            
+            // 清除高亮
+            const dropZones = document.querySelectorAll('.drop-zone, .formula-slot');
+            dropZones.forEach(zone => zone.classList.remove('drag-over'));
+            
+            // 判斷是否成功放置到【不同】的區域
+            const isValidDrop = targetZone && targetZoneId && touchDragData && 
+                              targetZoneId !== touchSourceZoneId;
+            
+            if (isValidDrop && dropCallback) {
+                // 放置到不同區域:先移除,再添加
+                if (touchRemoveCallback) {
+                    touchRemoveCallback();
+                }
+                dropCallback(touchDragData, targetZoneId);
+            } else {
+                // 放回原位或無效放置:恢復原元素
+                if (touchDragElement) {
+                    touchDragElement.style.opacity = '1';
+                    touchDragElement.style.transform = 'scale(1)';
+                }
+            }
+            
+            // 重置
+            touchDragData = null;
+            touchDragElement = null;
+            touchClone = null;
+            touchRemoveCallback = null;
+            touchSourceZoneId = null;
+        }
+
+        // ⭐ 新增:全域觸控取消處理(防止當機)
+        if (typeof window !== 'undefined') {
+            document.addEventListener('touchcancel', function(e) {
+                if (isDragging) {
+                    isDragging = false;
+                    if (touchClone && touchClone.parentNode) {
+                        touchClone.parentNode.removeChild(touchClone);
+                    }
+                    if (touchDragElement) {
+                        touchDragElement.style.opacity = '1';
+                        touchDragElement.style.transform = 'scale(1)';
+                    }
+                    document.body.style.overflow = '';
+                    document.body.style.touchAction = '';
+                    document.body.style.userSelect = '';
+                    document.body.style.webkitUserSelect = '';
+                    const scrollContainer = document.querySelector('.overflow-y-auto');
+                    if (scrollContainer) {
+                        scrollContainer.style.overflowY = 'auto';
+                        scrollContainer.style.touchAction = '';
+                    }
+                    touchClone = null;
+                    touchDragData = null;
+                    touchDragElement = null;
+                    touchRemoveCallback = null;
+                    touchSourceZoneId = null;
+                }
+            }, { passive: false });  // ⭐ passive: false 很重要!
+        }
+		// ===========================================
+        // 主應用程式
+        // ===========================================
+        function App() {
+            const [screen, setScreen] = useState('section_select');
+            const [currentSection, setCurrentSection] = useState(null);
+            const [currentLevelIndex, setCurrentLevelIndex] = useState(0);
+            const [gameState, setGameState] = useState('playing');
+            const [droppedItems, setDroppedItems] = useState({});
+            const [formulaSlots, setFormulaSlots] = useState({ left: null, right1: null, right2: null, right3: null });
+            const [matchZones, setMatchZones] = useState({});
+            const [feedback, setFeedback] = useState({});
+            const [startTime, setStartTime] = useState(null);
+            const [elapsedTime, setElapsedTime] = useState(0);
+            const [score, setScore] = useState({ correct: 0, total: 0 });
+            const [shuffledItems, setShuffledItems] = useState([]);
+            const [shuffledZones, setShuffledZones] = useState([]);
+            
+            // 新增:遊戲進度追蹤
+            const [sectionStartTime, setSectionStartTime] = useState(null);
+            const [sectionTotalTime, setSectionTotalTime] = useState(0);
+            const [levelProgress, setLevelProgress] = useState({});
+            const [errorLog, setErrorLog] = useState([]);
+            const [completedLevels, setCompletedLevels] = useState([]);
+            
+            // 新增:小節完成狀態追蹤 (localStorage持久化)
+            const [sectionCompletionStatus, setSectionCompletionStatus] = useState(() => {
+                try {
+                    const saved = localStorage.getItem('chapter4_completion_status');
+                    return saved ? JSON.parse(saved) : {};
+                } catch {
+                    return {};
+                }
+            });
+            
+            // 新增:字體大小調整 (localStorage持久化) - 使用百分比
+            const [fontScale, setFontScale] = useState(() => {
+                try {
+                    const saved = localStorage.getItem('chapter4_font_scale');
+                    return saved ? parseFloat(saved) : 100; // 預設 100%
+                } catch {
+                    return 100;
+                }
+            });
+            
+            // 應用字體大小到 document.documentElement
+            useEffect(() => {
+                document.documentElement.style.fontSize = `${fontScale}%`;
+            }, [fontScale]);
+            
+            // 改變字體大小
+            const increaseFontSize = () => {
+                const newScale = Math.min(fontScale + 10, 150); // 最大 150%
+                setFontScale(newScale);
+                localStorage.setItem('chapter4_font_scale', newScale.toString());
+            };
+            
+            const decreaseFontSize = () => {
+                const newScale = Math.max(fontScale - 10, 70); // 最小 70%
+                setFontScale(newScale);
+                localStorage.setItem('chapter4_font_scale', newScale.toString());
+            };
+            
+            // 重置字體大小
+            const resetFontSize = () => {
+                setFontScale(100);
+                localStorage.setItem('chapter4_font_scale', '100');
+            };
+
+            // 計時器
+            useEffect(() => {
+                let timer;
+                if (gameState === 'playing' && startTime) {
+                    timer = setInterval(() => {
+                        setElapsedTime(Math.floor((new Date() - startTime) / 1000));
+                    }, 1000);
+                }
+                return () => {
+                    if (timer) clearInterval(timer);
+                };
+            }, [gameState, startTime]);
+
+            // 初始化關卡(隨機排序)
+            const initializeLevel = (sectionId, levelIndex) => {
+                const level = CHAPTER_DATA[sectionId][levelIndex];
+                if (level.formulaItems) {
+                    setShuffledItems(shuffleArray(level.formulaItems));
+                } else if (level.items) {
+                    setShuffledItems(shuffleArray(level.items));
+                }
+                if (level.zones) {
+                    setShuffledZones(shuffleArray(level.zones));
+                }
+            };
+
+            // 選擇小節
+            const selectSection = (sectionId) => {
+                setCurrentSection(sectionId);
+                setCurrentLevelIndex(0);
+                setScreen('playing');
+                setGameState('playing');
+                setStartTime(new Date());
+                setSectionStartTime(new Date());
+                setElapsedTime(0);
+                setDroppedItems({});
+                setFormulaSlots({ left: null, right1: null, right2: null, right3: null });
+                setMatchZones({});
+                setFeedback({});
+                setScore({ correct: 0, total: 0 });
+                setLevelProgress({});
+                setErrorLog([]);
+                setCompletedLevels([]);
+                initializeLevel(sectionId, 0);
+            };
+
+            // 處理拖曳
+            const handleDragStart = (e, item) => {
+                e.dataTransfer.setData('item', JSON.stringify(item));
+            };
+
+            const handleDragOver = (e) => {
+                e.preventDefault();
+            };
+
+            const handleDrop = (e, zoneId) => {
+                e.preventDefault();
+                const item = JSON.parse(e.dataTransfer.getData('item'));
+                
+                setDroppedItems(prev => ({
+                    ...prev,
+                    [zoneId]: [...(prev[zoneId] || []), item]
+                }));
+            };
+
+            // 觸控版本的放置處理
+            const handleTouchDrop = (item, zoneId) => {
+                setDroppedItems(prev => ({
+                    ...prev,
+                    [zoneId]: [...(prev[zoneId] || []), item]
+                }));
+            };
+
+            // 處理配對區拖曳
+            const handleMatchDrop = (e, zoneId) => {
+                e.preventDefault();
+                const item = JSON.parse(e.dataTransfer.getData('item'));
+                
+                setMatchZones(prev => ({
+                    ...prev,
+                    [zoneId]: [...(prev[zoneId] || []), item]
+                }));
+            };
+
+            // 觸控版本的配對區放置
+            const handleTouchMatchDrop = (item, zoneId) => {
+                setMatchZones(prev => ({
+                    ...prev,
+                    [zoneId]: [...(prev[zoneId] || []), item]
+                }));
+            };
+
+            // 處理公式拖曳
+            const handleFormulaDrop = (e, slotId) => {
+                e.preventDefault();
+                const item = JSON.parse(e.dataTransfer.getData('item'));
+                
+                setFormulaSlots(prev => ({
+                    ...prev,
+                    [slotId]: item
+                }));
+            };
+
+            // 觸控版本的公式放置
+            const handleTouchFormulaDrop = (item, slotId) => {
+                setFormulaSlots(prev => ({
+                    ...prev,
+                    [slotId]: item
+                }));
+            };
+
+            // 移除已放置的項目
+            const removeItem = (zoneId, itemId) => {
+                setDroppedItems(prev => ({
+                    ...prev,
+                    [zoneId]: prev[zoneId].filter(item => item.id !== itemId)
+                }));
+            };
+
+            // 移除配對區的項目
+            const removeMatchItem = (zoneId, itemId) => {
+                setMatchZones(prev => ({
+                    ...prev,
+                    [zoneId]: prev[zoneId].filter(item => item.id !== itemId)
+                }));
+            };
+
+            // 移除公式槽中的項目
+            const removeFormulaItem = (slotId) => {
+                setFormulaSlots(prev => ({
+                    ...prev,
+                    [slotId]: null
+                }));
+            };
+
+            // 檢查答案(分類題)
+            const checkClassificationAnswers = () => {
+                const currentLevel = CHAPTER_DATA[currentSection][currentLevelIndex];
+                const newFeedback = {};
+                let correctCount = 0;
+                let totalZones = Object.keys(currentLevel.solution).length;
+                const wrongAnswers = [];
+
+                Object.keys(currentLevel.solution).forEach(zoneId => {
+                    const correctVals = currentLevel.solution[zoneId];
+                    const droppedVals = (droppedItems[zoneId] || []).map(item => item.val);
+                    
+                    // 檢查:該區域的所有項目的val都必須在正確答案中
+                    // 且該區域必須有項目(不能為空)
+                    const isCorrect = droppedVals.length > 0 &&
+                                    droppedVals.every(val => correctVals.includes(val));
+                    
+                    newFeedback[zoneId] = isCorrect;
+                    if (isCorrect) {
+                        correctCount++;
+                    } else {
+                        // 記錄錯誤
+                        const zone = currentLevel.zones.find(z => z.id === zoneId);
+                        wrongAnswers.push({
+                            zone: zone.title,
+                            userAnswer: (droppedItems[zoneId] || []).map(item => item.text),
+                            correctAnswer: currentLevel.items
+                                .filter(item => correctVals.includes(item.val))
+                                .map(item => item.text)
+                        });
+                    }
+                });
+
+                // 額外檢查:確保所有項目都已分類
+                const allItemsPlaced = Object.values(droppedItems).flat().length === currentLevel.items.length;
+
+                setFeedback(newFeedback);
+
+                if (correctCount === totalZones && allItemsPlaced) {
+                    // 過關
+                    const levelTime = elapsedTime;
+                    setCompletedLevels(prev => [...prev, {
+                        levelId: currentLevel.id,
+                        title: currentLevel.title,
+                        time: levelTime,
+                        attempts: score.total + 1
+                    }]);
+                    setGameState('completed');
+                    setScore(prev => ({ 
+                        correct: prev.correct + 1, 
+                        total: prev.total + 1 
+                    }));
+                } else {
+                    // 答錯
+                    if (wrongAnswers.length > 0) {
+                        setErrorLog(prev => [...prev, {
+                            levelId: currentLevel.id,
+                            levelTitle: currentLevel.title,
+                            timestamp: new Date(),
+                            errors: wrongAnswers
+                        }]);
+                    }
+                    setScore(prev => ({ 
+                        ...prev, 
+                        total: prev.total + 1 
+                    }));
+                }
+            };
+
+            // 檢查答案(公式配對題)
+            const checkFormulaMatchAnswers = () => {
+                const currentLevel = CHAPTER_DATA[currentSection][currentLevelIndex];
+                const { left, right1, right2, right3 } = formulaSlots;
+                
+                // 檢查公式組合
+                const leftCorrect = left && left.val === currentLevel.solution.formula.left[0];
+                const rightVals = [right1, right2, right3].filter(slot => slot !== null).map(slot => slot.val);
+                const correctRight = currentLevel.solution.formula.right;
+                const formulaCorrect = leftCorrect && rightVals.length === 3 &&
+                                    correctRight.every(val => rightVals.includes(val)) &&
+                                    rightVals.every(val => correctRight.includes(val));
+
+                // 檢查配對
+                const newFeedback = { formula: formulaCorrect };
+                let matchCorrectCount = 0;
+                const totalZones = Object.keys(currentLevel.solution.match).length;
+
+                Object.keys(currentLevel.solution.match).forEach(zoneId => {
+                    const correctVals = currentLevel.solution.match[zoneId];
+                    const matchedVals = (matchZones[zoneId] || []).map(item => item.val);
+                    
+                    const isCorrect = matchedVals.length > 0 &&
+                                    matchedVals.every(val => correctVals.includes(val));
+                    
+                    newFeedback[zoneId] = isCorrect;
+                    if (isCorrect) matchCorrectCount++;
+                });
+
+                // 檢查所有配對項目都已使用
+                const allMatchItemsPlaced = Object.values(matchZones).flat().length === currentLevel.matchItems.length;
+
+                setFeedback(newFeedback);
+
+                if (formulaCorrect && matchCorrectCount === totalZones && allMatchItemsPlaced) {
+                    setGameState('completed');
+                    setScore(prev => ({ 
+                        correct: prev.correct + 1, 
+                        total: prev.total + 1 
+                    }));
+                } else {
+                    setScore(prev => ({ 
+                        ...prev, 
+                        total: prev.total + 1 
+                    }));
+                }
+            };
+
+            // 檢查答案(公式題)
+            const checkFormulaAnswers = () => {
+                const currentLevel = CHAPTER_DATA[currentSection][currentLevelIndex];
+                const { left, right1, right2, right3 } = formulaSlots;
+                
+                // 檢查左邊
+                const leftCorrect = left && left.val === currentLevel.solution.left[0];
+                
+                // 檢查右邊(順序不限)
+                const rightVals = [right1, right2, right3].filter(slot => slot !== null).map(slot => slot.val);
+                const correctRight = currentLevel.solution.right;
+                const rightCorrect = rightVals.length === 3 &&
+                                    correctRight.every(val => rightVals.includes(val)) &&
+                                    rightVals.every(val => correctRight.includes(val));
+
+                const newFeedback = {
+                    left: leftCorrect,
+                    right: rightCorrect
+                };
+
+                setFeedback(newFeedback);
+
+                if (leftCorrect && rightCorrect) {
+                    setGameState('completed');
+                    setScore(prev => ({ 
+                        correct: prev.correct + 1, 
+                        total: prev.total + 1 
+                    }));
+                } else {
+                    setScore(prev => ({ 
+                        ...prev, 
+                        total: prev.total + 1 
+                    }));
+                }
+            };
+
+            // 檢查答案統一接口
+            const checkAnswers = () => {
+                const currentLevel = CHAPTER_DATA[currentSection][currentLevelIndex];
+                if (currentLevel.type === 'formula_match') {
+                    checkFormulaMatchAnswers();
+                } else if (currentLevel.type === 'formula') {
+                    checkFormulaAnswers();
+                } else {
+                    checkClassificationAnswers();
+                }
+            };
+
+            // 下一關
+            const nextLevel = () => {
+                if (currentLevelIndex < CHAPTER_DATA[currentSection].length - 1) {
+                    const newIndex = currentLevelIndex + 1;
+                    setCurrentLevelIndex(newIndex);
+                    setGameState('playing');
+                    setStartTime(new Date());
+                    setElapsedTime(0);
+                    setDroppedItems({});
+                    setFormulaSlots({ left: null, right1: null, right2: null, right3: null });
+                    setMatchZones({});
+                    setFeedback({});
+                    initializeLevel(currentSection, newIndex);
+                } else {
+                    // 完成所有關卡,計算總時間
+                    const endTime = new Date();
+                    const totalSeconds = Math.floor((endTime - sectionStartTime) / 1000);
+                    setSectionTotalTime(totalSeconds);
+                    
+                    // 標記小節完成
+                    const newStatus = {
+                        ...sectionCompletionStatus,
+                        [currentSection]: {
+                            completed: true,
+                            completedAt: endTime.toISOString(),
+                            totalTime: totalSeconds,
+                            attempts: score.total,
+                            errors: score.total - score.correct,
+                            errorLog: errorLog  // 添加錯誤記錄
+                        }
+                    };
+                    setSectionCompletionStatus(newStatus);
+                    localStorage.setItem('chapter4_completion_status', JSON.stringify(newStatus));
+                    
+                    // 檢查是否全部完成
+                    const allSections = ['4-1', '4-2', '4-3', '4-4'];
+                    const allCompleted = allSections.every(sec => newStatus[sec]?.completed);
+                    
+                    if (allCompleted) {
+                        setScreen('all_complete');
+                    } else {
+                        setScreen('final_summary');
+                    }
+                }
+            };
+
+            // 重新開始
+            const restart = () => {
+                setCurrentLevelIndex(0);
+                setGameState('playing');
+                setStartTime(new Date());
+                setElapsedTime(0);
+                setDroppedItems({});
+                setFormulaSlots({ left: null, right1: null, right2: null, right3: null });
+                setMatchZones({});
+                setFeedback({});
+                setScore({ correct: 0, total: 0 });
+                initializeLevel(currentSection, 0);
+            };
+
+            // 格式化時間
+            const formatTime = (seconds) => {
+                const mins = Math.floor(seconds / 60);
+                const secs = seconds % 60;
+                return `${mins}:${secs.toString().padStart(2, '0')}`;
+            };
+
+            // 取得當前關卡
+            const currentLevel = currentSection ? CHAPTER_DATA[currentSection][currentLevelIndex] : null;
+            const colors = currentSection ? themeColors[currentSection] : themeColors['4-1'];
+			// ===========================================
+            // 小節選擇畫面
+            // ===========================================
+            if (screen === 'section_select') {
+                const sections = [
+                    { id: '4-1', title: '4-1 植物的運輸構造', icon: 'fa-seedling', levels: 3, color: 'from-green-400 to-emerald-600' },
+                    { id: '4-2', title: '4-2 植物體內物質的運輸', icon: 'fa-leaf', levels: 3, color: 'from-blue-400 to-cyan-600' },
+                    { id: '4-3', title: '4-3 人體的循環系統', icon: 'fa-heart-pulse', levels: 3, color: 'from-red-400 to-pink-600' },
+                    { id: '4-4', title: '4-4 人體的淋巴系統', icon: 'fa-water', levels: 3, color: 'from-purple-400 to-indigo-600' }
+                ];
+
+                // 檢查是否全部完成
+                const allCompleted = sections.every(sec => sectionCompletionStatus[sec.id]?.completed);
+                
+                // 計算總體統計
+                const allSectionData = allCompleted ? sections.map(sec => ({
+                    id: sec.id,
+                    title: sec.title,
+                    ...sectionCompletionStatus[sec.id]
+                })) : [];
+                
+                const totalTime = allSectionData.reduce((sum, sec) => sum + (sec.totalTime || 0), 0);
+                const totalAttempts = allSectionData.reduce((sum, sec) => sum + (sec.attempts || 0), 0);
+                const totalErrors = allSectionData.reduce((sum, sec) => sum + (sec.errors || 0), 0);
+                
+                // 取得最後完成時間
+                const lastCompletedTime = allCompleted ? 
+                    allSectionData.reduce((latest, sec) => {
+                        const time = new Date(sec.completedAt);
+                        return time > latest ? time : latest;
+                    }, new Date(0)) : null;
+
+                // 下載證書功能
+                const downloadCertificate = () => {
+                    const element = document.getElementById('certificate-content');
+                    html2canvas(element, {
+                        backgroundColor: '#667eea',
+                        scale: 2,
+                        width: 1200,
+                        windowWidth: 1200
+                    }).then(canvas => {
+                        const link = document.createElement('a');
+                        link.download = `第4章運輸-完成證書-${lastCompletedTime.getFullYear()}${(lastCompletedTime.getMonth()+1).toString().padStart(2,'0')}${lastCompletedTime.getDate().toString().padStart(2,'0')}.png`;
+                        link.href = canvas.toDataURL();
+                        link.click();
+                    });
+                };
+
+                return (
+                    <div className="min-h-screen flex items-center justify-center p-6">
+                        {/* 字體大小調整按鈕 - 固定在右上角 */}
+                        <div className="fixed top-4 right-4 z-50 flex items-center gap-2 glass-effect rounded-xl p-2 shadow-xl">
+                            <button
+                                onClick={decreaseFontSize}
+                                disabled={fontScale <= 70}
+                                className={`px-3 py-2 rounded-lg font-bold transition-all ${
+                                    fontScale <= 70
+                                        ? 'bg-white/10 text-white/30 cursor-not-allowed'
+                                        : 'bg-white/20 text-white hover:bg-white/30 hover:scale-110'
+                                }`}
+                                title="縮小字體"
+                            >
+                                <span className="text-sm">A<sup className="text-xs">-</sup></span>
+                            </button>
+                            
+                            <button
+                                onClick={increaseFontSize}
+                                disabled={fontScale >= 150}
+                                className={`px-3 py-2 rounded-lg font-bold transition-all ${
+                                    fontScale >= 150
+                                        ? 'bg-white/10 text-white/30 cursor-not-allowed'
+                                        : 'bg-white/20 text-white hover:bg-white/30 hover:scale-110'
+                                }`}
+                                title="放大字體"
+                            >
+                                <span className="text-sm">A<sup className="text-xs">+</sup></span>
+                            </button>
+                        </div>
+                        
+                        <div className="max-w-6xl w-full">
+                            <div className="text-center mb-12 fade-in">
+                                <h1 className="text-5xl font-black text-white mb-4">
+                                    <i className="fas fa-heart-pulse mr-4"></i>
+                                    第4章 運輸
+                                </h1>
+                                <p className="text-xl text-white/90 mb-4">選擇一個小節開始學習</p>
+                                
+                                {/* 清除記錄按鈕 */}
+                                {Object.keys(sectionCompletionStatus).length > 0 && (
+                                    <button
+                                        onClick={() => {
+                                            if (confirm('⚠️ 確定要清除所有完成記錄嗎?\n\n此操作將會:\n• 清除所有小節的完成標記\n• 刪除所有學習數據\n• 無法復原\n\n確定要繼續嗎?')) {
+                                                setSectionCompletionStatus({});
+                                                localStorage.removeItem('chapter4_completion_status');
+                                                alert('✅ 已清除所有記錄!');
+                                            }
+                                        }}
+                                        className="bg-red-500/80 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-bold transition-all shadow-lg hover:scale-105"
+                                    >
+                                        <i className="fas fa-trash-alt mr-2"></i>
+                                        清除所有完成記錄
+                                    </button>
+                                )}
+                                
+                                {/* 全部完成時的證書按鈕 */}
+                                {allCompleted && (
+                                    <div className="mt-6 glass-effect rounded-2xl p-6 animate-bounce-slow">
+                                        <div className="text-4xl mb-3">🏆</div>
+                                        <h2 className="text-2xl font-bold text-yellow-300 mb-3">
+                                            恭喜!已完成全部小節
+                                        </h2>
+                                        <button
+                                            onClick={downloadCertificate}
+                                            className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-8 py-4 rounded-xl font-bold text-lg hover:scale-110 transition-all shadow-2xl"
+                                        >
+                                            <i className="fas fa-download mr-2"></i>
+                                            下載完整學習證書
+                                        </button>
+                                        <p className="text-white/70 text-sm mt-2">
+                                            包含所有關卡詳細資訊與錯誤分析
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="grid md:grid-cols-2 gap-6">
+                                {sections.map((section, index) => {
+                                    const isCompleted = sectionCompletionStatus[section.id]?.completed;
+                                    const completionData = sectionCompletionStatus[section.id];
+                                    
+                                    return (
+                                        <div
+                                            key={section.id}
+                                            className="glass-effect rounded-2xl p-8 hover:scale-105 transition-all duration-300 cursor-pointer fade-in relative"
+                                            style={{ animationDelay: `${index * 0.1}s` }}
+                                            onClick={() => selectSection(section.id)}
+                                        >
+                                            {/* 完成標記 */}
+                                            {isCompleted && (
+                                                <div className="absolute top-4 right-4 bg-green-500 text-white px-3 py-1 rounded-full text-sm font-bold flex items-center gap-1 shadow-lg animate-bounce">
+                                                    <i className="fas fa-check-circle"></i>
+                                                    已完成
+                                                </div>
+                                            )}
+                                            
+                                            <div className={`w-20 h-20 bg-gradient-to-br ${section.color} rounded-2xl flex items-center justify-center mb-6 mx-auto relative`}>
+                                                <i className={`${section.icon} text-4xl text-white`}></i>
+                                                {isCompleted && (
+                                                    <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-green-500 rounded-full flex items-center justify-center border-4 border-white">
+                                                        <i className="fas fa-trophy text-white text-sm"></i>
+                                                    </div>
+                                                )}
+                                            </div>
+                                            
+                                            <h2 className="text-2xl font-bold text-white text-center mb-3">
+                                                {section.title}
+                                            </h2>
+                                            
+                                            <p className="text-white/80 text-center mb-2">
+                                                共 {section.levels} 個關卡
+                                            </p>
+                                            
+                                            {isCompleted && completionData && (
+                                                <div className="text-center text-white/70 text-xs mt-3 space-y-1">
+                                                    <div>⏱️ {Math.floor(completionData.totalTime / 60)}:{(completionData.totalTime % 60).toString().padStart(2, '0')}</div>
+                                                    <div>🎯 嘗試 {completionData.attempts} 次</div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                            
+                            {/* 隱藏的證書內容(用於截圖) */}
+                            {allCompleted && (
+                                <div 
+                                    id="certificate-content" 
+                                    style={{
+                                        position: 'fixed',
+                                        left: '-9999px',
+                                        width: '1200px',
+                                        backgroundColor: '#667eea',
+                                        padding: '60px',
+                                        fontFamily: 'Noto Sans TC, sans-serif'
+                                    }}
+                                >
+                                    {/* 證書標題 */}
+                                    <div style={{textAlign: 'center', marginBottom: '40px'}}>
+                                        <div style={{fontSize: '80px', marginBottom: '20px'}}>🏆</div>
+                                        <h1 style={{fontSize: '48px', fontWeight: '900', color: 'white', marginBottom: '10px'}}>
+                                            學習完成證書
+                                        </h1>
+                                        <h2 style={{fontSize: '36px', fontWeight: 'bold', color: '#fbbf24', marginBottom: '20px'}}>
+                                            第4章 運輸 - 全章通關
+                                        </h2>
+                                        <div style={{fontSize: '18px', color: 'rgba(255,255,255,0.9)'}}>
+                                            完成時間:{lastCompletedTime.getFullYear()}年{lastCompletedTime.getMonth()+1}月{lastCompletedTime.getDate()}日 {lastCompletedTime.getHours().toString().padStart(2,'0')}:{lastCompletedTime.getMinutes().toString().padStart(2,'0')}:{lastCompletedTime.getSeconds().toString().padStart(2,'0')}
+                                        </div>
+                                    </div>
+
+                                    {/* 總體統計 */}
+                                    <div style={{display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px', marginBottom: '40px'}}>
+                                        <div style={{backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: '16px', padding: '30px', textAlign: 'center'}}>
+                                            <div style={{fontSize: '40px', marginBottom: '10px'}}>⏱️</div>
+                                            <div style={{fontSize: '14px', color: 'rgba(255,255,255,0.8)', marginBottom: '8px'}}>總闖關時間</div>
+                                            <div style={{fontSize: '32px', fontWeight: 'bold', color: 'white'}}>
+                                                {Math.floor(totalTime / 60)}:{(totalTime % 60).toString().padStart(2, '0')}
+                                            </div>
+                                        </div>
+                                        <div style={{backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: '16px', padding: '30px', textAlign: 'center'}}>
+                                            <div style={{fontSize: '40px', marginBottom: '10px'}}>📚</div>
+                                            <div style={{fontSize: '14px', color: 'rgba(255,255,255,0.8)', marginBottom: '8px'}}>完成小節</div>
+                                            <div style={{fontSize: '32px', fontWeight: 'bold', color: '#4ade80'}}>4 / 4</div>
+                                        </div>
+                                        <div style={{backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: '16px', padding: '30px', textAlign: 'center'}}>
+                                            <div style={{fontSize: '40px', marginBottom: '10px'}}>🎯</div>
+                                            <div style={{fontSize: '14px', color: 'rgba(255,255,255,0.8)', marginBottom: '8px'}}>總嘗試次數</div>
+                                            <div style={{fontSize: '32px', fontWeight: 'bold', color: 'white'}}>{totalAttempts}</div>
+                                        </div>
+                                        <div style={{backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: '16px', padding: '30px', textAlign: 'center'}}>
+                                            <div style={{fontSize: '40px', marginBottom: '10px'}}>{totalErrors === 0 ? '💯' : '📊'}</div>
+                                            <div style={{fontSize: '14px', color: 'rgba(255,255,255,0.8)', marginBottom: '8px'}}>總錯誤次數</div>
+                                            <div style={{fontSize: '32px', fontWeight: 'bold', color: totalErrors === 0 ? '#4ade80' : '#fbbf24'}}>
+                                                {totalErrors}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* 各小節詳情 */}
+                                    <div style={{backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: '16px', padding: '30px', marginBottom: '30px'}}>
+                                        <h3 style={{fontSize: '24px', fontWeight: 'bold', color: 'white', marginBottom: '20px'}}>
+                                            📋 各小節完成詳情
+                                        </h3>
+                                        {allSectionData.map((sec, idx) => (
+                                            <div key={idx} style={{
+                                                backgroundColor: 'rgba(255,255,255,0.1)',
+                                                borderRadius: '12px',
+                                                padding: '20px',
+                                                marginBottom: '15px',
+                                                display: 'flex',
+                                                justifyContent: 'space-between',
+                                                alignItems: 'center'
+                                            }}>
+                                                <div style={{display: 'flex', alignItems: 'center', gap: '15px'}}>
+                                                    <div style={{
+                                                        width: '50px',
+                                                        height: '50px',
+                                                        backgroundColor: '#22c55e',
+                                                        borderRadius: '12px',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        fontSize: '24px',
+                                                        color: 'white',
+                                                        fontWeight: 'bold'
+                                                    }}>✓</div>
+                                                    <div>
+                                                        <div style={{fontSize: '20px', fontWeight: 'bold', color: 'white', marginBottom: '5px'}}>
+                                                            {sec.title}
+                                                        </div>
+                                                        <div style={{fontSize: '14px', color: 'rgba(255,255,255,0.7)'}}>
+                                                            嘗試 {sec.attempts} 次 · 錯誤 {sec.errors} 次
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div style={{fontSize: '20px', color: 'rgba(255,255,255,0.8)', fontFamily: 'monospace'}}>
+                                                    {Math.floor(sec.totalTime / 60)}:{(sec.totalTime % 60).toString().padStart(2, '0')}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    {/* 成就評級 */}
+                                    <div style={{backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: '16px', padding: '30px', textAlign: 'center', marginBottom: '30px'}}>
+                                        <h3 style={{fontSize: '24px', fontWeight: 'bold', color: 'white', marginBottom: '20px'}}>
+                                            🌟 總體評級
+                                        </h3>
+                                        <div style={{fontSize: '80px', marginBottom: '15px'}}>
+                                            {totalErrors === 0 ? '🏆' : totalErrors <= 5 ? '🥇' : totalErrors <= 10 ? '🥈' : '🥉'}
+                                        </div>
+                                        <div style={{fontSize: '32px', fontWeight: 'bold', color: 'white', marginBottom: '10px'}}>
+                                            {totalErrors === 0 ? '完美大師' : totalErrors <= 5 ? '優秀學習者' : totalErrors <= 10 ? '表現良好' : '持續進步'}
+                                        </div>
+                                        <div style={{fontSize: '16px', color: 'rgba(255,255,255,0.8)'}}>
+                                            {totalErrors === 0 ? '全部關卡一次通過,生物大師!' : 
+                                             totalErrors <= 5 ? '優秀的學習表現!' :
+                                             totalErrors <= 10 ? '不錯的學習成果!' :
+                                             '完成就是勝利!'}
+                                        </div>
+                                    </div>
+
+                                    {/* 頁尾 */}
+                                    <div style={{marginTop: '40px', textAlign: 'center', fontSize: '14px', color: 'rgba(255,255,255,0.6)'}}>
+                                        此證書證明學習者已完成第4章所有關卡的學習與測驗
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                );
+            }
+			// ===========================================
+            // 遊戲進行畫面
+            // ===========================================
+            if (screen === 'playing' && currentLevel) {
+                // 取得還沒被放置的項目
+                let availableItems = [];
+                
+                if (currentLevel.type === 'formula_match') {
+                    const placedVals = Object.values(formulaSlots).filter(slot => slot !== null).map(slot => slot.val);
+                    availableItems = shuffledItems.filter(item => !placedVals.includes(item.val));
+                } else if (currentLevel.type === 'formula') {
+                    const placedVals = Object.values(formulaSlots).filter(slot => slot !== null).map(slot => slot.val);
+                    availableItems = shuffledItems.filter(item => !placedVals.includes(item.val));
+                } else {
+                    const placedItemIds = Object.values(droppedItems).flat().map(item => item.id);
+                    availableItems = shuffledItems.filter(item => !placedItemIds.includes(item.id));
+                }
+
+                return (
+                    <div className="h-screen flex flex-col overflow-hidden">
+                        {/* 頂首 - 極度精簡版 */}
+                        <div className={`flex-shrink-0 bg-gradient-to-r ${colors.header} p-2 md:p-3 text-white shadow-xl`}>
+                            {/* 第一行:字體調整、關卡名稱、進度條、統計按鈕 */}
+                            <div className="flex items-center gap-2 mb-2">
+                                {/* 左側:字體調整 + 關卡名稱 */}
+                                <div className="flex items-center gap-2 flex-shrink-0">
+                                    {/* 字體調整按鈕組 */}
+                                    <div className="flex items-center gap-1 bg-black/20 rounded-lg p-1">
+                                        <button
+                                            onClick={decreaseFontSize}
+                                            disabled={fontScale <= 70}
+                                            className={`px-1.5 py-0.5 rounded text-xs font-bold transition-all ${
+                                                fontScale <= 70
+                                                    ? 'text-white/30 cursor-not-allowed'
+                                                    : 'text-white hover:bg-white/20'
+                                            }`}
+                                        >
+                                            A<sup style={{ fontSize: '8px' }}>-</sup>
+                                        </button>
+                                        <button
+                                            onClick={increaseFontSize}
+                                            disabled={fontScale >= 150}
+                                            className={`px-1.5 py-0.5 rounded text-xs font-bold transition-all ${
+                                                fontScale >= 150
+                                                    ? 'text-white/30 cursor-not-allowed'
+                                                    : 'text-white hover:bg-white/20'
+                                            }`}
+                                        >
+                                            A<sup style={{ fontSize: '8px' }}>+</sup>
+                                        </button>
+                                    </div>
+                                    <h2 className="text-sm md:text-base font-bold truncate leading-tight">{currentLevel.title}</h2>
+                                </div>
+                                
+                                {/* 中間:進度條(縮減為50%最大寬度) */}
+                                <div className="flex-1 min-w-0 max-w-[50%]">
+                                    <div className="relative h-3 bg-black/30 rounded-full overflow-hidden">
+                                        <div 
+                                            className="absolute h-full bg-gradient-to-r from-yellow-400 to-yellow-600 transition-all duration-500"
+                                            style={{ width: `${((currentLevelIndex + 1) / CHAPTER_DATA[currentSection].length) * 100}%` }}
+                                        ></div>
+                                    </div>
+                                </div>
+                                
+                                {/* 右側:統計與按鈕 */}
+                                <div className="flex items-center gap-2 flex-shrink-0">
+                                    <span className="text-xs opacity-80 whitespace-nowrap hidden sm:inline">⏱️ {formatTime(elapsedTime)}</span>
+                                    <span className="text-xs bg-black/20 px-2 py-0.5 rounded whitespace-nowrap">🎯 {score.total}</span>
+                                    <button
+                                        onClick={() => setScreen('section_select')}
+                                        className="bg-white/20 hover:bg-white/30 px-2 py-1 rounded transition-all text-xs"
+                                    >
+                                        <i className="fas fa-home"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            {/* 第二行:關卡狀態點 */}
+                            <div className="flex gap-1 justify-center">
+                                {CHAPTER_DATA[currentSection].map((level, idx) => (
+                                    <div 
+                                        key={idx}
+                                        className={`
+                                            w-5 h-5 rounded flex items-center justify-center text-xs font-bold transition-all
+                                            ${idx < currentLevelIndex ? 'bg-green-500 text-white' : ''}
+                                            ${idx === currentLevelIndex ? 'bg-yellow-400 text-black animate-pulse' : ''}
+                                            ${idx > currentLevelIndex ? 'bg-gray-500/30 text-gray-400' : ''}
+                                        `}
+                                    >
+                                        {idx < currentLevelIndex ? '✓' : idx + 1}
+                                    </div>
+                                ))}
+                                <span className="text-xs opacity-70 ml-2 self-center">{currentLevelIndex + 1}/{CHAPTER_DATA[currentSection].length}</span>
+                            </div>
+                        </div>
+
+                        {/* 遊戲內容區 - 可滾動,高度調整為90% */}
+                        <div className="flex-1 overflow-y-auto p-2 md:p-4" style={{WebkitOverflowScrolling: 'touch', maxHeight: '90%'}}>
+                        
+                        {/* 分類題型 */}
+                        {currentLevel.type === 'classification' && (
+                            <div className="grid lg:grid-cols-3 gap-2 md:gap-3">
+                                {/* 選項區 */}
+                                <div className="lg:col-span-1">
+                                    <div className="glass-effect rounded-lg p-2 md:p-3 lg:sticky lg:top-2">
+                                        <h3 className="text-sm md:text-base font-bold text-white mb-2 flex items-center">
+                                            <i className="fas fa-cube mr-1 text-xs"></i>
+                                            待分類項目
+                                        </h3>
+                                        <div className="space-y-1.5">
+                                            {availableItems.map(item => (
+                                                <div
+                                                    key={item.id}
+                                                    draggable
+                                                    onDragStart={(e) => handleDragStart(e, item)}
+                                                    onTouchStart={(e) => handleTouchStart(e, item, null)}
+                                                    onTouchMove={handleTouchMove}
+                                                    onTouchEnd={(e) => handleTouchEnd(e, handleTouchDrop)}
+                                                    className="drag-item bg-white rounded-lg p-2 shadow-lg"
+                                                >
+                                                    <p className="text-gray-800 font-medium text-center text-xs md:text-sm">
+                                                        {item.text}
+                                                    </p>
+                                                </div>
+                                            ))}
+                                            {availableItems.length === 0 && (
+                                                <div className="text-center text-white/70 py-3 text-xs">
+                                                    所有項目都已分類
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* 分類區 */}
+                                <div className="lg:col-span-2">
+                                    <div className="grid gap-2">
+                                        {shuffledZones.map(zone => (
+                                            <div
+                                                key={zone.id}
+                                                data-zone-id={zone.id}
+                                                onDragOver={handleDragOver}
+                                                onDrop={(e) => handleDrop(e, zone.id)}
+                                                className={`
+                                                    drop-zone glass-effect rounded-lg p-2 md:p-3
+                                                    ${feedback[zone.id] === true ? 'correct-answer' : ''}
+                                                    ${feedback[zone.id] === false ? 'wrong-answer' : ''}
+                                                    ${!feedback[zone.id] ? 'border-2 border-white/30' : ''}
+                                                `}
+                                            >
+                                                <h4 className="text-sm md:text-base font-bold text-white mb-2 flex items-center">
+                                                    <i className={`${zone.icon} mr-1 text-xs`}></i>
+                                                    <span className="flex-1 text-xs md:text-sm">{zone.title}</span>
+                                                    {feedback[zone.id] === true && (
+                                                        <i className="fas fa-check-circle text-green-400 text-base"></i>
+                                                    )}
+                                                    {feedback[zone.id] === false && (
+                                                        <i className="fas fa-times-circle text-red-400 text-base"></i>
+                                                    )}
+                                                </h4>
+                                                <div className="grid grid-cols-2 gap-1.5">
+                                                    {(droppedItems[zone.id] || []).map(item => (
+                                                        <div
+                                                            key={item.id}
+                                                            draggable
+                                                            onDragStart={(e) => {
+                                                                handleDragStart(e, item);
+                                                                // 從原位置移除
+                                                                setTimeout(() => removeItem(zone.id, item.id), 0);
+                                                            }}
+                                                            onTouchStart={(e) => handleTouchStart(e, item, () => removeItem(zone.id, item.id))}
+                                                            onTouchMove={handleTouchMove}
+                                                            onTouchEnd={(e) => handleTouchEnd(e, handleTouchDrop)}
+                                                            className="bg-white rounded-lg p-2 shadow-lg group relative cursor-move"
+                                                        >
+                                                            <p className="text-gray-800 font-medium text-xs text-center pr-5">
+                                                                {item.text}
+                                                            </p>
+                                                            <button
+                                                                onClick={() => removeItem(zone.id, item.id)}
+                                                                className="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-xs"
+                                                            >
+                                                                ×
+                                                            </button>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    {/* 檢查答案按鈕 */}
+                                    <div className="mt-2 flex gap-2">
+                                        {gameState === 'playing' && (() => {
+                                            // 計算是否所有項目都已分類
+                                            const totalItems = currentLevel.items.length;
+                                            const placedItems = Object.values(droppedItems).flat().length;
+                                            const allPlaced = placedItems === totalItems;
+                                            
+                                            return (
+                                                <button
+                                                    onClick={checkAnswers}
+                                                    className={`flex-1 py-2.5 rounded-lg font-bold text-sm transition-all shadow-xl ${
+                                                        allPlaced 
+                                                            ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:scale-105 cursor-pointer'
+                                                            : 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                                                    }`}
+                                                    disabled={!allPlaced}
+                                                >
+                                                    <i className="fas fa-check mr-1"></i>
+                                                    {allPlaced ? '檢查答案' : `尚未完成 (${placedItems}/${totalItems})`}
+                                                </button>
+                                            );
+                                        })()}
+                                        {gameState === 'completed' && (
+                                            <button
+                                                onClick={nextLevel}
+                                                className="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 text-white py-2.5 rounded-lg font-bold text-sm hover:scale-105 transition-all shadow-xl"
+                                            >
+                                                <i className="fas fa-arrow-right mr-1"></i>
+                                                {currentLevelIndex < CHAPTER_DATA[currentSection].length - 1 ? '下一關' : '完成本節'}
+                                            </button>
+                                        )}
+                                        <button
+                                            onClick={restart}
+                                            className="bg-white/20 text-white px-3 py-2.5 rounded-lg hover:bg-white/30 transition-all text-sm"
+                                        >
+                                            <i className="fas fa-redo"></i>
+                                            <span className="ml-1 hidden sm:inline">重來</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                        
+                        </div>
+                        {/* 遊戲內容區結束 */}
+                    </div>
+                );
+            }
+			// ===========================================
+            // 全部完成畫面 (四個小節都完成)
+            // ===========================================
+            if (screen === 'all_complete') {
+                const allSectionData = ['4-1', '4-2', '4-3', '4-4'].map(id => ({
+                    id,
+                    ...sectionCompletionStatus[id]
+                }));
+                
+                const totalTime = allSectionData.reduce((sum, sec) => sum + (sec.totalTime || 0), 0);
+                const totalAttempts = allSectionData.reduce((sum, sec) => sum + (sec.attempts || 0), 0);
+                const totalErrors = allSectionData.reduce((sum, sec) => sum + (sec.errors || 0), 0);
+                const totalLevels = 3 + 3 + 3 + 3; // 各小節關卡數
+                
+                const takeFullScreenshot = () => {
+                    const element = document.getElementById('all-complete-content');
+                    html2canvas(element, {
+                        backgroundColor: '#667eea',
+                        scale: 2
+                    }).then(canvas => {
+                        const completionDate = new Date();
+                        const link = document.createElement('a');
+                        link.download = `第4章-全章完成-${completionDate.getFullYear()}${(completionDate.getMonth()+1).toString().padStart(2,'0')}${completionDate.getDate().toString().padStart(2,'0')}.png`;
+                        link.href = canvas.toDataURL();
+                        link.click();
+                    });
+                };
+                
+                return (
+                    <div className="min-h-screen p-6">
+                        <div id="all-complete-content" className="max-w-5xl mx-auto">
+                            {/* 慶祝標題 */}
+                            <div className="glass-effect rounded-3xl p-8 mb-6 text-center fade-in">
+                                <div className="text-8xl mb-4">🎊🏆🎊</div>
+                                <h1 className="text-6xl font-black text-white mb-3">
+                                    完美達成!
+                                </h1>
+                                <p className="text-3xl text-yellow-300 font-bold mb-2">
+                                    第4章 運輸 - 全章通關
+                                </p>
+                                <p className="text-xl text-white/90">
+                                    恭喜你完成所有 {totalLevels} 個關卡!
+                                </p>
+                            </div>
+
+                            {/* 總體統計 */}
+                            <div className="grid md:grid-cols-4 gap-4 mb-6">
+                                <div className="glass-effect rounded-2xl p-6 text-center">
+                                    <div className="text-5xl mb-3">⏱️</div>
+                                    <div className="text-white/80 text-sm mb-1">總學習時間</div>
+                                    <div className="text-3xl font-bold text-white">
+                                        {Math.floor(totalTime / 60)}分{totalTime % 60}秒
+                                    </div>
+                                </div>
+                                <div className="glass-effect rounded-2xl p-6 text-center">
+                                    <div className="text-5xl mb-3">📚</div>
+                                    <div className="text-white/80 text-sm mb-1">完成小節</div>
+                                    <div className="text-3xl font-bold text-green-400">4 / 4</div>
+                                </div>
+                                <div className="glass-effect rounded-2xl p-6 text-center">
+                                    <div className="text-5xl mb-3">🎯</div>
+                                    <div className="text-white/80 text-sm mb-1">總嘗試次數</div>
+                                    <div className="text-3xl font-bold text-white">{totalAttempts}</div>
+                                </div>
+                                <div className="glass-effect rounded-2xl p-6 text-center">
+                                    <div className="text-5xl mb-3">{totalErrors === 0 ? '💯' : '📊'}</div>
+                                    <div className="text-white/80 text-sm mb-1">總錯誤次數</div>
+                                    <div className={`text-3xl font-bold ${totalErrors === 0 ? 'text-green-400' : 'text-yellow-400'}`}>
+                                        {totalErrors}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* 各小節詳情 */}
+                            <div className="glass-effect rounded-2xl p-6 mb-6">
+                                <h3 className="text-2xl font-bold text-white mb-4 flex items-center">
+                                    <i className="fas fa-list-check mr-3"></i>
+                                    各小節完成狀況
+                                </h3>
+                                <div className="space-y-3">
+                                    {allSectionData.map((sec, idx) => {
+                                        const sectionNames = {
+                                            '4-1': '4-1 植物的運輸構造',
+                                            '4-2': '4-2 植物體內物質的運輸',
+                                            '4-3': '4-3 人體的循環系統',
+                                            '4-4': '4-4 人體的淋巴系統'
+                                        };
+                                        return (
+                                            <div key={idx} className="bg-white/10 rounded-xl p-4 flex items-center justify-between">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center text-white font-bold text-xl">
+                                                        ✓
+                                                    </div>
+                                                    <div>
+                                                        <div className="text-white font-bold text-lg">{sectionNames[sec.id]}</div>
+                                                        <div className="text-white/70 text-sm">
+                                                            嘗試 {sec.attempts} 次 · 錯誤 {sec.errors} 次
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div className="text-white/80 text-lg font-mono">
+                                                    {Math.floor(sec.totalTime / 60)}:{(sec.totalTime % 60).toString().padStart(2, '0')}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+
+                            {/* 成就評級 */}
+                            <div className="glass-effect rounded-2xl p-6 mb-6 text-center">
+                                <h3 className="text-2xl font-bold text-white mb-4">🌟 總體評級</h3>
+                                <div className="text-8xl mb-3">
+                                    {totalErrors === 0 ? '🏆' : totalErrors <= 5 ? '🥇' : totalErrors <= 10 ? '🥈' : '🥉'}
+                                </div>
+                                <div className="text-3xl font-bold text-white mb-2">
+                                    {totalErrors === 0 ? '完美大師!' : totalErrors <= 5 ? '優秀學習者!' : totalErrors <= 10 ? '表現良好!' : '持續進步!'}
+                                </div>
+                                <div className="text-white/80 text-lg">
+                                    {totalErrors === 0 ? '全部關卡一次通過,你是真正的生物大師!' : 
+                                     totalErrors <= 5 ? '非常優秀的表現,繼續保持!' :
+                                     totalErrors <= 10 ? '不錯的學習成果,加油!' :
+                                     '完成就是勝利,下次會更好!'}
+                                </div>
+                            </div>
+
+                            {/* 學習建議 */}
+                            {totalErrors > 0 && (
+                                <div className="glass-effect rounded-2xl p-6 mb-6">
+                                    <h3 className="text-xl font-bold text-white mb-3 flex items-center">
+                                        <i className="fas fa-lightbulb mr-2 text-yellow-400"></i>
+                                        學習建議
+                                    </h3>
+                                    <ul className="text-white/80 space-y-2">
+                                        <li>• 複習錯誤較多的小節,鞏固知識點</li>
+                                        <li>• 可以隨時回來重新挑戰,追求完美通關</li>
+                                        <li>• 將學習成果截圖保存,記錄學習歷程</li>
+                                    </ul>
+                                </div>
+                            )}
+
+                            {/* 錯誤記錄與正確答案 */}
+                            {totalErrors > 0 && (() => {
+                                // 收集所有小節的錯誤記錄
+                                const allErrors = [];
+                                allSectionData.forEach(sec => {
+                                    const sectionErrors = sectionCompletionStatus[sec.id]?.errorLog || [];
+                                    sectionErrors.forEach(err => {
+                                        allErrors.push({
+                                            section: sec.title,
+                                            ...err
+                                        });
+                                    });
+                                });
+
+                                if (allErrors.length === 0) return null;
+
+                                return (
+                                    <div className="glass-effect rounded-2xl p-6 mb-6">
+                                        <h3 className="text-xl font-bold text-white mb-4 flex items-center">
+                                            <i className="fas fa-clipboard-list mr-2 text-red-400"></i>
+                                            錯誤記錄與正確答案
+                                        </h3>
+                                        <div className="text-white/70 text-sm mb-4">
+                                            以下是學習過程中的錯誤嘗試,檢視這些可以幫助理解概念
+                                        </div>
+                                        <div className="space-y-3 max-h-96 overflow-y-auto">
+                                            {allErrors.map((error, idx) => (
+                                                <div key={idx} className="bg-white/5 rounded-lg p-4 border-l-4 border-red-500">
+                                                    <div className="flex items-center gap-2 mb-2">
+                                                        <div className="w-6 h-6 bg-red-500 rounded flex items-center justify-center text-white text-xs font-bold">
+                                                            {idx + 1}
+                                                        </div>
+                                                        <div>
+                                                            <div className="text-white font-bold text-sm">{error.section}</div>
+                                                            <div className="text-white/60 text-xs">{error.levelTitle}</div>
+                                                        </div>
+                                                    </div>
+                                                    <div className="ml-8 space-y-1">
+                                                        {error.errors.map((err, errIdx) => (
+                                                            <div key={errIdx} className="mb-2">
+                                                                <div className="text-white/70 text-xs mb-1">📍 {err.zone}</div>
+                                                                <div className="text-red-300 text-sm">
+                                                                    ✗ 你的答案:<span className="font-medium ml-1">{err.userAnswer.length > 0 ? err.userAnswer.join(', ') : '(未填寫)'}</span>
+                                                                </div>
+                                                                <div className="text-green-300 text-sm">
+                                                                    ✓ 正確答案:<span className="font-medium ml-1">{err.correctAnswer.join(', ')}</span>
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                );
+                            })()}
+                        </div>
+
+                        {/* 操作按鈕 */}
+                        <div className="max-w-5xl mx-auto flex gap-4 justify-center mt-6 flex-wrap">
+                            <button
+                                onClick={takeFullScreenshot}
+                                className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-8 py-4 rounded-xl font-bold text-lg hover:scale-105 transition-all shadow-xl"
+                            >
+                                <i className="fas fa-camera mr-2"></i>
+                                下載完成證書
+                            </button>
+                            <button
+                                onClick={() => {
+                                    if (confirm('確定要清除所有完成記錄嗎?')) {
+                                        setSectionCompletionStatus({});
+                                        localStorage.removeItem('chapter4_completion_status');
+                                        setScreen('section_select');
+                                    }
+                                }}
+                                className="bg-gradient-to-r from-orange-500 to-red-600 text-white px-8 py-4 rounded-xl font-bold text-lg hover:scale-105 transition-all shadow-xl"
+                            >
+                                <i className="fas fa-redo mr-2"></i>
+                                重置所有進度
+                            </button>
+                            <button
+                                onClick={() => setScreen('section_select')}
+                                className="bg-white/20 text-white px-8 py-4 rounded-xl font-bold text-lg hover:bg-white/30 transition-all"
+                            >
+                                <i className="fas fa-home mr-2"></i>
+                                返回選單
+                            </button>
+                        </div>
+                    </div>
+                );
+            }
+
+            // ===========================================
+            // 最終總結畫面
+            // ===========================================
+            if (screen === 'final_summary') {
+                const completionDate = new Date();
+                const errorCount = errorLog.length;
+                const totalAttempts = score.total;
+                const correctAttempts = score.correct;
+                const wrongAttempts = totalAttempts - correctAttempts;
+                
+                // 截圖功能
+                const takeScreenshot = () => {
+                    const element = document.getElementById('summary-content');
+                    html2canvas(element, {
+                        backgroundColor: '#667eea',
+                        scale: 2
+                    }).then(canvas => {
+                        const link = document.createElement('a');
+                        link.download = `第4章-${currentSection}-學習成果-${completionDate.getFullYear()}${(completionDate.getMonth()+1).toString().padStart(2,'0')}${completionDate.getDate().toString().padStart(2,'0')}.png`;
+                        link.href = canvas.toDataURL();
+                        link.click();
+                    });
+                };
+                
+                return (
+                    <div className="min-h-screen p-6">
+                        <div id="summary-content" className="max-w-5xl mx-auto">
+                            {/* 標題區 */}
+                            <div className="glass-effect rounded-3xl p-8 mb-6 text-center fade-in">
+                                <div className="text-6xl mb-4">🏆</div>
+                                <h1 className="text-5xl font-black text-white mb-2">
+                                    挑戰完成!
+                                </h1>
+                                <p className="text-2xl text-white/90">
+                                    {currentSection} 全關卡通關
+                                </p>
+                            </div>
+
+                            {/* 基本統計 */}
+                            <div className="grid md:grid-cols-4 gap-4 mb-6">
+                                <div className="glass-effect rounded-2xl p-6 text-center">
+                                    <div className="text-4xl mb-2">📅</div>
+                                    <div className="text-white/80 text-sm mb-1">完成時間</div>
+                                    <div className="text-white font-bold">
+                                        {completionDate.getFullYear()}/{(completionDate.getMonth()+1).toString().padStart(2,'0')}/{completionDate.getDate().toString().padStart(2,'0')}
+                                    </div>
+                                    <div className="text-white font-bold">
+                                        {completionDate.getHours().toString().padStart(2,'0')}:{completionDate.getMinutes().toString().padStart(2,'0')}:{completionDate.getSeconds().toString().padStart(2,'0')}
+                                    </div>
+                                </div>
+                                <div className="glass-effect rounded-2xl p-6 text-center">
+                                    <div className="text-4xl mb-2">⏱️</div>
+                                    <div className="text-white/80 text-sm mb-1">總闖關時間</div>
+                                    <div className="text-3xl font-bold text-white">
+                                        {Math.floor(sectionTotalTime / 60)}:{(sectionTotalTime % 60).toString().padStart(2, '0')}
+                                    </div>
+                                </div>
+                                <div className="glass-effect rounded-2xl p-6 text-center">
+                                    <div className="text-4xl mb-2">🎯</div>
+                                    <div className="text-white/80 text-sm mb-1">總嘗試次數</div>
+                                    <div className="text-3xl font-bold text-white">{totalAttempts}</div>
+                                </div>
+                                <div className="glass-effect rounded-2xl p-6 text-center">
+                                    <div className="text-4xl mb-2">{wrongAttempts === 0 ? '💯' : '📊'}</div>
+                                    <div className="text-white/80 text-sm mb-1">錯誤次數</div>
+                                    <div className={`text-3xl font-bold ${wrongAttempts === 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                        {wrongAttempts}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* 關卡詳情 */}
+                            <div className="glass-effect rounded-2xl p-6 mb-6">
+                                <h3 className="text-2xl font-bold text-white mb-4 flex items-center">
+                                    <i className="fas fa-list-check mr-3"></i>
+                                    關卡完成詳情
+                                </h3>
+                                <div className="space-y-3">
+                                    {completedLevels.map((level, idx) => (
+                                        <div key={idx} className="bg-white/10 rounded-xl p-4 flex items-center justify-between">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center text-white font-bold">
+                                                    ✓
+                                                </div>
+                                                <div>
+                                                    <div className="text-white font-bold">{level.title}</div>
+                                                    <div className="text-white/70 text-sm">嘗試次數:{level.attempts} 次</div>
+                                                </div>
+                                            </div>
+                                            <div className="text-white/80">
+                                                {Math.floor(level.time / 60)}:{(level.time % 60).toString().padStart(2, '0')}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* 錯誤記錄 */}
+                            {errorLog.length > 0 && (
+                                <div className="glass-effect rounded-2xl p-6 mb-6">
+                                    <h3 className="text-2xl font-bold text-white mb-4 flex items-center">
+                                        <i className="fas fa-exclamation-triangle mr-3 text-yellow-400"></i>
+                                        錯誤記錄與正確答案
+                                    </h3>
+                                    <div className="space-y-4">
+                                        {errorLog.map((log, idx) => (
+                                            <div key={idx} className="bg-white/10 rounded-xl p-4">
+                                                <div className="text-white font-bold mb-2 flex items-center gap-2">
+                                                    <span className="bg-red-500 px-2 py-1 rounded text-xs">錯誤 {idx + 1}</span>
+                                                    {log.levelTitle}
+                                                </div>
+                                                {log.errors.map((error, errorIdx) => (
+                                                    <div key={errorIdx} className="ml-4 mb-2 bg-white/5 rounded-lg p-3">
+                                                        <div className="text-white/80 text-sm mb-1">
+                                                            📍 {error.zone}
+                                                        </div>
+                                                        <div className="grid md:grid-cols-2 gap-2 text-sm">
+                                                            <div>
+                                                                <span className="text-red-400">✗ 你的答案:</span>
+                                                                <span className="text-white ml-2">
+                                                                    {error.userAnswer.length > 0 ? error.userAnswer.join(', ') : '(未填寫)'}
+                                                                </span>
+                                                            </div>
+                                                            <div>
+                                                                <span className="text-green-400">✓ 正確答案:</span>
+                                                                <span className="text-white ml-2">
+                                                                    {error.correctAnswer.join(', ')}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* 成就評級 */}
+                            <div className="glass-effect rounded-2xl p-6 mb-6 text-center">
+                                <h3 className="text-2xl font-bold text-white mb-4">🌟 成就評級</h3>
+                                <div className="text-6xl mb-2">
+                                    {wrongAttempts === 0 ? '🏆' : wrongAttempts <= 2 ? '🥇' : wrongAttempts <= 5 ? '🥈' : '🥉'}
+                                </div>
+                                <div className="text-2xl font-bold text-white mb-2">
+                                    {wrongAttempts === 0 ? '完美通關!' : wrongAttempts <= 2 ? '優秀表現!' : wrongAttempts <= 5 ? '表現良好!' : '繼續加油!'}
+                                </div>
+                                <div className="text-white/80">
+                                    {wrongAttempts === 0 ? '一次錯誤都沒有,太厲害了!' : 
+                                     wrongAttempts <= 2 ? '只有少數錯誤,非常棒!' :
+                                     wrongAttempts <= 5 ? '還有進步空間,加油!' :
+                                     '多練習幾次會更好的!'}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* 操作按鈕 */}
+                        <div className="max-w-5xl mx-auto flex gap-4 justify-center mt-6 flex-wrap">
+                            <button
+                                onClick={takeScreenshot}
+                                className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-8 py-4 rounded-xl font-bold text-lg hover:scale-105 transition-all shadow-xl"
+                            >
+                                <i className="fas fa-camera mr-2"></i>
+                                下載學習成果截圖
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setCurrentLevelIndex(0);
+                                    setScreen('playing');
+                                    setGameState('playing');
+                                    setStartTime(new Date());
+                                    setSectionStartTime(new Date());
+                                    setElapsedTime(0);
+                                    setDroppedItems({});
+                                    setFormulaSlots({ left: null, right1: null, right2: null, right3: null });
+                                    setMatchZones({});
+                                    setFeedback({});
+                                    setScore({ correct: 0, total: 0 });
+                                    setErrorLog([]);
+                                    setCompletedLevels([]);
+                                    initializeLevel(currentSection, 0);
+                                }}
+                                className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-8 py-4 rounded-xl font-bold text-lg hover:scale-105 transition-all shadow-xl"
+                            >
+                                <i className="fas fa-redo mr-2"></i>
+                                再挑戰一次
+                            </button>
+                            <button
+                                onClick={() => setScreen('section_select')}
+                                className="bg-white/20 text-white px-8 py-4 rounded-xl font-bold text-lg hover:bg-white/30 transition-all"
+                            >
+                                <i className="fas fa-home mr-2"></i>
+                                返回選單
+                            </button>
+                        </div>
+                    </div>
+                );
+            }
+
+            return null;
+        }
+
+        // 渲染應用程式
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
