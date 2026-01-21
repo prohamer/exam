@@ -1,0 +1,1276 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第3章 生物體的營養 - 互動式闖關系統</title>
+    
+    <!-- React -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+    
+    <!-- html2canvas for screenshot -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            cursor: default;
+        }
+
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            overscroll-behavior: none;
+            -webkit-user-select: none;
+            user-select: none;
+            overflow-x: hidden;
+        }
+
+        input, textarea {
+            -webkit-user-select: text;
+            -moz-user-select: text;
+            -ms-user-select: text;
+            user-select: text;
+            cursor: text;
+        }
+
+        button, a, .clickable {
+            cursor: pointer !important;
+        }
+
+        .drag-item {
+			transition: all 0.2s ease;
+			cursor: grab !important;
+			touch-action: none;
+			-webkit-touch-callout: none;
+			min-width: 120px;
+			max-width: 200px;
+		}
+
+        .drag-item:active {
+            cursor: grabbing !important;
+        }
+
+        @media (hover: hover) {
+            .drag-item:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            }
+        }
+
+        .dragging {
+            opacity: 0.5;
+            transform: scale(1.05);
+            z-index: 1000;
+            position: fixed;
+            pointer-events: none;
+        }
+
+        .cursor-move {
+            cursor: move !important;
+            touch-action: none;
+            -webkit-touch-callout: none;
+        }
+
+        .cursor-move:active {
+            cursor: grabbing !important;
+        }
+
+        .drop-zone {
+            transition: all 0.2s ease;
+            min-height: 80px;
+        }
+
+        .drop-zone.drag-over {
+            background: rgba(59, 130, 246, 0.2);
+            border: 3px dashed #3b82f6 !important;
+            transform: scale(1.02);
+        }
+
+        .correct-answer {
+            animation: correctPulse 0.6s ease-out;
+            border: 3px solid #10b981 !important;
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        .wrong-answer {
+            animation: shake 0.5s ease-out;
+            border: 3px solid #ef4444 !important;
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        @keyframes correctPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes bounce-slow {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .animate-bounce-slow {
+            animation: bounce-slow 2s ease-in-out infinite;
+        }
+
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+		// ===========================================
+        // 遊戲數據
+        // ===========================================
+        const CHAPTER_DATA = {
+            "3-1": [
+                {
+                    id: "3-1-1",
+                    section: "3-1",
+                    type: "classification",
+                    title: "第一關：能量養分大分類",
+                    description: "請將以下食物成分依據其主要類型分類",
+                    zones: [
+                        { id: 'zone1', title: '醣類（碳水化合物）', icon: 'fa-bread-slice' },
+                        { id: 'zone2', title: '蛋白質', icon: 'fa-drumstick-bite' },
+                        { id: 'zone3', title: '脂質', icon: 'fa-oil-can' }
+                    ],
+                    items: [
+                        { id: 'item1', text: '米飯中的澱粉', val: 'carb_1' },
+                        { id: 'item2', text: '肌肉的主要成分', val: 'protein_1' },
+                        { id: 'item3', text: '儲存能量的肝糖', val: 'carb_2' },
+                        { id: 'item4', text: '植物細胞壁的纖維素', val: 'carb_3' },
+                        { id: 'item5', text: '動物毛髮的主要成分', val: 'protein_2' },
+                        { id: 'item6', text: '皮膚下層的脂肪', val: 'lipid_1' },
+                        { id: 'item7', text: '雞蛋中的蛋白', val: 'protein_3' },
+                        { id: 'item8', text: '奶油和沙拉油', val: 'lipid_2' },
+                        { id: 'item9', text: '堅果中的油脂', val: 'lipid_3' }
+                    ],
+                    solution: {
+                        zone1: ['carb_1', 'carb_2', 'carb_3'],
+                        zone2: ['protein_1', 'protein_2', 'protein_3'],
+                        zone3: ['lipid_1', 'lipid_2', 'lipid_3']
+                    }
+                },
+                {
+                    id: "3-1-2",
+                    section: "3-1",
+                    type: "classification",
+                    title: "第二關：調節生理機能的養分",
+                    description: "請將以下養分依據其類型分類",
+                    zones: [
+                        { id: 'zone1', title: '水', icon: 'fa-droplet' },
+                        { id: 'zone2', title: '礦物質', icon: 'fa-gem' },
+                        { id: 'zone3', title: '維生素', icon: 'fa-pills' }
+                    ],
+                    items: [
+                        { id: 'item1', text: '人體含量最多的物質', val: 'water_1' },
+                        { id: 'item2', text: '鈣和磷組成骨骼', val: 'mineral_1' },
+                        { id: 'item3', text: '鐵質可造血', val: 'mineral_2' },
+                        { id: 'item4', text: '缺乏會導致夜盲症', val: 'vitamin_1' },
+                        { id: 'item5', text: '缺乏會皮下出血', val: 'vitamin_2' },
+                        { id: 'item6', text: '細胞內物質需先溶於其中', val: 'water_2' },
+                        { id: 'item7', text: '調節生理機能', val: 'vitamin_3' },
+                        { id: 'item8', text: '構成細胞組織', val: 'mineral_3' },
+                        { id: 'item9', text: '占人體重約70%', val: 'water_3' }
+                    ],
+                    solution: {
+                        zone1: ['water_1', 'water_2', 'water_3'],
+                        zone2: ['mineral_1', 'mineral_2', 'mineral_3'],
+                        zone3: ['vitamin_1', 'vitamin_2', 'vitamin_3']
+                    }
+                },
+                {
+                    id: "3-1-3",
+                    section: "3-1",
+                    type: "classification",
+                    title: "第三關：如何檢測養分？",
+                    description: "請將以下實驗現象或方法，分類到正確的檢測項目",
+                    zones: [
+                        { id: 'zone1', title: '碘液測澱粉', icon: 'fa-flask' },
+                        { id: 'zone2', title: '本氏液測葡萄糖', icon: 'fa-vial' }
+                    ],
+                    items: [
+                        { id: 'item1', text: '遇澱粉變藍黑色', val: 'iodine_1' },
+                        { id: 'item2', text: '遇澱粉變紫紅色', val: 'iodine_2' },
+                        { id: 'item3', text: '加熱後變橙紅色', val: 'benedict_1' },
+                        { id: 'item4', text: '試劑原本是淡藍色', val: 'benedict_2' },
+                        { id: 'item5', text: '試劑原本是黃褐色', val: 'iodine_3' },
+                        { id: 'item6', text: '白飯滴入後變色', val: 'iodine_4' },
+                        { id: 'item7', text: '需要隔水加熱', val: 'benedict_3' },
+                        { id: 'item8', text: '葡萄糖含量高變磚紅色', val: 'benedict_4' }
+                    ],
+                    solution: {
+                        zone1: ['iodine_1', 'iodine_2', 'iodine_3', 'iodine_4'],
+                        zone2: ['benedict_1', 'benedict_2', 'benedict_3', 'benedict_4']
+                    }
+                }
+            ],
+            "3-2": [
+                {
+                    id: "3-2-1",
+                    section: "3-2",
+                    type: "classification",
+                    title: "第一關：分解還是合成？",
+                    description: "請將以下生理作用分類為分解作用或合成作用",
+                    zones: [
+                        { id: 'zone1', title: '分解作用', icon: 'fa-arrow-down' },
+                        { id: 'zone2', title: '合成作用', icon: 'fa-arrow-up' }
+                    ],
+                    items: [
+                        { id: 'item1', text: '澱粉變成葡萄糖', val: 'decompose_1' },
+                        { id: 'item2', text: '葡萄糖變成澱粉', val: 'synthesize_1' },
+                        { id: 'item3', text: '蛋白質變成胺基酸', val: 'decompose_2' },
+                        { id: 'item4', text: '胺基酸變成蛋白質', val: 'synthesize_2' },
+                        { id: 'item5', text: '大分子變小分子', val: 'decompose_3' },
+                        { id: 'item6', text: '小分子變大分子', val: 'synthesize_3' },
+                        { id: 'item7', text: '消化食物的過程', val: 'decompose_4' },
+                        { id: 'item8', text: '植物製造養分', val: 'synthesize_4' }
+                    ],
+                    solution: {
+                        zone1: ['decompose_1', 'decompose_2', 'decompose_3', 'decompose_4'],
+                        zone2: ['synthesize_1', 'synthesize_2', 'synthesize_3', 'synthesize_4']
+                    }
+                },
+                {
+                    id: "3-2-2",
+                    section: "3-2",
+                    type: "classification",
+                    title: "第二關：認識酵素的特性",
+                    description: "請判斷以下敘述是否為酵素的特性",
+                    zones: [
+                        { id: 'zone1', title: '正確的特性', icon: 'fa-check' },
+                        { id: 'zone2', title: '錯誤的敘述', icon: 'fa-times' }
+                    ],
+                    items: [
+                        { id: 'item1', text: '具有專一性', val: 'correct_1' },
+                        { id: 'item2', text: '可以重複使用', val: 'correct_2' },
+                        { id: 'item3', text: '主要成分是蛋白質', val: 'correct_3' },
+                        { id: 'item4', text: '反應後會被消耗掉', val: 'wrong_1' },
+                        { id: 'item5', text: '可以分解所有物質', val: 'wrong_2' },
+                        { id: 'item6', text: '本質不會改變', val: 'correct_4' },
+                        { id: 'item7', text: '受溫度影響', val: 'correct_5' },
+                        { id: 'item8', text: '在任何環境都能作用', val: 'wrong_3' }
+                    ],
+                    solution: {
+                        zone1: ['correct_1', 'correct_2', 'correct_3', 'correct_4', 'correct_5'],
+                        zone2: ['wrong_1', 'wrong_2', 'wrong_3']
+                    }
+                },
+                {
+                    id: "3-2-3",
+                    section: "3-2",
+                    type: "classification",
+                    title: "第三關：酵素喜歡什麼環境？",
+                    description: "請將以下敘述分類為「有利」或「不利」酵素作用",
+                    zones: [
+                        { id: 'zone1', title: '有利酵素作用', icon: 'fa-thumbs-up' },
+                        { id: 'zone2', title: '不利酵素作用', icon: 'fa-thumbs-down' }
+                    ],
+                    items: [
+                        { id: 'item1', text: '人體體溫37°C', val: 'favorable_1' },
+                        { id: 'item2', text: '沸水100°C', val: 'unfavorable_1' },
+                        { id: 'item3', text: '冰水0°C', val: 'unfavorable_2' },
+                        { id: 'item4', text: '胃的酸性環境（胃蛋白酶）', val: 'favorable_2' },
+                        { id: 'item5', text: '小腸的鹼性環境（腸液酵素）', val: 'favorable_3' },
+                        { id: 'item6', text: '極端高溫', val: 'unfavorable_3' },
+                        { id: 'item7', text: '適當的酸鹼度', val: 'favorable_4' },
+                        { id: 'item8', text: '唾液的中性環境（唾液澱粉酶）', val: 'favorable_5' },
+                        { id: 'item9', text: '極端酸性或鹼性', val: 'unfavorable_4' },
+                        { id: 'item10', text: '適當溫度範圍內', val: 'favorable_6' }
+                    ],
+                    solution: {
+                        zone1: ['favorable_1', 'favorable_2', 'favorable_3', 'favorable_4', 'favorable_5', 'favorable_6'],
+                        zone2: ['unfavorable_1', 'unfavorable_2', 'unfavorable_3', 'unfavorable_4']
+                    }
+                },
+                {
+                    id: "3-2-4",
+                    section: "3-2",
+                    type: "classification",
+                    title: "第四關：酵素找受質",
+                    description: "請將受質分類到能分解它的酵素",
+                    zones: [
+                        { id: 'zone1', title: '澱粉酶', icon: 'fa-bread-slice' },
+                        { id: 'zone2', title: '蛋白酶', icon: 'fa-egg' },
+                        { id: 'zone3', title: '脂肪酶', icon: 'fa-oil-can' }
+                    ],
+                    items: [
+                        { id: 'item1', text: '米飯中的澱粉', val: 'amylase_1' },
+                        { id: 'item2', text: '肉類中的蛋白質', val: 'protease_1' },
+                        { id: 'item3', text: '奶油中的脂質', val: 'lipase_1' },
+                        { id: 'item4', text: '馬鈴薯中的澱粉', val: 'amylase_2' },
+                        { id: 'item5', text: '魚肉中的蛋白質', val: 'protease_2' },
+                        { id: 'item6', text: '沙拉油中的脂質', val: 'lipase_2' },
+                        { id: 'item7', text: '麵包中的澱粉', val: 'amylase_3' },
+                        { id: 'item8', text: '豆腐中的蛋白質', val: 'protease_3' },
+                        { id: 'item9', text: '堅果中的脂質', val: 'lipase_3' }
+                    ],
+                    solution: {
+                        zone1: ['amylase_1', 'amylase_2', 'amylase_3'],
+                        zone2: ['protease_1', 'protease_2', 'protease_3'],
+                        zone3: ['lipase_1', 'lipase_2', 'lipase_3']
+                    }
+                }
+            ],
+            "3-3": [
+                {
+                    id: "3-3-1",
+                    section: "3-3",
+                    type: "classification",
+                    title: "第一關：認識葉片的構造",
+                    description: "請將以下功能配對到正確的葉片構造",
+                    zones: [
+                        { id: 'zone1', title: '表皮（上、下表皮）', icon: 'fa-shield-alt' },
+                        { id: 'zone2', title: '葉肉', icon: 'fa-leaf' },
+                        { id: 'zone3', title: '氣孔與保衛細胞', icon: 'fa-wind' },
+                        { id: 'zone4', title: '葉脈', icon: 'fa-project-diagram' }
+                    ],
+                    items: [
+                        { id: 'item1', text: '保護葉片', val: 'epidermis_1' },
+                        { id: 'item2', text: '含有葉綠體', val: 'mesophyll_1' },
+                        { id: 'item3', text: '控制氣孔開閉', val: 'stomata_1' },
+                        { id: 'item4', text: '運送水分和養分', val: 'vein_1' },
+                        { id: 'item5', text: '氣體進出的通道', val: 'stomata_2' },
+                        { id: 'item6', text: '進行光合作用', val: 'mesophyll_2' },
+                        { id: 'item7', text: '支持葉片', val: 'vein_2' },
+                        { id: 'item8', text: '防止水分散失（角質層）', val: 'epidermis_2' },
+                        { id: 'item9', text: '由兩個保衛細胞控制', val: 'stomata_3' },
+                        { id: 'item10', text: '含葉綠素的部位', val: 'mesophyll_3' }
+                    ],
+                    solution: {
+                        zone1: ['epidermis_1', 'epidermis_2'],
+                        zone2: ['mesophyll_1', 'mesophyll_2', 'mesophyll_3'],
+                        zone3: ['stomata_1', 'stomata_2', 'stomata_3'],
+                        zone4: ['vein_1', 'vein_2']
+                    }
+                },
+                {
+                    id: "3-3-2",
+                    section: "3-3",
+                    type: "classification",
+                    title: "第二關：光合作用的進與出",
+                    description: "請將以下物質分類為光合作用的原料或產物",
+                    zones: [
+                        { id: 'zone1', title: '原料（需要的）', icon: 'fa-arrow-right' },
+                        { id: 'zone2', title: '產物（產生的）', icon: 'fa-arrow-left' }
+                    ],
+                    items: [
+                        { id: 'item1', text: '水（從根吸收）', val: 'reactant_1' },
+                        { id: 'item2', text: '二氧化碳（從氣孔進入）', val: 'reactant_2' },
+                        { id: 'item3', text: '氧氣（從氣孔排出）', val: 'product_1' },
+                        { id: 'item4', text: '葡萄糖（製造的養分）', val: 'product_2' },
+                        { id: 'item5', text: '水（產生的）', val: 'product_3' },
+                        { id: 'item6', text: '光能（太陽提供）', val: 'reactant_3' },
+                        { id: 'item7', text: '澱粉（儲存形式）', val: 'product_4' },
+                        { id: 'item8', text: 'H₂O + CO₂', val: 'reactant_4' }
+                    ],
+                    solution: {
+                        zone1: ['reactant_1', 'reactant_2', 'reactant_3', 'reactant_4'],
+                        zone2: ['product_1', 'product_2', 'product_3', 'product_4']
+                    }
+                },
+                {
+                    id: "3-3-3",
+                    section: "3-3",
+                    type: "classification",
+                    title: "第三關：光合作用需要什麼？",
+                    description: "請判斷以下條件是否為光合作用所必需",
+                    zones: [
+                        { id: 'zone1', title: '必要條件', icon: 'fa-check-circle' },
+                        { id: 'zone2', title: '非必要條件', icon: 'fa-times-circle' }
+                    ],
+                    items: [
+                        { id: 'item1', text: '陽光照射', val: 'necessary_1' },
+                        { id: 'item2', text: '葉綠體', val: 'necessary_2' },
+                        { id: 'item3', text: '二氧化碳', val: 'necessary_3' },
+                        { id: 'item4', text: '水分', val: 'necessary_4' },
+                        { id: 'item5', text: '土壤養分', val: 'unnecessary_1' },
+                        { id: 'item6', text: '氧氣', val: 'unnecessary_2' },
+                        { id: 'item7', text: '葉綠素', val: 'necessary_5' },
+                        { id: 'item8', text: '黑暗環境', val: 'unnecessary_3' }
+                    ],
+                    solution: {
+                        zone1: ['necessary_1', 'necessary_2', 'necessary_3', 'necessary_4', 'necessary_5'],
+                        zone2: ['unnecessary_1', 'unnecessary_2', 'unnecessary_3']
+                    }
+                }
+            ],
+            "3-4": [
+                {
+                    id: "3-4-1",
+                    section: "3-4",
+                    type: "classification",
+                    title: "第一關：消化道還是消化腺？",
+                    description: "請將以下器官分類到消化道或消化腺",
+                    zones: [
+                        { id: 'zone1', title: '消化道', icon: 'fa-route' },
+                        { id: 'zone2', title: '消化腺', icon: 'fa-flask-vial' }
+                    ],
+                    items: [
+                        { id: 'item1', text: '口腔', val: 'tract_1' },
+                        { id: 'item2', text: '唾腺', val: 'gland_1' },
+                        { id: 'item3', text: '食道', val: 'tract_2' },
+                        { id: 'item4', text: '胃', val: 'tract_3' },
+                        { id: 'item5', text: '胃腺', val: 'gland_2' },
+                        { id: 'item6', text: '肝臟', val: 'gland_3' },
+                        { id: 'item7', text: '胰臟', val: 'gland_4' },
+                        { id: 'item8', text: '小腸', val: 'tract_4' },
+                        { id: 'item9', text: '腸腺', val: 'gland_5' },
+                        { id: 'item10', text: '大腸', val: 'tract_5' }
+                    ],
+                    solution: {
+                        zone1: ['tract_1', 'tract_2', 'tract_3', 'tract_4', 'tract_5'],
+                        zone2: ['gland_1', 'gland_2', 'gland_3', 'gland_4', 'gland_5']
+                    }
+                },
+                {
+                    id: "3-4-2",
+                    section: "3-4",
+                    type: "classification",
+                    title: "第二關：消化腺分泌什麼？",
+                    description: "請將消化液配對到正確的消化腺",
+                    zones: [
+                        { id: 'zone1', title: '唾腺', icon: 'fa-comment-dots' },
+                        { id: 'zone2', title: '胃腺', icon: 'fa-stomach' },
+                        { id: 'zone3', title: '肝臟', icon: 'fa-liver' },
+                        { id: 'zone4', title: '胰臟', icon: 'fa-pancreas' },
+                        { id: 'zone5', title: '腸腺', icon: 'fa-intestines' }
+                    ],
+                    items: [
+                        { id: 'item1', text: '分泌唾液', val: 'salivary_1' },
+                        { id: 'item2', text: '分泌胃液', val: 'gastric_1' },
+                        { id: 'item3', text: '分泌膽汁', val: 'liver_1' },
+                        { id: 'item4', text: '分泌胰液', val: 'pancreas_1' },
+                        { id: 'item5', text: '分泌腸液', val: 'intestinal_1' },
+                        { id: 'item6', text: '注入口腔', val: 'salivary_2' },
+                        { id: 'item7', text: '注入胃', val: 'gastric_2' },
+                        { id: 'item8', text: '儲存在膽囊', val: 'liver_2' },
+                        { id: 'item9', text: '注入小腸（胰液）', val: 'pancreas_2' },
+                        { id: 'item10', text: '注入小腸（腸液）', val: 'intestinal_2' }
+                    ],
+                    solution: {
+                        zone1: ['salivary_1', 'salivary_2'],
+                        zone2: ['gastric_1', 'gastric_2'],
+                        zone3: ['liver_1', 'liver_2'],
+                        zone4: ['pancreas_1', 'pancreas_2'],
+                        zone5: ['intestinal_1', 'intestinal_2']
+                    }
+                },
+                {
+                    id: "3-4-3",
+                    section: "3-4",
+                    type: "classification",
+                    title: "第三關：消化液的任務",
+                    description: "請將以下消化液依據其主要功能分類",
+                    zones: [
+                        { id: 'zone1', title: '分解澱粉', icon: 'fa-bread-slice' },
+                        { id: 'zone2', title: '分解蛋白質', icon: 'fa-drumstick-bite' },
+                        { id: 'zone3', title: '分解脂質', icon: 'fa-oil-can' },
+                        { id: 'zone4', title: '乳化脂質', icon: 'fa-droplet-slash' }
+                    ],
+                    items: [
+                        { id: 'item1', text: '唾液（唾液澱粉酶）', val: 'starch_1' },
+                        { id: 'item2', text: '胃液（胃蛋白酶）', val: 'protein_1' },
+                        { id: 'item3', text: '膽汁', val: 'emulsify_1' },
+                        { id: 'item4', text: '胰液（胰澱粉酶）', val: 'starch_2' },
+                        { id: 'item5', text: '胰液（胰蛋白酶）', val: 'protein_2' },
+                        { id: 'item6', text: '胰液（胰脂肪酶）', val: 'lipid_1' },
+                        { id: 'item7', text: '腸液（腸澱粉酶）', val: 'starch_3' },
+                        { id: 'item8', text: '腸液（腸蛋白酶）', val: 'protein_3' },
+                        { id: 'item9', text: '將脂質變成小油滴', val: 'emulsify_2' },
+                        { id: 'item10', text: '口腔內開始作用', val: 'starch_4' }
+                    ],
+                    solution: {
+                        zone1: ['starch_1', 'starch_2', 'starch_3', 'starch_4'],
+                        zone2: ['protein_1', 'protein_2', 'protein_3'],
+                        zone3: ['lipid_1'],
+                        zone4: ['emulsify_1', 'emulsify_2']
+                    }
+                },
+                {
+                    id: "3-4-4",
+                    section: "3-4",
+                    type: "classification",
+                    title: "第四關：消化的最終產物",
+                    description: "請將小分子配對到其來源的大分子",
+                    zones: [
+                        { id: 'zone1', title: '澱粉 → 葡萄糖', icon: 'fa-candy-cane' },
+                        { id: 'zone2', title: '蛋白質 → 胺基酸', icon: 'fa-dna' },
+                        { id: 'zone3', title: '脂質 → 脂肪酸與甘油', icon: 'fa-oil-can' }
+                    ],
+                    items: [
+                        { id: 'item1', text: '米飯消化後', val: 'glucose_1' },
+                        { id: 'item2', text: '肉類消化後', val: 'amino_1' },
+                        { id: 'item3', text: '奶油消化後', val: 'fatty_1' },
+                        { id: 'item4', text: '可被小腸吸收的糖', val: 'glucose_2' },
+                        { id: 'item5', text: '可被小腸吸收的胺基酸', val: 'amino_2' },
+                        { id: 'item6', text: '可被小腸吸收的脂肪酸', val: 'fatty_2' },
+                        { id: 'item7', text: '麵包最終變成', val: 'glucose_3' },
+                        { id: 'item8', text: '豆腐最終變成', val: 'amino_3' },
+                        { id: 'item9', text: '沙拉油最終變成', val: 'fatty_3' }
+                    ],
+                    solution: {
+                        zone1: ['glucose_1', 'glucose_2', 'glucose_3'],
+                        zone2: ['amino_1', 'amino_2', 'amino_3'],
+                        zone3: ['fatty_1', 'fatty_2', 'fatty_3']
+                    }
+                },
+                {
+                    id: "3-4-5",
+                    section: "3-4",
+                    type: "classification",
+                    title: "第五關：食物的旅程",
+                    description: "請將以下功能配對到正確的消化道器官",
+                    zones: [
+                        { id: 'zone1', title: '口腔、咽、食道', icon: 'fa-mouth-open' },
+                        { id: 'zone2', title: '胃', icon: 'fa-circle' },
+                        { id: 'zone3', title: '小腸', icon: 'fa-ribbon' },
+                        { id: 'zone4', title: '大腸、肛門', icon: 'fa-toilet' }
+                    ],
+                    items: [
+                        { id: 'item1', text: '咀嚼食物', val: 'mouth_1' },
+                        { id: 'item2', text: '調控食物進入食道', val: 'mouth_2' },
+                        { id: 'item3', text: '蠕動推進食物', val: 'mouth_3' },
+                        { id: 'item4', text: '儲存食物', val: 'stomach_1' },
+                        { id: 'item5', text: '初步分解蛋白質', val: 'stomach_2' },
+                        { id: 'item6', text: '形成粥狀物', val: 'stomach_3' },
+                        { id: 'item7', text: '消化食物的主要場所', val: 'small_1' },
+                        { id: 'item8', text: '吸收養分和大部分水分', val: 'small_2' },
+                        { id: 'item9', text: '具有絨毛增加吸收面積', val: 'small_3' },
+                        { id: 'item10', text: '吸收剩餘水分', val: 'large_1' },
+                        { id: 'item11', text: '形成糞便', val: 'large_2' },
+                        { id: 'item12', text: '排遺', val: 'large_3' }
+                    ],
+                    solution: {
+                        zone1: ['mouth_1', 'mouth_2', 'mouth_3'],
+                        zone2: ['stomach_1', 'stomach_2', 'stomach_3'],
+                        zone3: ['small_1', 'small_2', 'small_3'],
+                        zone4: ['large_1', 'large_2', 'large_3']
+                    }
+                }
+            ]
+        };
+
+        // 主題配色
+        const themeColors = {
+            '3-1': { 
+                primary: 'from-green-500 to-emerald-600',
+                header: 'from-green-600 to-emerald-700', 
+                badge: 'bg-green-500' 
+            },
+            '3-2': { 
+                primary: 'from-blue-500 to-cyan-600',
+                header: 'from-blue-600 to-cyan-700', 
+                badge: 'bg-blue-500' 
+            },
+            '3-3': { 
+                primary: 'from-purple-500 to-pink-600',
+                header: 'from-purple-600 to-pink-700', 
+                badge: 'bg-purple-500' 
+            },
+            '3-4': { 
+                primary: 'from-orange-500 to-red-600',
+                header: 'from-orange-600 to-red-700', 
+                badge: 'bg-orange-500' 
+            }
+        };
+		// 隨機排序函數
+        function shuffleArray(array) {
+            const newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        }
+
+        // 觸控拖曳支援 - v4.1 修復版本
+        let touchDragData = null;
+        let touchDragElement = null;
+        let touchClone = null;
+        let touchRemoveCallback = null;
+        let touchSourceZoneId = null;
+        let isDragging = false;
+
+        function handleTouchStart(e, item, removeCallback) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            isDragging = true;
+            touchDragData = item;
+            touchDragElement = e.currentTarget;
+            touchRemoveCallback = removeCallback;
+            
+            document.body.style.overflow = 'hidden';
+            document.body.style.touchAction = 'none';
+            document.body.style.userSelect = 'none';
+            document.body.style.webkitUserSelect = 'none';
+            
+            const scrollContainer = document.querySelector('.overflow-y-auto');
+            if (scrollContainer) {
+                scrollContainer.style.overflowY = 'hidden';
+                scrollContainer.style.touchAction = 'none';
+            }
+            
+            const sourceZone = touchDragElement.closest('.drop-zone');
+            touchSourceZoneId = sourceZone ? sourceZone.getAttribute('data-zone-id') : null;
+            
+            const touch = e.touches[0];
+            
+            touchClone = touchDragElement.cloneNode(true);
+            touchClone.style.position = 'fixed';
+            touchClone.style.zIndex = '10000';
+            touchClone.style.opacity = '0.8';
+            touchClone.style.pointerEvents = 'none';
+            touchClone.style.width = touchDragElement.offsetWidth + 'px';
+            touchClone.style.left = (touch.clientX - touchDragElement.offsetWidth / 2) + 'px';
+            touchClone.style.top = (touch.clientY - touchDragElement.offsetHeight / 2) + 'px';
+            touchClone.style.transition = 'none';
+            touchClone.style.touchAction = 'none';
+            document.body.appendChild(touchClone);
+            
+            touchDragElement.style.opacity = '0.2';
+            touchDragElement.style.transform = 'scale(0.95)';
+            touchDragElement.style.transition = 'opacity 0.2s, transform 0.2s';
+        }
+
+        function handleTouchMove(e) {
+            if (!touchClone || !isDragging) return;
+            
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const touch = e.touches[0];
+            
+            touchClone.style.left = (touch.clientX - touchClone.offsetWidth / 2) + 'px';
+            touchClone.style.top = (touch.clientY - touchClone.offsetHeight / 2) + 'px';
+            
+            const dropZones = document.querySelectorAll('.drop-zone');
+            dropZones.forEach(zone => zone.classList.remove('drag-over'));
+            
+            const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+            if (elementBelow) {
+                const dropZone = elementBelow.closest('.drop-zone');
+                if (dropZone) {
+                    const targetZoneId = dropZone.getAttribute('data-zone-id');
+                    if (targetZoneId !== touchSourceZoneId) {
+                        dropZone.classList.add('drag-over');
+                    }
+                }
+            }
+        }
+
+        function handleTouchEnd(e, dropCallback) {
+            if (!touchClone) return;
+            
+            isDragging = false;
+            
+            const touch = e.changedTouches[0];
+            const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+            
+            let targetZone = null;
+            let targetZoneId = null;
+            if (elementBelow) {
+                targetZone = elementBelow.closest('.drop-zone');
+                if (targetZone) {
+                    targetZoneId = targetZone.getAttribute('data-zone-id');
+                }
+            }
+            
+            if (touchClone && touchClone.parentNode) {
+                touchClone.parentNode.removeChild(touchClone);
+            }
+            
+            document.body.style.overflow = '';
+            document.body.style.touchAction = '';
+            document.body.style.userSelect = '';
+            document.body.style.webkitUserSelect = '';
+            
+            const scrollContainer = document.querySelector('.overflow-y-auto');
+            if (scrollContainer) {
+                scrollContainer.style.overflowY = 'auto';
+                scrollContainer.style.touchAction = '';
+            }
+            
+            const dropZones = document.querySelectorAll('.drop-zone');
+            dropZones.forEach(zone => zone.classList.remove('drag-over'));
+            
+            const isValidDrop = targetZone && targetZoneId && touchDragData && 
+                              targetZoneId !== touchSourceZoneId;
+            
+            if (isValidDrop && dropCallback) {
+                if (touchRemoveCallback) {
+                    touchRemoveCallback();
+                }
+                dropCallback(touchDragData, targetZoneId);
+            } else {
+                if (touchDragElement) {
+                    touchDragElement.style.opacity = '1';
+                    touchDragElement.style.transform = 'scale(1)';
+                }
+            }
+            
+            touchDragData = null;
+            touchDragElement = null;
+            touchClone = null;
+            touchRemoveCallback = null;
+            touchSourceZoneId = null;
+        }
+
+        if (typeof window !== 'undefined') {
+            document.addEventListener('touchcancel', function(e) {
+                if (isDragging) {
+                    isDragging = false;
+                    if (touchClone && touchClone.parentNode) {
+                        touchClone.parentNode.removeChild(touchClone);
+                    }
+                    if (touchDragElement) {
+                        touchDragElement.style.opacity = '1';
+                        touchDragElement.style.transform = 'scale(1)';
+                    }
+                    document.body.style.overflow = '';
+                    document.body.style.touchAction = '';
+                    document.body.style.userSelect = '';
+                    document.body.style.webkitUserSelect = '';
+                    const scrollContainer = document.querySelector('.overflow-y-auto');
+                    if (scrollContainer) {
+                        scrollContainer.style.overflowY = 'auto';
+                        scrollContainer.style.touchAction = '';
+                    }
+                    touchClone = null;
+                    touchDragData = null;
+                    touchDragElement = null;
+                    touchRemoveCallback = null;
+                    touchSourceZoneId = null;
+                }
+            }, { passive: false });
+        }
+
+        // 主應用程式
+        function App() {
+            const [screen, setScreen] = useState('section_select');
+            const [currentSection, setCurrentSection] = useState(null);
+            const [currentLevelIndex, setCurrentLevelIndex] = useState(0);
+            const [gameState, setGameState] = useState('playing');
+            const [droppedItems, setDroppedItems] = useState({});
+            const [feedback, setFeedback] = useState({});
+            const [startTime, setStartTime] = useState(null);
+            const [elapsedTime, setElapsedTime] = useState(0);
+            const [score, setScore] = useState({ correct: 0, total: 0 });
+            const [shuffledItems, setShuffledItems] = useState([]);
+            const [shuffledZones, setShuffledZones] = useState([]);
+            
+            const [sectionStartTime, setSectionStartTime] = useState(null);
+            const [sectionTotalTime, setSectionTotalTime] = useState(0);
+            const [errorLog, setErrorLog] = useState([]);
+            const [completedLevels, setCompletedLevels] = useState([]);
+            
+            const [sectionCompletionStatus, setSectionCompletionStatus] = useState(() => {
+                try {
+                    const saved = localStorage.getItem('chapter3_completion_status');
+                    return saved ? JSON.parse(saved) : {};
+                } catch {
+                    return {};
+                }
+            });
+            
+            const [fontScale, setFontScale] = useState(() => {
+                try {
+                    const saved = localStorage.getItem('chapter3_font_scale');
+                    return saved ? parseFloat(saved) : 100;
+                } catch {
+                    return 100;
+                }
+            });
+            
+            useEffect(() => {
+                document.documentElement.style.fontSize = `${fontScale}%`;
+            }, [fontScale]);
+            
+            const increaseFontSize = () => {
+                const newScale = Math.min(fontScale + 10, 150);
+                setFontScale(newScale);
+                localStorage.setItem('chapter3_font_scale', newScale.toString());
+            };
+            
+            const decreaseFontSize = () => {
+                const newScale = Math.max(fontScale - 10, 70);
+                setFontScale(newScale);
+                localStorage.setItem('chapter3_font_scale', newScale.toString());
+            };
+
+            useEffect(() => {
+                let timer;
+                if (gameState === 'playing' && startTime) {
+                    timer = setInterval(() => {
+                        setElapsedTime(Math.floor((new Date() - startTime) / 1000));
+                    }, 1000);
+                }
+                return () => {
+                    if (timer) clearInterval(timer);
+                };
+            }, [gameState, startTime]);
+
+            const initializeLevel = (sectionId, levelIndex) => {
+                const level = CHAPTER_DATA[sectionId][levelIndex];
+                if (level.items) {
+                    setShuffledItems(shuffleArray(level.items));
+                }
+                if (level.zones) {
+                    setShuffledZones(shuffleArray(level.zones));
+                }
+            };
+
+            const selectSection = (sectionId) => {
+                setCurrentSection(sectionId);
+                setCurrentLevelIndex(0);
+                setScreen('playing');
+                setGameState('playing');
+                setStartTime(new Date());
+                setSectionStartTime(new Date());
+                setElapsedTime(0);
+                setDroppedItems({});
+                setFeedback({});
+                setScore({ correct: 0, total: 0 });
+                setErrorLog([]);
+                setCompletedLevels([]);
+                initializeLevel(sectionId, 0);
+            };
+
+            const handleDragStart = (e, item) => {
+                e.dataTransfer.setData('item', JSON.stringify(item));
+            };
+
+            const handleDragOver = (e) => {
+                e.preventDefault();
+            };
+
+            const handleDrop = (e, zoneId) => {
+                e.preventDefault();
+                const item = JSON.parse(e.dataTransfer.getData('item'));
+                
+                setDroppedItems(prev => ({
+                    ...prev,
+                    [zoneId]: [...(prev[zoneId] || []), item]
+                }));
+            };
+
+            const handleTouchDrop = (item, zoneId) => {
+                setDroppedItems(prev => ({
+                    ...prev,
+                    [zoneId]: [...(prev[zoneId] || []), item]
+                }));
+            };
+
+            const removeItem = (zoneId, itemId) => {
+                setDroppedItems(prev => ({
+                    ...prev,
+                    [zoneId]: prev[zoneId].filter(item => item.id !== itemId)
+                }));
+            };
+
+            const checkAnswers = () => {
+                const currentLevel = CHAPTER_DATA[currentSection][currentLevelIndex];
+                const newFeedback = {};
+                let correctCount = 0;
+                let totalZones = Object.keys(currentLevel.solution).length;
+                const wrongAnswers = [];
+
+                Object.keys(currentLevel.solution).forEach(zoneId => {
+                    const correctVals = currentLevel.solution[zoneId];
+                    const droppedVals = (droppedItems[zoneId] || []).map(item => item.val);
+                    
+                    const isCorrect = droppedVals.length > 0 &&
+                                    droppedVals.every(val => correctVals.includes(val));
+                    
+                    newFeedback[zoneId] = isCorrect;
+                    if (isCorrect) {
+                        correctCount++;
+                    } else {
+                        const zone = currentLevel.zones.find(z => z.id === zoneId);
+                        const userAnswerItems = (droppedItems[zoneId] || []).map(item => item.text);
+                        const correctAnswerItems = currentLevel.items
+                            .filter(item => correctVals.includes(item.val))
+                            .map(item => item.text);
+                        
+                        wrongAnswers.push({
+                            zone: zone.title,
+                            userAnswer: userAnswerItems.length > 0 ? userAnswerItems.join('、') : '(未填寫)',
+                            correctAnswer: correctAnswerItems.join('、')
+                        });
+                    }
+                });
+
+                const allItemsPlaced = Object.values(droppedItems).flat().length === currentLevel.items.length;
+
+                setFeedback(newFeedback);
+
+                if (correctCount === totalZones && allItemsPlaced) {
+                    const levelTime = elapsedTime;
+                    setCompletedLevels(prev => [...prev, {
+                        levelId: currentLevel.id,
+                        title: currentLevel.title,
+                        time: levelTime,
+                        attempts: score.total + 1
+                    }]);
+                    setGameState('completed');
+                    setScore(prev => ({ 
+                        correct: prev.correct + 1, 
+                        total: prev.total + 1 
+                    }));
+                } else {
+                    if (wrongAnswers.length > 0) {
+                        setErrorLog(prev => [...prev, {
+                            levelId: currentLevel.id,
+                            levelTitle: currentLevel.title,
+                            timestamp: new Date(),
+                            errors: wrongAnswers
+                        }]);
+                    }
+                    setScore(prev => ({ 
+                        ...prev, 
+                        total: prev.total + 1 
+                    }));
+                }
+            };
+
+            const nextLevel = () => {
+                if (currentLevelIndex < CHAPTER_DATA[currentSection].length - 1) {
+                    const newIndex = currentLevelIndex + 1;
+                    setCurrentLevelIndex(newIndex);
+                    setGameState('playing');
+                    setStartTime(new Date());
+                    setElapsedTime(0);
+                    setDroppedItems({});
+                    setFeedback({});
+                    initializeLevel(currentSection, newIndex);
+                } else {
+                    const endTime = new Date();
+                    const totalSeconds = Math.floor((endTime - sectionStartTime) / 1000);
+                    setSectionTotalTime(totalSeconds);
+                    
+                    const newStatus = {
+                        ...sectionCompletionStatus,
+                        [currentSection]: {
+                            completed: true,
+                            completedAt: endTime.toISOString(),
+                            totalTime: totalSeconds,
+                            attempts: score.total,
+                            errors: score.total - score.correct,
+                            errorLog: errorLog
+                        }
+                    };
+                    setSectionCompletionStatus(newStatus);
+                    localStorage.setItem('chapter3_completion_status', JSON.stringify(newStatus));
+                    
+                    const allSections = ['3-1', '3-2', '3-3', '3-4'];
+                    const allCompleted = allSections.every(sec => newStatus[sec]?.completed);
+                    
+                    if (allCompleted) {
+                        setScreen('all_complete');
+                    } else {
+                        setScreen('final_summary');
+                    }
+                }
+            };
+
+            const restart = () => {
+                setCurrentLevelIndex(0);
+                setGameState('playing');
+                setStartTime(new Date());
+                setElapsedTime(0);
+                setDroppedItems({});
+                setFeedback({});
+                setScore({ correct: 0, total: 0 });
+                initializeLevel(currentSection, 0);
+            };
+
+            const formatTime = (seconds) => {
+                const mins = Math.floor(seconds / 60);
+                const secs = seconds % 60;
+                return `${mins}:${secs.toString().padStart(2, '0')}`;
+            };
+
+            const currentLevel = currentSection ? CHAPTER_DATA[currentSection][currentLevelIndex] : null;
+            const colors = currentSection ? themeColors[currentSection] : themeColors['3-1'];
+			// 小節選擇畫面
+            if (screen === 'section_select') {
+                const sections = [
+                    { id: '3-1', title: '3-1 食物中的養分與能量', icon: 'fa-apple-alt', levels: 3, color: 'from-green-400 to-emerald-600' },
+                    { id: '3-2', title: '3-2 酵素', icon: 'fa-dna', levels: 4, color: 'from-blue-400 to-cyan-600' },
+                    { id: '3-3', title: '3-3 植物如何製造養分', icon: 'fa-seedling', levels: 3, color: 'from-purple-400 to-pink-600' },
+                    { id: '3-4', title: '3-4 人體如何獲得養分', icon: 'fa-utensils', levels: 5, color: 'from-orange-400 to-red-600' }
+                ];
+
+                const allCompleted = sections.every(sec => sectionCompletionStatus[sec.id]?.completed);
+
+                return (
+                    <div className="min-h-screen flex items-center justify-center p-6">
+                        <div className="fixed top-4 right-4 z-50 flex items-center gap-2 glass-effect rounded-xl p-2 shadow-xl">
+                            <button onClick={decreaseFontSize} disabled={fontScale <= 70}
+                                className={`px-3 py-2 rounded-lg font-bold transition-all ${fontScale <= 70 ? 'bg-white/10 text-white/30 cursor-not-allowed' : 'bg-white/20 text-white hover:bg-white/30 hover:scale-110'}`}>
+                                <span className="text-sm">A<sup className="text-xs">-</sup></span>
+                            </button>
+                            <button onClick={increaseFontSize} disabled={fontScale >= 150}
+                                className={`px-3 py-2 rounded-lg font-bold transition-all ${fontScale >= 150 ? 'bg-white/10 text-white/30 cursor-not-allowed' : 'bg-white/20 text-white hover:bg-white/30 hover:scale-110'}`}>
+                                <span className="text-sm">A<sup className="text-xs">+</sup></span>
+                            </button>
+                        </div>
+                        
+                        <div className="max-w-6xl w-full">
+                            <div className="text-center mb-12 fade-in">
+                                <h1 className="text-5xl font-black text-white mb-4">
+                                    <i className="fas fa-seedling mr-4"></i>第3章 生物體的營養
+                                </h1>
+                                <p className="text-xl text-white/90 mb-4">選擇一個小節開始學習</p>
+                                
+                                {Object.keys(sectionCompletionStatus).length > 0 && (
+                                    <button onClick={() => {
+                                        if (confirm('⚠️ 確定要清除所有完成記錄嗎?\n\n此操作將會:\n• 清除所有小節的完成標記\n• 刪除所有學習數據\n• 無法復原\n\n確定要繼續嗎?')) {
+                                            setSectionCompletionStatus({});
+                                            localStorage.removeItem('chapter3_completion_status');
+                                            alert('✅ 已清除所有記錄!');
+                                        }
+                                    }} className="bg-red-500/80 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-bold transition-all shadow-lg hover:scale-105">
+                                        <i className="fas fa-trash-alt mr-2"></i>清除所有完成記錄
+                                    </button>
+                                )}
+                            </div>
+
+                            <div className="grid md:grid-cols-2 gap-6">
+                                {sections.map((section, index) => {
+                                    const isCompleted = sectionCompletionStatus[section.id]?.completed;
+                                    const completionData = sectionCompletionStatus[section.id];
+                                    
+                                    return (
+                                        <div key={section.id} className="glass-effect rounded-2xl p-8 hover:scale-105 transition-all duration-300 cursor-pointer fade-in relative"
+                                            style={{ animationDelay: `${index * 0.1}s` }} onClick={() => selectSection(section.id)}>
+                                            {isCompleted && (
+                                                <div className="absolute top-4 right-4 bg-green-500 text-white px-3 py-1 rounded-full text-sm font-bold flex items-center gap-1 shadow-lg animate-bounce">
+                                                    <i className="fas fa-check-circle"></i>已完成
+                                                </div>
+                                            )}
+                                            
+                                            <div className={`w-20 h-20 bg-gradient-to-br ${section.color} rounded-2xl flex items-center justify-center mb-6 mx-auto relative`}>
+                                                <i className={`${section.icon} text-4xl text-white`}></i>
+                                                {isCompleted && (
+                                                    <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-green-500 rounded-full flex items-center justify-center border-4 border-white">
+                                                        <i className="fas fa-trophy text-white text-sm"></i>
+                                                    </div>
+                                                )}
+                                            </div>
+                                            
+                                            <h2 className="text-2xl font-bold text-white text-center mb-3">{section.title}</h2>
+                                            <p className="text-white/80 text-center mb-2">共 {section.levels} 個關卡</p>
+                                            
+                                            {isCompleted && completionData && (
+                                                <div className="text-center text-white/70 text-xs mt-3 space-y-1">
+                                                    <div>⏱️ {Math.floor(completionData.totalTime / 60)}:{(completionData.totalTime % 60).toString().padStart(2, '0')}</div>
+                                                    <div>🎯 嘗試 {completionData.attempts} 次</div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            // 遊戲進行畫面
+            if (screen === 'playing' && currentLevel) {
+                const placedItemIds = Object.values(droppedItems).flat().map(item => item.id);
+                const availableItems = shuffledItems.filter(item => !placedItemIds.includes(item.id));
+
+                return (
+                    <div className="h-screen flex flex-col overflow-hidden">
+                        <div className={`flex-shrink-0 bg-gradient-to-r ${colors.header} p-2 md:p-3 text-white shadow-xl`}>
+                            <div className="flex items-center gap-2 mb-2">
+                                <div className="flex items-center gap-2 flex-shrink-0">
+                                    <div className="flex items-center gap-1 bg-black/20 rounded-lg p-1">
+                                        <button onClick={decreaseFontSize} disabled={fontScale <= 70}
+                                            className={`px-1.5 py-0.5 rounded text-xs font-bold transition-all ${fontScale <= 70 ? 'text-white/30 cursor-not-allowed' : 'text-white hover:bg-white/20'}`}>
+                                            A<sup style={{ fontSize: '8px' }}>-</sup>
+                                        </button>
+                                        <button onClick={increaseFontSize} disabled={fontScale >= 150}
+                                            className={`px-1.5 py-0.5 rounded text-xs font-bold transition-all ${fontScale >= 150 ? 'text-white/30 cursor-not-allowed' : 'text-white hover:bg-white/20'}`}>
+                                            A<sup style={{ fontSize: '8px' }}>+</sup>
+                                        </button>
+                                    </div>
+                                    <h2 className="text-sm md:text-base font-bold truncate leading-tight">{currentLevel.title}</h2>
+                                </div>
+                                
+                                <div className="flex-1 min-w-0 max-w-[50%]">
+                                    <div className="relative h-3 bg-black/30 rounded-full overflow-hidden">
+                                        <div className="absolute h-full bg-gradient-to-r from-yellow-400 to-yellow-600 transition-all duration-500"
+                                            style={{ width: `${((currentLevelIndex + 1) / CHAPTER_DATA[currentSection].length) * 100}%` }}></div>
+                                    </div>
+                                </div>
+                                
+                                <div className="flex items-center gap-2 flex-shrink-0">
+                                    <span className="text-xs opacity-80 whitespace-nowrap hidden sm:inline">⏱️ {formatTime(elapsedTime)}</span>
+                                    <span className="text-xs bg-black/20 px-2 py-0.5 rounded whitespace-nowrap">🎯 {score.total}</span>
+                                    <button onClick={() => setScreen('section_select')}
+                                        className="bg-white/20 hover:bg-white/30 px-2 py-1 rounded transition-all text-xs">
+                                        <i className="fas fa-home"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div className="flex gap-1 justify-center">
+                                {CHAPTER_DATA[currentSection].map((level, idx) => (
+                                    <div key={idx} className={`w-5 h-5 rounded flex items-center justify-center text-xs font-bold transition-all
+                                        ${idx < currentLevelIndex ? 'bg-green-500 text-white' : ''}
+                                        ${idx === currentLevelIndex ? 'bg-yellow-400 text-black animate-pulse' : ''}
+                                        ${idx > currentLevelIndex ? 'bg-gray-500/30 text-gray-400' : ''}`}>
+                                        {idx < currentLevelIndex ? '✓' : idx + 1}
+                                    </div>
+                                ))}
+                                <span className="text-xs opacity-70 ml-2 self-center">{currentLevelIndex + 1}/{CHAPTER_DATA[currentSection].length}</span>
+                            </div>
+                        </div>
+
+                        <div className="flex-1 overflow-y-auto p-2 md:p-4" style={{WebkitOverflowScrolling: 'touch', maxHeight: '90%'}}>
+                            <div className="grid lg:grid-cols-3 gap-2 md:gap-3">
+                                <div className="lg:col-span-1">
+                                    <div className="glass-effect rounded-lg p-2 md:p-3 lg:sticky lg:top-2">
+                                        <h3 className="text-sm md:text-base font-bold text-white mb-2 flex items-center">
+                                            <i className="fas fa-cube mr-1 text-xs"></i>待分類項目
+                                        </h3>
+                                        <div className="grid grid-cols-2 gap-1.5">
+											{availableItems.map(item => (
+                                                <div key={item.id} draggable onDragStart={(e) => handleDragStart(e, item)}
+                                                    onTouchStart={(e) => handleTouchStart(e, item, null)}
+                                                    onTouchMove={handleTouchMove}
+                                                    onTouchEnd={(e) => handleTouchEnd(e, handleTouchDrop)}
+                                                    className="drag-item bg-white rounded-lg p-2 shadow-lg">
+                                                    <p className="text-gray-800 font-medium text-center text-xs">{item.text}</p>
+</div>
+                                            ))}
+                                            {availableItems.length === 0 && (
+                                                <div className="text-center text-white/70 py-3 text-xs">所有項目都已分類</div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="lg:col-span-2">
+                                    <div className="grid gap-2">
+                                        {shuffledZones.map(zone => (
+                                            <div key={zone.id} data-zone-id={zone.id}
+                                                onDragOver={handleDragOver}
+                                                onDrop={(e) => handleDrop(e, zone.id)}
+                                                className={`drop-zone glass-effect rounded-lg p-2 md:p-3
+                                                    ${feedback[zone.id] === true ? 'correct-answer' : ''}
+                                                    ${feedback[zone.id] === false ? 'wrong-answer' : ''}
+                                                    ${!feedback[zone.id] ? 'border-2 border-white/30' : ''}`}>
+                                                <h4 className="text-sm md:text-base font-bold text-white mb-2 flex items-center">
+                                                    <i className={`${zone.icon} mr-1 text-xs`}></i>
+                                                    <span className="flex-1 text-xs md:text-sm">{zone.title}</span>
+                                                    {feedback[zone.id] === true && <i className="fas fa-check-circle text-green-400 text-base"></i>}
+                                                    {feedback[zone.id] === false && <i className="fas fa-times-circle text-red-400 text-base"></i>}
+                                                </h4>
+                                                <div className="grid grid-cols-2 gap-1.5">
+                                                    {(droppedItems[zone.id] || []).map(item => (
+                                                        <div key={item.id} draggable
+                                                            onDragStart={(e) => { handleDragStart(e, item); setTimeout(() => removeItem(zone.id, item.id), 0); }}
+                                                            onTouchStart={(e) => handleTouchStart(e, item, () => removeItem(zone.id, item.id))}
+                                                            onTouchMove={handleTouchMove}
+                                                            onTouchEnd={(e) => handleTouchEnd(e, handleTouchDrop)}
+                                                            className="bg-white rounded-lg p-2 shadow-lg group relative cursor-move">
+                                                            <p className="text-gray-800 font-medium text-xs text-center pr-5">{item.text}</p>
+                                                            <button onClick={() => removeItem(zone.id, item.id)}
+                                                                className="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-xs">×</button>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    <div className="mt-2 flex gap-2">
+                                        {gameState === 'playing' && (() => {
+                                            const totalItems = currentLevel.items.length;
+                                            const placedItems = Object.values(droppedItems).flat().length;
+                                            const allPlaced = placedItems === totalItems;
+                                            
+                                            return (
+                                                <button onClick={checkAnswers}
+                                                    className={`flex-1 py-2.5 rounded-lg font-bold text-sm transition-all shadow-xl ${
+                                                        allPlaced ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:scale-105 cursor-pointer'
+                                                            : 'bg-gray-400 text-gray-200 cursor-not-allowed'}`}
+                                                    disabled={!allPlaced}>
+                                                    <i className="fas fa-check mr-1"></i>
+                                                    {allPlaced ? '檢查答案' : `尚未完成 (${placedItems}/${totalItems})`}
+                                                </button>
+                                            );
+                                        })()}
+                                        {gameState === 'completed' && (
+                                            <button onClick={nextLevel}
+                                                className="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 text-white py-2.5 rounded-lg font-bold text-sm hover:scale-105 transition-all shadow-xl">
+                                                <i className="fas fa-arrow-right mr-1"></i>
+                                                {currentLevelIndex < CHAPTER_DATA[currentSection].length - 1 ? '下一關' : '完成本節'}
+                                            </button>
+                                        )}
+                                        <button onClick={restart}
+                                            className="bg-white/20 text-white px-3 py-2.5 rounded-lg hover:bg-white/30 transition-all text-sm">
+                                            <i className="fas fa-redo"></i>
+                                            <span className="ml-1 hidden sm:inline">重來</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            return null;
+        }
+		// 渲染應用程式
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
