@@ -807,7 +807,7 @@
             
             const [sectionCompletionStatus, setSectionCompletionStatus] = useState(() => {
                 try {
-                    const saved = localStorage.getItem('chapter3_completion_status');
+                    const saved = localStorage.getItem('biology_chapter3_completion_status');
                     return saved ? JSON.parse(saved) : {};
                 } catch {
                     return {};
@@ -816,7 +816,7 @@
             
             const [fontScale, setFontScale] = useState(() => {
                 try {
-                    const saved = localStorage.getItem('chapter3_font_scale');
+                    const saved = localStorage.getItem('biology_chapter3_font_scale');
                     return saved ? parseFloat(saved) : 100;
                 } catch {
                     return 100;
@@ -830,13 +830,13 @@
             const increaseFontSize = () => {
                 const newScale = Math.min(fontScale + 10, 150);
                 setFontScale(newScale);
-                localStorage.setItem('chapter3_font_scale', newScale.toString());
+                localStorage.setItem('biology_chapter3_font_scale', newScale.toString());
             };
             
             const decreaseFontSize = () => {
                 const newScale = Math.max(fontScale - 10, 70);
                 setFontScale(newScale);
-                localStorage.setItem('chapter3_font_scale', newScale.toString());
+                localStorage.setItem('biology_chapter3_font_scale', newScale.toString());
             };
 
             useEffect(() => {
@@ -1001,7 +1001,7 @@
                         }
                     };
                     setSectionCompletionStatus(newStatus);
-                    localStorage.setItem('chapter3_completion_status', JSON.stringify(newStatus));
+                    localStorage.setItem('biology_chapter3_completion_status', JSON.stringify(newStatus));
                     
                     const allSections = ['3-1', '3-2', '3-3', '3-4'];
                     const allCompleted = allSections.every(sec => newStatus[sec]?.completed);
@@ -1068,7 +1068,7 @@
                                     <button onClick={() => {
                                         if (confirm('⚠️ 確定要清除所有完成記錄嗎?\n\n此操作將會:\n• 清除所有小節的完成標記\n• 刪除所有學習數據\n• 無法復原\n\n確定要繼續嗎?')) {
                                             setSectionCompletionStatus({});
-                                            localStorage.removeItem('chapter3_completion_status');
+                                            localStorage.removeItem('biology_chapter3_completion_status');
                                             alert('✅ 已清除所有記錄!');
                                         }
                                     }} className="bg-red-500/80 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-bold transition-all shadow-lg hover:scale-105">
