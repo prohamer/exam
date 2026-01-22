@@ -3,6 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- 
+    ⚠️ localStorage Keys 說明：
+    - biology_chapter6_completion_status: 生物第6章完成記錄
+    - biology_chapter6_font_scale: 生物第6章字體設定
+    
+    這樣可以避免與其他科目（理化、地科等）的相同章節衝突
+    -->
     <title>8上第6章 生物體的恆定 - 互動式闖關系統</title>
     
     <!-- React -->
@@ -753,7 +761,7 @@
             // 新增：小節完成狀態追蹤 (localStorage持久化)
             const [sectionCompletionStatus, setSectionCompletionStatus] = useState(() => {
                 try {
-                    const saved = localStorage.getItem('chapter6_completion_status');
+                    const saved = localStorage.getItem('biology_chapter6_completion_status');
                     return saved ? JSON.parse(saved) : {};
                 } catch {
                     return {};
@@ -763,7 +771,7 @@
             // 新增：字體大小調整 (localStorage持久化) - 使用百分比
             const [fontScale, setFontScale] = useState(() => {
                 try {
-                    const saved = localStorage.getItem('chapter6_font_scale');
+                    const saved = localStorage.getItem('biology_chapter6_font_scale');
                     return saved ? parseFloat(saved) : 100; // 預設 100%
                 } catch {
                     return 100;
@@ -779,19 +787,19 @@
             const increaseFontSize = () => {
                 const newScale = Math.min(fontScale + 10, 150); // 最大 150%
                 setFontScale(newScale);
-                localStorage.setItem('chapter6_font_scale', newScale.toString());
+                localStorage.setItem('biology_chapter6_font_scale', newScale.toString());
             };
             
             const decreaseFontSize = () => {
                 const newScale = Math.max(fontScale - 10, 70); // 最小 70%
                 setFontScale(newScale);
-                localStorage.setItem('chapter6_font_scale', newScale.toString());
+                localStorage.setItem('biology_chapter6_font_scale', newScale.toString());
             };
             
             // 重置字體大小
             const resetFontSize = () => {
                 setFontScale(100);
-                localStorage.setItem('chapter6_font_scale', '100');
+                localStorage.setItem('biology_chapter6_font_scale', '100');
             };
 
             // 計時器
@@ -1126,7 +1134,7 @@
                         }
                     };
                     setSectionCompletionStatus(newStatus);
-                    localStorage.setItem('chapter6_completion_status', JSON.stringify(newStatus));
+                    localStorage.setItem('biology_chapter6_completion_status', JSON.stringify(newStatus));
                     
                     // 檢查是否全部完成
                     const allSections = ['6-1', '6-2', '6-3'];
@@ -1257,7 +1265,7 @@
                                         onClick={() => {
                                             if (confirm('⚠️ 確定要清除所有完成記錄嗎？\n\n此操作將會：\n• 清除所有小節的完成標記\n• 刪除所有學習數據\n• 無法復原\n\n確定要繼續嗎？')) {
                                                 setSectionCompletionStatus({});
-                                                localStorage.removeItem('chapter6_completion_status');
+                                                localStorage.removeItem('biology_chapter6_completion_status');
                                                 alert('✅ 已清除所有記錄！');
                                             }
                                         }}
@@ -2339,7 +2347,7 @@
                                 onClick={() => {
                                     if (confirm('確定要清除所有完成記錄嗎？')) {
                                         setSectionCompletionStatus({});
-                                        localStorage.removeItem('chapter6_completion_status');
+                                        localStorage.removeItem('biology_chapter6_completion_status');
                                         setScreen('section_select');
                                     }
                                 }}
