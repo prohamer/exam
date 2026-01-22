@@ -736,7 +736,7 @@
             // 新增:小節完成狀態追蹤 (localStorage持久化)
             const [sectionCompletionStatus, setSectionCompletionStatus] = useState(() => {
                 try {
-                    const saved = localStorage.getItem('chapter4_completion_status');
+                    const saved = localStorage.getItem('biology_chapter4_completion_status');
                     return saved ? JSON.parse(saved) : {};
                 } catch {
                     return {};
@@ -746,7 +746,7 @@
             // 新增:字體大小調整 (localStorage持久化) - 使用百分比
             const [fontScale, setFontScale] = useState(() => {
                 try {
-                    const saved = localStorage.getItem('chapter4_font_scale');
+                    const saved = localStorage.getItem('biology_chapter4_font_scale');
                     return saved ? parseFloat(saved) : 100; // 預設 100%
                 } catch {
                     return 100;
@@ -762,19 +762,19 @@
             const increaseFontSize = () => {
                 const newScale = Math.min(fontScale + 10, 150); // 最大 150%
                 setFontScale(newScale);
-                localStorage.setItem('chapter4_font_scale', newScale.toString());
+                localStorage.setItem('biology_chapter4_font_scale', newScale.toString());
             };
             
             const decreaseFontSize = () => {
                 const newScale = Math.max(fontScale - 10, 70); // 最小 70%
                 setFontScale(newScale);
-                localStorage.setItem('chapter4_font_scale', newScale.toString());
+                localStorage.setItem('biology_chapter4_font_scale', newScale.toString());
             };
             
             // 重置字體大小
             const resetFontSize = () => {
                 setFontScale(100);
-                localStorage.setItem('chapter4_font_scale', '100');
+                localStorage.setItem('biology_chapter4_font_scale', '100');
             };
 
             // 計時器
@@ -1240,7 +1240,7 @@
                                         onClick={() => {
                                             if (confirm('⚠️ 確定要清除所有完成記錄嗎?\n\n此操作將會:\n• 清除所有小節的完成標記\n• 刪除所有學習數據\n• 無法復原\n\n確定要繼續嗎?')) {
                                                 setSectionCompletionStatus({});
-                                                localStorage.removeItem('chapter4_completion_status');
+                                                localStorage.removeItem('biology_chapter4_completion_status');
                                                 alert('✅ 已清除所有記錄!');
                                             }
                                         }}
@@ -1900,7 +1900,7 @@
                                 onClick={() => {
                                     if (confirm('確定要清除所有完成記錄嗎?')) {
                                         setSectionCompletionStatus({});
-                                        localStorage.removeItem('chapter4_completion_status');
+                                        localStorage.removeItem('biology_chapter4_completion_status');
                                         setScreen('section_select');
                                     }
                                 }}
