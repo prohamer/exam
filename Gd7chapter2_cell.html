@@ -440,7 +440,7 @@
             const [errorLog, setErrorLog] = useState([]);
             const [sectionCompletionStatus, setSectionCompletionStatus] = useState(() => {
                 try {
-                    const saved = localStorage.getItem('chapter2_completion_status');
+                    const saved = localStorage.getItem('biology_chapter2_completion_status');
                     return saved ? JSON.parse(saved) : {};
                 } catch {
                     return {};
@@ -448,7 +448,7 @@
             });
             const [fontScale, setFontScale] = useState(() => {
                 try {
-                    const saved = localStorage.getItem('chapter2_font_scale');
+                    const saved = localStorage.getItem('biology_chapter2_font_scale');
                     return saved ? parseFloat(saved) : 100;
                 } catch {
                     return 100;
@@ -462,13 +462,13 @@
             const increaseFontSize = () => {
                 const newScale = Math.min(fontScale + 10, 150);
                 setFontScale(newScale);
-                localStorage.setItem('chapter2_font_scale', newScale.toString());
+                localStorage.setItem('biology_chapter2_font_scale', newScale.toString());
             };
 
             const decreaseFontSize = () => {
                 const newScale = Math.max(fontScale - 10, 70);
                 setFontScale(newScale);
-                localStorage.setItem('chapter2_font_scale', newScale.toString());
+                localStorage.setItem('biology_chapter2_font_scale', newScale.toString());
             };
 
             useEffect(() => {
@@ -603,7 +603,7 @@
                         }
                     };
                     setSectionCompletionStatus(newStatus);
-                    localStorage.setItem('chapter2_completion_status', JSON.stringify(newStatus));
+                    localStorage.setItem('biology_chapter2_completion_status', JSON.stringify(newStatus));
                     alert(`恭喜完成 ${currentSection}!`);
                     setScreen('section_select');
                 }
@@ -646,7 +646,7 @@
                                 <p className="text-xl text-white/90 mb-4">選擇一個小節開始學習</p>
                                 
                                 {Object.keys(sectionCompletionStatus).length > 0 && (
-                                    <button onClick={() => { if (confirm('確定要清除所有完成記錄嗎?')) { setSectionCompletionStatus({}); localStorage.removeItem('chapter2_completion_status'); alert('已清除!'); }}} className="bg-red-500/80 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-bold transition-all shadow-lg hover:scale-105">
+                                    <button onClick={() => { if (confirm('確定要清除所有完成記錄嗎?')) { setSectionCompletionStatus({}); localStorage.removeItem('biology_chapter2_completion_status'); alert('已清除!'); }}} className="bg-red-500/80 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-bold transition-all shadow-lg hover:scale-105">
                                         <i className="fas fa-trash-alt mr-2"></i>
                                         清除所有完成記錄
                                     </button>
