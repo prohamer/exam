@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>114-2段一線上題庫</title>
+  
+  <!-- 引入 Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+  
+  <style>
+    body {
+      font-family: 'Noto Sans TC', sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f5f5f5;
+      color: #333;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    h1 {
+      color: #2196F3;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .setup-form {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+      color: #666;
+      font-weight: 500;
+    }
+
+    .range-inputs {
+      display: flex;
+      gap: 20px;
+    }
+    
+    .range-inputs > div {
+      flex: 1;
+    }
+
+    select, input {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 16px;
+      background-color: #fff;
+    }
+
+    .range-inputs input::-webkit-inner-spin-button,
+    .range-inputs input::-webkit-outer-spin-button {
+      opacity: 1;
+    }
+
+    button {
+      background-color: #4CAF50;
+      color: white;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background-color 0.3s;
+      font-weight: 500;
+    }
+
+    button:hover {
+      background-color: #45a049;
+    }
+
+    button:disabled {
+      background-color: #cccccc;
+      cursor: not-allowed;
+    }
+
+    .question-container {
+	  margin-top: 5px;
+	  position: relative;
+	}
+
+    .question-text {
+      font-size: 18px;
+      margin-bottom: 15px;
+      line-height: 1.5;
+      background-color: #f8f9fa;
+      padding: 12px 15px;
+      border-radius: 8px;
+    }
+
+    .question-label {
+      color: #666;
+      font-weight: 400;
+      display: block;
+      margin-bottom: 8px;
+      font-size: 0.9em;
+    }
+
+    .question-content {
+      color: #0d47a1;
+      font-weight: 500;
+    }
+
+    .media-container {
+      margin: 10px 0;
+      text-align: center;
+    }
+
+    .media-container img {
+      max-width: 100%;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .options-container {
+	  display: flex;
+	  flex-direction: column;
+	  gap: 2px;  /* 從 10px 改為 2px */
+	}
+
+    .option {
+	  background-color: #f8f9fa;
+	  padding: 5px 10px;  /* 從 10px 15px 改為 5px 10px */
+	  border-radius: 6px;
+	  cursor: pointer;
+	  transition: all 0.3s;
+	  border: 2px solid transparent;
+	  margin-bottom: 1px;  /* 從 2px 改為 1px */
+	  min-height: 32px;    /* 從 44px 改為 32px */
+	  display: flex;
+	  align-items: center;
+	  line-height: 1.2;    /* 加入這行來縮小行距 */
+	}
+
+    .option:hover {
+      background-color: #e9ecef;
+      border-color: #4CAF50;
+    }
+
+    .selected {
+      background-color: #cce5ff;
+      border-color: #2196F3;
+    }
+
+    .correct {
+      background-color: #d4edda;
+      border-color: #28a745;
+    }
+
+    .incorrect {
+      background-color: #f8d7da;
+      border-color: #dc3545;
+    }
+
+    .feedback {
+      margin-top: 15px;
+      padding: 12px;
+      border-radius: 6px;
+    }
+
+    .feedback.correct {
+      background-color: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+
+    .feedback.incorrect {
+      background-color: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+
+    .explanation {
+      margin-top: 12px;
+      padding: 12px;
+      background-color: #fff3cd;
+      border-radius: 6px;
+      color: #856404;
+      border: 1px solid #ffeeba;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 10px;
+      background-color: #e9ecef;
+      border-radius: 5px;
+      margin: 15px 0;
+      overflow: hidden;
+    }
+
+    .progress {
+      height: 100%;
+      background-color: #4CAF50;
+      transition: width 0.3s;
+    }
+
+    .header {
+	  display: flex;
+	  flex-wrap: wrap;           /* 允許換行 */
+	  justify-content: center;   /* 置中對齊 */
+	  align-items: center;
+	  background-color: #f8f9fa;
+	  padding: 2px 4px;         /* 縮小 padding */
+	  margin-bottom: 2px;       /* 縮小 margin */
+	  border-radius: 6px;
+	  gap: 2px;                 /* 縮小元素間距 */
+	  row-gap: 0px;             /* 行間距為 0 */
+	  line-height: 1;           /* 最小行高 */
+	}
+
+    .progress-text {
+	  padding: 1px 2px;
+	  margin: 0;                /* 移除邊距 */
+	  border-radius: 4px;
+	  font-weight: bold;
+	  white-space: nowrap;
+	  font-size: 0.85em;       /* 較小的字體大小 */
+	  line-height: 1;          /* 最小行高 */
+	  color: #2c3e50;
+	}
+
+	.timer {
+	  padding: 1px 2px;
+	  margin: 0;
+	  border-radius: 4px;
+	  font-weight: bold;
+	  white-space: nowrap;
+	  font-size: 0.85em;
+	  line-height: 1;
+	  color: #666;
+	}
+
+    .results {
+      text-align: center;
+    }
+
+    .results h2 {
+      color: #2196F3;
+      margin-bottom: 20px;
+    }
+
+    .score {
+      font-size: 48px;
+      color: #4CAF50;
+      margin: 20px 0;
+      font-weight: bold;
+    }
+
+    .wrong-questions {
+      text-align: left;
+      margin-top: 30px;
+    }
+
+    .wrong-question {
+      background-color: #fff3cd;
+      padding: 15px;
+      border-radius: 6px;
+      margin-bottom: 15px;
+      border: 1px solid #ffeeba;
+    }
+
+    .font-size-controls {
+	  padding: 1px;
+	  margin: 0;
+	  display: flex;
+	  gap: 2px;               /* 縮小按鈕間距 */
+	}
+	
+	.font-size-controls {
+	  position: absolute;
+	  top: 10px;
+	  right: 10px;
+	  padding: 1px;
+	  margin: 0;
+	  display: flex;
+	  gap: 2px;
+	}
+
+
+    .result-section {
+      background-color: #f8f9fa;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      border: 1px solid #e9ecef;
+    }
+
+    .result-section h3 {
+      color: #2196F3;
+      margin-top: 0;
+      margin-bottom: 15px;
+      font-size: 1.2em;
+    }
+
+    .result-section p {
+      margin: 8px 0;
+      line-height: 1.6;
+    }
+
+    .wrong-question h4 {
+      color: #856404;
+      margin-top: 0;
+      margin-bottom: 10px;
+    }
+
+    .wrong-question p {
+      margin: 5px 0;
+    }
+
+    #summary {
+      text-align: left;
+      margin: 20px 0;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        padding: 15px;
+      }
+      
+      .option {
+		padding: 4px 8px;  /* 從 8px 12px 改為 4px 8px */
+		min-height: 28px;  /* 從 44px 改為 28px */
+	  }
+      
+      .question-text {
+        padding: 10px 12px;
+      }
+      
+      .result-section,
+      .wrong-question {
+        padding: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div id="setup-view">
+      <h1>114-2段一線上題庫</h1>
+      <div class="setup-form">
+        <div class="form-group">
+          <label for="sheet-select">選擇測驗：</label>
+          <select id="sheet-select" onchange="updateQuestionRange()">
+            <option value="">載入中...</option>
+          </select>
+        </div>
+        <div class="form-group range-inputs">
+          <div>
+            <label for="start-row">開始題號：</label>
+            <input type="number" id="start-row" min="1" value="1" />
+          </div>
+          <div>
+            <label for="end-row">結束題號：</label>
+            <input type="number" id="end-row" min="1" value="1" />
+          </div>
+        </div>
+        <button onclick="startQuiz()">開始測驗</button>
+      </div>
+    </div>
+
+    <div id="quiz-view" style="display: none;">
+      <div class="header">
+        <div class="progress-text">題目 <span id="current-question">1</span>/<span id="total-questions">10</span></div>
+        <div class="timer" id="timer">00:00</div>
+      </div>
+
+      <div class="progress-bar">
+        <div class="progress" id="progress-bar"></div>
+      </div>
+
+      <div class="question-container">
+		  <div class="font-size-controls">
+			<button onclick="changeFontSize(2)">A+</button>
+			<button onclick="changeFontSize(-2)">A-</button>
+		  </div>
+		  <div class="question-text" id="question-text"></div>
+		  <div class="media-container" id="media-container"></div>
+		  <div class="options-container" id="options-container"></div>
+		</div>
+
+      <div class="feedback" id="feedback" style="display: none;"></div>
+      
+    </div>
+
+    <div id="results-view" style="display: none;">
+      <div class="results">
+        <h2>測驗結果</h2>
+        <div class="score" id="final-score"></div>
+        <div id="summary"></div>
+        <div class="wrong-questions" id="wrong-questions"></div>
+        <button onclick="location.reload()">重新測驗</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 注入題目資料
+	  const questionsData = {"國一科技":{"name":"國一科技","questions":[{"correctAnswer":"165","question":"若接到疑似詐騙電話時，可以撥打下列哪支電話求助，避免受害？","mediaUrl":"","options":["165","1995","113","119"],"explanation":""},{"correctAnswer":"每種要素都有特定的圖示加以表示","question":"下列關於創用CC的4大授權要素之說明，何者正確？","mediaUrl":"","options":["每種要素都有特定的圖示加以表示","任意挑選2種要素，均可組成一種授權條款","可將4項要素全部加入，組成一種授權條款","創用CC最多共有8種不同的授權條款"],"explanation":""},{"correctAnswer":"CC圖示（選項A）","question":"下列圖示中，何者不屬於創用四大授權要素？","mediaUrl":"","options":["CC圖示（選項A）","「=」圖示（選項B）","「C」循環圖示（選項C）","「i」圖示（選項D）"],"explanation":""},{"correctAnswer":"讓人快速掌握內容與重點","question":"下列何者是「簡報」的最主要目的？","mediaUrl":"","options":["用來編排大量的文字與圖片","讓人快速掌握內容與重點","播放影片與多媒體動畫","進行大量數據的運算"],"explanation":""},{"correctAnswer":"點擊滑鼠左鍵時，會切換成下一頁","question":"當我們播放「Google簡報」時，下列操作敘述何者正確？","mediaUrl":"","options":["只能一頁一頁自動播放","不能使用簡報筆進行播放切換","點擊滑鼠左鍵時，會切換成下一頁","可以利用工具列進行播放控制，但只能前往下一頁"],"explanation":""},{"correctAnswer":"附加功能","question":"賣場中有各種品牌的冷氣，子晴最後選購了價格較高，但售後服務較好、維修保障時間較久的品牌，請問他是以哪種原因而做出這個決定？","mediaUrl":"","options":["附加功能","實用功能","心理功能","價格取向"],"explanation":""},{"correctAnswer":"黃光","question":"姊姊想要開一家咖啡廳，若他想營造溫暖舒適的感覺，應選用何種燈具較適合？","mediaUrl":"","options":["白光","黃光","七彩燈條","閃爍燈球"],"explanation":""},{"correctAnswer":"木製","question":"小軍的新家正在裝修，若他想讓客廳呈現溫暖、放鬆的感覺，應選用何種桌椅組合較適合？","mediaUrl":"","options":["木製","金屬製","塑膠製","水泥製"],"explanation":""},{"correctAnswer":"表示節省水資源","question":"小翔發現家中的洗衣機上有附圖標誌，請問這個標誌代表什麼意義？","mediaUrl":"","options":["表示可回收","表示能源效率高","表示得過設計大獎","表示節省水資源"],"explanation":""},{"correctAnswer":"斜張橋","question":"有一座橋的外形如附圖所示，其鋼索一端固定在橋塔上，另一端拉起橋面。則此橋應為何種橋梁？","mediaUrl":"","options":["拱橋","吊橋","桁架橋","斜張橋"],"explanation":""},{"correctAnswer":"三角形","question":"桁架結構最基本的構造大多呈現何種形狀？","mediaUrl":"","options":["圓形","三角形","正方形","長方形"],"explanation":""},{"correctAnswer":"銲接","question":"下列何種接合方式最適合用於將電子零件組裝到電路板上？","mediaUrl":"","options":["榫接","螺接","銲接","膠合"],"explanation":""},{"correctAnswer":"螺接","question":"下列哪種接合方式的拆卸最為方便？","mediaUrl":"","options":["燒結","膠合","銲接","螺接"],"explanation":""},{"correctAnswer":"樓梯","question":"已知機構是由機件所組成，當其中一個機件運動，其他的機件也會跟著運動、產生特定的動作。則下列何者不屬於機構？","mediaUrl":"","options":["腳踏車","電梯","門鎖","樓梯"],"explanation":""},{"correctAnswer":"銼刀的切齒被木屑填滿了","question":"小風使用銼刀銼削木質作品，剛開始一切順利，但一陣子之後，發現銼削的效率越來越低。假設操作銼刀的方式沒有改變，則銼削效率下降的最可能原因為何？","mediaUrl":"","options":["銼刀被木頭磨損變鈍了","木頭中心的質地比較硬","銼刀的切齒被木屑填滿了","銼刀的種類選擇錯了"],"explanation":""},{"correctAnswer":"以上三種都不行","question":"要利用鐵釘結合兩個木塊時，若手上沒有鐵錘，可以選用下列何者來敲錘鐵釘？","mediaUrl":"","options":["尖嘴鉗","鋼絲鉗","斜口鉗","以上三種都不行"],"explanation":""},{"correctAnswer":"避免鑽孔處背面劈裂","question":"要在木板上鑽穿一個孔時，木板下方要放置一塊墊木，其原因為何？","mediaUrl":"","options":["避免鑽孔處背面劈裂","避免材料滑動","避免零件太小不易加工","避免鑽頭歪斜"],"explanation":""},{"correctAnswer":"輕輕推出，用力拉回","question":"已知折合鋸的鋸齒如附圖所示，則鋸切木材時的施力情形，下列何者正確？","mediaUrl":"","options":["用力推出，輕輕拉回","輕輕推出，用力拉回","推出和拉回的施力相同","以上方法都可以"],"explanation":""},{"correctAnswer":"廣播訊息（積木）","question":"若在一個程式中有多個角色，當角色甲移動到定位之後，其他角色要開始執行各自的程式。除了「計算角色甲移動的時間」這個方法之外，還可以利用下列何者來通知其他角色？","mediaUrl":"","options":["說出（積木）","移動到點（積木）","停止（積木）","廣播訊息（積木）"],"explanation":""},{"correctAnswer":"WHO","question":"5W1H法是展開專題時常用的分析手法，則「本專題的參與對象和成員」應該在哪一個項目中進行分析？","mediaUrl":"","options":["WHY","WHO","WHAT","WHEN"],"explanation":""},{"correctAnswer":"程式D（被點擊→重複無限次→播放音效直到結束，完整版）","question":"若希望不間斷、且完整的重複播放生日快樂歌，可以使用下列哪一個程式？","mediaUrl":"","options":["程式A（被點擊→播放音效直到結束）","程式B（被點擊→重複無限次→播放音效直到結束）","程式C（被點擊→重複無限次→播放音效直到結束→空）","程式D（被點擊→重複無限次→播放音效直到結束，完整版）"],"explanation":""},{"correctAnswer":"為了避免個資外洩，參加網路抽獎活動時提供假的資料","question":"為了生命、財產的安全，我們應該負起保護自己個資的責任。試問下列哪個態度或行為是不正確的？","mediaUrl":"","options":["網路購物時，選擇有信譽的平臺","不將個資、家庭狀況發布於公開的社群網站","電腦、手機均設定開機密碼","為了避免個資外洩，參加網路抽獎活動時提供假的資料"],"explanation":""},{"correctAnswer":"檢視社群網站的隱私設定，並避免被陌生人加為好友","question":"下列何種作法，可以保護自己的個人資料？","mediaUrl":"","options":["網路抽獎中獎機會大，應多多參與","為避免麻煩，電腦、手機不設定開機密碼","檢視社群網站的隱私設定，並避免被陌生人加為好友","使用公用電腦時，讓電腦記錄個人帳號、密碼等資料，以節省填寫的時間"],"explanation":""},{"correctAnswer":"永久保護","question":"著作人格權是用來保護作者的名譽、人格利益，著作人格權的保護期限何時終止？","mediaUrl":"","options":["創作發表後50年終止","創作者死亡時終止","創作者死後的第50年終止","永久保護"],"explanation":""},{"correctAnswer":"完全放棄著作權的保障","question":"下列何者不是推廣創用CC的目的？","mediaUrl":"","options":["免去作品一一授權的麻煩","促進著作分享流通","完全放棄著作權的保障","替代傳統的版權制度"],"explanation":""},{"correctAnswer":"行","question":"小星想藉由「食衣住行育樂」的面向來規畫三天兩夜的旅遊行程。則「船票、自行車租賃」應該要列在哪一項目中？","mediaUrl":"","options":["食","住","行","育樂"],"explanation":""},{"correctAnswer":"同一時間內，可以多人從雲端開啟、編輯檔案","question":"小組撰寫專題報告時，利用Google文件進行協作，下列敘述何者正確？","mediaUrl":"","options":["小組成員必須將該檔案下載到電腦裡，才能進行編輯","同一時間內，只能有一個人從雲端開啟此檔案","同一時間內，可以多人從雲端開啟檔案，但只有一人能編輯檔案","同一時間內，可以多人從雲端開啟、編輯檔案"],"explanation":""},{"correctAnswer":"插入","question":"利用「Google文件」編排文件時，若想在頁面中加入表格，應由附圖功能表中的哪一項目進行設定？","mediaUrl":"","options":["檔案","插入","格式","工具"],"explanation":""},{"correctAnswer":"圖片圖示（選項D）","question":"利用「Google文件」編排文件時，若想在頁面中加入圖片，應由工具列中的哪一項目進行設定？","mediaUrl":"","options":["印表機圖示（選項A）","文件圖示（選項B）","連結圖示（選項C）","圖片圖示（選項D）"],"explanation":""},{"correctAnswer":"「=SUM(B1:B4)」結果為10","question":"一試算表中的資料如附圖所示，則下列哪一項函數的運算結果正確？","mediaUrl":"","options":["「=SUM(B1:B4)」結果為15","「=SUM(B1:B4)」結果為10","「=AVERAGE(B1:B5)」結果為15","「=AVERAGE(B1:B5)」結果為2"],"explanation":""},{"correctAnswer":"適用於專題報告的文件編排","question":"下列關於「Google試算表」的功能與特性，何者敘述錯誤？","mediaUrl":"","options":["可以用來運算數據資料","方便產生統計圖表","可以多人同時編輯修改","適用於專題報告的文件編排"],"explanation":""},{"correctAnswer":"播放鍵圖示（選項A）","question":"簡報製作完成後，可執行下列哪一工具來查看簡報，檢查簡報內容、動畫設定、網路連結的正確性？","mediaUrl":"","options":["播放鍵圖示（選項A）","加號圖示（選項B）","圖片圖示（選項C）","影片圖示（選項D）"],"explanation":""},{"correctAnswer":"膠合","question":"小方想用冰棒棍製作模型飛機，並確保模型整體結構輕量，外形光滑流暢，則應該選擇下列哪種接合方式效果最好？","mediaUrl":"","options":["釘接","膠合","銲接","螺接"],"explanation":""},{"correctAnswer":"僅甲乙可","question":"將兩個大小不同的齒輪直接互相咬合，如附圖所示。若可以任選其中一個齒輪作為主動件，則從動件可以達到下列哪些目的？（甲）可以加速轉動。（乙）可以減速轉動。（丙）可以與主動件同速度轉動。","mediaUrl":"","options":["甲乙丙均可","僅甲乙可","僅甲丙、或僅乙丙可","僅丙可"],"explanation":""},{"correctAnswer":"甲乙丙都要","question":"進行下列何種加工時，需要將工作物穩固夾持？（甲）鋸切。（乙）鑽孔。（丙）銼削。","mediaUrl":"","options":["甲乙丙都要","甲乙","乙丙","甲丙"],"explanation":""},{"correctAnswer":"甲乙丙丁","question":"下列哪些因素可能危害橋梁結構安全？（甲）地震頻繁發生。（乙）河川坡陡流急。（丙）颱風豪雨沖刷。（丁）車輛超載超重。","mediaUrl":"","options":["甲乙丙丁","甲乙丙","甲乙","丙丁"],"explanation":""},{"correctAnswer":"甲乙丙","question":"下列哪種接合方式不具有重複拆卸組裝的效果？（甲）平板保護殼的磁釦。（乙）運動鞋的鞋帶。（丙）廁所門上的插銷門鎖。（丁）教室外透過凝固製成的鋼筋混泥土柱子。","mediaUrl":"","options":["甲乙丙","乙丙丁","甲丙","乙丁"],"explanation":""},{"correctAnswer":"減速，且輸出間歇轉動","question":"附圖為一齒輪、缺齒齒輪所組成的機構。此機構運作的效果為何？","mediaUrl":"","options":["加速，且輸出轉速穩定","加速，且輸出間歇轉動","減速，且輸出轉速穩定","減速，且輸出間歇轉動"],"explanation":""},{"correctAnswer":"折合鋸使用時應該向前施力推鋸","question":"下列關於鋸子功能與操作方法的敘述，哪一項錯誤？","mediaUrl":"","options":["折合鋸使用時應該向前施力推鋸","曲線鋸適合用在精細切割，例如鋸切曲線","雙面鋸可依據鋸齒的形狀分為縱切鋸與橫斷鋸","鋸切時應從頭到尾把鋸片全長拉完，避免局部鋸齒耗損"],"explanation":""},{"correctAnswer":"大中使用剪刀剪裁砂紙","question":"下列4個人之中，誰使用砂紙的方法錯誤？","mediaUrl":"","options":["大中使用剪刀剪裁砂紙","平平把白板筆包在砂紙裡面，用來砂磨剛鑽好的圓孔","阿一將砂紙包覆於木塊，並以單一方向砂磨剛鋸完的平面","小美依序使用號數150、240、400的砂紙完成小木偶表面的砂磨"],"explanation":""}],"totalQuestions":40},"國一健體":{"name":"國一健體","questions":[{"correctAnswer":"慢性阻塞性肺病","question":"下列何者是吸菸對於呼吸系統的影響？","mediaUrl":"","options":["胰臟癌","心肌梗塞","骨質疏鬆症","慢性阻塞性肺病"],"explanation":""},{"correctAnswer":"0.07","question":"脫水會導致熱傷害的發生，脫水程度達體重何種比例時，可能會虛脫、休克甚至危及生命？","mediaUrl":"","options":["0.03","0.04","0.05","0.07"],"explanation":""},{"correctAnswer":"使用酒精代替","question":"從健康的觀點，下列何者方式不適合用來反菸？","mediaUrl":"","options":["監督菸商不能廣告","使用酒精代替","提高菸品健康捐","舉辦反菸路跑"],"explanation":""},{"correctAnswer":"製造輸入電子煙最高罰5,000萬元","question":"西元2023年《菸害防制法》修法後，臺灣對電子煙的規定為何？","mediaUrl":"","options":["20歲以下，不得使用電子煙","不能在實體店面販售電子煙，只能在網路上販售","電子煙廣告會被要求撤下，不會罰款","製造輸入電子煙最高罰5,000萬元"],"explanation":""},{"correctAnswer":"變高","question":"籃球上籃時，球擦板的位置要如何，才可避免被蓋火鍋？","mediaUrl":"","options":["變高","變低","適中","都可以"],"explanation":""},{"correctAnswer":"一氧化碳","question":"一手菸裡的有害物質，以下何者不是致癌成分？","mediaUrl":"","options":["砷","菸焦油","一氧化碳","甲醛"],"explanation":""},{"correctAnswer":"肌紅蛋白","question":"□□□□為肌肉細胞中輸送氧氣的蛋白，此蛋白的數量或活性愈高，愈能提升肌肉攜帶氧氣的能力，有助於運動表現。上述□□□□應為下列何者？","mediaUrl":"","options":["肌白蛋白","鐵紅蛋白","肌鈣蛋白","肌紅蛋白"],"explanation":""},{"correctAnswer":"二十歲之前的青少年","question":"研究指出，下列何者是成為規律吸菸者的關鍵時期？","mediaUrl":"","options":["六歲以下的幼兒","六至十二歲的學童","二十歲之前的青少年","三十歲左右的成人"],"explanation":""},{"correctAnswer":"15～20年","question":"世界衛生組織指出，吸菸者比不吸菸者減少多久壽命？","mediaUrl":"","options":["1～2年","3～5年","6～8年","15～20年"],"explanation":""},{"correctAnswer":"脂肪","question":"何種營養素在體內具有保護器官、幫助脂溶性維生素吸收及荷爾蒙生成？","mediaUrl":"","options":["蛋白質","礦物質","脂肪","醣類"],"explanation":""},{"correctAnswer":"吸菸很久的人，一旦戒菸就容易罹病","question":"關於吸菸的敘述，你認為下列何者錯誤？","mediaUrl":"","options":["吸菸很久的人，一旦戒菸就容易罹病","吸菸會導致許多疾病","多數吸菸成癮者，在青少年時期即學會吸菸","即使是二手菸對於身體也有很大危害"],"explanation":""},{"correctAnswer":"吸菸會讓人缺氧影響學習","question":"青少年可以利用以下何種危害健康的證據，拒絕吸菸？","mediaUrl":"","options":["吸菸會讓牙齒更健康","吸菸會幫助身高長高","吸菸會讓人缺氧影響學習","吸菸會幫助減肥"],"explanation":""},{"correctAnswer":"呼吸道疾病","question":"當長期暴露在有人吸菸的環境時，可能會對我們造成什麼傷害？","mediaUrl":"","options":["慢性肝病","呼吸道疾病","糖尿病","腎臟病"],"explanation":""},{"correctAnswer":"穀物及水果","question":"食物中的醣類主要為何？","mediaUrl":"","options":["穀物及水果","蛋及肉類","奶及魚","蛋及奶"],"explanation":""},{"correctAnswer":"青少年吸菸可能是為了表現獨立自主","question":"下列何者情形為青少年吸菸常見的理由？","mediaUrl":"","options":["青少年吸菸可能是為了表現獨立自主","現在的青少年常接觸菸品廣告","吸菸對於青少年生長發展不會有影響","吸菸不會造成青少年身體健康的危害"],"explanation":""},{"correctAnswer":"2年","question":"有小奧運之稱的世界大學運動會，每幾年舉辦一次？","mediaUrl":"","options":["1年","2年","3年","4年"],"explanation":""},{"correctAnswer":"低脂","question":"運動競賽前的營養補充應以下列何者為主？","mediaUrl":"","options":["低脂","電解質","各類營養的綜合餐點","低醣"],"explanation":""},{"correctAnswer":"注意不可拋球","question":"下列有關低手發球動作的敘述，何者有誤？","mediaUrl":"","options":["右手呈半握拳","用手掌處擊球","手臂像鐘擺軌跡由後往前擺動","注意不可拋球"],"explanation":""},{"correctAnswer":"三手菸","question":"「若是有人在密閉的空間，如房間或車子內吸菸，即使菸品已經熄滅，燃燒時所產生的有毒物質微粒仍然會沾染在吸菸者的衣物與毛髮。」上述指的是下列何者？","mediaUrl":"","options":["一手菸","二手菸","三手菸","四手菸"],"explanation":""},{"correctAnswer":"肺部","question":"電子煙是一種電子裝置，可將煙彈內的液體加熱霧化產生蒸氣，讓使用者吸至下列何處？","mediaUrl":"","options":["心臟","肺部","腎臟","胃部"],"explanation":""},{"correctAnswer":"尼古丁","question":"電子煙並沒有輔助戒菸的效果，甚至大多煙彈液體中仍含有下列何者？","mediaUrl":"","options":["尼古丁","菸焦油","氧氣","一氧化碳"],"explanation":""},{"correctAnswer":"二手菸","question":"下列何者已經被世界衛生組織(WHO)列為「頭號致癌物質」？","mediaUrl":"","options":["一手菸","二手菸","三手菸","四手菸"],"explanation":""},{"correctAnswer":"頭抬出水中","question":"下列有關持浮板打水練習的要領，何者有誤？","mediaUrl":"","options":["手抓著浮板中間或後面","頭抬出水中","身體浮在水面上","換氣時間愈短愈好"],"explanation":""},{"correctAnswer":"改抽電子煙幫助戒菸","question":"下列何者不是正確的戒菸方法？","mediaUrl":"","options":["求助於戒菸門診","請親友監督與鼓勵戒菸","參閱華文戒菸網站和政府戒菸資訊","改抽電子煙幫助戒菸"],"explanation":""},{"correctAnswer":"白內障","question":"下列何者是吸菸對於眼部疾病的影響？","mediaUrl":"","options":["白內障","胰臟癌","口腔癌","心肌梗塞"],"explanation":""},{"correctAnswer":"甲乙丙","question":"同學們提出建立無菸環境的辦法。哪些人提出的方法是可行的？（甲）阿宏：對於他人的抽菸邀約，要懂得拒絕。（乙）小城：身邊若有人抽菸，則委婉提醒對方或遠離現場，拒吸二手菸。（丙）大黃：協助身邊有菸癮者至戒菸門診，戒除菸癮。（丁）小律：以電子煙取代一般菸，降低對身體與環境的危害。","mediaUrl":"","options":["甲乙丙","甲乙丁","甲丙丁","乙丙丁"],"explanation":""},{"correctAnswer":"以小腿帶動大腿","question":"下列有關捷泳打水動作的描述，何者有誤？","mediaUrl":"","options":["主要是大腿出力","以小腿帶動大腿","腳掌壓水產生推進力","腳掌成內八字狀"],"explanation":""},{"correctAnswer":"免疫系統下降","question":"下列何者並非戒菸好處？","mediaUrl":"","options":["血液循環改善","癌症發生率降低","身體逐漸恢復健康","免疫系統下降"],"explanation":""},{"correctAnswer":"二手菸","question":"吸菸者口中吐出來的「主流菸煙」和燃燒不完全的「副流菸煙」，混合後會成為下列何者？","mediaUrl":"","options":["一手菸","二手菸","三手菸","四手菸"],"explanation":""},{"correctAnswer":"甲乙丙","question":"「大洋在和朋友聚會時突然菸癮犯了……由上述可知，抽菸使大洋遭遇哪些問題？（甲）危害生理健康。（乙）違反社會規範。（丙）人際關係疏離。（丁）個人經濟損失。","mediaUrl":"","options":["甲乙丙","甲乙丁","甲丙丁","乙丙丁"],"explanation":""},{"correctAnswer":"0800-636363","question":"下列何者是政府免費戒菸專線？","mediaUrl":"","options":["0800-636363","882-5252","0800-092000","0800-53153"],"explanation":""},{"correctAnswer":"0800-531531","question":"若想檢舉吸菸，可以撥打下列哪一支檢舉電話？","mediaUrl":"","options":["0800-636363","882-5252","0800-092000","0800-531531"],"explanation":""},{"correctAnswer":"W形","question":"除舉球員外，五名球員在接球區域分布平均，前三名球員負責接前場的球，後兩名球員負責接後場的球。上述內容是指下列何種隊形？","mediaUrl":"","options":["L形","W形","X形","U形"],"explanation":""},{"correctAnswer":"佐企：電子煙是電子裝置，其電池時常發生爆炸意外","question":"同學們在網路上搜尋電子煙的資訊，何者取得的資訊正確？","mediaUrl":"","options":["一鼓：想戒菸的人，可以試著使用電子煙","佐企：電子煙是電子裝置，其電池時常發生爆炸意外","載三：電子煙不易成癮，對身體的危害較輕","山傑：「果汁棒」造型的電子煙添加營養素，特別適合年輕族群"],"explanation":""},{"correctAnswer":"高手肘","question":"捷泳划手的移臂前伸動作，應採下列何種姿勢，將手臂前伸入水？","mediaUrl":"","options":["低手肘","高手肘","直臂","依個人習慣"],"explanation":""},{"correctAnswer":"違反社會規範","question":"「叔叔是老菸槍，大約一、兩個小時就想抽根菸。但許多地方都禁菸，他若是不遵守規定，可能遭人檢舉。」由上述可知，叔叔的菸癮讓他付出什麼代價？","mediaUrl":"","options":["危害生理健康","個人經濟損失","違反社會規範","人際關係疏離"],"explanation":""},{"correctAnswer":"人際關係疏離","question":"「大茗：我們班同學好像都很討厭菸味，聚會都不找我。」由上述可知，愛抽菸的大茗，遇到了什麼問題？","mediaUrl":"","options":["危害生理健康","個人經濟損失","違反社會規範","人際關係疏離"],"explanation":""},{"correctAnswer":"個人經濟損失","question":"「小悅：每個月的零用錢都要拿去買菸，我沒辦法買其他東西了。」由上述可知，有菸癮的小悅遇到什麼問題？","mediaUrl":"","options":["危害生理健康","個人經濟損失","違反社會規範","人際關係疏離"],"explanation":""},{"correctAnswer":"做成維他命棒或果汁棒等各種外型","question":"以下何者是電子煙商用不同的包裝手法，讓人誤以為不是菸品，以便吸引年輕族群嘗試？","mediaUrl":"","options":["做成維他命棒或果汁棒等各種外型","改造吸食口","煙彈內的液體味道刺鼻","拔除電池"],"explanation":""},{"correctAnswer":"9，9","question":"「排球場是由兩個＿公尺的方形組成。」中應填入下列何者？","mediaUrl":"","options":["9，9","10，10","11，11","12，12"],"explanation":""},{"correctAnswer":"2000","question":"水分約占人體體重的60～70％，青少年時期每天水分攝取量至少應達多少毫升？","mediaUrl":"","options":["1500","2000","3000","4000"],"explanation":""},{"correctAnswer":"四打法","question":"適合長距離游泳的打水方法為下列何者？","mediaUrl":"","options":["四打法","六打法","八打法","三打法"],"explanation":""},{"correctAnswer":"僅能靠政府全面禁菸","question":"想要有效拒絕菸對自己的危害，以下何者做法較不適合？","mediaUrl":"","options":["僅能靠政府全面禁菸","自己不要吸菸","拒吸二手菸","當身邊有人吸菸時勇敢提醒"],"explanation":""},{"correctAnswer":"丙丁","question":"下列有關籃球單手投籃的動作敘述，何者正確？（甲）慣用手置於側邊以穩定球體 （乙）以非慣用手持球 （丙）投出時慣用手手臂向斜上方伸直，手腕及手指下壓 （丁）出手後手指指向籃框，身體完全伸展。","mediaUrl":"","options":["甲乙","乙丙","乙丁","丙丁"],"explanation":""},{"correctAnswer":"用委婉、誠懇的態度阻止對方吸菸","question":"當看到有人在學校吸菸時，為了健康我們可以怎麼做？","mediaUrl":"","options":["用委婉、誠懇的態度阻止對方吸菸","默默離開現場，當作沒發生","跟他一起吸菸就不會吸進二手菸","不破壞關係，默默承受"],"explanation":""},{"correctAnswer":"走過去委婉告知在餐廳吸菸違法","question":"當你到餐廳發現有人在吸菸，你會使用哪一種方式來拒菸？","mediaUrl":"","options":["摀住嘴巴就不會吸到","走過去委婉告知在餐廳吸菸違法","請服務生將座位安排遠離他","心裡拒菸就好不用處理"],"explanation":""},{"correctAnswer":"委婉、誠懇的告訴對方不能吸菸","question":"當在餐廳吸到二手菸，下列何者解決方式較為適合？","mediaUrl":"","options":["委婉、誠懇的告訴對方不能吸菸","自己默默離開餐廳","也點燃一根菸，降低吸到二手菸機率","戴著口罩就沒問題"],"explanation":""},{"correctAnswer":"甲乙丙丁","question":"下列有關籃球跨步上籃的動作敘述，何者正確？（甲）可站立於與籃框呈45度角的位置 （乙）須距離籃框約2～3公尺處為宜 （丙）第一步可跨大 （丁）可採單手或雙手將球投出。","mediaUrl":"","options":["甲","甲乙","甲乙丙","甲乙丙丁"],"explanation":""},{"correctAnswer":"乙丙丁","question":"下列有關籃球雙手投籃的動作敘述，何者正確？（甲）雙手持球，掌心接觸球體 （乙）力量不足時，較常使用的投籃方式 （丙）單手無法將球拿穩時，較常使用的投籃方式 （丁）兩手掌外翻使球向下旋轉，拇指與食指指向籃框。","mediaUrl":"","options":["甲乙丙","甲乙丁","甲丙丁","乙丙丁"],"explanation":""},{"correctAnswer":"跟他一起吸就比較不會吸到二手菸","question":"當家中有人吸菸，以下何種拒絕方法較不適當？","mediaUrl":"","options":["告訴他吸菸會導致心血管疾病","把吸菸罹癌的數據拿給他看","跟他一起吸就比較不會吸到二手菸","當他想吸菸時轉移他的注意力"],"explanation":""}],"totalQuestions":50},"國二科技":{"name":"國二科技","questions":[{"correctAnswer":"多孔材質","question":"除濕輪式除濕機的原理是利用什麼來吸附空氣中的水氣？","mediaUrl":"","options":["液態冷媒","高分子分散型液晶","多孔材質","離子"],"explanation":""},{"correctAnswer":"著作權法","question":"在網路上購買盜版光碟的行為觸犯了什麼法？","mediaUrl":"","options":["妨害名譽罪","過失殺人罪","詐欺罪","著作權法"],"explanation":""},{"correctAnswer":"辛勤創作者的結晶","question":"智慧財產法要保護的是？","mediaUrl":"","options":["一般人知的權利","辛勤創作者的結晶","國家","消費者"],"explanation":""},{"correctAnswer":"隱私權","question":"將朋友的姓名、生日等個人資料公開在網站上，可能會侵犯下列何者？","mediaUrl":"","options":["隱私權","資訊存取權","財產權","工作權"],"explanation":""},{"correctAnswer":"長時間使用網路","question":"下列何者不是使用網路的良好習慣？","mediaUrl":"","options":["長時間使用網路","不散播謠言","尊重他人隱私權","避免情緒性的謾罵"],"explanation":""},{"correctAnswer":"經濟快速發展需求","question":"核能發電廠建設的主要原因包括以下哪個因素？","mediaUrl":"","options":["地球暖化問題","經濟快速發展需求","天然氣供應不穩定","太陽能技術成熟"],"explanation":""},{"correctAnswer":"環境生態破壞","question":"核電廠發生意外事故可能導致什麼結果？","mediaUrl":"","options":["大氣層溫室氣體減少","環境生態破壞","解決地球暖化","天然氣價格上漲"],"explanation":""},{"correctAnswer":"繳交會費不等於合法授權","question":"付費加入網站會員，下載歌曲來聽，也上傳歌曲跟別人分享，請問會違法嗎？","mediaUrl":"","options":["只要分享不收費，就不會有違法的問題","繳交會費不等於合法授權","違法的是網站業者，不是會員","已繳會費，當然不違法"],"explanation":""},{"correctAnswer":"以上皆是","question":"下列何者屬於資訊隱私權的一部分？","mediaUrl":"","options":["身分證字號","匿名所發表的文章","網路上所交談的對話","以上皆是"],"explanation":""},{"correctAnswer":"在個人網頁上寫作介紹他人的文章","question":"下列何種行為不會違反著作權法？","mediaUrl":"","options":["將市售CD借給同學拷貝使用","將網路下載的圖片放在社團的網頁上","在個人網頁上寫作介紹他人的文章","傳送盜版軟體給朋友"],"explanation":""},{"correctAnswer":"買賣大補帖盜版軟體","question":"以下那一個行為在網路環境中是違法的？","mediaUrl":"","options":["交友","買賣大補帖盜版軟體","下載免費軟體","聊天"],"explanation":""},{"correctAnswer":"以上皆是","question":"下列哪個是導致「網路沉迷」的因素？","mediaUrl":"","options":["好奇心的推動","尋求自我認同","人際關係的渴求","以上皆是"],"explanation":""},{"correctAnswer":"加入臉書社團時，要先察看版規","question":"關於網路禮節，下列敘述何者正確？","mediaUrl":"","options":["網路用匿名方式批評店家給差評","借用朋友的名字到聊天室聊天，反正誰也不認識誰","加入臉書社團時，要先察看版規","因為言論自由，所以網路可以任意發言"],"explanation":""},{"correctAnswer":"惡意破壞","question":"電腦病毒的侵入是屬於？","mediaUrl":"","options":["機件故障","天然災害","惡意破壞","人為過失"],"explanation":""},{"correctAnswer":"程式產生","question":"電腦病毒的發作，是由於？","mediaUrl":"","options":["操作不當","程式產生","記憶體突變","細菌感染"],"explanation":""},{"correctAnswer":"以上皆是","question":"下列何者行為觸犯了「妨害電腦使用罪」？","mediaUrl":"","options":["無故取得、刪除或變更他人電腦裡的檔案","用他人帳號密碼、破解電腦系統之漏洞","以電腦病毒或程式干擾他人電腦或相關設備","以上皆是"],"explanation":""},{"correctAnswer":"不要隨意輸入金融卡、身分證、帳號等敏感資料","question":"使用公眾無線網路時，應注意：","mediaUrl":"","options":["不要隨意輸入金融卡、身分證、帳號等敏感資料","不需上網時，可擅自關閉無線網路連線","利用公眾網路下載影片","不想記密碼，直接勾選「記住我的帳號」"],"explanation":""},{"correctAnswer":"網路霸凌","question":"在網路上發表騷擾或詆毀他人之言論，是屬於下列哪一種行為？","mediaUrl":"","options":["網路詐騙","網路霸凌","網路交友","網路成癮"],"explanation":""},{"correctAnswer":"煤炭","question":"火力發電廠主要使用以下哪種燃料來產生高溫、高壓的蒸汽來驅動發電機？","mediaUrl":"","options":["天然氣","太陽能","煤炭","生質能"],"explanation":""},{"correctAnswer":"空氣中風的流動","question":"風力發電設備的運作原理是利用什麼來轉動葉片發電？","mediaUrl":"","options":["太陽輻射","高溫、高壓的蒸汽","水流","空氣中風的流動"],"explanation":""},{"correctAnswer":"溫差原理","question":"防潮箱的電子晶片除濕式是利用什麼原理來除濕？","mediaUrl":"","options":["溫差原理","光敏材料原理","電磁感應原理","物態變化原理"],"explanation":""},{"correctAnswer":"鋰離子聚合物電池","question":"哪種電池具有彈性的軟膜式層壓包裝，且重量較輕？","mediaUrl":"","options":["鋰離子電池","鋰離子聚合物電池","鐵鎳電池","鎳氫電池"],"explanation":""},{"correctAnswer":"提升安全性與促進共用","question":"智慧運輸中，自駕車的精神是什麼？","mediaUrl":"","options":["提升便利性","促進共用","提升安全性與促進共用","減少空氣汙染"],"explanation":""},{"correctAnswer":"以上皆是","question":"3D列印機常見的類型為？","mediaUrl":"","options":["光固化","熱熔融層積","雷射粉末燒結","以上皆是"],"explanation":""},{"correctAnswer":"機車","question":"綠色運具（Green Modes）中，以下哪一個製造的廢氣對環境影響較大？","mediaUrl":"","options":["徒步","機車","腳踏車","電動車輛"],"explanation":""},{"correctAnswer":"避開陽光","question":"觸控螢幕的維護保養，以下哪種方式可以協助保護螢幕？","mediaUrl":"","options":["經常暴露在陽光下","使用化學藥品擦拭螢幕","避開陽光","不進行清潔"],"explanation":""},{"correctAnswer":"電動車、電風扇、吹風機、冷氣機等","question":"無刷馬達通常應用在哪些產品或系統中？","mediaUrl":"","options":["咖啡機與微波爐","汽車引擎與火箭發動機","電動車、電風扇、吹風機、冷氣機等","無刷馬達目前尚未應用在任何產品中"],"explanation":""},{"correctAnswer":"N","question":"假設資料出現的機率相等，以N筆資料循序搜尋，最多約需進行","mediaUrl":"","options":["N","N/2","(N+1)/2","(N-1)/2　　次比較"],"explanation":""},{"correctAnswer":"二分搜尋法","question":"已排序好的資料列，應使用何種搜尋法較為有利？","mediaUrl":"","options":["循序搜尋法","二分搜尋法","無搜尋法適合","N次搜尋法"],"explanation":""},{"correctAnswer":"調節各個馬達轉速","question":"飛行控制板的功能是什麼？","mediaUrl":"","options":["接收遙控器訊號","調節各個馬達轉速","讀取感測器數值來計算高度與位置","提供飛行器與飛手的溝通管道"],"explanation":""},{"correctAnswer":"將高溫、高壓的蒸汽注入渦輪","question":"火力發電是透過以下哪種方式將燃燒產生的熱能轉換為機械能？","mediaUrl":"","options":["將高溫、高壓的蒸汽注入渦輪","利用水位的高低差","將太陽輻射轉換成一般熱能","藉著空氣中風的流動來轉動葉片"],"explanation":""},{"correctAnswer":"電磁能","question":"下列哪種能量形態是指電磁場所具有的能量？","mediaUrl":"","options":["電能","熱能","電磁能","核能"],"explanation":""},{"correctAnswer":"以上皆是","question":"核能是透過轉化質量從原子分裂或融合釋放的能量，其中使用的燃料為下列哪種？","mediaUrl":"","options":["鈾-235","鈽-239","鈾-238","以上皆是"],"explanation":""},{"correctAnswer":"函式","question":"將特定功能單獨編寫成一個程式單元，並賦予特定名稱，以便在有需要的時候，可以透過呼叫其名稱來反覆使用，指的是？","mediaUrl":"","options":["函式","陣列","演算法","流程圖"],"explanation":""},{"correctAnswer":"正比","question":"根據帕斯卡原理，液體對從動部出力之大小與其活塞面積之大小關係為何？","mediaUrl":"","options":["正比","反比","平方比","無關"],"explanation":""},{"correctAnswer":"以上皆可","question":"渦輪機主要利用什麼來推動旋轉機件，以轉化成機械能的設備？","mediaUrl":"","options":["水","蒸汽","氣體","以上皆可"],"explanation":""},{"correctAnswer":"阿櫻購買有版權的遊戲軟體","question":"下列何者為守法行為？","mediaUrl":"","options":["某電視台未付權利金，就逕自播放歌曲","阿雄將排行榜歌曲剪接翻錄作精選集出售","阿貴在夜市販賣仿冒的勞力士錶","阿櫻購買有版權的遊戲軟體"],"explanation":""},{"correctAnswer":"帕斯卡原理","question":"液壓傳動是應用下列那一個原理？","mediaUrl":"","options":["帕斯卡原理","槓桿原理","連通管原理","慣性原理"],"explanation":""},{"correctAnswer":"鏈條與鏈輪","question":"哪種動力傳動裝置利用鏈條和鏈輪進行傳輸主鏈輪之動力，讓從動輪進行同步運動？","mediaUrl":"","options":["連桿","帶輪","鏈條與鏈輪","螺旋"],"explanation":""},{"correctAnswer":"入侵他人電腦竊取資料","question":"請問：下列何者不屬於常見之網路霸凌行為？","mediaUrl":"","options":["網路發布令人難堪的留言","上傳欺凌受害者的影片","傳送電子郵件散布不實訊息","入侵他人電腦竊取資料"],"explanation":""}],"totalQuestions":40},"國二健體":{"name":"國二健體","questions":[{"correctAnswer":"惡性腫瘤","question":"小偉的阿姨因為抽菸而罹患肺癌，醫師提醒，抽菸會增加癌症風險。肺癌屬於哪一種疾病？","mediaUrl":"","options":["傳染病","惡性腫瘤","心血管疾病","退化性疾病。"],"explanation":""},{"correctAnswer":"滑步","question":"下列何種步法在籃球比賽中常使用於近距離防禦進攻者切入或投籃時？","mediaUrl":"","options":["滑步","後側步","趨前步","交叉步。"],"explanation":""},{"correctAnswer":"依照球托出時間進行助跑","question":"有關排球扣球助跑動作，下列何者敘述正確？","mediaUrl":"","options":["依照球托出時間進行助跑","右手攻擊者，起跳前右腳大跨步","左手攻擊者，起跳前左腳大跨步","要跳起時，雙手先提高至頭上方。"],"explanation":""},{"correctAnswer":"趨前步。","question":"下列何種步法在籃球比賽中常使用於進攻者切入後，又突然往後運球時，往前壓迫進攻者？","mediaUrl":"","options":["滑步","交叉步","後側步","趨前步。"],"explanation":""},{"correctAnswer":"胰島素","question":"糖尿病的成因與下列何者有關？","mediaUrl":"","options":["酵素","雌激素","胰島素","腎上腺素。"],"explanation":""},{"correctAnswer":"5秒鐘","question":"籃球比賽時，進攻方球員運球收球後，如有防守方球員在1公尺內積極防守，進攻者在幾秒內無法傳球或投籃即違例？","mediaUrl":"","options":["3秒鐘","4秒鐘","5秒鐘","6秒鐘。"],"explanation":""},{"correctAnswer":"119。","question":"發現有人熱中暑時，應迅速撥打下列哪個電話號碼，啟動緊急醫療救護？","mediaUrl":"","options":["110","113","117","119。"],"explanation":""},{"correctAnswer":"台灣職業排球聯賽","question":"下列何者為國內最高水準的排球比賽？","mediaUrl":"","options":["永信杯","企業甲級排球聯賽","大專排球聯賽","台灣職業排球聯賽"],"explanation":""},{"correctAnswer":"運動技術不佳，但場上拚搏態度積極。","question":"下列何者是發生校園運動傷害的可能原因？","mediaUrl":"","options":["運動前慢跑","穿著運動服","遵守運動規則","運動技術不佳，但場上拚搏態度積極。"],"explanation":""},{"correctAnswer":"增加蔬果攝取","question":"為了降低罹癌風險，哪一種飲食選擇最合適？","mediaUrl":"","options":["增加蔬果攝取","少吃纖維食物","每天喝含糖飲料","多吃高油炸食品。"],"explanation":""},{"correctAnswer":"癌症","question":"下列何種疾病多年來位居國人十大死因第一位？","mediaUrl":"","options":["癌症","糖尿病","冠心病","腎臟病。"],"explanation":""},{"correctAnswer":"蓋火鍋。","question":"籃球比賽中，進攻球員投籃後，防守球員將滯空的球拍打下來的動作稱之為何？","mediaUrl":"","options":["灌籃","射籃","挑籃","蓋火鍋。"],"explanation":""},{"correctAnswer":"運動量少。","question":"下列何者可能是造成慢性病的源頭之一？","mediaUrl":"","options":["正常作息","早睡早起","情緒穩定","運動量少。"],"explanation":""},{"correctAnswer":"近親有糖尿病者","question":"下列何者是罹患第二型糖尿病的高危險群？","mediaUrl":"","options":["經常感冒","地中海型貧血","近親有糖尿病者","對天氣變化過敏。"],"explanation":""},{"correctAnswer":"糖尿病","question":"阿明每天喝手搖飲料。含糖飲食過多，除了肥胖，也會增加罹患什麼疾病的風險？","mediaUrl":"","options":["過敏","糖尿病","肺結核","小兒麻痺症。"],"explanation":""},{"correctAnswer":"永信杯","question":"排球在國內有號稱「排球甲子園大賽」的賽事為何？","mediaUrl":"","options":["中華盃","永信杯","媽祖盃","菁英盃。"],"explanation":""},{"correctAnswer":"雙腳在空中微微後勾","question":"有關排球攻擊空中及扣球的動作，下列何者敘述正確？","mediaUrl":"","options":["雙腳在空中微微後勾","在空中時慣用手放至胸部一帶","手臂向上揮擊伸直","手腕輕輕下扣。"],"explanation":""},{"correctAnswer":"葡萄糖","question":"胰島素由胰臟分泌，主要功能是幫助血液中的何者進入細胞被利用或儲存？","mediaUrl":"","options":["葡萄糖","紅血球","血小板","白血球。"],"explanation":""},{"correctAnswer":"後排球員攻擊踩線。","question":"排球裁判做出單手手臂上舉後，前臂彎曲的動作，是表示下列何種犯規？","mediaUrl":"","options":["延誤發球","四次擊球","位置或輪轉錯誤","後排球員攻擊踩線。"],"explanation":""},{"correctAnswer":"反手網前短球。","question":"「當來球於左前方落下時，手腕瞬間做外旋動作，看準擊球點後輕輕將球擊出，使球翻轉過網，回擊至對方網前。」此段動作敘述是指羽球哪個動作技術？","mediaUrl":"","options":["正手發短球","反手發短球","正手網前短球","反手網前短球。"],"explanation":""},{"correctAnswer":"心血管疾病或其他併發症。","question":"糖尿病患者若忽視控制，最可能造成哪一種健康後果？","mediaUrl":"","options":["哮喘","腸胃炎","骨質疏鬆","心血管疾病或其他併發症。"],"explanation":""},{"correctAnswer":"醫療較不發達，傳染病盛行","question":"下列關於古代人的生活型態說明，何者正確？","mediaUrl":"","options":["生活忙碌，經常熬夜","醫療進步，慢性病為主","醫療較不發達，傳染病盛行","飲食習慣以高油、高鹽、高糖、低纖維的食物為主。"],"explanation":""},{"correctAnswer":"疾病","question":"「我是B型肝炎的帶原者，已經好多年了，肝臟總是反覆發炎；去年腹部疼痛掛了急診，竟然被診斷出有肝癌。」根據上述判斷，此為哪一種致癌因素？","mediaUrl":"","options":["疾病","飲食習慣","環境汙染","生活型態。"],"explanation":""},{"correctAnswer":"位置或輪轉錯誤","question":"排球裁判在自己身體腹部位置做單手畫圈動作，表示下列何種犯規？","mediaUrl":"","options":["延誤發球","球隊替補換人","位置或輪轉錯誤","後排球員攻擊踩線。"],"explanation":""},{"correctAnswer":"糖尿病","question":"有些人因胰臟功能不佳，無法分泌胰島素，或是胰島素無法有效的作用，而罹患何種病？","mediaUrl":"","options":["腎臟病","風溼病","糖尿病","心臟病。"],"explanation":""},{"correctAnswer":"糖尿病。","question":"下列哪種疾病患者易發生血管病變與神經感覺不靈敏的情況，而腳是最遠的肢體末端，更易因受傷不自覺，導致潰爛、發炎，嚴重時必須截肢？","mediaUrl":"","options":["口腔癌","心臟病","腦中風","糖尿病。"],"explanation":""},{"correctAnswer":"抽菸","question":"常見的致癌因素包含成癮物質、飲食習慣、生活型態、環境汙染與疾病，請問下列何者屬於成癮物質因素？","mediaUrl":"","options":["抽菸","病原體","心情鬱悶","高脂肪飲食。"],"explanation":""},{"correctAnswer":"第二型糖尿病。","question":"下列哪一類型患者的細胞對胰島素的反應較差，胰島素無法有效協助葡萄糖進入細胞內，血糖因而超過標準？","mediaUrl":"","options":["血癌","腎臟病","第一型糖尿病","第二型糖尿病。"],"explanation":""},{"correctAnswer":"飲食習慣以高油、高鹽、高糖、低纖維的食物為主。","question":"下列關於現代人的生活型態說明，何者正確？","mediaUrl":"","options":["日出而作，日落而息","平均餘命較古代人短","醫療較不發達，傳染病盛行","飲食習慣以高油、高鹽、高糖、低纖維的食物為主。"],"explanation":""},{"correctAnswer":"網前短球。","question":"下列何者的羽球動作技術是強調擊球高度須近於網高，運用手腕與手指發力控制拍面角度，將球輕擊過網？","mediaUrl":"","options":["發球","殺球","高遠球","網前短球。"],"explanation":""},{"correctAnswer":"站位與來球呈一枝球拍的距離","question":"下列有關羽球反手網前短球的動作敘述，何者正確？","mediaUrl":"","options":["站位與來球呈一枝球拍的距離","持拍手隨前臂伸向前下方斜放，並低於網高","手腕瞬間做內旋動作，用力將球擊出","看準擊球點後，將球擊向邊線位置。"],"explanation":""},{"correctAnswer":"順勢。","question":"「右腳於擊球瞬間向前跨一步，重心轉換成前腳，持拍手順勢而下，至身體左側，雙眼注視羽球擊出的方向。」此段動作敘述是指羽球哪個動作？","mediaUrl":"","options":["預備","引拍","擊球","順勢。"],"explanation":""},{"correctAnswer":"後排球員必須在前排三公尺線後單足、雙足起跳攻擊，踩線或越線都是犯規動作。","question":"下列有關排球的規則，何者敘述正確？","mediaUrl":"","options":["排球只允許最多兩次的擊球","將球打在對手區域的邊線上算出界","在裁判哨音後，規定時間以內將球發出，超過即違例不失分，換對手發球","後排球員必須在前排三公尺線後單足、雙足起跳攻擊，踩線或越線都是犯規動作。"],"explanation":""},{"correctAnswer":"適時補充含電解質的飲品","question":"關於熱傷害的預防方法下列何者正確？","mediaUrl":"","options":["運動中不要補充水分","適時補充含電解質的飲品","穿深色且具透氣排汗性之衣褲","在上午10點至下午2點間從事戶外運動。"],"explanation":""},{"correctAnswer":"持拍手隨前臂伸向前上方斜舉，並近於網高","question":"下列有關羽球正手網前短球的動作敘述，何者正確？","mediaUrl":"","options":["非持拍手之腳向前方跨步，站位與來球呈一枝球拍的距離","持拍手隨前臂伸向前上方斜舉，並近於網高","手腕瞬間做外旋動作，用力將球擊出","看準擊球點後，將球擊向後場底線位置。"],"explanation":""},{"correctAnswer":"球隊替補換人","question":"排球裁判在自己身體腹部位置雙手做前後交替輪轉動作，表示下列何種狀況？","mediaUrl":"","options":["延誤發球","球隊暫停","球隊替補換人","位置或輪轉錯誤。"],"explanation":""},{"correctAnswer":"胰島素分泌或作用異常。","question":"糖尿病主要與哪一項因素有關？","mediaUrl":"","options":["感染病毒","缺乏鈣質","維生素缺乏","胰島素分泌或作用異常。"],"explanation":""},{"correctAnswer":"殺球","question":"「擊球位置於額頭前上方約一點鐘方向，手臂近於伸直，至最高點擊球。」此段動作敘述是指羽球哪個動作技術？","mediaUrl":"","options":["殺球","發球","挑球","網前短球。"],"explanation":""},{"correctAnswer":"亞硝酸鹽","question":"下列何種添加物常被拿來當肉類的防腐劑，香腸、火腿、培根等食物都會加入此物，因此這些肉類加工品應減少食用？","mediaUrl":"","options":["碳酸鈉","碳酸氫鈉","亞硝酸鹽","阿斯巴甜。"],"explanation":""},{"correctAnswer":"足底筋膜炎","question":"下列何者屬於慢性運動傷害？","mediaUrl":"","options":["骨折","腳踝扭傷","足底筋膜炎","延遲性肌肉痠痛。"],"explanation":""},{"correctAnswer":"亞硝酸鹽。","question":"有一位年僅14歲的國中生從小就天天吃烤香腸，持續八年，直到出現血便就醫，才發現罹患大腸癌。由於香腸內添加何者作為防腐劑，而且經過高溫燒烤，經常食用易誘發癌症？","mediaUrl":"","options":["膨脹劑","碳酸鈉","抗氧化劑","亞硝酸鹽。"],"explanation":""},{"correctAnswer":"血癌","question":"政府針對五大癌症進行篩檢補助，下列何者不在補助範圍之內？","mediaUrl":"","options":["乳癌","血癌","大腸癌","口腔癌。"],"explanation":""},{"correctAnswer":"雙腳屈膝呈預備狀態。","question":"下列有關羽球運動的預備動作敘述，何者正確？","mediaUrl":"","options":["眼睛注視對手","身體前傾，持拍手置於頭上","雙腳前後站立","雙腳屈膝呈預備狀態。"],"explanation":""},{"correctAnswer":"網前短球。","question":"「一腳向前方跨步，膝關節微彎，呈弓箭步。」是指羽球哪個動作技術之步法？","mediaUrl":"","options":["發球","殺球","高遠球","網前短球。"],"explanation":""},{"correctAnswer":"大腸癌","question":"定期做糞便潛血檢查可降低二至三成哪一種癌症的死亡率？","mediaUrl":"","options":["胃癌","肝癌","大腸癌","胰臟癌。"],"explanation":""},{"correctAnswer":"環境汙染","question":"常見的致癌因素包含成癮物質、飲食習慣、生活型態、環境汙染與疾病，請問「輻射」是屬於下列何種因素？","mediaUrl":"","options":["疾病","飲食習慣","環境汙染","生活型態。"],"explanation":""},{"correctAnswer":"持球位置維持準備投籃位置","question":"籃球運動中，有關過人威脅動作的敘述，下列何者正確？","mediaUrl":"","options":["身體重心平均放在雙腳","持球位置維持準備投籃位置","雙腳平行站立，膝關節微彎並與肩同寬","接球時背向籃框，以餘光觀察防守者和隊友的空檔。"],"explanation":""},{"correctAnswer":"脈搏快而弱。","question":"發生熱衰竭的現象時，下列哪個徵兆會出現？","mediaUrl":"","options":["抽筋","輕微脫水","發生休克","脈搏快而弱。"],"explanation":""},{"correctAnswer":"超過3次擊球","question":"排球裁判手指比出4的動作，表示下列何種犯規？","mediaUrl":"","options":["連擊","延誤發球","超過3次擊球","球隊替補換4號球員。"],"explanation":""},{"correctAnswer":"皮膚發紅、發熱","question":"發生熱中暑的現象時，下列哪個徵兆會出現？","mediaUrl":"","options":["皮膚溼冷","臉色蒼白","皮膚發紅、發熱","脫水(3～5%體重)。"],"explanation":""}],"totalQuestions":50},"國三科技":{"name":"國三科技","questions":[{"correctAnswer":"鱷魚夾","question":"Micro:bit 可以使用下列何者連接其他外接裝置？","mediaUrl":"","options":["銅線","網路線","藍牙天線","鱷魚夾"],"explanation":""},{"correctAnswer":"bca","question":"關於控制系統的運作，請依照裝置運作的順序排序？a.輸出裝置，b.輸入裝置，c.控制裝置。","mediaUrl":"","options":["abc","acb","bca","bac"],"explanation":""},{"correctAnswer":"血型","question":"下列哪一項是非數值資料？","mediaUrl":"","options":["血型","身高","體重","胸圍"],"explanation":""},{"correctAnswer":"非數值資料","question":"資料的型態依其形式大致可分為兩類，一類可使用算術四則運算計算，另一類可以用分類、排序或描述的方式來處理，請問後者的資料型態為何？","mediaUrl":"","options":["數值資料","非數值資料","數位資料","類比資料"],"explanation":""},{"correctAnswer":"可以透過圓點與顏色詮釋整體資料，因此無法看到單一圓點的詳細資料","question":"使用 Google 試算表製作出地理分布圖後，無法從圖上看出哪一項功能？","mediaUrl":"","options":["可以觀察同一物品在全球各地區的數量差異","可以透過圓點大小，視覺化的判斷數量多寡","可以透過圓點顏色，視覺化的判斷數量多寡","可以透過圓點與顏色詮釋整體資料，因此無法看到單一圓點的詳細資料"],"explanation":""},{"correctAnswer":"主要進行的動作有輸入、輸出、控制和記憶","question":"物聯網是生活中常見的微電腦控制應用，關於物聯網的敘述，下列何者錯誤？","mediaUrl":"","options":["透過資訊科技的技術，讓原本獨立運作的科技產品連結至網際網路","目的為對機器、裝置或人員達到蒐集資料、定位、遠端遙控等","主要進行的動作有輸入、輸出、控制和記憶","可以透過不同的感測器主動感知外在情況"],"explanation":""},{"correctAnswer":"染疫患者身分證字號","question":"為了了解新冠肺炎所造成的影響，各縣市透過資料開放平台提供相關資料給予民眾查詢，請問下列何者資料最不可能放置於資料開放平臺？","mediaUrl":"","options":["每日染疫人數","染疫患者身分證字號","疫苗接種比例","染疫死亡人數"],"explanation":""},{"correctAnswer":"開發版上 LED 每秒閃爍","question":"當透過 Arduino IDE 成功上傳至 Arduino 開發板時，開發板會有何種反應？","mediaUrl":"","options":["開發版上 LED 每秒閃爍","開發版上蜂鳴器持續鳴叫","開發版上 LED 長亮","不做任何反應"],"explanation":""},{"correctAnswer":"比較團隊間各向度的優劣","question":"下列哪一項是雷達圖的主要功能？","mediaUrl":"","options":["比較團隊間各向度的優劣","比較團隊間人數的多寡","比較團隊間外語程度的優劣","比較團隊間學習成效的高低"],"explanation":""},{"correctAnswer":"確定並設定連接 COM 腳","question":"小寶使用 Arduino IDE 時，發現程式無法成功灌入開發板中，最後發現是序列埠沒抓到。請問應如何處理較為妥當？","mediaUrl":"","options":["重開 Arduino IDE 程式","程式刪掉重寫","確定並設定連接 COM 腳","重開機"],"explanation":""},{"correctAnswer":"丙甲乙戊丁","question":"關於製作折線圖的操作步驟，以下排列何者正確？甲、將要製作成圖表的資料整理至試算表中；乙、選取要製作成圖表的項目及數據；丙、搜尋並下載相關資料檔案；丁、在圖表類型下拉選單中點選「折線圖」；戊、點選功能表的插入鍵，點選圖表。","mediaUrl":"","options":["丙乙甲戊丁","丙乙甲丁戊","丙甲乙戊丁","丙甲乙丁戊"],"explanation":""},{"correctAnswer":"XML","question":"請問下列何種資料格式是一種「描述資料」的語言，檔案內容除了資料本身，還描述資料的結構與組成關係？","mediaUrl":"","options":["CSV","doc","html","XML"],"explanation":""},{"correctAnswer":"排序（A→Z）","question":"記錄家裡附近的超商店家名稱和距離公里數，利用 Google 試算表依照距離從近到遠排列，需選擇篩選器中的哪個選項？","mediaUrl":"","options":["排序（Z→A）","排序（A→Z）","依顏色排序","依表格排序"],"explanation":""},{"correctAnswer":"不變","question":"小寶欲使用 Google 試算表將學號與姓名進行排序，首先他先點選學號欄後選擇排序（A→Z），請問學號會怎麼排序？","mediaUrl":"","options":["由大到小排序","不變","由小到大排序","視情況而定"],"explanation":""},{"correctAnswer":"紅外線測距模組","question":"下列何者是微控制器配件的輸入裝置？","mediaUrl":"","options":["紅外線測距模組","藍牙模組","全彩 LED 模組","液晶顯示器"],"explanation":""},{"correctAnswer":"以上皆是","question":"關於 Google 試算表的敘述，下列何者正確？","mediaUrl":"","options":["我們可以透過「上傳」電腦中檔案的方式，將檔案匯入 Google 試算表並進行編輯","我們可以透過開啟雲端硬碟內檔案的方式編輯試算表","我們可以直接建立空白試算表，並自行輸入數值與建立表格","以上皆是"],"explanation":""},{"correctAnswer":"PLC","question":"請問下列何者為「可程式控制器」的英文簡稱？","mediaUrl":"","options":["PLC","PLB","PLA","PLE"],"explanation":""},{"correctAnswer":"abd","question":"下列關於資料來源的敘述何者正確？a.生活周遭處處都有資料，b.使用者通常搜集資料都有其目的，c.網路上搜集而來的資料都是可以信任的，d.常見搜集資料的方法有測量、調查或實驗。","mediaUrl":"","options":["abc","abd","bcd","acd"],"explanation":""},{"correctAnswer":"利用電機機械設備代替積體電路，簡化複雜的電路","question":"關於可程式控制器的敘述，下列何者錯誤？","mediaUrl":"","options":["利用電機機械設備代替積體電路，簡化複雜的電路","使用可程式記憶體以儲存、規畫指令","執行像是邏輯、順序、計時、計數與演算等功能","比傳統的純電控設備更容易維修"],"explanation":""},{"correctAnswer":"根據時間設定行走的距離與方向改變次數","question":"若希望藉由程式讓模擬車子順時針繞行正方形一圈，下列敘述何者錯誤？","mediaUrl":"","options":["先從自走車的路徑與動作來分解","判斷起始點與終點位置，注意初始面對的方向和行走方向的差異","根據時間設定行走的距離與方向改變次數","依據微控制器的種類、配件和接腳位置轉換為對應的語言輸入指令"],"explanation":""},{"correctAnswer":"丙丁乙甲","question":"利用 Google 試算表進行資料整理時，若要將原本純數字的儲存格改為日期格式，正確的操作步驟為何？甲、選取日期；乙、按下工具列的格式→數值；丙、登入帳戶後，再開啟 Google 試算表；丁、選取要設定或修改格式的儲存格範圍。","mediaUrl":"","options":["丙乙丁甲","丙乙甲丁","丙甲乙丁","丙丁乙甲"],"explanation":""},{"correctAnswer":"程式判斷及計算的主要部分","question":"控制裝置在控制系統中為不可或缺的角色，關於控制裝置的敘述，下列何者正確？","mediaUrl":"","options":["接收感測器、開關的訊號","各項裝置的通訊溝通","程式判斷及計算的主要部分","使馬達等裝置作動"],"explanation":""},{"correctAnswer":"超商熱銷商品排行","question":"經由分析整理過後的資料，可以讓使用者了解資料所代表的意義，這樣的資料就稱為「資訊」，請問下列何者屬於「資訊」的範疇？","mediaUrl":"","options":["超商熱銷商品排行","同學臉書的打卡紀錄","手機通訊錄","城市每日的空氣品質"],"explanation":""},{"correctAnswer":"操作單元","question":"微控制器就像是一臺小型電腦，下列何者不是電腦的五大單元？","mediaUrl":"","options":["輸入單元","操作單元","記憶單元","控制單元"],"explanation":""},{"correctAnswer":"以上皆是","question":"物聯網的運作過程中，主要進行下列何者動作？","mediaUrl":"","options":["感知","控制","傳遞","以上皆是"],"explanation":""},{"correctAnswer":"數值資料","question":"資料的型態依其形式大致可分為兩類，一類可使用算術四則運算計算，另一類可以用分類、排序或描述的方式來處理，請問前者的資料型態為何？","mediaUrl":"","options":["數值資料","非數值資料","數位資料","類比資料"],"explanation":""},{"correctAnswer":"兩者都可輸入數位訊號或類比訊號","question":"關於 Micro:bit 和 Arduino 的敘述，下列何者正確？","mediaUrl":"","options":["兩者都有 5×5 的 LED 螢幕","兩者都可輸入數位訊號或類比訊號","兩者都不需提供電源就可以啟動","兩者都不需匯入程式，連接配件即可動作"],"explanation":""},{"correctAnswer":"調查資料","question":"下列哪一項是透過操作獲得的資料？","mediaUrl":"","options":["調查資料","交通流量","交易資料","預算資料"],"explanation":""},{"correctAnswer":"資訊科技段考分數","question":"下列哪一項是數值資料？","mediaUrl":"","options":["座號","身分證字號","資訊科技段考分數","出生年月日"],"explanation":""},{"correctAnswer":"電路設計","question":"線控手臂是藉由下列何種設計以達到控制的目的？","mediaUrl":"","options":["機構的設計","電路設計","程式設計","以上皆非"],"explanation":""},{"correctAnswer":"甲丁丙乙","question":"關於控制系統的運作步驟順序為何？甲.檢測或感應裝置持續偵測外界情況 乙.將訊號傳遞給驅動裝置 丙.進行程式運算與判斷 丁.提供訊號給控制裝置","mediaUrl":"","options":["丁甲乙丙","甲丁丙乙","丁丙甲乙","甲乙丙丁"],"explanation":""},{"correctAnswer":"CSV","question":"為了方便資料的統計與分析，通常我們會將資料儲存為何種格式？","mediaUrl":"","options":["html","CSV","doc","png"],"explanation":""},{"correctAnswer":"電磁鐵方式","question":"繼電器是透過哪種方式，控制電路通路或斷路？","mediaUrl":"","options":["感應方式","滑動方式","電磁鐵方式","按壓方式"],"explanation":""},{"correctAnswer":"馬達","question":"請問下列何者屬於輸出模組？","mediaUrl":"","options":["微動開關模組","溫溼度感測模組","藍牙模組","馬達"],"explanation":""},{"correctAnswer":"類似為一臺連接滑鼠、鍵盤的電腦","question":"關於開發板的敘述，下列何者錯誤？","mediaUrl":"","options":["類似為一臺連接滑鼠、鍵盤的電腦","不包含喇叭等裝置","常見的開發板為 Micro:bit 和 Arduino","不同的開發板有不同的特色和功能"],"explanation":""},{"correctAnswer":"試算表","question":"Google 網站提供多種文件編輯工具，其中可以用來作為資料處理的工具為何？","mediaUrl":"","options":["文件","試算表","簡報","Gmail"],"explanation":""},{"correctAnswer":"半導體","question":"請問電晶體是由下列何種材料所製成的電子元件？","mediaUrl":"","options":["晶體","半晶體","導體","半導體"],"explanation":""},{"correctAnswer":"程式設計","question":"電子機械手臂比線控手臂多了何種設計以達到控制的目的？","mediaUrl":"","options":["機構的設計","電路設計","程式設計","以上皆非"],"explanation":""},{"correctAnswer":"資料值、一筆錄、一個檔","question":"就資料的規模（由小至大）來說，下列哪一項正確？","mediaUrl":"","options":["一筆錄、資料值、一個檔","一個檔、資料值、一筆錄","資料值、一筆錄、一個檔","一筆錄、一個檔、資料值"],"explanation":""},{"correctAnswer":"婚姻狀況","question":"前幾年新冠肺炎肆虐時，為了生產疫苗需進行實驗蒐集資料，請問進行人體實驗前，蒐集的個人資料何者不合理？","mediaUrl":"","options":["身高","體重","婚姻狀況","過敏藥物"],"explanation":""}],"totalQuestions":40},"國三健體":{"name":"國三健體","questions":[{"correctAnswer":"生殖器官小潰瘍","question":"梅毒可能導致下列哪一種情況？","mediaUrl":"","options":["感冒","哮喘","腹瀉","生殖器官小潰瘍"],"explanation":""},{"correctAnswer":"種植樹木","question":"下列何者不屬於人類活動的破壞？","mediaUrl":"","options":["畜牧牛隻","種植樹木","濫墾木材","改種植經濟作物"],"explanation":""},{"correctAnswer":"3人","question":"排球比賽時，最多僅能幾人參與攔網動作？","mediaUrl":"","options":["1人","2人","3人","4人"],"explanation":""},{"correctAnswer":"美國國家海洋暨大氣總署","question":"下列哪個單位發現在西元1992～2015年間，全球平均海平面高度已上升約8.5公分？","mediaUrl":"","options":["美國國家海洋暨大氣總署","綠色和平組織","司法院","衛生福利部國民健康署"],"explanation":""},{"correctAnswer":"約3～12週","question":"感染HIV之後，檢驗的試劑尚無法檢測出HIV抗體存在的時期，目前約多久？","mediaUrl":"","options":["約1～2週","約3～6週","約3～8週","約3～12週"],"explanation":""},{"correctAnswer":"1,398平方公里","question":"綠色和平組織警告，如果我們仍不積極改善溫室效應，西元2050年臺灣將有多少平方公里的面積(相當於五千多座大安森林公園)被海水淹沒？","mediaUrl":"","options":["1,398平方公里","1,500平方公里","1,698平方公里","2,000平方公里"],"explanation":""},{"correctAnswer":"水災的發生","question":"下列何者是降雨量改變所帶來的影響？","mediaUrl":"","options":["水災的發生","傳染病頻繁出現","垃圾量增加","北極熊等生物滅絕"],"explanation":""},{"correctAnswer":"臺灣","question":"綠色和平組織警告，如果大家仍不積極改善溫室效應，西元2050年哪一個國家將有1,398平方公里的面積被海水淹沒，並減少10％的土地面積？","mediaUrl":"","options":["日本","臺灣","美國","英國"],"explanation":""},{"correctAnswer":"攔網","question":"排球比賽時，下列何種技術是屬於防守動作？","mediaUrl":"","options":["發球","舉球","攔網","吊球"],"explanation":""},{"correctAnswer":"人體體液","question":"下列何者是HIV僅能生存的地方？","mediaUrl":"","options":["各種液體","人體體液","海洋","河流"],"explanation":""},{"correctAnswer":"地形與汙染","question":"臺灣雖有豐沛的年雨量，卻因為什麼原因，被列為缺水國家之一？","mediaUrl":"","options":["雨量與生態","地形與汙染","死亡率與生育率","人口與地形"],"explanation":""},{"correctAnswer":"海洋步向死亡","question":"下列何者是海洋生態改變所帶來的影響？","mediaUrl":"","options":["水災的發生","海洋步向死亡","垃圾量增加","北極熊等生物滅絕"],"explanation":""},{"correctAnswer":"西元1981年","question":"全球第一起愛滋病例由下列哪一年通報？","mediaUrl":"","options":["西元1978年","西元1979年","西元1980年","西元1981年"],"explanation":""},{"correctAnswer":"美國舊金山","question":"愛滋紀念被單在下列何地發起？","mediaUrl":"","options":["日本東京","英國倫敦","美國紐約","美國舊金山"],"explanation":""},{"correctAnswer":"熱浪","question":"下列何者將是溫帶歐洲的常態？","mediaUrl":"","options":["熱浪","豪雨","傳染病","空氣汙染"],"explanation":""},{"correctAnswer":"腸胃","question":"降雨量突降的乾旱區域，水源便容易受到汙染，造成哪一種傳染疾病盛行？","mediaUrl":"","options":["泌尿","心臟","腦部","腸胃"],"explanation":""},{"correctAnswer":"愛滋感染者","question":"感染HIV後無發病時期，稱為下列何者？","mediaUrl":"","options":["性病感染者","空窗期","愛滋病患","愛滋感染者"],"explanation":""},{"correctAnswer":"活動的範圍不相同","question":"有關浮潛和潛水的描述，下列選項何者正確？","mediaUrl":"","options":["穿戴的裝備一樣","不需具備一定的游泳技能","活動的範圍不相同","不需有教練帶領就能進行活動"],"explanation":""},{"correctAnswer":"綠色和平組織","question":"下列何者警告，如果我們仍不積極改善溫室效應，西元2050年臺灣將有1,398平方公里的面積(相當於五千多座大安森林公園)被海水淹沒？","mediaUrl":"","options":["美國國家海洋暨大氣總署","綠色和平組織","司法院","衛生福利部國民健康署"],"explanation":""},{"correctAnswer":"中暑","question":"西元2019年歐洲熱浪警報，造成許多老人因為什麼情況而死亡？","mediaUrl":"","options":["流感","中暑","傳染病","空氣汙染"],"explanation":""},{"correctAnswer":"保險套","question":"從事性行為時，使用下列何者是尊重伴侶，保護對方的最佳表現？","mediaUrl":"","options":["鋁箔紙","保鮮膜","保險套","塑膠袋"],"explanation":""},{"correctAnswer":"看人看球","question":"有關籃球防守須與球和人保持三角關係，同時看到人與球的動態，利用餘光並調整站位，將人與球納入自己的視野範圍之戰術敘述，為下列何者？","mediaUrl":"","options":["看人看球","隨球移動","球到人到","補位與還原"],"explanation":""},{"correctAnswer":"降雨","question":"在氣候變遷的影響之下，當一個地區出現下列哪一種極端的情況，諾羅病毒、隱孢子蟲等病原體會在飲用水中大量增加並影響居民健康？","mediaUrl":"","options":["炙熱","寒流","降雨","乾旱"],"explanation":""},{"correctAnswer":"隨球移動","question":"有關籃球防守主要是防禦空手者，要隨球的流動調整防守站位，才可與所防禦的對手保持一定距離和角度之戰術敘述，為下列何者？","mediaUrl":"","options":["看人看球","隨球移動","球到人到","補位與還原"],"explanation":""},{"correctAnswer":"燃燒石化燃料","question":"下列哪一種人類活動會造成溫室效應加劇，地球溫度持續上升，導致全球暖化和氣候變遷？","mediaUrl":"","options":["大量種植樹木","使用綠色能源","減少交通運輸的使用","燃燒石化燃料"],"explanation":""},{"correctAnswer":"澳洲","question":"西元2019年哪一個國家森林大火，空氣汙染情形連外太空衛星都拍攝得到？","mediaUrl":"","options":["美國","日本","英國","澳洲"],"explanation":""},{"correctAnswer":"血液","question":"下列何者是性病帶原者病原體濃度較高的部分？","mediaUrl":"","options":["血液","淚液","汗液","唾液"],"explanation":""},{"correctAnswer":"西元2005年","question":"臺灣自西元哪一年開始推動「孕婦全面篩檢愛滋計畫」？","mediaUrl":"","options":["西元2003年","西元2004年","西元2005年","西元2006年"],"explanation":""},{"correctAnswer":"西元1992～2015年間","question":"美國國家海洋暨大氣總署(NOAA)發現在什麼期間，全球平均海平面高度已上升約8.5公分？","mediaUrl":"","options":["西元1990～2015年間","西元1991～2015年間","西元1992～2015年間","西元1992～2010年間"],"explanation":""},{"correctAnswer":"球到人到","question":"有關籃球防守隨時與無持球者保持一定距離與角度，是為了確保球到位時，防守者也能即時到位之戰術敘述，為下列何者？","mediaUrl":"","options":["看人看球","隨球移動","球到人到","補位與還原"],"explanation":""},{"correctAnswer":"疱疹病毒","question":"下列何者是生殖器疱疹的病原體？","mediaUrl":"","options":["疱疹病毒","淋病雙球菌","梅毒螺旋體","人類乳突病毒"],"explanation":""},{"correctAnswer":"自然產","question":"下列哪一個行為無法大幅降低新生兒的感染機率？","mediaUrl":"","options":["預防性投藥","自然產","剖腹","使用母乳替代品"],"explanation":""},{"correctAnswer":"4℃","question":"如果全球真的升溫達到多少，臺灣將會減少10％的面積，導致許多農地無法耕種？","mediaUrl":"","options":["1℃","2℃","3℃","4℃"],"explanation":""},{"correctAnswer":"丁","question":"下列有關排球攔網空中手部動作犯規之選項，何者正確？（甲）雙手晃動，隨意揮動 （乙）單手攔網 （丙）以拳頭攔網 （丁）手輕輕觸碰球網。","mediaUrl":"","options":["甲乙丙丁","甲丁","丙丁","丁"],"explanation":""},{"correctAnswer":"先將調整帶放至最大，再將面鏡貼於臉部","question":"有關正確穿戴面鏡的方法，下列選項何者正確？","mediaUrl":"","options":["先將調整帶放至最大，再將面鏡貼於臉部","先調好調整帶再將面鏡貼於臉部","調整帶要有緊繃感","調整帶要能鬆動為原則"],"explanation":""},{"correctAnswer":"需要求所有活動參與者辦理保險","question":"有關〈水域遊憩活動管理辦法〉之敘述，下列選項何者正確？","mediaUrl":"","options":["業者只須配置合格的教練即可","需要求所有活動參與者辦理保險","有良善的救生設備下，任何水域都可進行水上活動","業者不需有營業執照，有提出申請即可"],"explanation":""},{"correctAnswer":"頭皮","question":"性病的病原體不會透過以下哪一個地方進行感染？","mediaUrl":"","options":["龜頭","陰道","頭皮","直腸"],"explanation":""},{"correctAnswer":"生殖器官","question":"青少年的哪一部分尚未完全發育成熟，對細菌和病毒的防護力較弱，因此若是發生不安全的性行為，感染性病的風險也較高？","mediaUrl":"","options":["呼吸器官","生殖器官","淋巴器官","腸胃器官"],"explanation":""},{"correctAnswer":"三線位置","question":"有關籃球盯人防守在弱邊防禦無球進攻者之戰術敘述，為下列何者？","mediaUrl":"","options":["一線位置","二線位置","三線位置","全方位位置"],"explanation":""},{"correctAnswer":"固定防守一位進攻者","question":"有關籃球盯人防守戰術之敘述，下列何者正確？","mediaUrl":"","options":["固定防守一位進攻者","當離開自己防守區，則由其他區的隊友防禦","採2－3防守","採3－2防守"],"explanation":""},{"correctAnswer":"失明","question":"淋菌性結膜炎可能導致下列哪一種情況？","mediaUrl":"","options":["感冒","哮喘","失明","失聰"],"explanation":""},{"correctAnswer":"溫暖潮溼","question":"性病的病原體喜歡哪一種環境？","mediaUrl":"","options":["炙熱乾燥","溫暖乾燥","寒冷潮溼","溫暖潮溼"],"explanation":""},{"correctAnswer":"甲丙","question":"下列有關可以參與排球攔網者之選項，何者正確？（甲）前排舉球員 （乙）後排舉球員 （丙）前排攻擊手 （丁）後排攻擊手 （戊）自由球員。","mediaUrl":"","options":["甲丙戊","甲丙","乙丁戊","乙丁"],"explanation":""},{"correctAnswer":"人類從水資源吸取更豐富的礦物質","question":"當水資源遭到生物或化學汙染時，不可能發生以下的情形？","mediaUrl":"","options":["民眾傳染病","農作物重金屬殘留","水資源干擾人類內分泌系統","人類從水資源吸取更豐富的礦物質"],"explanation":""},{"correctAnswer":"傳染病頻繁出現","question":"下列何者是病媒增加所帶來的影響？","mediaUrl":"","options":["水災的發生","傳染病頻繁出現","垃圾量增加","北極熊等生物滅絕"],"explanation":""},{"correctAnswer":"甲乙丁","question":"有關浮潛時，使用物質防止面鏡起霧的方法，下列選項何者正確？（甲）唾液 （乙）防霧劑 （丙）鹽巴 （丁）海草。","mediaUrl":"","options":["甲乙丙","甲丙丁","甲乙丁","甲乙丙丁"],"explanation":""},{"correctAnswer":"龜頭","question":"性病病原體接觸到下列哪一個部位容易進入人體，導致感染？","mediaUrl":"","options":["指甲","頭髮","龜頭","皮膚"],"explanation":""},{"correctAnswer":"血液","question":"性病帶原者身上的哪一個部分，帶有高度傳染力？","mediaUrl":"","options":["血液","汗液","唾液","淚液"],"explanation":""},{"correctAnswer":"海水變多，鹽業興盛","question":"因人類活動造成海洋生態改變，可能不會有以下哪一個情形發生？","mediaUrl":"","options":["珊瑚死亡","漁獲減少","海洋步向死亡","海水變多，鹽業興盛"],"explanation":""},{"correctAnswer":"溫室效應","question":"日常生活中的燃燒石化燃料(發電)、砍伐森林(木材)和交通運輸等行為，都會造成下列何者加劇？","mediaUrl":"","options":["溫室效應","豪雨","傳染病","空氣汙染"],"explanation":""}],"totalQuestions":50}};
+	  
+	  // 其他變數
+	  let questions = [];
+	  let currentQuestionIndex = 0;
+	  let score = 0;
+	  let startTime;
+	  let timerInterval;
+	  let wrongQuestions = [];
+	  let fontSize = 18;
+	
+
+    // 頁面載入時初始化
+    window.onload = function() {
+      loadSheets();
+    };
+
+    // 修改 loadSheets 函數
+    function loadSheets() {
+      const sheets = Object.values(questionsData);
+      
+      if (sheets.length === 0) {
+        alert('找不到可用的工作表！');
+        return;
+      }
+
+      const select = document.getElementById('sheet-select');
+      select.innerHTML = '';
+      
+      sheets.forEach(sheet => {
+        const option = document.createElement('option');
+        option.value = sheet.name;
+        option.textContent = sheet.name;
+        option.dataset.total = sheet.totalQuestions;
+        select.appendChild(option);
+      });
+
+      select.selectedIndex = 0;
+      updateQuestionRange();
+    }
+
+    function updateQuestionRange() {
+      const select = document.getElementById('sheet-select');
+      const selectedOption = select.options[select.selectedIndex];
+      const total = parseInt(selectedOption.dataset.total) || 0;
+      
+      const startRow = document.getElementById('start-row');
+      const endRow = document.getElementById('end-row');
+      
+      startRow.max = total;
+      endRow.max = total;
+      
+      let currentStart = parseInt(startRow.value);
+      if (currentStart > total) {
+        currentStart = 1;
+      }
+      
+      startRow.value = currentStart;
+      endRow.value = total;
+    }
+
+    function startQuiz() {
+      const sheetName = document.getElementById('sheet-select').value;
+      const startRow = parseInt(document.getElementById('start-row').value);
+      const endRow = parseInt(document.getElementById('end-row').value);
+
+      if (!sheetName) {
+        alert('請選擇測驗類型！');
+        return;
+      }
+
+      if (startRow > endRow) {
+        alert('開始題號不能大於結束題號！');
+        return;
+      }
+
+      const selectedQuestions = questionsData[sheetName].questions
+        .slice(startRow - 1, endRow)
+        .map(q => ({...q}));
+      
+      initQuiz(shuffleArray(selectedQuestions));
+    }
+
+    function shuffleArray(array) {
+      const newArray = [...array];
+      for (let i = newArray.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+      }
+      return newArray;
+    }
+
+    function initQuiz(quizQuestions) {
+      questions = quizQuestions;
+      document.getElementById('setup-view').style.display = 'none';
+      document.getElementById('quiz-view').style.display = 'block';
+      document.getElementById('total-questions').textContent = questions.length;
+      startTime = new Date();
+      startTimer();
+      showQuestion();
+    }
+
+    function showQuestion() {
+	  const question = questions[currentQuestionIndex];
+	  document.getElementById('current-question').textContent = currentQuestionIndex + 1;
+	  
+	  document.getElementById('question-text').innerHTML = '		<span class="question-label">第' + (currentQuestionIndex + 1) + '題</span>		<div class="question-content">' + question.question + '</div>	  ';
+	  
+	  document.getElementById('progress-bar').style.width = ((currentQuestionIndex + 1) / questions.length * 100) + '%';
+
+	  // 媒體處理代碼省略...
+
+	  // 創建選項的複製並打亂順序
+	  const options = [...question.options];
+	  const correctAnswer = question.correctAnswer;
+	  
+	  // 選項洗牌
+	  for (let i = options.length - 1; i > 0; i--) {
+		const j = Math.floor(Math.random() * (i + 1));
+		[options[i], options[j]] = [options[j], options[i]];
+	  }
+	  
+	  const optionsContainer = document.getElementById('options-container');
+	  optionsContainer.innerHTML = '';
+	  options.forEach((option, index) => {
+		const button = document.createElement('div');
+		button.className = 'option';
+		button.textContent = option;
+		button.onclick = () => selectOption(option); // 注意這裡傳入的是選項文字而非索引
+		optionsContainer.appendChild(button);
+	  });
+
+	  document.getElementById('feedback').style.display = 'none';
+	}
+
+    // 修改 selectOption 函數以接受選項文字
+	function selectOption(selectedOption) {
+	  const question = questions[currentQuestionIndex];
+	  const options = document.querySelectorAll('.option');
+	  
+	  // 找出所選選項在當前顯示選項中的索引
+	  const selectedIndex = Array.from(options).findIndex(option => option.textContent === selectedOption);
+	  
+	  options.forEach(option => option.classList.remove('selected'));
+	  options[selectedIndex].classList.add('selected');
+
+	  const result = {
+		isCorrect: selectedOption === question.correctAnswer,
+		correctAnswer: question.correctAnswer,
+		explanation: question.explanation
+	  };
+	  
+	  showFeedback(result);
+	}
+
+    function showFeedback(result) {
+      const feedback = document.getElementById('feedback');
+      const options = document.querySelectorAll('.option');
+      
+      feedback.style.display = 'block';
+      feedback.className = 'feedback ' + (result.isCorrect ? 'correct' : 'incorrect');
+      
+      if (result.isCorrect) {
+          feedback.innerHTML = '<h3>太棒了！答對了！</h3>' +
+            '<div class="explanation">' + result.explanation + '</div>' +
+            '<button onclick="nextQuestion()" style="margin-top: 15px;">下一題</button>';
+          score++;
+        } else {
+          feedback.innerHTML = '<h3>答錯了...</h3>' +
+            '<p>正確答案是：' + result.correctAnswer + '</p>' +
+            '<div class="explanation">' + result.explanation + '</div>' +
+            '<button onclick="nextQuestion()" style="margin-top: 15px;">下一題</button>';
+        wrongQuestions.push({
+          question: questions[currentQuestionIndex].question,
+          userAnswer: questions[currentQuestionIndex].options[Array.from(options)
+            .findIndex(opt => opt.classList.contains('selected'))],
+          correctAnswer: result.correctAnswer
+        });
+      }
+
+      options.forEach(option => {
+        option.onclick = null;
+        if (option.textContent === result.correctAnswer) {
+          option.classList.add('correct');
+        } else if (option.classList.contains('selected')) {
+          option.classList.add('incorrect');
+        }
+      });
+    }
+
+    function nextQuestion() {
+      currentQuestionIndex++;
+      if (currentQuestionIndex < questions.length) {
+        showQuestion();
+      } else {
+        showResults();
+      }
+    }
+
+    function showResults() {
+	  clearInterval(timerInterval);
+	  const endTime = new Date();
+	  const duration = Math.floor((endTime - startTime) / 1000);
+	  const minutes = Math.floor(duration / 60);
+	  const seconds = duration % 60;
+
+	  // 加入變數宣告
+	  const sheetName = document.getElementById('sheet-select').value;
+	  const startRow = document.getElementById('start-row').value;
+	  const endRow = document.getElementById('end-row').value;
+
+	  const dateOptions = { year: 'numeric', month: '2-digit', day: '2-digit', weekday: 'long' };
+	  const timeOptions = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
+	  const formattedDate = endTime.toLocaleDateString('zh-TW', dateOptions);
+	  const formattedTime = endTime.toLocaleTimeString('zh-TW', timeOptions);
+
+	  document.getElementById('quiz-view').style.display = 'none';
+	  document.getElementById('results-view').style.display = 'block';
+
+	  const scorePercentage = Math.round((score / questions.length) * 100);
+	  document.getElementById('final-score').textContent = scorePercentage + '%';
+
+	  document.getElementById('summary').innerHTML = 
+		'<div class="result-section">' +
+		  '<h3>測驗資訊</h3>' +
+		  '<p>題組：' + sheetName + '</p>' +
+		  '<p>測驗範圍：第 ' + startRow + ' 題 至 第 ' + endRow + ' 題</p>' +
+		  '<p>完成時間：' + formattedDate + ' ' + formattedTime + '</p>' +
+		'</div>' +
+		'<div class="result-section">' +
+		  '<h3>測驗成績</h3>' +
+		  '<p>測驗時間：' + minutes + '分' + seconds + '秒</p>' +
+		  '<p>總題數：' + questions.length + '</p>' +
+		  '<p>答對題數：' + score + '</p>' +
+		  '<p>答錯題數：' + (questions.length - score) + '</p>' +
+		'</div>';
+
+	  if (wrongQuestions.length > 0) {
+		const wrongQuestionsHtml = wrongQuestions.map(function(q, index) {
+		  return '<div class="wrong-question">' +
+			'<h4>題目 ' + (index + 1) + '</h4>' +
+			'<p>' + q.question + '</p>' +
+			'<p>你的答案：' + q.userAnswer + '</p>' +
+			'<p>正確答案：' + q.correctAnswer + '</p>' +
+		  '</div>';
+		}).join('');
+
+		document.getElementById('wrong-questions').innerHTML = 
+		  '<div class="result-section">' +
+			'<h3>錯題複習</h3>' +
+			wrongQuestionsHtml +
+		  '</div>';
+	  }
+	}
+	
+	function startTimer() {
+      timerInterval = setInterval(function() {
+        const now = new Date();
+        const diff = Math.floor((now - startTime) / 1000);
+        const minutes = Math.floor(diff / 60);
+        const seconds = diff % 60;
+        document.getElementById('timer').textContent = 
+          String(minutes).padStart(2, '0') + ':' + String(seconds).padStart(2, '0');
+      }, 1000);
+    }
+
+    function changeFontSize(change) {
+	  fontSize += change;
+	  // 修改題目文字大小
+	  const questionText = document.getElementById('question-text');
+	  const label = questionText.querySelector('.question-label');
+	  const content = questionText.querySelector('.question-content');
+	  
+	  if (label) label.style.fontSize = (fontSize * 0.9) + 'px';
+	  if (content) content.style.fontSize = fontSize + 'px';
+	  
+	  // 修改選項文字大小
+	  const options = document.querySelectorAll('.option');
+	  options.forEach(option => {
+		option.style.fontSize = fontSize + 'px';
+	  });
+	}
+
+    function handleError(error) {
+      console.error('Error:', error);
+      alert('發生錯誤：' + error);
+    }
+  </script>
+</body>
+</html>
