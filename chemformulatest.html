@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html>
+<head>
+ <meta charset="UTF-8">
+ <title>化學式測驗</title>
+ <style>
+body { 
+  font-family: 'Noto Sans TC', Arial, sans-serif; 
+  margin: 10px;
+  background-color: #f0f0f0;
+  color: #2c3e50;
+  font-weight: bold;
+  font-size: 18px;
+}
+.hidden { display: none; }
+#quizContainer { 
+  max-width: 800px; 
+  margin: 0 auto;
+  background-color: white;
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+.option { 
+  display: block; 
+  width: 80%; 
+  max-width: 500px;
+  padding: 8px; 
+  margin: 10px auto; 
+  background-color: #3498db; 
+  color: white;
+  border: none; 
+  border-radius: 5px; 
+  cursor: pointer; 
+  /*font-size: 16px;*/
+  font-weight: bold;
+  transition: all 0.3s ease;
+  text-align: center;
+}
+.option:hover { 
+  background-color: #2980b9;
+  transform: translateY(-1px);
+}
+.time-display {
+  color: #2c3e50;
+  font-weight: bold;
+  flex-grow: 1;
+  text-align: center;
+}
+.question-info {
+  color: #2c3e50;
+  font-weight: bold;
+  text-align: center;
+  padding: 0 15px;
+}
+.result { 
+  margin: 15px 0; 
+  padding: 15px;
+  border-radius: 8px;
+  background-color: #f8f9fa;
+  text-align: center;
+}
+.font-controls {
+  display: flex;
+  gap: 4px;
+}
+
+.font-controls button {
+  padding: 4px 12px;
+  min-width: 36px;
+}
+.status-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #f8f9fa;
+  padding: 8px;
+  border-radius: 6px;
+  margin-bottom: 10px;
+}
+.control-panel { 
+  margin-bottom: 15px;
+  padding: 15px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+}
+.next-btn { 
+  display: block;
+  width: 80%;
+  max-width: 300px;
+  margin: 15px auto;
+  padding: 12px;
+  background-color: #2ecc71;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  /*font-size: 16px;*/
+  font-weight: bold;
+}
+.next-btn:disabled {
+  background-color: #bdbdbd;
+  cursor: not-allowed;
+}
+.feedback { 
+  margin: 10px 0;
+  padding: 12px;
+  border-radius: 8px;
+  /*font-size: 16px;*/
+  text-align: center;
+}
+.correct { 
+  background-color: #FFFFFF;
+  color: green;
+  font-weight: bold;
+}
+.incorrect { 
+  background-color: #FFDC35;
+  color: red;
+  font-weight: bold;
+}
+#timer {
+  font-size: 18px;
+  font-weight: bold;
+  margin: 8px 0;
+  padding: 8px;
+  background-color: #f8f9fa;
+  border-radius: 6px;
+  text-align: center;
+  color: #2c3e50;
+}
+#progress {
+  font-size: 16px;
+  font-weight: bold;
+  margin: 8px 0;
+  padding: 8px;
+  background-color: #f8f9fa;
+  border-radius: 6px;
+  text-align: center;
+  color: #2c3e50;
+}
+#questionText {
+  /*size: 18px;*/
+  font-weight: bold;
+  margin: 12px 0;
+  padding: 12px;
+  text-align: center;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  color: #2c3e50;
+}
+button {
+  padding: 8px 15px;
+  background-color: #3498db;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+  margin: 0 5px;
+  font-size: 14px;
+}
+button:hover {
+  background-color: #2980b9;
+}
+select, input {
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  margin: 0 5px;
+  font-size: 14px;
+}
+h1 {
+  color: #2c3e50;
+  margin: 15px 0;
+  text-align: center;
+  font-size: 24px;
+  font-weight: bold;
+}
+h2 {
+  color: #2c3e50;
+  margin: 15px 0;
+  font-size: 20px;
+  font-weight: bold;
+}
+.result p {
+  margin: 8px 0;
+  color: #2c3e50;
+  font-size: 16px;
+  text-align: left;
+}
+label {
+  color: #2c3e50;
+  margin-right: 8px;
+  font-weight: bold;
+}
+/* 更新結果和回顧區塊的樣式 */
+
+.review-item {
+  padding: 15px;
+  margin: 10px 0;
+  border-radius: 8px;
+  text-align: left;  /* 確保靠左對齊 */
+}
+
+/* 奇數項目用淡黃色 */
+.review-item:nth-child(odd) {
+  background-color: #fff3e0;  /* 淡黃色 */
+}
+
+/* 偶數項目用淡藍色 */
+.review-item:nth-child(even) {
+  background-color: #e3f2fd;  /* 淡藍色 */
+}
+
+/* 保持標題置中 */
+.result h2, .result h3 {
+  text-align: center;
+}
+
+/* 保持測驗結果摘要置中 */
+.result-summary {
+  text-align: center;
+}
+
+.control-panel label {
+  display: inline-block;
+  min-width: 80px;
+}
+/* 狀態列容器 */
+.status-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #f0f7ff;
+  padding: 8px 12px;
+  margin-bottom: 12px;
+  border-radius: 8px;
+  gap: 8px;
+}
+
+/* 各項資訊的樣式 */
+.status-item {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+
+.status-row-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+/* 工作表名稱 */
+.sheet-name {
+  color: #1565c0;
+  background-color: #e3f2fd;
+  flex-grow: 0;
+}
+
+.status-row-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 16px;
+}
+
+/* 時間顯示 */
+.timer {
+  color: #e53935;
+  background-color: #ffebee;
+}
+
+/* 進度顯示 */
+.progress {
+  color: #2e7d32;
+  background-color: #e8f5e9;
+}
+
+/* 字體控制按鈕組 */
+.font-controls {
+  display: flex;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.font-controls button {
+  padding: 4px 12px;
+  min-width: 36px;
+  background-color: #64b5f6;
+  border-radius: 4px;
+}
+
+/* 添加這些 CSS 樣式給答案回顧 */
+.review-question, .review-explanation {
+  color: #1a237e;  /* 深藍色 */
+  font-weight: bold;
+}
+
+.review-wrong {
+  color: #d32f2f;  /* 紅色 */
+  font-weight: bold;
+}
+
+.review-correct {
+  color: #2e7d32;  /* 綠色 */
+  font-weight: bold;
+}
+
+
+</style>
+
+</style>
+ <script>
+   let allSheetData = {"常見化學式":[["單字","字義","圖片","例句","句義","主題"],["H₂","氫氣","","元素","密度最小的氣體，具可燃性",""],["O₂","氧氣","","元素","具助燃性",""],["N₂","氮氣","","元素","空氣中含量最多的氣體，性質穩定",""],["Cl₂","氯氣","","元素","黃綠色有毒氣體，溶於水生成氯水",""],["He","氦氣","","元素","惰性氣體（單原子分子）",""],["Ar","氬氣","","元素","惰性氣體（單原子分子）",""],["C","碳","","元素","鑽石、石墨、備長炭",""],["S","硫","","元素","黃色固體（硫磺）",""],["Na","鈉","","元素","活性大，需保存在礦物油中",""],["K","鉀","","元素","活性大，需保存在礦物油中",""],["Mg","鎂","","元素","燃燒產生強烈白光",""],["Fe","鐵","","元素","",""],["Cu","銅","","元素","",""],["Zn","鋅","","元素","",""],["Ag","銀","","元素","",""],["H₂O","水","","氧化物","最常見的氧化物與溶劑",""],["H₂O₂","雙氧水","","氧化物","過氧化氫，分解產生氧氣",""],["CO₂","二氧化碳","","氧化物","固態稱為乾冰",""],["CO","一氧化碳","","氧化物","具毒性，具還原力",""],["SO₂","二氧化硫","","氧化物","刺鼻味，酸雨成分",""],["CuO","氧化銅","","氧化物","黑色固體",""],["Fe₂O₃","氧化鐵","","氧化物","鐵鏽主要成分，紅褐色",""],["MgO","氧化鎂","","氧化物","白色固體",""],["HCl","鹽酸","","酸鹼","氯化氫水溶液，胃酸成分",""],["H₂SO₄","硫酸","","酸鹼","化學工業之母，強烈脫水性",""],["HNO₃","硝酸","","酸鹼","照光易分解，強氧化性",""],["CH₃COOH","醋酸","","酸鹼","乙酸，食醋成分",""],["NaOH","氫氧化鈉","","酸鹼","燒鹼、苛性鈉，易潮解",""],["KOH","氫氧化鉀","","酸鹼","強鹼",""],["Ca(OH)₂","氫氧化鈣","","酸鹼","熟石灰，檢驗二氧化碳",""],["NH₄OH","氨水","","酸鹼","弱鹼性，有刺鼻味",""],["NaCl","氯化鈉","","鹽類","食鹽",""],["CaCO₃","碳酸鈣","","鹽類","灰石、大理石、貝殼，難溶於水",""],["Na₂CO₃","碳酸鈉","","鹽類","蘇打、洗滌鹼，水溶液呈鹼性",""],["NaHCO₃","碳酸氫鈉","","鹽類","小蘇打、焙用鹼，加熱產生二氧化碳",""],["CaSO₄","硫酸鈣","","鹽類","石膏",""],["CuSO₄","硫酸銅","","鹽類","含水藍色/無水白色（檢驗水）",""],["CoCl₂","氯化亞鈷","","鹽類","含水紅色/無水藍色（檢驗水）",""],["CaCl₂","氯化鈣","","鹽類","常見乾燥劑",""],["CH₄","甲烷","","有機物","天然氣主成分",""],["C₃H₈","丙烷","","有機物","液化石油氣主成分",""],["C₂H₅OH","乙醇","","有機物","酒精",""],["C₆H₁₂O₆","葡萄糖","","有機物","單醣",""],["C₁₂H₂₂O₁₁","蔗糖","","有機物","雙醣",""],["CH₃COOC₂H₅","乙酸乙酯","","有機物","酯類，果香味",""]],"常見離子":[["單字","字義","圖片","例句","句義","主題","","","","",""],["H⁺","氫離子","","陽離子(+1)","","","","陽離子(+1)","氫離子","H⁺",""],["Na⁺","鈉離子","","陽離子(+1)","","","","陽離子(+1)","鈉離子","Na⁺",""],["K⁺","鉀離子","","陽離子(+1)","","","","陽離子(+1)","鉀離子","K⁺",""],["Ag⁺","銀離子","","陽離子(+1)","","","","陽離子(+1)","銀離子","Ag⁺",""],["NH₄⁺","銨根離子","","陽離子(+1)","唯一常見的非金屬多原子陽離子","","","陽離子(+1)","銨根離子","NH₄⁺","唯一常見的非金屬多原子陽離子"],["Mg²⁺","鎂離子","","陽離子(+2)","","","","陽離子(+2)","鎂離子","Mg²⁺",""],["Ca²⁺","鈣離子","","陽離子(+2)","","","","陽離子(+2)","鈣離子","Ca²⁺",""],["Ba²⁺","鋇離子","","陽離子(+2)","","","","陽離子(+2)","鋇離子","Ba²⁺",""],["Zn²⁺","鋅離子","","陽離子(+2)","","","","陽離子(+2)","鋅離子","Zn²⁺",""],["Cu²⁺","銅離子","","陽離子(+2)","水溶液呈藍色","","","陽離子(+2)","銅離子","Cu²⁺","水溶液呈藍色"],["Pb²⁺","鉛離子","","陽離子(+2)","","","","陽離子(+2)","鉛離子","Pb²⁺",""],["Fe²⁺","亞鐵離子","","陽離子(+2)","水溶液呈淺綠色","","","陽離子(+2)","亞鐵離子","Fe²⁺","水溶液呈淺綠色"],["Fe³⁺","鐵離子","","陽離子(+3)","水溶液呈黃褐色","","","陽離子(+3)","鐵離子","Fe³⁺","水溶液呈黃褐色"],["Al³⁺","鋁離子","","陽離子(+3)","","","","陽離子(+3)","鋁離子","Al³⁺",""],["F⁻","氟離子","","陰離子(-1)","","","","陰離子(-1)","氟離子","F⁻",""],["Cl⁻","氯離子","","陰離子(-1)","","","","陰離子(-1)","氯離子","Cl⁻",""],["Br⁻","溴離子","","陰離子(-1)","","","","陰離子(-1)","溴離子","Br⁻",""],["I⁻","碘離子","","陰離子(-1)","","","","陰離子(-1)","碘離子","I⁻",""],["OH⁻","氫氧根離子","","陰離子(-1)","鹼性來源","","","陰離子(-1)","氫氧根離子","OH⁻","鹼性來源"],["NO₃⁻","硝酸根離子","","陰離子(-1)","其鹽類皆可溶於水","","","陰離子(-1)","硝酸根離子","NO₃⁻","其鹽類皆可溶於水"],["CH₃COO⁻","醋酸根離子","","陰離子(-1)","其鹽類皆可溶於水","","","陰離子(-1)","醋酸根離子","CH₃COO⁻","其鹽類皆可溶於水"],["HCO₃⁻","碳酸氫根離子","","陰離子(-1)","","","","陰離子(-1)","碳酸氫根離子","HCO₃⁻",""],["O²⁻","氧離子","","陰離子(-2)","","","","陰離子(-2)","氧離子","O²⁻",""],["S²⁻","硫離子","","陰離子(-2)","","","","陰離子(-2)","硫離子","S²⁻",""],["SO₄²⁻","硫酸根離子","","陰離子(-2)","","","","陰離子(-2)","硫酸根離子","SO₄²⁻",""],["CO₃²⁻","碳酸根離子","","陰離子(-2)","","","","陰離子(-2)","碳酸根離子","CO₃²⁻",""],["CrO₄²⁻","鉻酸根離子","","陰離子(-2)","黃色","","","陰離子(-2)","鉻酸根離子","CrO₄²⁻","黃色"],["Cr₂O₇²⁻","二鉻酸根離子","","陰離子(-2)","橘紅色","","","陰離子(-2)","二鉻酸根離子","Cr₂O₇²⁻","橘紅色"],["PO₄³⁻","磷酸根離子","","陰離子(-3)","","","","陰離子(-3)","磷酸根離子","PO₄³⁻",""]]};
+   let questions = allSheetData[Object.keys(allSheetData)[0]];
+   let currentQuestions = [];
+   let currentIndex = 0;
+   let correctCount = 0;
+   let wrongCount = 0;
+   let timeLeft = 0;
+   let timer;
+   let fontSize = 20;
+   let wrongAnswers = [];
+   let startTime;
+   let canProceed = false;
+   let endTime; // 新增變數記錄結束時間
+   
+   function init() {
+	  const sheetSelect = document.getElementById('sheetSelect');
+	  ["常見化學式","常見離子"].forEach(name => {
+		const option = document.createElement('option');
+		option.value = option.text = name;
+		sheetSelect.add(option);
+	  });
+	  
+	  sheetSelect.value = Object.keys(allSheetData)[0];
+		questions = allSheetData[sheetSelect.value];
+		document.getElementById('startRow').value = 1;
+		// 扣除標題列
+		document.getElementById('endRow').value = questions.length - 1;
+		
+		sheetSelect.addEventListener('change', function() {
+			questions = allSheetData[this.value];
+			document.getElementById('endRow').value = questions.length - 1;
+		});
+	}
+   
+   function startQuiz() {
+    const timeLimit = document.getElementById('timeSelect').value * 60;
+    const startRow = parseInt(document.getElementById('startRow').value);
+    const endRow = parseInt(document.getElementById('endRow').value);
+    
+    if (isNaN(startRow) || isNaN(endRow) || startRow > endRow || endRow > questions.length) {
+      alert('請輸入有效的題目範圍');
+      return;
+    }
+    
+    currentQuestions = prepareQuestions(startRow-1, endRow-1);
+    if (currentQuestions.length === 0) {
+      alert('無法取得題目');
+      return;
+    }
+    
+    currentIndex = 0;
+    correctCount = wrongCount = 0;
+    wrongAnswers = [];
+    startTime = new Date();
+    endTime = new Date(startTime.getTime() + timeLimit * 1000);
+    canProceed = false;
+    
+    document.getElementById('setup').classList.add('hidden');
+    document.getElementById('quiz').classList.remove('hidden');
+    document.getElementById('result').classList.add('hidden');
+    document.getElementById('feedback').innerHTML = '';
+    document.getElementById('nextBtn').disabled = true;
+    
+    updateTimer();
+    timer = setInterval(updateTimer, 1000);
+    
+    showQuestion();
+  }
+   
+   function updateTimer() {
+	  const now = new Date();
+	  const remainingTime = Math.floor((endTime - now) / 1000);
+	  
+	  if (remainingTime <= 0) {
+		endQuiz();
+		return;
+	  }
+	  
+	  const minutes = Math.floor(remainingTime / 60);
+	  const seconds = remainingTime % 60;
+	  document.getElementById('timer').textContent = 
+		'剩餘時間: ' + minutes + ':' + String(seconds).padStart(2, '0');
+	}
+   
+   function prepareQuestions(start, end) {
+    // 確保排除標題列
+		const startIndex = start + 1;  // +1 是因為要從第二列開始
+		const endIndex = end + 2;      // +2 是因為要包含結束列，且 slice 是 exclusive
+		const rangeQuestions = questions.slice(startIndex, endIndex);
+		return rangeQuestions.sort(() => Math.random() - 0.5);
+	}
+   
+   function adjustFontSize(change) {
+	  fontSize = Math.max(14, Math.min(24, fontSize + change));
+
+	  // 調整問題文字大小
+	  const questionText = document.getElementById('questionText');
+	  if (questionText) {
+		questionText.style.fontSize = (fontSize + 4) + 'px';
+	  }
+
+	  // 調整所有選項文字大小
+	  const options = document.getElementsByClassName('option');
+	  for (let option of options) {
+		option.style.fontSize = (fontSize + 2) + 'px';
+	  }
+
+	  // 調整其他元素
+	  const timer = document.getElementById('timer');
+	  if (timer) {
+		timer.style.fontSize = (fontSize + 2) + 'px';
+	  }
+
+	  const progress = document.getElementById('progress');
+	  if (progress) {
+		progress.style.fontSize = fontSize + 'px';
+	  }
+
+	  // 調整工作表名稱
+	  const sheetTitle = document.getElementById('sheetTitle');
+	  if (sheetTitle) {
+		sheetTitle.style.fontSize = fontSize + 'px';
+	  }
+
+	  // 調整答案回饋
+	  const feedback = document.getElementById('feedback');
+	  if (feedback) {
+		feedback.style.fontSize = fontSize + 'px';
+	  }
+	}
+   
+   function showQuestion() {
+    if (currentIndex >= currentQuestions.length) {
+      endQuiz();
+      return;
+    }
+
+    const question = currentQuestions[currentIndex];
+    document.getElementById('questionText').innerHTML = 
+      '<span style="color: #0066CC;">Which is：</span>' + question[1]; // 改用 question[1] (B欄)
+    document.getElementById('sheetTitle').textContent = document.getElementById('sheetSelect').value;
+
+	 const correctAnswer = question[0];// 改用 question[0] (A欄)
+	 const explanation = question[2] || '';
+	 
+	 // 修改這部分，從第二列開始抓取答案選項
+    let wrongOptions = questions
+      .slice(1)  // 從第二列開始
+      .filter(q => q[0] !== correctAnswer && q[0])  // 過濾掉正確答案和空值
+      .map(q => q[0])  
+      .sort(() => Math.random() - 0.5)
+      .slice(0, 3);
+	 
+	 const options = [correctAnswer, ...wrongOptions].sort(() => Math.random() - 0.5);
+	 
+	 const optionsContainer = document.getElementById('options');
+	 optionsContainer.innerHTML = '';
+	 options.forEach((option, index) => {
+	   const div = document.createElement('div');
+	   div.className = 'option';
+	   div.textContent = option;
+	   div.onclick = () => checkAnswer(option, correctAnswer, explanation);
+	   optionsContainer.appendChild(div);
+	 });
+	 
+	 document.getElementById('progress').textContent = 
+	   (currentIndex + 1) + '/' + currentQuestions.length + '題 | 答對:' + correctCount + ' | 答錯:' + wrongCount;
+	 
+	 document.getElementById('feedback').innerHTML = '';
+	 document.getElementById('nextBtn').disabled = true;
+	 canProceed = false;
+	}
+   
+   function checkAnswer(selected, correct, explanation) {
+     if (canProceed) return;
+     
+     const isCorrect = selected === correct;
+     if (isCorrect) {
+       correctCount++;
+     } else {
+       wrongCount++;
+       wrongAnswers.push({
+         question: currentQuestions[currentIndex][1],// 改用 [1] (B欄)
+         selected: selected,
+         correct: correct,
+         explanation: explanation
+       });
+     }
+     
+     document.getElementById('feedback').innerHTML = 
+       '<div class="' + (isCorrect ? 'correct' : 'incorrect') + '">' +
+       (isCorrect ? '答對了！' : '答錯了！') +
+       '<br>正確答案：' + correct +
+       (explanation ? '<br>解釋：' + explanation : '') +
+       '</div>';
+     
+     document.getElementById('nextBtn').disabled = false;
+     canProceed = true;
+     
+     document.getElementById('progress').textContent = 
+       '題目 ' + (currentIndex + 1) + '/' + currentQuestions.length + ' | 答對: ' + correctCount + ' | 答錯: ' + wrongCount;
+   }
+   
+   function nextQuestion() {
+     if (!canProceed) return;
+     currentIndex++;
+     showQuestion();
+   }
+   
+   
+   function endQuiz() {
+    clearInterval(timer);
+    const endTime = new Date();
+    const duration = Math.floor((endTime - startTime) / 1000);
+    
+    // 計算答對率百分比
+    const finalScore = Math.round((correctCount / currentQuestions.length) * 100) || 0;
+    
+    document.getElementById('quiz').classList.add('hidden');
+    document.getElementById('result').classList.remove('hidden');
+    
+    let resultHTML = 
+        '<h2>' + document.getElementById('sheetSelect').value + ' 測驗結果</h2>' +
+        '<p>測驗日期時間: ' + endTime.toLocaleString() + '</p>' +
+        '<p>測驗時間: ' + Math.floor(duration/60) + '分' + duration%60 + '秒</p>' +
+        '<p>總題數: ' + currentQuestions.length + '</p>' +
+        '<p>答對題數: ' + correctCount + '</p>' +
+        '<p>答錯題數: ' + wrongCount + '</p>' +
+        '<p>得分: ' + finalScore + ' 分</p>';  // 顯示百分比分數
+     
+     if (wrongAnswers.length > 0) {
+       resultHTML += '<h3>答錯題目回顧：</h3>';
+		  wrongAnswers.forEach((item, index) => {
+			resultHTML += 
+			  '<div class="review-item">' +
+			  '<p class="review-question">題目 ' + (index + 1) + ': ' + item.question + '</p>' +
+			  '<p class="review-wrong">您的答案: ' + item.selected + '</p>' +
+			  '<p class="review-correct">正確答案: ' + item.correct + '</p>' +
+			  (item.explanation ? '<p class="review-explanation">解釋: ' + item.explanation + '</p>' : '') +
+			  '</div>';
+		  });
+     }
+     
+     document.getElementById('result').innerHTML = resultHTML;
+   }
+   
+   function adjustFontSize(change) {
+     fontSize = Math.max(14, Math.min(24, fontSize + change));
+     document.body.style.fontSize = fontSize + 'px';
+   }
+ </script>
+</head>
+<body onload="init()">
+ <div id="quizContainer">
+   <div id="setup">
+     <h1>化學式測驗</h1>
+     <div class="control-panel">
+       <label>選擇工作表：</label>
+       <select id="sheetSelect"></select>
+     </div>
+     <div class="control-panel">
+       <label>起始題號：</label>
+       <input type="number" id="startRow" min="1">
+       <label>結束題號：</label>
+	   <input type="number" id="endRow" min="1">
+     </div>
+     <div class="control-panel">
+       <label>測驗時間：</label>
+       <select id="timeSelect">
+         <option value="5">5分鐘</option>
+         <option value="8">8分鐘</option>
+       </select>
+     </div>
+     <div class="control-panel">
+       <label>字體大小：</label>
+       <button onclick="adjustFontSize(-2)">A-</button>
+       <button onclick="adjustFontSize(2)">A+</button>
+     </div>
+     <button onclick="startQuiz()">開始測驗</button>
+   </div>
+   
+   <div id="quiz" class="hidden">
+    <div class="status-bar">
+	  <div class="status-item sheet-name" id="sheetTitle"></div>
+	  <div class="status-item timer" id="timer"></div>
+	  <div class="status-item progress" id="progress"></div>
+	  <div class="font-controls">
+		<button onclick="adjustFontSize(-2)">A-</button>
+		<button onclick="adjustFontSize(2)">A+</button>
+	  </div>
+	</div>
+    
+    <div id="questionText"></div>
+    <div id="options"></div>
+    <div id="feedback"></div>
+    <button id="nextBtn" onclick="nextQuestion()" class="next-btn" disabled>下一題</button>
+  </div>
+  
+  <div id="result" class="hidden"></div>
+</div>
+</body>
+</html>

@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>化學式閃卡</title>
+  <style>
+    :root {
+      --english-primary: #4CAF50;
+      --english-hover: #45a049;
+      --chinese-primary: #FF5722;
+      --chinese-hover: #f4511e;
+      --control-primary: #2196F3;
+      --control-hover: #1e88e5;
+      --nav-primary: #9C27B0;
+      --nav-hover: #8e24aa;
+      --font-primary: #E91E63;
+      --font-hover: #D81B60;
+      --skip-primary: #FF9800;
+      --skip-hover: #FB8C00;
+      --disabled-color: #cccccc;
+      --base-font-size: 16px;
+      --font-size: 44px;
+      --mark-primary: #FFD700;
+      --mark-hover: #FFC700;
+    }
+    
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      max-width: 800px;
+      margin: 0 auto;
+      background-color: #000000;
+      color: #ffffff;
+    }
+
+    /* 上方選擇器列樣式 */
+    .header-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      align-items: center;
+    }
+
+    .sheet-selector {
+      flex: 1;
+      padding: 12px;
+      border-radius: 5px;
+      border: 1px solid #333;
+      font-size: var(--base-font-size);
+      background-color: #1a1a1a;
+      color: #ffffff;
+      cursor: pointer;
+    }
+    
+    .controls {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .controls-row {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .progress-indicator {
+      text-align: center;
+      margin: 10px 0;
+      font-size: 14px;
+      color: #ffffff;
+      font-weight: bold;
+    }
+    
+    .flashcard {
+      border: 1px solid #333;
+      padding: 30px;
+      border-radius: 10px;
+      text-align: center;
+      min-height: 200px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      cursor: pointer;
+      background-color: #1a1a1a;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      margin: 20px 0;
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+    }
+
+    .flashcard.english {
+      border-color: var(--english-primary);
+      background-color: #1a1a1a;
+    }
+    
+    .flashcard.chinese {
+      border-color: var(--chinese-primary);
+      background-color: #1a1a1a;
+    }
+    
+    .word {
+      font-size: var(--font-size);
+      margin-bottom: 20px;
+      font-weight: bold;
+      color: #ffffff;
+    }
+
+    .example-text {
+      font-size: calc(var(--font-size) * 0.4);
+      color: #FFD700 !important;
+      margin-top: 20px;
+    }
+
+    .flashcard.chinese .example-text {
+      color: #ffffff !important;
+    }
+    
+    .btn-skip {
+      background-color: var(--skip-primary);
+    }
+    
+    .btn-skip:hover:not(:disabled) {
+      background-color: var(--skip-hover);
+    }
+    
+    .btn-font {
+      background-color: var(--font-primary);
+    }
+    
+    .btn-font:hover:not(:disabled) {
+      background-color: var(--font-hover);
+    }
+    
+    .btn-control {
+      background-color: var(--control-primary);
+    }
+    
+    .btn-control:hover:not(:disabled) {
+      background-color: var(--control-hover);
+    }
+    
+    .btn-nav {
+      background-color: var(--nav-primary);
+    }
+    
+    .btn-nav:hover:not(:disabled) {
+      background-color: var(--nav-hover);
+    }
+    
+    button {
+      padding: 8px 15px;
+      font-size: var(--base-font-size);
+      font-weight: bold;
+      border-radius: 5px;
+      border: none;
+      color: white;
+      cursor: pointer;
+      min-width: 80px;
+    }
+    
+    button:disabled {
+      background-color: var(--disabled-color);
+      cursor: not-allowed;
+    }
+
+    @media (max-width: 600px) {
+      body {
+        padding: 10px;
+      }
+      
+      button {
+        padding: 8px 12px;
+        font-size: 14px;
+        min-width: 70px;
+      }
+      
+      .controls-row {
+        gap: 5px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header-row">
+    <select id="sheetSelect" class="sheet-selector" onchange="changeSheet()">
+      <option value="常見化學式">常見化學式</option><option value="常見離子">常見離子</option>
+    </select>
+  </div>
+
+  <div class="controls">
+    <div class="controls-row">
+      <button class="btn-skip" onclick="skip10Words()">後10個</button>
+      <button class="btn-font" onclick="adjustFontSize(2)">A+</button>
+      <button class="btn-font" onclick="adjustFontSize(-2)">A-</button>
+    </div>
+  </div>
+
+  <div class="progress-indicator">
+    <span id="progressText"></span>
+  </div>
+
+  <div class="flashcard">
+    <div id="content" class="word"></div>
+  </div>
+
+  <div class="controls-row">
+    <button class="btn-control" onclick="toggleRandom()">隨機切換</button>
+    <button class="btn-nav" onclick="previousWord()">← 上一個</button>
+    <button class="btn-nav" onclick="nextWord()">下一個 →</button>
+  </div>
+
+  <script>
+    const allSheetData = {"常見化學式":[{"word":"H₂","meaning":"氫氣","image":"","example":"元素","exampleTranslation":"密度最小的氣體，具可燃性"},{"word":"O₂","meaning":"氧氣","image":"","example":"元素","exampleTranslation":"具助燃性"},{"word":"N₂","meaning":"氮氣","image":"","example":"元素","exampleTranslation":"空氣中含量最多的氣體，性質穩定"},{"word":"Cl₂","meaning":"氯氣","image":"","example":"元素","exampleTranslation":"黃綠色有毒氣體，溶於水生成氯水"},{"word":"He","meaning":"氦氣","image":"","example":"元素","exampleTranslation":"惰性氣體（單原子分子）"},{"word":"Ar","meaning":"氬氣","image":"","example":"元素","exampleTranslation":"惰性氣體（單原子分子）"},{"word":"C","meaning":"碳","image":"","example":"元素","exampleTranslation":"鑽石、石墨、備長炭"},{"word":"S","meaning":"硫","image":"","example":"元素","exampleTranslation":"黃色固體（硫磺）"},{"word":"Na","meaning":"鈉","image":"","example":"元素","exampleTranslation":"活性大，需保存在礦物油中"},{"word":"K","meaning":"鉀","image":"","example":"元素","exampleTranslation":"活性大，需保存在礦物油中"},{"word":"Mg","meaning":"鎂","image":"","example":"元素","exampleTranslation":"燃燒產生強烈白光"},{"word":"Fe","meaning":"鐵","image":"","example":"元素","exampleTranslation":""},{"word":"Cu","meaning":"銅","image":"","example":"元素","exampleTranslation":""},{"word":"Zn","meaning":"鋅","image":"","example":"元素","exampleTranslation":""},{"word":"Ag","meaning":"銀","image":"","example":"元素","exampleTranslation":""},{"word":"H₂O","meaning":"水","image":"","example":"氧化物","exampleTranslation":"最常見的氧化物與溶劑"},{"word":"H₂O₂","meaning":"雙氧水","image":"","example":"氧化物","exampleTranslation":"過氧化氫，分解產生氧氣"},{"word":"CO₂","meaning":"二氧化碳","image":"","example":"氧化物","exampleTranslation":"固態稱為乾冰"},{"word":"CO","meaning":"一氧化碳","image":"","example":"氧化物","exampleTranslation":"具毒性，具還原力"},{"word":"SO₂","meaning":"二氧化硫","image":"","example":"氧化物","exampleTranslation":"刺鼻味，酸雨成分"},{"word":"CuO","meaning":"氧化銅","image":"","example":"氧化物","exampleTranslation":"黑色固體"},{"word":"Fe₂O₃","meaning":"氧化鐵","image":"","example":"氧化物","exampleTranslation":"鐵鏽主要成分，紅褐色"},{"word":"MgO","meaning":"氧化鎂","image":"","example":"氧化物","exampleTranslation":"白色固體"},{"word":"HCl","meaning":"鹽酸","image":"","example":"酸鹼","exampleTranslation":"氯化氫水溶液，胃酸成分"},{"word":"H₂SO₄","meaning":"硫酸","image":"","example":"酸鹼","exampleTranslation":"化學工業之母，強烈脫水性"},{"word":"HNO₃","meaning":"硝酸","image":"","example":"酸鹼","exampleTranslation":"照光易分解，強氧化性"},{"word":"CH₃COOH","meaning":"醋酸","image":"","example":"酸鹼","exampleTranslation":"乙酸，食醋成分"},{"word":"NaOH","meaning":"氫氧化鈉","image":"","example":"酸鹼","exampleTranslation":"燒鹼、苛性鈉，易潮解"},{"word":"KOH","meaning":"氫氧化鉀","image":"","example":"酸鹼","exampleTranslation":"強鹼"},{"word":"Ca(OH)₂","meaning":"氫氧化鈣","image":"","example":"酸鹼","exampleTranslation":"熟石灰，檢驗二氧化碳"},{"word":"NH₄OH","meaning":"氨水","image":"","example":"酸鹼","exampleTranslation":"弱鹼性，有刺鼻味"},{"word":"NaCl","meaning":"氯化鈉","image":"","example":"鹽類","exampleTranslation":"食鹽"},{"word":"CaCO₃","meaning":"碳酸鈣","image":"","example":"鹽類","exampleTranslation":"灰石、大理石、貝殼，難溶於水"},{"word":"Na₂CO₃","meaning":"碳酸鈉","image":"","example":"鹽類","exampleTranslation":"蘇打、洗滌鹼，水溶液呈鹼性"},{"word":"NaHCO₃","meaning":"碳酸氫鈉","image":"","example":"鹽類","exampleTranslation":"小蘇打、焙用鹼，加熱產生二氧化碳"},{"word":"CaSO₄","meaning":"硫酸鈣","image":"","example":"鹽類","exampleTranslation":"石膏"},{"word":"CuSO₄","meaning":"硫酸銅","image":"","example":"鹽類","exampleTranslation":"含水藍色/無水白色（檢驗水）"},{"word":"CoCl₂","meaning":"氯化亞鈷","image":"","example":"鹽類","exampleTranslation":"含水紅色/無水藍色（檢驗水）"},{"word":"CaCl₂","meaning":"氯化鈣","image":"","example":"鹽類","exampleTranslation":"常見乾燥劑"},{"word":"CH₄","meaning":"甲烷","image":"","example":"有機物","exampleTranslation":"天然氣主成分"},{"word":"C₃H₈","meaning":"丙烷","image":"","example":"有機物","exampleTranslation":"液化石油氣主成分"},{"word":"C₂H₅OH","meaning":"乙醇","image":"","example":"有機物","exampleTranslation":"酒精"},{"word":"C₆H₁₂O₆","meaning":"葡萄糖","image":"","example":"有機物","exampleTranslation":"單醣"},{"word":"C₁₂H₂₂O₁₁","meaning":"蔗糖","image":"","example":"有機物","exampleTranslation":"雙醣"},{"word":"CH₃COOC₂H₅","meaning":"乙酸乙酯","image":"","example":"有機物","exampleTranslation":"酯類，果香味"}],"常見離子":[{"word":"H⁺","meaning":"氫離子","image":"","example":"陽離子(+1)","exampleTranslation":""},{"word":"Na⁺","meaning":"鈉離子","image":"","example":"陽離子(+1)","exampleTranslation":""},{"word":"K⁺","meaning":"鉀離子","image":"","example":"陽離子(+1)","exampleTranslation":""},{"word":"Ag⁺","meaning":"銀離子","image":"","example":"陽離子(+1)","exampleTranslation":""},{"word":"NH₄⁺","meaning":"銨根離子","image":"","example":"陽離子(+1)","exampleTranslation":"唯一常見的非金屬多原子陽離子"},{"word":"Mg²⁺","meaning":"鎂離子","image":"","example":"陽離子(+2)","exampleTranslation":""},{"word":"Ca²⁺","meaning":"鈣離子","image":"","example":"陽離子(+2)","exampleTranslation":""},{"word":"Ba²⁺","meaning":"鋇離子","image":"","example":"陽離子(+2)","exampleTranslation":""},{"word":"Zn²⁺","meaning":"鋅離子","image":"","example":"陽離子(+2)","exampleTranslation":""},{"word":"Cu²⁺","meaning":"銅離子","image":"","example":"陽離子(+2)","exampleTranslation":"水溶液呈藍色"},{"word":"Pb²⁺","meaning":"鉛離子","image":"","example":"陽離子(+2)","exampleTranslation":""},{"word":"Fe²⁺","meaning":"亞鐵離子","image":"","example":"陽離子(+2)","exampleTranslation":"水溶液呈淺綠色"},{"word":"Fe³⁺","meaning":"鐵離子","image":"","example":"陽離子(+3)","exampleTranslation":"水溶液呈黃褐色"},{"word":"Al³⁺","meaning":"鋁離子","image":"","example":"陽離子(+3)","exampleTranslation":""},{"word":"F⁻","meaning":"氟離子","image":"","example":"陰離子(-1)","exampleTranslation":""},{"word":"Cl⁻","meaning":"氯離子","image":"","example":"陰離子(-1)","exampleTranslation":""},{"word":"Br⁻","meaning":"溴離子","image":"","example":"陰離子(-1)","exampleTranslation":""},{"word":"I⁻","meaning":"碘離子","image":"","example":"陰離子(-1)","exampleTranslation":""},{"word":"OH⁻","meaning":"氫氧根離子","image":"","example":"陰離子(-1)","exampleTranslation":"鹼性來源"},{"word":"NO₃⁻","meaning":"硝酸根離子","image":"","example":"陰離子(-1)","exampleTranslation":"其鹽類皆可溶於水"},{"word":"CH₃COO⁻","meaning":"醋酸根離子","image":"","example":"陰離子(-1)","exampleTranslation":"其鹽類皆可溶於水"},{"word":"HCO₃⁻","meaning":"碳酸氫根離子","image":"","example":"陰離子(-1)","exampleTranslation":""},{"word":"O²⁻","meaning":"氧離子","image":"","example":"陰離子(-2)","exampleTranslation":""},{"word":"S²⁻","meaning":"硫離子","image":"","example":"陰離子(-2)","exampleTranslation":""},{"word":"SO₄²⁻","meaning":"硫酸根離子","image":"","example":"陰離子(-2)","exampleTranslation":""},{"word":"CO₃²⁻","meaning":"碳酸根離子","image":"","example":"陰離子(-2)","exampleTranslation":""},{"word":"CrO₄²⁻","meaning":"鉻酸根離子","image":"","example":"陰離子(-2)","exampleTranslation":"黃色"},{"word":"Cr₂O₇²⁻","meaning":"二鉻酸根離子","image":"","example":"陰離子(-2)","exampleTranslation":"橘紅色"},{"word":"PO₄³⁻","meaning":"磷酸根離子","image":"","example":"陰離子(-3)","exampleTranslation":""}]};
+    let words = [];
+    let currentIndex = 0;
+    let isShowingMeaning = false;
+    let isRandom = false;
+    let fontSize = 44;
+    
+    // 觸控相關變數
+    let touchStartX = 0;
+    let touchEndX = 0;
+    let lastClickTime = 0;
+    let isSwiping = false;
+    const SWIPE_THRESHOLD = 30;
+
+    // 初始化函數
+    window.onload = function() {
+      // 設置初始工作表的單字
+      const firstSheet = Object.keys(allSheetData)[0];
+      if (firstSheet) {
+        words = allSheetData[firstSheet];
+        document.getElementById('sheetSelect').value = firstSheet;
+      }
+
+      const flashcard = document.querySelector('.flashcard');
+      if(flashcard) {
+        flashcard.addEventListener('click', handleClick);
+        flashcard.addEventListener('touchstart', handleTouchStart, {passive: false});
+        flashcard.addEventListener('touchmove', handleTouchMove, {passive: false});
+        flashcard.addEventListener('touchend', handleTouchEnd);
+      }
+      
+      document.documentElement.style.setProperty('--font-size', '44px');
+      showCurrentWord();
+      updateProgress();
+    };
+
+    function handleClick(event) {
+      if (!event.sourceCapabilities || !event.sourceCapabilities.firesTouchEvents) {
+        toggleCard();
+      }
+    }
+
+    function handleTouchStart(event) {
+      event.preventDefault();
+      touchStartX = event.touches[0].clientX;
+      isSwiping = false;
+    }
+
+    function handleTouchMove(event) {
+      event.preventDefault();
+      touchEndX = event.touches[0].clientX;
+      const moveDistance = Math.abs(touchEndX - touchStartX);
+      if (moveDistance > 10) {
+        isSwiping = true;
+      }
+    }
+
+    function handleTouchEnd(event) {
+      const swipeDistance = touchEndX - touchStartX;
+      
+      if (!isSwiping || Math.abs(swipeDistance) < 10) {
+        toggleCard();
+      } else if (Math.abs(swipeDistance) > SWIPE_THRESHOLD) {
+        if (swipeDistance > 0) {
+          currentIndex = (currentIndex - 1 + words.length) % words.length;
+        } else {
+          if (isRandom) {
+            currentIndex = Math.floor(Math.random() * words.length);
+          } else {
+            currentIndex = (currentIndex + 1) % words.length;
+          }
+        }
+        showCurrentWord();
+      }
+    }
+
+    function updateProgress() {
+      const total = words.length;
+      const current = currentIndex + 1;
+      const progressText = document.getElementById('progressText');
+      if(progressText) {
+        progressText.textContent = current + ' / ' + total;
+      }
+    }
+
+    function changeSheet() {
+      const sheetName = document.getElementById('sheetSelect').value;
+      words = allSheetData[sheetName];
+      currentIndex = 0;
+      showCurrentWord();
+    }
+    
+    function showCurrentWord() {
+      if (!words || words.length === 0) return;
+      
+      const card = document.querySelector('.flashcard');
+      const content = document.getElementById('content');
+      const currentWord = words[currentIndex];
+      
+      if (!isShowingMeaning) {
+        content.innerHTML =   currentWord.word +  
+          (currentWord.example ? 
+          '<div class="example-text">' + currentWord.example + '</div>' : 
+          '');
+        card.classList.remove('chinese');
+        card.classList.add('english');
+      } else {
+        content.innerHTML = currentWord.meaning + 
+          (currentWord.exampleTranslation ? 
+          '<div class="example-text">' + currentWord.exampleTranslation + '</div>' : 
+          '');
+        card.classList.remove('english');
+        card.classList.add('chinese');
+      }
+      updateProgress();
+    }
+
+    function toggleCard() {
+      isShowingMeaning = !isShowingMeaning;
+      showCurrentWord();
+    }
+
+    function previousWord() {
+      currentIndex = (currentIndex - 1 + words.length) % words.length;
+      showCurrentWord();
+    }
+
+    function nextWord() {
+      if (isRandom) {
+        let newIndex;
+        do {
+          newIndex = Math.floor(Math.random() * words.length);
+        } while (newIndex === currentIndex && words.length > 1);
+        currentIndex = newIndex;
+      } else {
+        currentIndex = (currentIndex + 1) % words.length;
+      }
+      showCurrentWord();
+    }
+
+    function skip10Words() {
+      currentIndex = (currentIndex + 10) % words.length;
+      showCurrentWord();
+    }
+    
+    function toggleRandom() {
+      isRandom = !isRandom;
+      const randomButton = document.querySelector('.btn-control[onclick="toggleRandom()"]');
+      if (randomButton) {
+        randomButton.textContent = isRandom ? '順序切換' : '隨機切換';
+      }
+    }
+
+    function adjustFontSize(change) {
+      fontSize = Math.max(16, Math.min(80, fontSize + change));
+      document.documentElement.style.setProperty('--font-size', fontSize + 'px');
+    }
+  </script>
+</body>
+</html>
