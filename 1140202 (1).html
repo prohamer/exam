@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>114-2綜合藝文題庫測驗系統</title>
+  
+  <!-- 引入 Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+  
+  <style>
+    body {
+      font-family: 'Noto Sans TC', sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f5f5f5;
+      color: #333;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    h1 {
+      color: #2196F3;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .setup-form {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+      color: #666;
+      font-weight: 500;
+    }
+
+    .range-inputs {
+      display: flex;
+      gap: 20px;
+    }
+    
+    .range-inputs > div {
+      flex: 1;
+    }
+
+    select, input {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 16px;
+      background-color: #fff;
+    }
+
+    .range-inputs input::-webkit-inner-spin-button,
+    .range-inputs input::-webkit-outer-spin-button {
+      opacity: 1;
+    }
+
+    button {
+      background-color: #4CAF50;
+      color: white;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background-color 0.3s;
+      font-weight: 500;
+    }
+
+    button:hover {
+      background-color: #45a049;
+    }
+
+    button:disabled {
+      background-color: #cccccc;
+      cursor: not-allowed;
+    }
+
+    .question-container {
+	  margin-top: 5px;
+	  position: relative;
+	}
+
+    .question-text {
+      font-size: 18px;
+      margin-bottom: 15px;
+      line-height: 1.5;
+      background-color: #f8f9fa;
+      padding: 12px 15px;
+      border-radius: 8px;
+    }
+
+    .question-label {
+      color: #666;
+      font-weight: 400;
+      display: block;
+      margin-bottom: 8px;
+      font-size: 0.9em;
+    }
+
+    .question-content {
+      color: #0d47a1;
+      font-weight: 500;
+    }
+
+    .media-container {
+      margin: 10px 0;
+      text-align: center;
+    }
+
+    .media-container img {
+      max-width: 100%;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .options-container {
+	  display: flex;
+	  flex-direction: column;
+	  gap: 2px;  /* 從 10px 改為 2px */
+	}
+
+    .option {
+	  background-color: #f8f9fa;
+	  padding: 5px 10px;  /* 從 10px 15px 改為 5px 10px */
+	  border-radius: 6px;
+	  cursor: pointer;
+	  transition: all 0.3s;
+	  border: 2px solid transparent;
+	  margin-bottom: 1px;  /* 從 2px 改為 1px */
+	  min-height: 32px;    /* 從 44px 改為 32px */
+	  display: flex;
+	  align-items: center;
+	  line-height: 1.2;    /* 加入這行來縮小行距 */
+	}
+
+    .option:hover {
+      background-color: #e9ecef;
+      border-color: #4CAF50;
+    }
+
+    .selected {
+      background-color: #cce5ff;
+      border-color: #2196F3;
+    }
+
+    .correct {
+      background-color: #d4edda;
+      border-color: #28a745;
+    }
+
+    .incorrect {
+      background-color: #f8d7da;
+      border-color: #dc3545;
+    }
+
+    .feedback {
+      margin-top: 15px;
+      padding: 12px;
+      border-radius: 6px;
+    }
+
+    .feedback.correct {
+      background-color: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+
+    .feedback.incorrect {
+      background-color: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+
+    .explanation {
+      margin-top: 12px;
+      padding: 12px;
+      background-color: #fff3cd;
+      border-radius: 6px;
+      color: #856404;
+      border: 1px solid #ffeeba;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 10px;
+      background-color: #e9ecef;
+      border-radius: 5px;
+      margin: 15px 0;
+      overflow: hidden;
+    }
+
+    .progress {
+      height: 100%;
+      background-color: #4CAF50;
+      transition: width 0.3s;
+    }
+
+    .header {
+	  display: flex;
+	  flex-wrap: wrap;           /* 允許換行 */
+	  justify-content: center;   /* 置中對齊 */
+	  align-items: center;
+	  background-color: #f8f9fa;
+	  padding: 2px 4px;         /* 縮小 padding */
+	  margin-bottom: 2px;       /* 縮小 margin */
+	  border-radius: 6px;
+	  gap: 2px;                 /* 縮小元素間距 */
+	  row-gap: 0px;             /* 行間距為 0 */
+	  line-height: 1;           /* 最小行高 */
+	}
+
+    .progress-text {
+	  padding: 1px 2px;
+	  margin: 0;                /* 移除邊距 */
+	  border-radius: 4px;
+	  font-weight: bold;
+	  white-space: nowrap;
+	  font-size: 0.85em;       /* 較小的字體大小 */
+	  line-height: 1;          /* 最小行高 */
+	  color: #2c3e50;
+	}
+
+	.timer {
+	  padding: 1px 2px;
+	  margin: 0;
+	  border-radius: 4px;
+	  font-weight: bold;
+	  white-space: nowrap;
+	  font-size: 0.85em;
+	  line-height: 1;
+	  color: #666;
+	}
+
+    .results {
+      text-align: center;
+    }
+
+    .results h2 {
+      color: #2196F3;
+      margin-bottom: 20px;
+    }
+
+    .score {
+      font-size: 48px;
+      color: #4CAF50;
+      margin: 20px 0;
+      font-weight: bold;
+    }
+
+    .wrong-questions {
+      text-align: left;
+      margin-top: 30px;
+    }
+
+    .wrong-question {
+      background-color: #fff3cd;
+      padding: 15px;
+      border-radius: 6px;
+      margin-bottom: 15px;
+      border: 1px solid #ffeeba;
+    }
+
+    .font-size-controls {
+	  padding: 1px;
+	  margin: 0;
+	  display: flex;
+	  gap: 2px;               /* 縮小按鈕間距 */
+	}
+	
+	.font-size-controls {
+	  position: absolute;
+	  top: 10px;
+	  right: 10px;
+	  padding: 1px;
+	  margin: 0;
+	  display: flex;
+	  gap: 2px;
+	}
+
+
+    .result-section {
+      background-color: #f8f9fa;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      border: 1px solid #e9ecef;
+    }
+
+    .result-section h3 {
+      color: #2196F3;
+      margin-top: 0;
+      margin-bottom: 15px;
+      font-size: 1.2em;
+    }
+
+    .result-section p {
+      margin: 8px 0;
+      line-height: 1.6;
+    }
+
+    .wrong-question h4 {
+      color: #856404;
+      margin-top: 0;
+      margin-bottom: 10px;
+    }
+
+    .wrong-question p {
+      margin: 5px 0;
+    }
+
+    #summary {
+      text-align: left;
+      margin: 20px 0;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        padding: 15px;
+      }
+      
+      .option {
+		padding: 4px 8px;  /* 從 8px 12px 改為 4px 8px */
+		min-height: 28px;  /* 從 44px 改為 28px */
+	  }
+      
+      .question-text {
+        padding: 10px 12px;
+      }
+      
+      .result-section,
+      .wrong-question {
+        padding: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div id="setup-view">
+      <h1>題庫線上練習系統</h1>
+      <div class="setup-form">
+        <div class="form-group">
+          <label for="sheet-select">選擇測驗：</label>
+          <select id="sheet-select" onchange="updateQuestionRange()">
+            <option value="">載入中...</option>
+          </select>
+        </div>
+        <div class="form-group range-inputs">
+          <div>
+            <label for="start-row">開始題號：</label>
+            <input type="number" id="start-row" min="1" value="1" />
+          </div>
+          <div>
+            <label for="end-row">結束題號：</label>
+            <input type="number" id="end-row" min="1" value="1" />
+          </div>
+        </div>
+        <button onclick="startQuiz()">開始測驗</button>
+      </div>
+    </div>
+
+    <div id="quiz-view" style="display: none;">
+      <div class="header">
+        <div class="progress-text">題目 <span id="current-question">1</span>/<span id="total-questions">10</span></div>
+        <div class="timer" id="timer">00:00</div>
+      </div>
+
+      <div class="progress-bar">
+        <div class="progress" id="progress-bar"></div>
+      </div>
+
+      <div class="question-container">
+		  <div class="font-size-controls">
+			<button onclick="changeFontSize(2)">A+</button>
+			<button onclick="changeFontSize(-2)">A-</button>
+		  </div>
+		  <div class="question-text" id="question-text"></div>
+		  <div class="media-container" id="media-container"></div>
+		  <div class="options-container" id="options-container"></div>
+		</div>
+
+      <div class="feedback" id="feedback" style="display: none;"></div>
+      
+    </div>
+
+    <div id="results-view" style="display: none;">
+      <div class="results">
+        <h2>測驗結果</h2>
+        <div class="score" id="final-score"></div>
+        <div id="summary"></div>
+        <div class="wrong-questions" id="wrong-questions"></div>
+        <button onclick="location.reload()">重新測驗</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 注入題目資料
+	  const questionsData = {"國一綜合":{"name":"國一綜合","questions":[{"correctAnswer":"提問和建議","question":"「訪問或請教相關的人員以及尋找相關資源，讓計畫更完整。」為服務學習過程中的哪一個步驟？","mediaUrl":"","options":["問題與感受","想像與解決","提問和建議","嘗試與演練"],"explanation":""},{"correctAnswer":"間接服務","question":"「協助社會福利機構進行募款或環境整理等」屬於何種服務學習的方式？","mediaUrl":"","options":["直接服務","間接服務","倡導議題","藝文傳播活動"],"explanation":""},{"correctAnswer":"倡導議題","question":"「倡導節約能源、防毒戒菸等」屬於何種服務學習的方式？","mediaUrl":"","options":["直接服務","間接服務","倡導議題","藝文傳播活動"],"explanation":""},{"correctAnswer":"美國","question":"「服務學習」由哪一個國家所推廣發展？","mediaUrl":"","options":["美國","法國","日本","韓國"],"explanation":""},{"correctAnswer":"想獲得什麼：乾淨的木棧道，讓寄居蟹、穿山甲等動物能平安穿行","question":"及哇哇在海灘遊玩時發現上面充滿了廢棄的寶特瓶、保麗龍與浮球等人造垃圾，與朋友討論後決定繪製「同理心地圖」。下列是及哇哇整理「同理心地圖」後的文字內容，聰明的你可以幫助及哇哇挑出裡面的錯誤嗎？","mediaUrl":"","options":["服務對象：高譚市大富大貴神秘海灘","看到：充滿了人造垃圾，除了有礙觀瞻外，還會造成遊憩時的危險","想獲得什麼：乾淨的木棧道，讓寄居蟹、穿山甲等動物能平安穿行","說或做：製作饒舌歌曲吸引大家的關注，並號召大家一起來淨灘"],"explanation":""},{"correctAnswer":"社會參與","question":"請問，「服務學習」課程較接近以下哪一個範疇？","mediaUrl":"","options":["社會參與","社群媒體經營","區塊鏈與加密貨幣","職涯發展"],"explanation":""},{"correctAnswer":"尊重服務使用者的隱私","question":"血氣方剛的小楊在長照機構進行服務學習，聽到了張奶奶的人生故事，不經張奶奶的同意便將其故事詳盡地書寫並公開在Facebook上。請問，他這種做法可能會違反哪一項服務倫理之規範？","mediaUrl":"","options":["尊重服務使用者的隱私","尊重服務使用者的決定","提供高品質的服務","避免傷害自尊"],"explanation":""},{"correctAnswer":"公共政策網路參與平臺","question":"「這是一個政府與民間互動溝通的單一討論平臺……無論是中華民國的國民，或居住在臺的外國人士，只要您有讓臺灣變得更好的想法，都可以在參與平臺提出您的意見。」請問上述介紹是指哪一個網路平台？","mediaUrl":"","options":["公共議題深藍討論區","公共交通鐵路運輸平臺","公共政策網路參與平臺","公共議題與人民提案網"],"explanation":""},{"correctAnswer":"服務次數越少越好，代表越有效率","question":"請問下列關於服務學習要擴大參與的概念，何者描述錯誤？","mediaUrl":"","options":["服務的計畫可以更完整，並且包含到各個層面是最好的狀況","服務次數越少越好，代表越有效率","服務學習若能邀請到更多人一同加入，可以讓更多人關心社會上需要關注的議題","服務計畫可以藉由網路平台讓更多人知道並加入"],"explanation":""},{"correctAnswer":"單結或八字結","question":"在陡峭的馬克坡，登山達人雪巴巴正在打一種繩結，這種繩結可以用於止滑、接繩，並防止繩頭鬆散。請問，雪巴巴打的可能是哪一種繩結？","mediaUrl":"","options":["攀山結或刻苦結","單結或八字結","蝴蝶結或中國結","接繩結或漁人結"],"explanation":""},{"correctAnswer":"活結","question":"「用在收納物品或綑綁塑膠袋。」通常為何者繩結的運用方式？","mediaUrl":"","options":["單結","雙八字結","活結","雀頭結"],"explanation":""},{"correctAnswer":"雙套結","question":"「固定繩子在物品上。」通常為何者繩結的運用方式？","mediaUrl":"","options":["漁人結","雙半結","雙套結","平結"],"explanation":""},{"correctAnswer":"水分","question":"日常生活中何項因素最容易影響繩子的存放與使用年限？","mediaUrl":"","options":["水分","通風","重壓","陽光"],"explanation":""},{"correctAnswer":"平結","question":"「包紮時，可固定三角巾，又稱作醫師結。」通常為何者繩結的運用方式？","mediaUrl":"","options":["漁人結","雙半結","雙套結","平結"],"explanation":""},{"correctAnswer":"接繩結","question":"請問，哪一個繩結可以串接兩條材質不同的繩子，並以此運用於攀爬網或漁網上？","mediaUrl":"","options":["愚人結","雙套結","接繩結","串繩結"],"explanation":""},{"correctAnswer":"單結","question":"「爬山遇到上、下陡坡時用來輔助攀爬。」通常為何者繩結的運用方式？","mediaUrl":"","options":["單結","雙八字結","活結","雀頭結"],"explanation":""},{"correctAnswer":"阿崔：中秋節最喜歡吃『烤小捲』","question":"從人類開始使用工具以來，「繩結」就跟我們的生活密不可分，請問：下列哪一位同學所提及的「物品」與「繩結」無關？","mediaUrl":"","options":["小明：籃球卡在籃板的『網繩』上","小花：跑大隊接力前要繫好『鞋帶』","阿木：『禮物盒』上的啾啾真是美麗","阿崔：中秋節最喜歡吃『烤小捲』"],"explanation":""},{"correctAnswer":"星狀型","question":"「將柴散置於地面，一端集中於火源。」為何種架柴方式？","mediaUrl":"","options":["塔型","星狀型","井型","井塔合一"],"explanation":""},{"correctAnswer":"引火柴","question":"「能被發火柴點燃的木柴，約是手指頭粗度。」為何種可燃物之描述？","mediaUrl":"","options":["發火柴","引火柴","燃燒柴","點火棒"],"explanation":""},{"correctAnswer":"跳祈火舞","question":"2023年冬天，希臘人小茶几被陶片流放制度所害，被驅逐到不知火鳥島上，下列何種生火方式可能無法成功燃起火苗？","mediaUrl":"","options":["打火棒生火","凸透鏡生火","使用打火機生火","跳祈火舞"],"explanation":""},{"correctAnswer":"在大樹下生火","question":"木炭生火是一項大家很常使用的技術，但有一些注意事項必須遵守，請問下列敘述何者可能最有使用上的風險？","mediaUrl":"","options":["在通風處生火","在大樹下生火","在炭盆裡生火","在露營炊事區生火"],"explanation":""},{"correctAnswer":"燃燒柴","question":"「主要的燃料，可維持火源的燃燒。」為何種可燃物之描述？","mediaUrl":"","options":["發火柴","引火柴","燃燒柴","點火棒"],"explanation":""},{"correctAnswer":"自行攜帶火盆，並在指定地點生火","question":"不當用火可能會造成環境不可逆的傷害，請問下列何者敘述是在戶外正確生火的方式？","mediaUrl":"","options":["直接在草地上生火，因為雜草很容易再生","風向不會影響生火，因此到達指定地點即可使用","若攜帶的木頭不夠，可直接折樹木上的樹枝使用","自行攜帶火盆，並在指定地點生火"],"explanation":""},{"correctAnswer":"以上皆是","question":"下列何者為清明節掃墓用火的注意事項？","mediaUrl":"","options":["不亂燒雜草","冥紙不飛揚","不亂丟菸蒂","以上皆是"],"explanation":""},{"correctAnswer":"這個味道是瓦斯本身的氣味","question":"在瓦斯罐漏氣時總會聞到一種奇怪的味道，關於瓦斯味道的描述何者錯誤？","mediaUrl":"","options":["瓦斯原本是無色無味的氣體","瓦斯的氣味是為了提醒人們而加入的","這個味道是瓦斯本身的氣味","這個味道是硫醇類的氣體"],"explanation":""},{"correctAnswer":"凸透鏡生火法","question":"噗噗子在大太陽底下拿著放大鏡聚光，將光照射在白紙上，而紙上漸漸冒出小黑點並冒起了白煙。請問，噗噗子的生火方式屬於下列何種？","mediaUrl":"","options":["凸透鏡生火法","太陽眼鏡生火法","凹透鏡生火法","哈哈鏡生火法"],"explanation":""},{"correctAnswer":"將兩個卡式爐並列放置以加強火力","question":"近年來有許多新聞都因為沒有注意卡式爐的使用方式而造成意外，請問下列哪一項並非正確的使用方式？","mediaUrl":"","options":["要將瓦斯罐缺口對準卡式爐凸起處","點火時要一氣呵成轉到底，並聽到點火聲","將兩個卡式爐並列放置以加強火力","鍋具不要超過爐面的大小"],"explanation":""},{"correctAnswer":"社會層面","question":"「中秋節吃月餅」，上述例子說明飲食行為中哪個面向的影響因素呢？","mediaUrl":"","options":["生物層面","經濟層面","資源層面","社會層面"],"explanation":""},{"correctAnswer":"以上皆是","question":"下列何者為有害健康的飲食習慣？","mediaUrl":"","options":["吃太多加工食品","吃太多鈉","喝太多糖飲","以上皆是"],"explanation":""},{"correctAnswer":"以上皆是","question":"我國已邁入高齡化社會，與長者接觸的機會增加，因為年齡的差距，有時很難與長輩溝通。此時溝通所需具備的「技巧」有哪些呢？","mediaUrl":"","options":["同理心","讚美","陪伴","以上皆是"],"explanation":""},{"correctAnswer":"隱藏自己的負面情緒，不讓家人擔心","question":"下列何者「不是」親子間良好的溝通方式？","mediaUrl":"","options":["互相欣賞互相學習","隱藏自己的負面情緒，不讓家人擔心","分享自己的生活","了解彼此的興趣與喜好"],"explanation":""},{"correctAnswer":"肯定語言","question":"「收到寫滿感謝的小紙條。」為何種愛的語言？","mediaUrl":"","options":["肯定語言","精心時刻","愛的禮物","服務行動"],"explanation":""},{"correctAnswer":"傾聽尊重","question":"下列何者為較佳的親子關係？","mediaUrl":"","options":["唯命是從","縱容放任","傾聽尊重","嚴加管教"],"explanation":""},{"correctAnswer":"5月15日","question":"每年的哪一天為聯合國大會所宣布的「國際家庭日」？","mediaUrl":"","options":["3月13日","5月15日","6月16日","8月18日"],"explanation":""},{"correctAnswer":"關心包容","question":"下列何者為「愛家五到運動」中「心到」的內容？","mediaUrl":"","options":["相視含情","傾聽會意","鼓勵讚美","關心包容"],"explanation":""},{"correctAnswer":"空間智慧","question":"生活科技課程中最需要運用的智慧，何者正確？","mediaUrl":"","options":["自然觀察智慧","語文智慧","空間智慧","肢體動覺智慧"],"explanation":""},{"correctAnswer":"語文智慧","question":"國文課作文總是得到老師讚賞，是屬於哪一種智慧能力展現？","mediaUrl":"","options":["語文智慧","音樂智慧","內省智慧","人際智慧"],"explanation":""},{"correctAnswer":"能用動作表達感受","question":"關於肢體動覺的敘述，何者正確？","mediaUrl":"","options":["能用動作表達感受","能探索自我感受","有邏輯思考專長","具有色彩的敏銳"],"explanation":""},{"correctAnswer":"有不懂的要自己想辦法苦念","question":"以下學習習慣，何者是阻力？","mediaUrl":"","options":["有不懂的要自己想辦法苦念","上課前可以先預習內容","課後不怕厭煩的多複習","考前訂定時間念考試內容"],"explanation":""},{"correctAnswer":"人際智慧","question":"滿滿很喜歡聊天來交朋友，是哪種智慧的展現？","mediaUrl":"","options":["人際智慧","內省智慧","音樂智慧","語文智慧"],"explanation":""},{"correctAnswer":"肢體動覺智慧","question":"玉琳在表演藝術課跳了一段舞蹈，是哪種智慧的展現？","mediaUrl":"","options":["音樂智慧","肢體動覺智慧","空間智慧","語文智慧"],"explanation":""},{"correctAnswer":"內省智慧","question":"喜歡沉思、想像或思考問題，屬於哪種多元智慧？","mediaUrl":"","options":["人際智慧","語文智慧","內省智慧","數學邏輯智慧"],"explanation":""},{"correctAnswer":"空間智慧","question":"玲玲把地理課的內容整理成一張自製的記憶地圖，是屬於哪一種智慧的學習方式？","mediaUrl":"","options":["音樂智慧","語文智慧","數學邏輯智慧","空間智慧"],"explanation":""},{"correctAnswer":"自然觀察智慧","question":"曉諭將教室旁的盆栽照顧的欣欣向榮，是哪種智慧的展現？","mediaUrl":"","options":["數學邏輯智慧","空間智慧","內省智慧","自然觀察智慧"],"explanation":""},{"correctAnswer":"迷思觀念","question":"在學習上，透過錯題訂正，可以改正什麼？","mediaUrl":"","options":["字跡","筆記","迷思觀念","脾氣"],"explanation":""},{"correctAnswer":"直接放棄","question":"以下選項哪個不是，在學習過程中學生如何處理找出學習困擾的因素？","mediaUrl":"","options":["直接放棄","分析相關問題的細節","找老師問","找家長幫忙"],"explanation":""},{"correctAnswer":"經常運用多元的學習方法與資源","question":"要讓學習事半功倍，應該怎麼做？","mediaUrl":"","options":["偶爾使用學習資源","經常運用多元的學習方法與資源","每天固定時間使用","只使用一種方法"],"explanation":""},{"correctAnswer":"加深記憶","question":"在學習中，用文字書寫的目的是？","mediaUrl":"","options":["讓字變漂亮","加深記憶","讓自己很忙","讓老師開心"],"explanation":""},{"correctAnswer":"可將任務分工分次完成","question":"以下關於避免拖延的內容，何者敘述正確？","mediaUrl":"","options":["拖延是正常的不需特別注意","休息就是在拖延時間","可將任務分工分次完成","一次就把事情完成就不會拖延"],"explanation":""},{"correctAnswer":"對任何訊息都要保持懷疑","question":"以下關於網路危機與辨認的敘述，何者正確？","mediaUrl":"","options":["先相信，除非有發現欺騙人","遇到問題就自己趕快解決","對任何訊息都要保持懷疑","聊得越久的網友越可信"],"explanation":""},{"correctAnswer":"方便不受限制","question":"以下關於網路交友的好處，何者正確？","mediaUrl":"","options":["方便不受限制","認識有錢人","交到另一半","不會被排擠"],"explanation":""},{"correctAnswer":"不要透漏身分證資料","question":"以下關於網路上自我介紹的敘述，何者正確？","mediaUrl":"","options":["可以透露父母的姓名","可以公開自己的居所","可以放別人的美照","不要透漏身分證資料"],"explanation":""},{"correctAnswer":"結伴同行","question":"以下關於見網友的敘述，何者正確？","mediaUrl":"","options":["單獨赴約","永不赴約","結伴同行","隱瞞家人"],"explanation":""},{"correctAnswer":"任何資訊都該去查證","question":"以下關於網路謠言的敘述，何者正確？","mediaUrl":"","options":["很多人說的就不是謠言","有影片佐證的就比較可信","任何資訊都該去查證","找人代言的就比較有保障"],"explanation":""},{"correctAnswer":"只要使用網路就該有限時間","question":"以下關於網路沉迷的敘述，何者正確？","mediaUrl":"","options":["只要隔天能上學就不是沉迷","只要不花費金錢消費就可以","只要不會影響功課作業就好","只要使用網路就該有限時間"],"explanation":""},{"correctAnswer":"懂得尊重相處才是要訣","question":"以下人際關係的敘述，何者正確？","mediaUrl":"","options":["要多請客才會有好朋友","成績能力好才有更多朋友","懂得尊重相處才是要訣","不聰明的人交不到朋友"],"explanation":""},{"correctAnswer":"不輕信網路優惠","question":"以下關於網路詐騙的敘述，何者正確？","mediaUrl":"","options":["不輕信網路優惠","店家底下有網友推薦的越有誠信","網路購物都是詐騙","店家有放照片的就可以買"],"explanation":""},{"correctAnswer":"聽不懂的時候可以將疑問提出","question":"以下關於避免人際溝通誤會的敘述，何者正確？","mediaUrl":"","options":["聽不懂的時候要先自我檢討","聽不懂的時候可以將疑問提出","聽不懂的時候可以要求別人再說一遍","聽不懂就自己揣摩判斷"],"explanation":""}],"totalQuestions":58},"國一藝文":{"name":"國一藝文","questions":[{"correctAnswer":"橘色","question":"繪畫時若將紅與黃混合，會得到哪一種色彩？","mediaUrl":"","options":["橘色","綠色","紫色","褐色"],"explanation":""},{"correctAnswer":"律動感","question":"設計中利用相同形狀或色彩的規律性反覆出現，是為了創造什麼效果？","mediaUrl":"","options":["對稱平衡","律動感","色彩衝突","留白效果"],"explanation":""},{"correctAnswer":"對比色","question":"若要讓畫面產生強烈的視覺吸引力與活力，通常會運用哪種配色法？","mediaUrl":"","options":["類似色","單一色調","對比色","低明度色"],"explanation":""},{"correctAnswer":"給人穩定、莊重且嚴肅的感覺","question":"下列關於「對稱平衡」的敘述，何者正確？","mediaUrl":"","options":["畫面左右兩側完全不相關","一定要用黑色調","會讓畫面顯得混亂","給人穩定、莊重且嚴肅的感覺"],"explanation":""},{"correctAnswer":"線","question":"在視覺藝術的「構成要素」中，下列何者屬於點的延伸，並具有方向性？","mediaUrl":"","options":["色塊","幾何形狀","線","陰影"],"explanation":""},{"correctAnswer":"在平面上營造出深度與空間感","question":"使用「透視法」繪畫時，其主要功能為何？","mediaUrl":"","options":["在平面上營造出深度與空間感","讓畫面色彩更豐富","讓畫紙更耐用","為了增加畫作的重量"],"explanation":""},{"correctAnswer":"溫馨、親切","question":"當室內設計選用暖色系的燈光與家具時，會帶來什麼心理感受？","mediaUrl":"","options":["冰冷、理性","溫馨、親切","專業、嚴肅","憂鬱、平靜"],"explanation":""},{"correctAnswer":"符號須具備辨識度與傳達意涵","question":"視覺傳達設計中的「Logo（商標）」設計，最核心的考量是？","mediaUrl":"","options":["必須畫得非常複雜","一定要使用冷色調","必須包含風景畫","符號須具備辨識度與傳達意涵"],"explanation":""},{"correctAnswer":"強調","question":"在設計海報時，若想引導觀眾第一眼看到重點標題，應使用哪種原則？","mediaUrl":"","options":["對稱","重複","強調","均衡"],"explanation":""},{"correctAnswer":"將小單位的材料拼貼成完整圖像","question":"馬賽克藝術創作的核心原理是什麼？","mediaUrl":"","options":["利用大面積色塊塗抹","將小單位的材料拼貼成完整圖像","利用數位噴墨打印","完全不進行任何切割"],"explanation":""},{"correctAnswer":"它能讓視覺產生協調與美感","question":"黃金比例（1:1.618）在藝術中被廣泛運用，其主要原因是？","mediaUrl":"","options":["它是最難繪製的比例","它是唯一合法的比例","它能節省作畫時間","它能讓視覺產生協調與美感"],"explanation":""},{"correctAnswer":"明度提高，彩度降低","question":"繪畫時若在純色中加入白色，會產生什麼變化？","mediaUrl":"","options":["明度提高，彩度降低","明度降低，色彩變深","色彩完全變成灰色","色彩變成補色"],"explanation":""},{"correctAnswer":"受光面與背光面的轉折界線","question":"在素描的明暗處理中，「明暗交界線」是指？","mediaUrl":"","options":["物體的邊框線","受光面與背光面的轉折界線","影子投射到地面的線","背景的顏色線"],"explanation":""},{"correctAnswer":"營造空間想像與呼吸感","question":"傳統水墨畫中的「留白」，在構圖上主要是為了？","mediaUrl":"","options":["填補畫紙空隙","節省墨水","營造空間想像與呼吸感","讓畫面顯得擁擠"],"explanation":""},{"correctAnswer":"二方連續","question":"連續紋樣設計時，若圖案只向單一方向重複排列，稱為？","mediaUrl":"","options":["放射紋樣","二方連續","四方連續","獨立紋樣"],"explanation":""},{"correctAnswer":"速度記號","question":"在樂譜中，用來表示音樂演奏速度快慢的標記，稱為什麼？","mediaUrl":"","options":["力度記號","速度記號","拍號","表情符號"],"explanation":""},{"correctAnswer":"一拍","question":"在4/4拍的樂曲中，一個四分音符代表的長度是？","mediaUrl":"","options":["一拍","兩拍","半拍","四拍"],"explanation":""},{"correctAnswer":"強、弱","question":"樂譜中的力度記號「f」與「p」，分別代表？","mediaUrl":"","options":["強、慢","快、弱","強、弱","快、慢"],"explanation":""},{"correctAnswer":"木琴、爵士鼓","question":"下列樂器組合中，哪一組完全屬於打擊樂器？","mediaUrl":"","options":["小提琴、鋼琴","長笛、喇叭","吉他、二胡","木琴、爵士鼓"],"explanation":""},{"correctAnswer":"Adagio","question":"音樂術語「Allegro」是指速度快，與下列哪個術語的意境相對？","mediaUrl":"","options":["Forte","Adagio","Piano","Crescendo"],"explanation":""},{"correctAnswer":"火車的運行節奏","question":"台灣民謠《丟丟銅仔》輕快的節奏，通常與哪種文化意象連結？","mediaUrl":"","options":["火車的運行節奏","莊嚴的祭祀","慢節奏的打坐","悲傷的送別"],"explanation":""},{"correctAnswer":"木管樂器","question":"在管弦樂團中，長笛（Flute）因為音色清亮，被歸類在？","mediaUrl":"","options":["弦樂器","銅管樂器","木管樂器","打擊樂器"],"explanation":""},{"correctAnswer":"第二線","question":"五線譜的「高音譜號」通常用來記錄音域較高的樂器，其起始記號中心線對準第幾線？","mediaUrl":"","options":["第一線","第二線","第三線","第四線"],"explanation":""},{"correctAnswer":"創造節奏的間隔與呼吸感","question":"音樂中的休止符對於樂曲而言，主要的作用是？","mediaUrl":"","options":["表示樂手可以聊天","表示樂曲結束","純粹占位用","創造節奏的間隔與呼吸感"],"explanation":""},{"correctAnswer":"吹奏者嘴唇震動產生空氣柱共鳴","question":"小號（Trumpet）屬於銅管樂器，其發聲原理為？","mediaUrl":"","options":["吹奏者嘴唇震動產生空氣柱共鳴","用弓摩擦弦","用木棒敲擊","撥動琴弦"],"explanation":""},{"correctAnswer":"緊張、期待或激昂","question":"旋律線若由低音往高音進行，通常會帶給聽眾什麼感覺？","mediaUrl":"","options":["穩定、下沉","平靜、無聊","緊張、期待或激昂","混亂、不安"],"explanation":""},{"correctAnswer":"結構性的主動聆聽","question":"當我們在聆聽交響曲時，同時關注樂器的音色變化與曲式結構，這是屬於？","mediaUrl":"","options":["被動聆聽","背景音樂欣賞","只聽歌詞","結構性的主動聆聽"],"explanation":""},{"correctAnswer":"音樂、戲劇、文學、舞蹈與舞台設計","question":"歌劇（Opera）被稱為綜合藝術，是因為它同時整合了哪些元素？","mediaUrl":"","options":["繪畫與攝影","音樂、戲劇、文學、舞蹈與舞台設計","只有電子音樂與表演","單純的樂器演奏"],"explanation":""},{"correctAnswer":"節奏的重點與下沉感","question":"在演奏音樂時，強拍（Strong beat）通常會對應什麼感覺？","mediaUrl":"","options":["節奏的重點與下沉感","音樂的停頓","樂手的休息","完全無規律"],"explanation":""},{"correctAnswer":"定格","question":"在戲劇表演中，當演員為了強化某個關鍵意象，集體靜止動作的技巧稱為什麼？","mediaUrl":"","options":["默劇","定格","對白","暖身"],"explanation":""},{"correctAnswer":"肢體語彙","question":"表演藝術中，演員透過身體動作來表達角色的情緒與性格，這稱為？","mediaUrl":"","options":["台詞技巧","道具設計","肢體語彙","舞台燈光"],"explanation":""},{"correctAnswer":"不依賴對白，以肢體表達意境","question":"默劇表演的核心重點在於？","mediaUrl":"","options":["不依賴對白，以肢體表達意境","使用大量的擴音器","必須要有華麗的布景","一定要有多位演員才能演出"],"explanation":""},{"correctAnswer":"舞台後方區域","question":"在標準的舞台術語中，「上台」（Upstage）是指舞台的什麼位置？","mediaUrl":"","options":["靠近觀眾處","舞台左右兩側","燈光架上","舞台後方區域"],"explanation":""},{"correctAnswer":"接納對手的點子並延伸（Yes, and...）","question":"即興表演（Improvisation）強調的互動精神是？","mediaUrl":"","options":["否定對手的提議","接納對手的點子並延伸（Yes, and...）","堅持自己的劇本不變","只顧自己表演"],"explanation":""},{"correctAnswer":"輔助敘事與界定角色特徵","question":"舞台道具（Prop）在戲劇中扮演的角色是？","mediaUrl":"","options":["純粹為了裝飾舞台","讓演員手上有東西拿","輔助敘事與界定角色特徵","為了增加表演成本"],"explanation":""},{"correctAnswer":"導演","question":"表演藝術中，負責整合燈光、音效、舞台調度與演員的靈魂人物是？","mediaUrl":"","options":["觀眾","導演","售票員","場務助理"],"explanation":""},{"correctAnswer":"維持與觀眾的視線接觸與能量交流","question":"演員在台上移動時，盡量避免背對觀眾，主要是為了？","mediaUrl":"","options":["怕被後台絆倒","為了看提詞機","為了展現優美的背影","維持與觀眾的視線接觸與能量交流"],"explanation":""},{"correctAnswer":"磨合團隊默契並修正表演節奏","question":"戲劇表演前，演員進行「排練」的主要目的是？","mediaUrl":"","options":["磨合團隊默契並修正表演節奏","背誦所有演員的台詞","設計所有人的妝容","決定慶功宴的地點"],"explanation":""},{"correctAnswer":"換位思考，理解角色的情感與動機","question":"角色扮演中，「同理心」的運用是指？","mediaUrl":"","options":["模仿角色的外型穿著","只模仿角色的聲音","換位思考，理解角色的情感與動機","將自己的性格完全帶入"],"explanation":""},{"correctAnswer":"塑造空間氛圍並引導觀眾視線","question":"劇場燈光設計的主要目的，除了照亮演員，還包括什麼？","mediaUrl":"","options":["測試演員的耐熱度","塑造空間氛圍並引導觀眾視線","為了讓舞台看起來更擁擠","為了不讓觀眾看清楚演員"],"explanation":""}],"totalQuestions":40},"國二綜合":{"name":"國二綜合","questions":[{"correctAnswer":"麻","question":"小君想選購涼爽的夏季服裝，根據纖維特性，她應該選擇哪種材質？","mediaUrl":"","options":["麻","羊毛","嫘縈","聚丙烯腈纖維"],"explanation":""},{"correctAnswer":"冷凍炸雞塊","question":"關於含有雞肉成分的美食，下列何者屬於較高度加工的食品？","mediaUrl":"","options":["烤雞","麻油雞","涼拌雞胸肉絲","冷凍炸雞塊"],"explanation":""},{"correctAnswer":"易燃性","question":"下列哪一項不是影響服裝舒適度的因素？","mediaUrl":"","options":["吸水性","彈性","材質","易燃性"],"explanation":""},{"correctAnswer":"經濟能力","question":"下列哪一項並非求職所必須考慮的條件？","mediaUrl":"","options":["專業技能","特質","興趣","經濟能力"],"explanation":""},{"correctAnswer":"不織布","question":"預防傳染病的重要功臣──醫療口罩，是使用下列哪一種布料製成？","mediaUrl":"","options":["梭織平紋布","梭織斜紋布","不織布","針織布"],"explanation":""},{"correctAnswer":"刻板印象","question":"對生活中特定的人、事、物，抱持簡化或習慣性的看法稱之為什麼？","mediaUrl":"","options":["刻板印象","個人看法","社會性看法","創造性思維"],"explanation":""},{"correctAnswer":"乾燥法","question":"奶粉、肉鬆、牛肉乾、果乾、茶葉等食品，都是用哪種食品加工法製成？","mediaUrl":"","options":["高溫殺菌法","醃漬法","乾燥法","發酵法"],"explanation":""},{"correctAnswer":"絲","question":"下列哪一種天然纖維，富有光澤並且垂墜性佳，非常適合製作華麗的禮服？","mediaUrl":"","options":["棉","麻","絲","毛"],"explanation":""},{"correctAnswer":"卡車結","question":"請問圖中能做出尾端固定的繩結，方便拉緊與調整，還可與營釘或吊環搭配使用的是什麼繩結？","mediaUrl":"","options":["漁人結","雙漁人結","卡車結","稱人結"],"explanation":""},{"correctAnswer":"紗布","question":"瑪莎與熊熊想要自製簡易濾水器，他們準備了寶特瓶、木炭、沙子、石頭、樹葉等。請問：他們可能還少了什麼？","mediaUrl":"","options":["紗布","塑膠布","輕便雨衣","衛生紙"],"explanation":""},{"correctAnswer":"聚酯纖維","question":"下列哪一種材質製作的圍裙耐熱度較低，在使用相對較危險？","mediaUrl":"","options":["棉","聚酯纖維","羊毛","麻"],"explanation":""},{"correctAnswer":"吸水性、彈性","question":"制服相較於體育服，較不適合上體育課的主要影響因素是什麼較差？","mediaUrl":"","options":["吸水性、彈性","吸水性、保溫性","保溫性、易燃性","易燃性、彈性"],"explanation":""},{"correctAnswer":"興趣","question":"小敏因為熱愛烘焙，選擇到麵包店工作。請問：這項因素是屬於哪種職業條件類別？","mediaUrl":"","options":["外型身材","特質","興趣","能力專長"],"explanation":""},{"correctAnswer":"甲丙丁己庚","question":"定向地圖的七種顏色代表各種地貌特徵，請選出下列正確的配對。（甲）藍色——水系地徵 （乙）白色——建築物 （丙）黑色——石頭 （丁）黃色——空曠地區 （戊）綠色——容易穿越的樹林 （己）紫紅色——賽程標示的起終點 （庚）棕色——等高線、泥土。","mediaUrl":"","options":["甲乙丙丁戊","甲丙丁己庚","乙丙丁戊己","乙丁戊己庚"],"explanation":""},{"correctAnswer":"巧虎：佩佩，我媽說女孩子很不適合從事這麼激烈的運動，你要不要做點靜態的活動就好？","question":"巧虎看見佩佩週末都會參加極限運動，他很好奇詢問佩佩極限運動的內容，請問：以下哪句話不合宜，恐會影響雙方互動關係？","mediaUrl":"","options":["巧虎：佩佩，請問你為什麼會想從事極限運動啊？","佩佩：巧虎，你會想跟我一起參加極限運動嗎？","巧虎：佩佩，我媽說女孩子很不適合從事這麼激烈的運動，你要不要做點靜態的活動就好？","佩佩：巧虎，從事極限運動讓我充滿成就感，我很期待你的加入。"],"explanation":""},{"correctAnswer":"以上皆是","question":"小芬未來想擔任護理師，國中畢業後的升學進路應該如何規畫？","mediaUrl":"","options":["高職→大學","高中→大學","護理專科學校","以上皆是"],"explanation":""},{"correctAnswer":"後方交會法","question":"在不熟悉的場地進行定向越野活動時，最容易迷路，此時可以先找出自己身處的線形特徵，亦可用明顯特徵物來標定自己所在的位置，使用已知的點來判斷方位。請問：這是指哪一種方法？","mediaUrl":"","options":["時錶法","後方交會法","奈史密斯定律","4S"],"explanation":""},{"correctAnswer":"姑婆芋","question":"有毒，塊莖、花序及汁液皆有劇毒，以根莖毒性較大。誤食會引起喉嚨疼痛、口腔麻木及胃部灼痛等，可將水灑在其葉片上，觀察水呈現擴散或是水珠狀，作為辨別方式。請問上述是指何種有毒植物？","mediaUrl":"","options":["馬纓丹","山芋","姑婆芋","蛇莓"],"explanation":""},{"correctAnswer":"聚丙烯腈纖維","question":"純羊毛衣物有很好的保溫性，但在價格上相對較貴，若要降低成本，通常會使用下列何種纖維混紡或代替？","mediaUrl":"","options":["聚酯纖維","聚烯胺纖維","聚丙烯腈纖維","嫘縈"],"explanation":""},{"correctAnswer":"鮪魚罐頭","question":"下列何者為運用食品加工技術「高溫殺菌法」而製成的食品？","mediaUrl":"","options":["鮪魚罐頭","冷凍湯圓","葡萄乾","優酪乳"],"explanation":""},{"correctAnswer":"喝到早餐店腐敗的豆漿引發嘔吐事件","question":"下列何者並非因不當使用食品添加物而導致食安疑慮的新聞事件？","mediaUrl":"","options":["喝到早餐店腐敗的豆漿引發嘔吐事件","標榜天然無添加的麵包添加香精事件","辣椒粉含有工業染劑「蘇丹紅」事件","運動飲料含有塑化劑事件"],"explanation":""},{"correctAnswer":"扶手法","question":"常見線狀地徵包括步道、柵欄、建物邊緣、石牆、溪流、植被分界等，沿著這些線狀地徵前進，能增強信心，減少犯錯機會，又可以較高的速度行進。請問：這是定向運動的哪一個技巧？","mediaUrl":"","options":["拇指輔行","正置地圖","扶手法","路向抉擇"],"explanation":""},{"correctAnswer":"正置地圖","question":"在使用地圖時，最好能讓地圖與實景一致，做到人、景、圖三合一，就能比較容易看得懂地圖，請問上述是指以下選項中的哪一個技巧？","mediaUrl":"","options":["拇指輔行","正置地圖","扶手法","路線抉擇"],"explanation":""},{"correctAnswer":"光彥、柯南","question":"柯南一群人上完童軍方位課後大家討論著，請問：哪些人的觀念較為正確？元太說：只要有手機就好了；光彥說：手機導航也需要正置地圖；步美說：只要有手機導航也不需要拇指輔行；柯南說：拇指輔行法很實用，去遊樂園玩時可以運用。","mediaUrl":"","options":["元太、柯南","光彥、步美","步美、柯南","光彥、柯南"],"explanation":""},{"correctAnswer":"阿媽說放冷凍就不會壞，所以放了一年也可以放心吃","question":"下列何者不符合「低溫冷凍法」加工食品的挑選原則？","mediaUrl":"","options":["挑選陳列於冷凍櫃中、無異味且在保存期限內的冷凍海鮮","不選購質地變軟、潮溼或結霜的冷凍湯圓","阿媽說放冷凍就不會壞，所以放了一年也可以放心吃","選購有CAS台灣優良農產品標章的冷凍食品"],"explanation":""},{"correctAnswer":"甲丙戊","question":"阿強想報名參加每年故宮博物院舉辦的定向活動，參加比賽時身上會攜帶的物品有哪些？甲、地圖 乙、打卡器 丙、核對卡 丁、放大鏡 戊、指北針 己、定向橘白燈籠。","mediaUrl":"","options":["甲乙丙","甲丙戊","乙丁己","乙丁戊"],"explanation":""},{"correctAnswer":"研究型","question":"婷婷希望未來可以成為一名天文學家。請問天文學家屬於哪一種荷倫碼類型？","mediaUrl":"","options":["實際型","研究型","藝術型","社會型"],"explanation":""},{"correctAnswer":"不要直接把東西丟進水裡清洗","question":"平時在野外活動時若能避免哪些行為，既能合宜利用水資源，又能保護水源？","mediaUrl":"","options":["不要擾動水源","盡量遠離水源","往溪水裡投入大量淨水劑，殺死微生物","不要直接把東西丟進水裡清洗"],"explanation":""},{"correctAnswer":"擁有數學和科學的能力","question":"小明未來想成為工程師，請問他可能會具備哪一種特質？","mediaUrl":"","options":["擁有數學和科學的能力","善於言詞，容易親近","喜歡井然有序的活動","富有創造力和想像力"],"explanation":""},{"correctAnswer":"企業型─政治人員","question":"阿倫從小就很有領導能力，不但每年都當班長，更是社團的負責人。根據他的特質，下列哪一種荷倫碼的類型和職業適合他？","mediaUrl":"","options":["研究型─科學家","事務型─祕書","藝術型─音樂家","企業型─政治人員"],"explanation":""},{"correctAnswer":"住沒冰箱的宿舍──買保久乳放宿舍中","question":"選擇美食須考量衛生、便利與營養價值，有關「情境－美食」的配對，下列何者為是？","mediaUrl":"","options":["炎熱的午後──路邊沒冷藏設備攤位賣的現榨果汁","參加三天兩夜的登山活動──冷凍雞塊","住沒冰箱的宿舍──買保久乳放宿舍中","放學回家肚子餓──路邊買炸銀絲捲"],"explanation":""},{"correctAnswer":"以寬容的態度尊重性別差異","question":"下列何者不是性別刻板印象對生活產生影響？","mediaUrl":"","options":["進入自動化思考，降低每件事情重新思考的時間","對人形成錯誤假設","忽略每個人的獨特性","以寬容的態度尊重性別差異"],"explanation":""},{"correctAnswer":"考量臨時露宿地點是否有危機潛伏","question":"西元2020年9月兩個家庭到南投縣仁愛鄉武界栗栖溪河床露營，結果臺電大觀水力電廠武界壩電動閘門因不明原因自動開啟，導致下游溪水暴漲，造成人員傷亡。請問：在野外露營時對於地點的選擇，若要呼應上述新聞事件，是下列哪一個選項？","mediaUrl":"","options":["做好自己的保暖","考量臨時露宿地點是否有危機潛伏","記得運用自己身邊的資源","與大自然和平共處，不打擾野生動物"],"explanation":""},{"correctAnswer":"降低成本或綜合不同纖維優點","question":"從混紡織物成分資料可看出混紡織物的主要目的為何？","mediaUrl":"","options":["增加衣物重量","降低成本或綜合不同纖維優點","增加製作難度","讓顏色更鮮豔"],"explanation":""},{"correctAnswer":"運用毛細原理迅速導溼，排放到外層蒸發","question":"有關運動時常穿的異形斷面纖維排汗衣，下列何者敘述最符合其特性？","mediaUrl":"","options":["運用毛細原理迅速導溼，排放到外層蒸發","使用圓形中空構造，防止體溫流失，並隔絕外界冷空氣","有多孔的特性，能去除異味、抗UV","透過不同功能層，同時達到隔絕雨水與排出溼氣的功能"],"explanation":""},{"correctAnswer":"小白：地勢高且排水須良好的平坦處","question":"小新率領的少年偵探團，在不熟悉路況的情況下，需要在野外臨時紮營，請問：哪一個人提出的地點較為適合？","mediaUrl":"","options":["風間：找一棵大樹下方，有樹蔭可以遮雨","小新：懸崖下方才不至於直接迎風，好維持體溫","小葵：溪邊取水容易，洗滌烹調也較方便","小白：地勢高且排水須良好的平坦處"],"explanation":""},{"correctAnswer":"家人期待","question":"小宗聽從家人的建議，未來決定朝電腦工程師的目標進行生涯規畫。根據這段話請判斷，小宗是受到以下哪一個因素才做出的生涯選擇？","mediaUrl":"","options":["家人期待","社會評價","同儕建議","職業資訊"],"explanation":""},{"correctAnswer":"高溫殺菌法、發酵法","question":"超市中常見泡菜罐頭，是透過哪些食品加工法，使其得以在常溫下長時間保存？","mediaUrl":"","options":["高溫殺菌法、發酵法","高溫殺菌法、醃漬法","低溫冷凍法、乾燥法","低溫冷凍法、發酵法"],"explanation":""},{"correctAnswer":"龍葵","question":"下列哪一個植物未成熟的果實有毒，不可食用？","mediaUrl":"","options":["龍葵","咸豐草","昭和草","車前草"],"explanation":""},{"correctAnswer":"男孩子不適合走服裝設計的道路，那是女生在做的事情","question":"小修因為與家人起衝突，到輔導室找輔導老師談話。請問：小修的描述中，哪句話顯現受到性別刻板印象的影響？","mediaUrl":"","options":["我是一位喜歡手作的人，也喜歡設計","我都希望自己未來能學習服裝設計","往設計師的生涯前進","男孩子不適合走服裝設計的道路，那是女生在做的事情"],"explanation":""}],"totalQuestions":40},"國二藝文":{"name":"國二藝文","questions":[{"correctAnswer":"版畫作品下方，會包含版畫張數、題目、作者簽名及創作年代等資訊","question":"下列對版畫作品的敘述，何者正確？","mediaUrl":"","options":["一個版可以印多張作品，藝術家不會每一張都簽名","就算是正式作品，也難以從作品判斷版次與版數","版畫作品下方，會包含版畫張數、題目、作者簽名及創作年代等資訊","完成所有版本後，印版會收歸庫存"],"explanation":""},{"correctAnswer":"〈鳳梨之鄉〉","question":"下列哪一件作品中的色彩、造形，可得知藝術家想要呈現臺灣早期關廟地區的市集生活？","mediaUrl":"","options":["〈大橋安宅驟雨〉","2008〈雙福一二三〉","〈鳳梨之鄉〉","〈蓮年有餘〉"],"explanation":""},{"correctAnswer":"唐代","question":"中國哪一朝代的版畫，已從宗教書籍擴展到文集的印刷？","mediaUrl":"","options":["唐代","北宋","元代","清代"],"explanation":""},{"correctAnswer":"元代","question":"中國至哪一個朝代演進出朱墨雙印，將版畫帶入彩色的領域？","mediaUrl":"","options":["唐代","南宋","北宋","元代"],"explanation":""},{"correctAnswer":"〈金剛般若波羅蜜經注釋〉","question":"下列版畫的色彩，何者為朱墨雙印？","mediaUrl":"","options":["〈蓮年有餘〉","〈鳳梨之鄉〉","〈大橋安宅驟雨〉","〈金剛般若波羅蜜經注釋〉"],"explanation":""},{"correctAnswer":"元","question":"若有一彩色版畫，則其可能為哪一朝代的作品？","mediaUrl":"","options":["漢","隋","唐","元"],"explanation":""},{"correctAnswer":"大衛雕像","question":"下列哪一個選項不是版畫的應用？","mediaUrl":"","options":["有絹印印製圖案的T恤","藏書票","年畫","大衛雕像"],"explanation":""},{"correctAnswer":"德國","question":"世界級電影音樂大師漢斯．季默是哪一國人？","mediaUrl":"","options":["法國","德國","英國","美國"],"explanation":""},{"correctAnswer":"美國","question":"世界級電影音樂大師約翰．威廉斯是哪一國人？","mediaUrl":"","options":["法國","德國","英國","美國"],"explanation":""},{"correctAnswer":"《夜校女生》","question":"「沒有人會為了你改變，如果你還有這自私的想法，請把臂膀好好的鍛鍊……」請問這是哪部電影的主題曲？","mediaUrl":"","options":["《悲情城市》","《春光乍洩》","《夜校女生》","《活個精彩》"],"explanation":""},{"correctAnswer":"陳建年","question":"臺灣電影《夜校女生》的導演是哪一位？","mediaUrl":"","options":["莊景燊","崔永徽","陳建年","告五人"],"explanation":""},{"correctAnswer":"一九六〇年代","question":"靈魂樂出現於哪個年代？","mediaUrl":"","options":["一九五〇年代","一九六〇年代","一九七〇年代","一九八〇年代"],"explanation":""},{"correctAnswer":"節奏藍調、福音歌","question":"靈魂樂為結合了哪兩種音樂風格的歌曲？","mediaUrl":"","options":["搖滾樂、福音歌","節奏藍調、福音歌","搖滾樂、節奏藍調","嘻哈音樂、爵士樂"],"explanation":""},{"correctAnswer":"由六至十二位成年男子組成，演唱時環繞圓圈","question":"關於傳統祭典音樂〈祈禱小米豐收歌〉的敘述，何者正確？","mediaUrl":"","options":["由六至十二位成年男子組成，演唱時環繞圓圈","由六至十二位成年人組成，演唱時排列一橫排","為阿美族傳統祭典音樂","為魯凱族社會每年豐收祭之前演唱的祭歌"],"explanation":""},{"correctAnswer":"口簧琴","question":"觀賞臺灣導演魏德聖於西元2011年上映的電影《賽德克‧巴萊》，會發現電影中頻繁出現哪項原住民族樂器？","mediaUrl":"","options":["鼻笛","口琴","口笛","口簧琴"],"explanation":""},{"correctAnswer":"南管","question":"「御前清客」彩牌、涼傘、宮燈是哪種樂團的招牌特色？","mediaUrl":"","options":["北管","南管","歌仔戲","京劇"],"explanation":""},{"correctAnswer":"冰雪奇緣","question":"迪士尼於西元2013年上映哪部動畫電影，描述一對公主姊妹艾莎與安娜受到神祕力量阻擋被迫分離，進而尋找真愛力量的故事，並改編為音樂劇搬上百老匯演出？","mediaUrl":"","options":["美女與野獸","真假公主","悲慘世界","冰雪奇緣"],"explanation":""},{"correctAnswer":"〈Let It Go〉","question":"觀賞《冰雪奇緣》(Frozen)後會發現，它的動畫電影主題曲是哪一首？副歌曲調簡單、重複性高，容易琅琅上口，即使改編為音樂劇也少不了這首歌曲。","mediaUrl":"","options":["〈Do You Want to Build a Snow Man〉","〈Love Is an Open Door〉","〈Let It Go〉","〈Frozen Heart〉"],"explanation":""},{"correctAnswer":"《歌劇魅影》","question":"請問哪一部音樂劇是由英國音樂劇作家洛伊德‧韋伯根據法國偵探小說改編，描述女主角克莉絲汀、羅爾與魅影之間的三角戀情？","mediaUrl":"","options":["《悲慘世界》","《鐘樓怪人》","《歌劇魅影》","《西貢小姐》"],"explanation":""},{"correctAnswer":"驚訝、悲傷或興奮；如同中文「我的媽啊！」","question":"《媽媽咪呀！》這部音樂劇的原文「Mamma Mia!」通常用來表達何種情緒，也和劇情內容相呼應？","mediaUrl":"","options":["憤怒、低落或憂鬱；如同中文「我的天啊！」","驚訝、悲傷或興奮；如同中文「我的天啊！」","憤怒、低落或憂鬱；如同中文「我的媽啊！」","驚訝、悲傷或興奮；如同中文「我的媽啊！」"],"explanation":""},{"correctAnswer":"《重返熱蘭遮》","question":"請問以下哪部音樂劇不是音樂時代劇場所製作的「臺灣音樂劇三部曲」？","mediaUrl":"","options":["《隔壁親家》","《渭水春風》","《四月望雨》","《重返熱蘭遮》"],"explanation":""},{"correctAnswer":"《四月望雨》","question":"請問以下哪部作品是音樂時代劇場以臺灣作曲家鄧雨賢所創的四首歌曲所命名的音樂劇？","mediaUrl":"","options":["《渭水春風》","《四月望雨》","《人間四月天》","《52赫茲我愛你》"],"explanation":""},{"correctAnswer":"手功","question":"下列哪一項中國舞基本功是增強雙手力量的動作？","mediaUrl":"","options":["彈跳功","腰功","腿功","手功"],"explanation":""},{"correctAnswer":"刀疤","question":"音樂劇《獅子王》中的哪一個角色以瘸腿的歪斜方式走路，與牠傾斜的面具相輔相成？","mediaUrl":"","options":["辛巴","木法沙","刀疤","丁滿"],"explanation":""},{"correctAnswer":"版畫藝術","question":"俗話說：「生活即藝術。」當我們穿鞋踩進泥濘裡，泥土黏在鞋底的凹紋上，再踏上乾淨的地板時留下鞋印。請判斷「留下鞋印」的過程，可謂何種藝術創作的原理？","mediaUrl":"","options":["版畫藝術","水彩作品","陶土創作","石雕過程"],"explanation":""},{"correctAnswer":"舞蹈","question":"中國文化博大精深，無論是古老盆俑、壁畫、古老文字，或是神話傳說，都可以看見東方的哪一項藝術痕跡？","mediaUrl":"","options":["建築","雕塑","音樂","舞蹈"],"explanation":""},{"correctAnswer":"客家族群","question":"安安：「我從小跟著父母及親戚們唱山歌，現在下班後也常會唱山歌來紓解工作的疲累。」樂樂：「我是看三腳採茶戲長大的，成年後也會到家裡附近觀看平安戲。」請問安安和樂樂最有可能是哪一個族群的人？","mediaUrl":"","options":["閩南族群","原住民族","客家族群","外省族群"],"explanation":""},{"correctAnswer":"套印時，一般先淺色再深色，先彩色後黑色","question":"傳統版畫套色常用「分版套色」的手法來進行，關於「分版套色」的敘述，何者正確？","mediaUrl":"","options":["大多由一版多色的方式進行","套印時，一般先淺色再深色，先彩色後黑色","作品若是五色，則需分刻十塊雕版","過程單一簡易，可以快速完成作品"],"explanation":""},{"correctAnswer":"〈鳳梨之鄉〉","question":"下列哪一項版畫創作，內容呈現臺灣早期關廟地區的市集生活？","mediaUrl":"","options":["〈大橋安宅驟雨〉","〈沃荷式的夢露〉","〈鳳梨之鄉〉","〈有餘年年〉"],"explanation":""},{"correctAnswer":"〈父親大人九十造像〉","question":"下列哪一件作品的題材表現作者憶寫年邁父親的拄杖樣貌？","mediaUrl":"","options":["〈繽紛圖影詩意濃〉","〈微風的往事〉","〈肖孝形產房〉","〈父親大人九十造像〉"],"explanation":""},{"correctAnswer":"齊柏林","question":"《Home》一書的作者林廉恩由於受到哪位紀錄片導演不幸罹難的消息觸動，決定透過臺灣風景的主題創作向其致敬？","mediaUrl":"","options":["齊柏林","楊冠玉","林鷹","陳俊任"],"explanation":""},{"correctAnswer":"《戰地琴人》","question":"請問哪一部電影有出現蕭邦的作品？","mediaUrl":"","options":["《戰地琴人》","《樂來越愛你》","《辛德勒的名單》","《海上鋼琴師》"],"explanation":""},{"correctAnswer":"客家／採茶戲","question":"以下關於臺灣傳統戲曲的配對，何者正確？","mediaUrl":"","options":["客家／採茶戲","南管／亂彈戲","北管／歌仔戲","閩南／梨園戲"],"explanation":""},{"correctAnswer":"《很久沒敬我了你》","question":"請問哪部音樂劇於西元2010年首演，臺東卑南族南王部落的歌手群在劇中演唱古調、工作歌、創作歌謠與其他原住民族具代表性的歌謠？","mediaUrl":"","options":["《百合戀》","《52赫茲我愛你》","《臺灣有個好萊塢》","《很久沒敬我了你》"],"explanation":""},{"correctAnswer":"古名伸","question":"古舞團由下列哪一位舞蹈家成立，自創團以來就積極的推廣即興舞蹈中接觸即興的舞蹈方式與觀念？","mediaUrl":"","options":["林懷民","古名伸","劉鳳學","許芳宜"],"explanation":""},{"correctAnswer":"翹袖折腰舞","question":"下列哪一種舞蹈以舞袖、折腰為主要動作，注重腰功與袖式變化？","mediaUrl":"","options":["敦煌舞","翹袖折腰舞","胡旋舞","踏歌舞"],"explanation":""},{"correctAnswer":"本地歌仔","question":"下列哪一種演出類型最早以落地掃形式，在廟埕、樹下或隨廟會陣頭遊行表演？","mediaUrl":"","options":["野臺歌仔戲","電視歌仔戲","本地歌仔","劇場歌仔戲"],"explanation":""},{"correctAnswer":"野臺歌仔戲","question":"下列哪一種歌仔戲會有戲先生在演出前，講述分場內容、分派角色，由演員臨場演出？","mediaUrl":"","options":["電視歌仔戲","劇場歌仔戲","本地歌仔","野臺歌仔戲"],"explanation":""},{"correctAnswer":"《萬花嬉春》","question":"下列哪一部電影是以從無聲電影到有聲電影的好萊塢為背景，用歌曲貫穿劇情的浪漫愛情故事？","mediaUrl":"","options":["《髮膠明星夢》","《歌舞青春》","《萬花嬉春》","《仲夏夜之夢》"],"explanation":""},{"correctAnswer":"純白貓","question":"下列哪一個角色在音樂劇《貓》中，展現姿態輕柔優雅，柔軟的延展著肢體，彷彿貓咪為自己清潔舔舐身軀的模樣，是最接近貓的形體的角色？","mediaUrl":"","options":["純白貓","保母貓","搖滾貓","魔術貓"],"explanation":""}],"totalQuestions":40},"國三綜合":{"name":"國三綜合","questions":[{"correctAnswer":"對在地文化的重視，也是樂活休閒的關懷之一","question":"下列哪一位同學對於樂活休閒概念的理解是正確的？","mediaUrl":"","options":["樂活休閒強調刺激、奢華和享受","樂活休閒強調自我，自己玩得開心就好","樂活休閒是有錢人才消費得起的休閒活動","對在地文化的重視，也是樂活休閒的關懷之一"],"explanation":""},{"correctAnswer":"交通位置","question":"明陽希望將來就讀的學校能位於生活機能便利的鬧區，上學會比較方便，他應該先針對哪個類別的問題做調查？","mediaUrl":"","options":["交通位置","學校簡史","校園環境","學校特色"],"explanation":""},{"correctAnswer":"小玲：我會乖乖聽父母的話，他們的人生經驗豐富，知道什麼對我最好","question":"下列哪一位同學在面對生涯抉擇時所考量的因素，無法幫助自己做出適合的選擇？","mediaUrl":"","options":["小英：我會參考學長、學姐的經驗談，減少不切實際的想像","小華：我會認真思考自己的興趣，生涯選擇符合自己需要，才有成就感","小玲：我會乖乖聽父母的話，他們的人生經驗豐富，知道什麼對我最好","小文：我會使用選校平衡單來評估自己適合什麼科系"],"explanation":""},{"correctAnswer":"莉婷：天下無難事，我相信自己一定可以考上好學校","question":"下列哪一位同學的想法具備正向思考的特質？","mediaUrl":"","options":["曉翎：我很想把英文讀好，但是我的會話能力太差了","明穎：幾何與證明這章很難，要考100分，根本是不可能的事","莉婷：天下無難事，我相信自己一定可以考上好學校","維菲：牛頓運動定律對我來說好像外星文，無法溝通"],"explanation":""},{"correctAnswer":"請長輩每天提醒自己","question":"每個人都有自己想達成的目標，而目標可透過行動計畫來實現，具體的行動計畫不包括下列何者？","mediaUrl":"","options":["請長輩每天提醒自己","將目標切分成不同階段來完成","適時修正與自我鼓勵","確實記錄實踐情形"],"explanation":""},{"correctAnswer":"對個人的心理健康有負面影響，如憤怒、憂鬱、焦慮等","question":"經濟壓力會對個人產生什麼樣的影響？","mediaUrl":"","options":["對個人的心理健康有負面影響，如憤怒、憂鬱、焦慮等","夫妻之間絕對會因為共患難而使感情更堅定","值得慶幸的是，不會影響人際關係品質","可獲致朋友的同情，人緣會更好"],"explanation":""},{"correctAnswer":"甲丙丁戊","question":"畢業前，除了寫卡片，我們還可以使用哪些方式來向同學表達謝意與祝福？甲、DIY小禮物；乙、包紅包；丙、送一首表達心意的歌曲；丁、寫e-mail；戊、以實際行動當面表達。","mediaUrl":"","options":["甲乙丙丁","甲丙丁戊","甲乙丁戊","乙丙丁戊"],"explanation":""},{"correctAnswer":"寫文章投稿賺稿費","question":"珠蒂的父親早逝，母親獨力撫養三個小孩，一家過著捉襟見肘的生活。珠蒂可以用什麼方法協助母親，減輕母親的負擔？","mediaUrl":"","options":["寫文章投稿賺稿費","休學去工廠當女工","幫同學寫作業賺錢","向地下錢莊借錢"],"explanation":""},{"correctAnswer":"以分期方式支付大筆消費金額時，先釐清分期方式及利息計算，以避免假分期真貸款的情形產生","question":"我們應如何避免消費陷阱？","mediaUrl":"","options":["只購買有附送贈品的商品，做最划算的消費","若廣告十分吸引人就趕快去購買，以免搶不到","標示不清的商品價格通常較低，可以多買一些","以分期方式支付大筆消費金額時，先釐清分期方式及利息計算，以避免假分期真貸款的情形產生"],"explanation":""},{"correctAnswer":"選擇題如有不會的題目，先猜答案，並在題目卷上標明，等全部作答完畢，再針對這些題目仔細檢視","question":"關於考試的小技巧，我們可以提供什麼建議給學弟、學妹？","mediaUrl":"","options":["選擇題如有不會的題目，先猜答案，並在題目卷上標明，等全部作答完畢，再針對這些題目仔細檢視","若是理解性的數學科，不懂就是不懂，花再多時間練習也沒用，不如把時間拿去背英文","妥善運用短期記憶，考試前半小時再背誦重點即可","國文根本沒有範圍可言，直接放棄比較省事"],"explanation":""},{"correctAnswer":"哆啦A夢：行前蒐集該水域的天氣、水流等地理資料，並依據所得到的資料準備與檢查裝備","question":"大雄、哆啦A夢、小夫和胖虎，他們利用假日一起去北海岸浮潛，在他們當中，哪一位最注重浮潛的安全守則？","mediaUrl":"","options":["小夫：還沒做好耳壓平衡就急著下潛","大雄：看到漂亮的海洋生物，忍不住伸手觸摸","胖虎：沉迷於美麗的海底世界，不知不覺中流到外海面","哆啦A夢：行前蒐集該水域的天氣、水流等地理資料，並依據所得到的資料準備與檢查裝備"],"explanation":""},{"correctAnswer":"想想看，買了以後使用的頻率有多高","question":"理性消費的第一步是思考，確認自己想進行的消費是否因「需要」而產生，這時候要思考的問題是什麼？","mediaUrl":"","options":["買下來之後是否能夠吸引他人羨慕的眼光","這個物品是否可以提升自己的身分地位","如果是全球限量的商品，一定要購買","想想看，買了以後使用的頻率有多高"],"explanation":""},{"correctAnswer":"不採計在校學科成績，但採計健康與體育、藝術與人文、綜合活動三個領域的成績","question":"關於免試入學多元學習表現中的「均衡學習」的敘述，何者正確？","mediaUrl":"","options":["不僅採計在校學科成績，亦採計健康與體育、藝術與人文、綜合活動三個領域的成績","不採計在校學科成績，但採計健康與體育、藝術與人文、綜合活動三個領域的成績","採計在校學科成績，不採計健康與體育、藝術與人文、綜合活動三個領域的成績","在校學科成績，以及健康與體育、藝術與人文、綜合活動三個領域的成績，都不採計"],"explanation":""},{"correctAnswer":"能說出動人的故事","question":"面對資訊過量的社會，想要說服別人，不能只是一味據理力爭，還必須具備什麼能力？","mediaUrl":"","options":["能說出動人的故事","能提出有力的研究證據","能運用邏輯來推理","能整合各項獨立元素"],"explanation":""},{"correctAnswer":"國中畢業→普通高中→一般大學→研究所→創業","question":"明彥對讀書很有興趣，功課很好，喜歡學術研究，而且很有領導力，他的夢想是創業，當一位大老闆，他最適合怎樣的生涯進路？","mediaUrl":"","options":["國中畢業→普通高中→一般大學→研究所→創業","國中畢業→技術高中→考取丙級技術士證","國中畢業→實用技能學程→軍警院校→依規定年限服務","國中畢業→綜合高中(專門學程)→二專"],"explanation":""},{"correctAnswer":"了解父母的用心，並傳達自己的感受讓父母知道，透過真誠的溝通化解衝突、達成共識","question":"宇治的爸媽希望他用功讀書，以後成為一位醫生，但宇治的夢想是成為籃球明星，親子之間因而經常發生衝突。宇治應該如何面對這樣的壓力？","mediaUrl":"","options":["為了避免衝突而妥協，放棄自己的夢想","向爺爺、奶奶討救兵，讓他們當自己的靠山","堅持自己的夢想，即使和父母決裂也在所不惜","了解父母的用心，並傳達自己的感受讓父母知道，透過真誠的溝通化解衝突、達成共識"],"explanation":""},{"correctAnswer":"欣文：特色招生是採甄選入學，所以一定要多培養自己的才藝","question":"下列哪一位同學對於特色招生的理解有誤？","mediaUrl":"","options":["雨薇：特色招生並非特色學校，更不等於明星學校","欣文：特色招生是採甄選入學，所以一定要多培養自己的才藝","柏林：特色招生的目的在鼓勵學校發展其重點課程，提供多元課程內容供學生依其性向、興趣及能力選擇","永任：學生可透過學科及術科考試進入特色招生學校"],"explanation":""},{"correctAnswer":"甲乙丁戊","question":"下列何者為增加家庭收入的方式？甲、正職薪水；乙、投資股票的股利；丙、虧空公款；丁、存款利息；戊、樂透中獎。","mediaUrl":"","options":["甲乙丁","甲乙丁戊","乙丁戊","乙丙丁戊"],"explanation":""}],"totalQuestions":18},"國三藝文":{"name":"國三藝文","questions":[{"correctAnswer":"當地環境與民眾生活","question":"公共藝術設置的主要目的之一，在於讓藝術品能與什麼產生連結？","mediaUrl":"","options":["美術館的館藏","當地環境與民眾生活","藝術家的私人收藏","國外的文化展覽"],"explanation":""},{"correctAnswer":"0.01","question":"根據台灣的規定，公共建築物應撥出一定比例的經費設置藝術品，此比例為？","mediaUrl":"","options":["0.01","0.05","0.1","0.15"],"explanation":""},{"correctAnswer":"利用自然素材或在地環境進行創作","question":"下列何者屬於「環境藝術」的特色？","mediaUrl":"","options":["一定要在室內畫廊展示","利用自然素材或在地環境進行創作","只使用昂貴的進口材料","作品完全不能移動"],"explanation":""},{"correctAnswer":"將文化價值轉化為具備經濟效益的創意商品","question":"「文創產業」的核心精神為何？","mediaUrl":"","options":["完全不考慮賺錢","只模仿國外的熱門商品","將文化價值轉化為具備經濟效益的創意商品","嚴禁使用數位科技"],"explanation":""},{"correctAnswer":"選用節能、減碳與環境友善的建材","question":"下列哪一項是「綠建築」設計中常見的考量？","mediaUrl":"","options":["選用節能、減碳與環境友善的建材","追求外觀最奢華的裝飾","盡量使用封閉式的空間以隔絕自然","建築越高越好"],"explanation":""},{"correctAnswer":"考量不同年齡與能力的族群，讓產品易於使用","question":"「通用設計」的主要精神在於？","mediaUrl":"","options":["讓產品價格降到最低","考量不同年齡與能力的族群，讓產品易於使用","針對特定菁英設計","產品的外觀一定要統一"],"explanation":""},{"correctAnswer":"文化符碼的轉化與創新","question":"若將原住民的傳統織紋應用在現代衣服設計上，這屬於什麼藝術手法？","mediaUrl":"","options":["抄襲行為","破壞文化傳統","文化符碼的轉化與創新","數位作弊"],"explanation":""},{"correctAnswer":"作品背後的創意與想法","question":"「觀念藝術」最強調的是？","mediaUrl":"","options":["創作者的精湛寫實技巧","作品背後的創意與想法","材料一定要非常昂貴","觀眾必須看得懂畫作"],"explanation":""},{"correctAnswer":"複合媒材","question":"藝術作品中，若同時使用繪畫、照片、現成物等媒材，通常稱為？","mediaUrl":"","options":["複合媒材","純繪畫","純雕塑","單一媒材"],"explanation":""},{"correctAnswer":"文化資產累積的時間美感","question":"我們在欣賞歷史古蹟時，最主要是為了體驗什麼？","mediaUrl":"","options":["科技帶來的進步","流行時尚的變遷","外國文化的特色","文化資產累積的時間美感"],"explanation":""},{"correctAnswer":"背景配樂","question":"在電影中，用來營造氣氛並暗示角色情緒的音樂，通常稱為什麼？","mediaUrl":"","options":["背景配樂","片頭介紹","廣告單曲","現場雜音"],"explanation":""},{"correctAnswer":"鼓勵樂手即興創作","question":"爵士樂（Jazz）最著名的表演特徵為何？","mediaUrl":"","options":["必須嚴格按照樂譜演奏","鼓勵樂手即興創作","只能用鋼琴表演","表演時完全不能有節奏"],"explanation":""},{"correctAnswer":"音樂、戲劇、舞蹈與舞台表現","question":"音樂劇（Musical）是哪幾種藝術形式的結合？","mediaUrl":"","options":["只有唱歌與跳舞","只有演戲與樂器","音樂、戲劇、舞蹈與舞台表現","單純的器樂演奏"],"explanation":""},{"correctAnswer":"嚴格的古典對位法","question":"下列何者通常不是現代流行音樂的核心組成要素？","mediaUrl":"","options":["電子合成音色","強烈的節奏感","易記的旋律","嚴格的古典對位法"],"explanation":""},{"correctAnswer":"檔案經過壓縮，方便儲存與傳輸","question":"在數位音樂普及的現代，MP3等格式最主要的優點是？","mediaUrl":"","options":["檔案經過壓縮，方便儲存與傳輸","音質一定是世界上最好的","必須使用黑膠唱片機播放","無法在手機上聽"],"explanation":""},{"correctAnswer":"多聲部疊加，產生自然的共鳴效果","question":"台灣布農族的「八部合音」聞名國際，其聲響結構的特色為何？","mediaUrl":"","options":["使用複雜的電子音效","多聲部疊加，產生自然的共鳴效果","只有單一旋律線","需要強大的管弦樂團伴奏"],"explanation":""},{"correctAnswer":"副歌（Chorus）","question":"在流行歌曲中，歌詞最重複、記憶點最強的段落通常是？","mediaUrl":"","options":["前奏","間奏","副歌（Chorus）","結尾"],"explanation":""},{"correctAnswer":"將舊有的錄音片段擷取並融入新創作中","question":"音樂製作中的「取樣」（Sampling）是指？","mediaUrl":"","options":["將他人音樂完全重新編曲","將舊有的錄音片段擷取並融入新創作中","請歌手重新演唱歌曲","完全放棄使用舊音樂"],"explanation":""},{"correctAnswer":"表達青春、自由與自我反思","question":"搖滾樂（Rock and Roll）發展史上，常被視為具備什麼樣的精神？","mediaUrl":"","options":["絕對服從長輩","喜好安靜的環境","追求極致的古典禮儀","表達青春、自由與自我反思"],"explanation":""},{"correctAnswer":"主題動機","question":"電影中若出現特定的旋律來代表某個角色，這被稱為？","mediaUrl":"","options":["主題動機","背景雜音","隨機音效","練習曲"],"explanation":""},{"correctAnswer":"利用非傳統表演空間（如廢棄廠房、街頭）","question":"「環境劇場」是指表演空間在哪裡？","mediaUrl":"","options":["只能在標準劇院","只能在公園","利用非傳統表演空間（如廢棄廠房、街頭）","電視攝影棚"],"explanation":""},{"correctAnswer":"透過藝術互動，拉近與民眾的距離","question":"街頭藝人表演時，最希望與觀眾建立什麼關係？","mediaUrl":"","options":["互不打擾","透過藝術互動，拉近與民眾的距離","拒絕任何獎勵","讓民眾感到害怕"],"explanation":""},{"correctAnswer":"藝術家的身體行為過程","question":"行動藝術（Performance Art）最重視的是？","mediaUrl":"","options":["畫出完美的圖畫","寫出厚重的劇本","購買精美的服裝","藝術家的身體行為過程"],"explanation":""},{"correctAnswer":"控台","question":"在劇場中，負責燈光、音響切換的技術控制中心稱為？","mediaUrl":"","options":["觀眾席","控台","化妝室","售票處"],"explanation":""},{"correctAnswer":"結合音樂、舞蹈、視覺、科技等多種媒介","question":"「跨領域藝術」是指？","mediaUrl":"","options":["只有單一媒材的創作","只能讓繪畫家參與","結合音樂、舞蹈、視覺、科技等多種媒介","禁止任何科技參與"],"explanation":""},{"correctAnswer":"默劇","question":"在舞台劇中，僅用肢體動作與表情來表演，不說話的戲劇類型是？","mediaUrl":"","options":["默劇","廣播劇","朗讀劇","歌劇"],"explanation":""},{"correctAnswer":"太極與書法等東方哲學意象","question":"雲門舞集常在現代舞中加入什麼元素，展現獨特的東方美學？","mediaUrl":"","options":["西方芭蕾的所有規則","太極與書法等東方哲學意象","街舞","只有西方古典音樂"],"explanation":""},{"correctAnswer":"現場根據題目進行即興創作，充滿意外與趣味","question":"即興劇（Improvisational Theatre）的表演樂趣在於？","mediaUrl":"","options":["演員將劇本背得一字不漏","演員不會犯錯","觀眾不能參與","現場根據題目進行即興創作，充滿意外與趣味"],"explanation":""},{"correctAnswer":"手機靜音，不隨意走動或拍攝","question":"欣賞表演藝術時，下列何者是正確的禮儀？","mediaUrl":"","options":["在演出的高潮處大聲說話","手機靜音，不隨意走動或拍攝","隨意更換座位","大聲詢問身旁的人劇情"],"explanation":""},{"correctAnswer":"將動態影像投射於建築外觀，產生立體錯覺","question":"光雕投影（Projection Mapping）技術通常用於？","mediaUrl":"","options":["將動態影像投射於建築外觀，產生立體錯覺","修補舊牆壁","繪製傳統水墨畫","製作靜態海報"],"explanation":""},{"correctAnswer":"減量包裝並選用可回收材質","question":"友善環境的包裝設計，建議採取哪種方式？","mediaUrl":"","options":["使用過度繁複的塑膠","印刷大量的燙金","減量包裝並選用可回收材質","買越多包裝越好"],"explanation":""},{"correctAnswer":"提示詞（Prompt）","question":"利用AI產生藝術圖像時，我們輸入的一段文字指令稱為什麼？","mediaUrl":"","options":["咒語","提示詞（Prompt）","密碼","文章"],"explanation":""},{"correctAnswer":"營造整潔、舒緩的視覺空間","question":"生活美學中的「收納」與「擺設」，最基本的原則為何？","mediaUrl":"","options":["營造整潔、舒緩的視覺空間","把東西塞滿","越貴的裝飾越好","完全不要擺放東西"],"explanation":""},{"correctAnswer":"建立居民的社區認同與共感","question":"公共藝術設置在社區中，有助於？","mediaUrl":"","options":["增加社區的垃圾量","讓居民互相對立","讓房價瞬間暴漲","建立居民的社區認同與共感"],"explanation":""},{"correctAnswer":"因為保護作品，防止油污或破壞","question":"參觀美術館時，為何不能觸摸畫作？","mediaUrl":"","options":["因為手很髒","因為館方想增加收入","因為保護作品，防止油污或破壞","因為那是不吉利的"],"explanation":""},{"correctAnswer":"少即是多（Less is more）","question":"極簡主義（Minimalism）的設計核心觀念是？","mediaUrl":"","options":["裝飾越多越好","少即是多（Less is more）","產品外觀一定要很複雜","拒絕使用任何顏色"],"explanation":""},{"correctAnswer":"結合科技媒介與互動特性","question":"「新媒體藝術」與傳統藝術相比，較顯著的特徵是？","mediaUrl":"","options":["結合科技媒介與互動特性","一定要是純手工","禁止數位器材","只能在紙上呈現"],"explanation":""},{"correctAnswer":"冷靜、專業與寬廣","question":"在設計色彩中，藍色通常讓人聯想到？","mediaUrl":"","options":["熱情與憤怒","混亂與不安","飢餓","冷靜、專業與寬廣"],"explanation":""},{"correctAnswer":"標註出處，並在使用前取得授權","question":"使用他人的作品時，正確且尊重的方式是？","mediaUrl":"","options":["假裝是自己畫的","標註出處，並在使用前取得授權","隨意裁切後使用","只要不被發現就沒關係"],"explanation":""},{"correctAnswer":"培養藝術鑑賞力，並將美感運用於生活中","question":"學習藝術與人文課程，最終目標為何？","mediaUrl":"","options":["培養藝術鑑賞力，並將美感運用於生活中","考試全部拿滿分","成為職業畫家","背誦所有藝術名詞"],"explanation":""}],"totalQuestions":40}};
+	  
+	  // 其他變數
+	  let questions = [];
+	  let currentQuestionIndex = 0;
+	  let score = 0;
+	  let startTime;
+	  let timerInterval;
+	  let wrongQuestions = [];
+	  let fontSize = 18;
+	
+
+    // 頁面載入時初始化
+    window.onload = function() {
+      loadSheets();
+    };
+
+    // 修改 loadSheets 函數
+    function loadSheets() {
+      const sheets = Object.values(questionsData);
+      
+      if (sheets.length === 0) {
+        alert('找不到可用的工作表！');
+        return;
+      }
+
+      const select = document.getElementById('sheet-select');
+      select.innerHTML = '';
+      
+      sheets.forEach(sheet => {
+        const option = document.createElement('option');
+        option.value = sheet.name;
+        option.textContent = sheet.name;
+        option.dataset.total = sheet.totalQuestions;
+        select.appendChild(option);
+      });
+
+      select.selectedIndex = 0;
+      updateQuestionRange();
+    }
+
+    function updateQuestionRange() {
+      const select = document.getElementById('sheet-select');
+      const selectedOption = select.options[select.selectedIndex];
+      const total = parseInt(selectedOption.dataset.total) || 0;
+      
+      const startRow = document.getElementById('start-row');
+      const endRow = document.getElementById('end-row');
+      
+      startRow.max = total;
+      endRow.max = total;
+      
+      let currentStart = parseInt(startRow.value);
+      if (currentStart > total) {
+        currentStart = 1;
+      }
+      
+      startRow.value = currentStart;
+      endRow.value = total;
+    }
+
+    function startQuiz() {
+      const sheetName = document.getElementById('sheet-select').value;
+      const startRow = parseInt(document.getElementById('start-row').value);
+      const endRow = parseInt(document.getElementById('end-row').value);
+
+      if (!sheetName) {
+        alert('請選擇測驗類型！');
+        return;
+      }
+
+      if (startRow > endRow) {
+        alert('開始題號不能大於結束題號！');
+        return;
+      }
+
+      const selectedQuestions = questionsData[sheetName].questions
+        .slice(startRow - 1, endRow)
+        .map(q => ({...q}));
+      
+      initQuiz(shuffleArray(selectedQuestions));
+    }
+
+    function shuffleArray(array) {
+      const newArray = [...array];
+      for (let i = newArray.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+      }
+      return newArray;
+    }
+
+    function initQuiz(quizQuestions) {
+      questions = quizQuestions;
+      document.getElementById('setup-view').style.display = 'none';
+      document.getElementById('quiz-view').style.display = 'block';
+      document.getElementById('total-questions').textContent = questions.length;
+      startTime = new Date();
+      startTimer();
+      showQuestion();
+    }
+
+    function showQuestion() {
+	  const question = questions[currentQuestionIndex];
+	  document.getElementById('current-question').textContent = currentQuestionIndex + 1;
+	  
+	  document.getElementById('question-text').innerHTML = '		<span class="question-label">第' + (currentQuestionIndex + 1) + '題</span>		<div class="question-content">' + question.question + '</div>	  ';
+	  
+	  document.getElementById('progress-bar').style.width = ((currentQuestionIndex + 1) / questions.length * 100) + '%';
+
+	  // 媒體處理代碼省略...
+
+	  // 創建選項的複製並打亂順序
+	  const options = [...question.options];
+	  const correctAnswer = question.correctAnswer;
+	  
+	  // 選項洗牌
+	  for (let i = options.length - 1; i > 0; i--) {
+		const j = Math.floor(Math.random() * (i + 1));
+		[options[i], options[j]] = [options[j], options[i]];
+	  }
+	  
+	  const optionsContainer = document.getElementById('options-container');
+	  optionsContainer.innerHTML = '';
+	  options.forEach((option, index) => {
+		const button = document.createElement('div');
+		button.className = 'option';
+		button.textContent = option;
+		button.onclick = () => selectOption(option); // 注意這裡傳入的是選項文字而非索引
+		optionsContainer.appendChild(button);
+	  });
+
+	  document.getElementById('feedback').style.display = 'none';
+	}
+
+    // 修改 selectOption 函數以接受選項文字
+	function selectOption(selectedOption) {
+	  const question = questions[currentQuestionIndex];
+	  const options = document.querySelectorAll('.option');
+	  
+	  // 找出所選選項在當前顯示選項中的索引
+	  const selectedIndex = Array.from(options).findIndex(option => option.textContent === selectedOption);
+	  
+	  options.forEach(option => option.classList.remove('selected'));
+	  options[selectedIndex].classList.add('selected');
+
+	  const result = {
+		isCorrect: selectedOption === question.correctAnswer,
+		correctAnswer: question.correctAnswer,
+		explanation: question.explanation
+	  };
+	  
+	  showFeedback(result);
+	}
+
+    function showFeedback(result) {
+      const feedback = document.getElementById('feedback');
+      const options = document.querySelectorAll('.option');
+      
+      feedback.style.display = 'block';
+      feedback.className = 'feedback ' + (result.isCorrect ? 'correct' : 'incorrect');
+      
+      if (result.isCorrect) {
+          feedback.innerHTML = '<h3>太棒了！答對了！</h3>' +
+            '<div class="explanation">' + result.explanation + '</div>' +
+            '<button onclick="nextQuestion()" style="margin-top: 15px;">下一題</button>';
+          score++;
+        } else {
+          feedback.innerHTML = '<h3>答錯了...</h3>' +
+            '<p>正確答案是：' + result.correctAnswer + '</p>' +
+            '<div class="explanation">' + result.explanation + '</div>' +
+            '<button onclick="nextQuestion()" style="margin-top: 15px;">下一題</button>';
+        wrongQuestions.push({
+          question: questions[currentQuestionIndex].question,
+          userAnswer: questions[currentQuestionIndex].options[Array.from(options)
+            .findIndex(opt => opt.classList.contains('selected'))],
+          correctAnswer: result.correctAnswer
+        });
+      }
+
+      options.forEach(option => {
+        option.onclick = null;
+        if (option.textContent === result.correctAnswer) {
+          option.classList.add('correct');
+        } else if (option.classList.contains('selected')) {
+          option.classList.add('incorrect');
+        }
+      });
+    }
+
+    function nextQuestion() {
+      currentQuestionIndex++;
+      if (currentQuestionIndex < questions.length) {
+        showQuestion();
+      } else {
+        showResults();
+      }
+    }
+
+    function showResults() {
+	  clearInterval(timerInterval);
+	  const endTime = new Date();
+	  const duration = Math.floor((endTime - startTime) / 1000);
+	  const minutes = Math.floor(duration / 60);
+	  const seconds = duration % 60;
+
+	  // 加入變數宣告
+	  const sheetName = document.getElementById('sheet-select').value;
+	  const startRow = document.getElementById('start-row').value;
+	  const endRow = document.getElementById('end-row').value;
+
+	  const dateOptions = { year: 'numeric', month: '2-digit', day: '2-digit', weekday: 'long' };
+	  const timeOptions = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
+	  const formattedDate = endTime.toLocaleDateString('zh-TW', dateOptions);
+	  const formattedTime = endTime.toLocaleTimeString('zh-TW', timeOptions);
+
+	  document.getElementById('quiz-view').style.display = 'none';
+	  document.getElementById('results-view').style.display = 'block';
+
+	  const scorePercentage = Math.round((score / questions.length) * 100);
+	  document.getElementById('final-score').textContent = scorePercentage + '%';
+
+	  document.getElementById('summary').innerHTML = 
+		'<div class="result-section">' +
+		  '<h3>測驗資訊</h3>' +
+		  '<p>題組：' + sheetName + '</p>' +
+		  '<p>測驗範圍：第 ' + startRow + ' 題 至 第 ' + endRow + ' 題</p>' +
+		  '<p>完成時間：' + formattedDate + ' ' + formattedTime + '</p>' +
+		'</div>' +
+		'<div class="result-section">' +
+		  '<h3>測驗成績</h3>' +
+		  '<p>測驗時間：' + minutes + '分' + seconds + '秒</p>' +
+		  '<p>總題數：' + questions.length + '</p>' +
+		  '<p>答對題數：' + score + '</p>' +
+		  '<p>答錯題數：' + (questions.length - score) + '</p>' +
+		'</div>';
+
+	  if (wrongQuestions.length > 0) {
+		const wrongQuestionsHtml = wrongQuestions.map(function(q, index) {
+		  return '<div class="wrong-question">' +
+			'<h4>題目 ' + (index + 1) + '</h4>' +
+			'<p>' + q.question + '</p>' +
+			'<p>你的答案：' + q.userAnswer + '</p>' +
+			'<p>正確答案：' + q.correctAnswer + '</p>' +
+		  '</div>';
+		}).join('');
+
+		document.getElementById('wrong-questions').innerHTML = 
+		  '<div class="result-section">' +
+			'<h3>錯題複習</h3>' +
+			wrongQuestionsHtml +
+		  '</div>';
+	  }
+	}
+	
+	function startTimer() {
+      timerInterval = setInterval(function() {
+        const now = new Date();
+        const diff = Math.floor((now - startTime) / 1000);
+        const minutes = Math.floor(diff / 60);
+        const seconds = diff % 60;
+        document.getElementById('timer').textContent = 
+          String(minutes).padStart(2, '0') + ':' + String(seconds).padStart(2, '0');
+      }, 1000);
+    }
+
+    function changeFontSize(change) {
+	  fontSize += change;
+	  // 修改題目文字大小
+	  const questionText = document.getElementById('question-text');
+	  const label = questionText.querySelector('.question-label');
+	  const content = questionText.querySelector('.question-content');
+	  
+	  if (label) label.style.fontSize = (fontSize * 0.9) + 'px';
+	  if (content) content.style.fontSize = fontSize + 'px';
+	  
+	  // 修改選項文字大小
+	  const options = document.querySelectorAll('.option');
+	  options.forEach(option => {
+		option.style.fontSize = fontSize + 'px';
+	  });
+	}
+
+    function handleError(error) {
+      console.error('Error:', error);
+      alert('發生錯誤：' + error);
+    }
+  </script>
+</body>
+</html>
