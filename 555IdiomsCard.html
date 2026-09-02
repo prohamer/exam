@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>555_Idioms</title>
+  <style>
+    :root {
+      --english-primary: #4CAF50;
+      --english-hover: #45a049;
+      --chinese-primary: #FF5722;
+      --chinese-hover: #f4511e;
+      --control-primary: #2196F3;
+      --control-hover: #1e88e5;
+      --nav-primary: #9C27B0;
+      --nav-hover: #8e24aa;
+      --font-primary: #E91E63;
+      --font-hover: #D81B60;
+      --skip-primary: #FF9800;
+      --skip-hover: #FB8C00;
+      --add-primary: #00BCD4;
+      --add-hover: #00ACC1;
+      --remove-primary: #F44336;
+      --remove-hover: #E53935;
+      --disabled-color: #cccccc;
+      --base-font-size: 16px;
+      --font-size: 44px;
+    }
+    
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      max-width: 800px;
+      margin: 0 auto;
+      background-color: #000000;
+      color: #ffffff;
+    }
+
+    .header-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      align-items: center;
+    }
+
+    .sheet-selector {
+      flex: 1;
+      padding: 12px;
+      border-radius: 5px;
+      border: 1px solid #333;
+      font-size: var(--base-font-size);
+      background-color: #1a1a1a;
+      color: #ffffff;
+      cursor: pointer;
+    }
+    
+    .controls {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .controls-row {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .progress-indicator {
+      text-align: center;
+      margin: 10px 0;
+      font-size: 14px;
+      color: #ffffff;
+      font-weight: bold;
+    }
+    
+    .flashcard {
+      border: 1px solid #333;
+      padding: 30px;
+      border-radius: 10px;
+      text-align: center;
+      min-height: 200px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      cursor: pointer;
+      background-color: #1a1a1a;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      margin: 20px 0;
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+    }
+
+    .flashcard.english {
+      border-color: var(--english-primary);
+    }
+    
+    .flashcard.chinese {
+      border-color: var(--chinese-primary);
+    }
+
+    .flashcard.custom {
+      border-color: var(--add-primary);
+    }
+
+    .empty-custom {
+      text-align: center;
+      color: #888;
+      font-size: 18px;
+      padding: 40px 20px;
+      line-height: 2;
+    }
+    
+    .word {
+      font-size: var(--font-size);
+      margin-bottom: 20px;
+      font-weight: bold;
+      color: #ffffff;
+    }
+
+    .example-text {
+      font-size: calc(var(--font-size) * 0.4);
+      color: #FFD700 !important;
+      margin-top: 20px;
+    }
+
+    .flashcard.chinese .example-text {
+      color: #ffffff !important;
+    }
+    
+    .btn-skip {
+      background-color: var(--skip-primary);
+    }
+    .btn-skip:hover:not(:disabled) {
+      background-color: var(--skip-hover);
+    }
+    
+    .btn-font {
+      background-color: var(--font-primary);
+    }
+    .btn-font:hover:not(:disabled) {
+      background-color: var(--font-hover);
+    }
+    
+    .btn-control {
+      background-color: var(--control-primary);
+    }
+    .btn-control:hover:not(:disabled) {
+      background-color: var(--control-hover);
+    }
+    
+    .btn-nav {
+      background-color: var(--nav-primary);
+    }
+    .btn-nav:hover:not(:disabled) {
+      background-color: var(--nav-hover);
+    }
+
+    .btn-add {
+      background-color: var(--add-primary);
+    }
+    .btn-add:hover:not(:disabled) {
+      background-color: var(--add-hover);
+    }
+
+    .btn-remove {
+      background-color: var(--remove-primary);
+    }
+    .btn-remove:hover:not(:disabled) {
+      background-color: var(--remove-hover);
+    }
+    
+    button {
+      padding: 8px 15px;
+      font-size: var(--base-font-size);
+      font-weight: bold;
+      border-radius: 5px;
+      border: none;
+      color: white;
+      cursor: pointer;
+      min-width: 80px;
+    }
+    
+    button:disabled {
+      background-color: var(--disabled-color);
+      cursor: not-allowed;
+    }
+
+    @media (max-width: 600px) {
+      body { padding: 10px; }
+      button {
+        padding: 8px 12px;
+        font-size: 14px;
+        min-width: 70px;
+      }
+      .controls-row { gap: 5px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="header-row">
+    <select id="sheetSelect" class="sheet-selector" onchange="changeSheet()">
+      <option value="A、U、W">A、U、W</option><option value="B">B</option><option value="C、D">C、D</option><option value="E、F">E、F</option><option value="G">G</option><option value="H、I、J">H、I、J</option><option value="K、L">K、L</option><option value="M、N、O">M、N、O</option><option value="P、Q、R">P、Q、R</option><option value="S">S</option><option value="T">T</option>
+      <option value="__custom__">⭐ 自訂片語庫</option>
+    </select>
+  </div>
+
+  <div class="controls">
+    <div class="controls-row">
+      <button class="btn-skip" onclick="skip10Words()">後10個</button>
+      <button class="btn-font" onclick="adjustFontSize(2)">A+</button>
+      <button class="btn-font" onclick="adjustFontSize(-2)">A-</button>
+      <button class="btn-control" onclick="pronounceWord()">發音</button>
+    </div>
+  </div>
+
+  <div class="progress-indicator">
+    <span id="progressText"></span>
+  </div>
+
+  <div id="flashcardArea">
+    <div class="flashcard" id="flashcard">
+      <div id="content" class="word"></div>
+    </div>
+  </div>
+
+  <div class="controls-row">
+    <button class="btn-control" onclick="toggleRandom()">隨機切換</button>
+    <button class="btn-nav" onclick="previousWord()">← 上一個</button>
+    <button id="customBtn" class="btn-add" onclick="toggleCustomWord()">＋</button>
+    <button class="btn-nav" onclick="nextWord()">下一個 →</button>
+  </div>
+
+  <script>
+    // ── localStorage key namespace（用試算表 ID 避免衝突）──
+    const SHEET_ID = "1Pz2t93PB_HXbqeTGYe8H_vaz7nocZcJCQ2Up5bh6RqM";
+    const KEY_CUSTOM   = "flashcard_" + SHEET_ID + "_custom";
+    const KEY_POSITION = "flashcard_" + SHEET_ID + "_position";
+
+    const CUSTOM_SHEET_NAME = "__custom__";
+
+    const allSheetData = {"A、U、W":[{"word":"about to","meaning":"即將、正要","image":"","example":"I'm about to head out; do you need anything?","exampleTranslation":"我正要出門,你需要什麼嗎?"},{"word":"above all","meaning":"尤其、最重要的是","image":"","example":"Above all, remember to enjoy the process.","exampleTranslation":"最重要的是,記得享受過程。"},{"word":"according to","meaning":"依照;根據","image":"","example":"According to the forecast, it will snow tonight.","exampleTranslation":"根據預報,今晚會下雪。"},{"word":"to account for","meaning":"說明、解釋;占(比例)","image":"","example":"How do you account for the missing money?","exampleTranslation":"你要怎麼解釋這筆不見的錢?"},{"word":"all along","meaning":"自始至終、一直都","image":"","example":"I suspected all along that he was joking.","exampleTranslation":"我一直都懷疑他是在開玩笑。"},{"word":"all (day, week, month, year) long","meaning":"一整天/週/月/年之久","image":"","example":"The baby cried all night long.","exampleTranslation":"寶寶哭了一整晚。"},{"word":"all in all","meaning":"總的來說、整體而言","image":"","example":"All in all, it was a productive week.","exampleTranslation":"整體來說,這是充實的一週。"},{"word":"all of a sudden","meaning":"突如其來、毫無預警","image":"","example":"All of a sudden the lights went dark.","exampleTranslation":"燈突然全暗了下來。"},{"word":"all right","meaning":"可以接受的;好、沒問題","image":"","example":"Is it all right if I open the window?","exampleTranslation":"我開窗可以嗎?"},{"word":"as a matter of fact","meaning":"事實上、其實","image":"","example":"As a matter of fact, I've already finished it.","exampleTranslation":"事實上,我已經做完了。"},{"word":"as for","meaning":"至於、談到","image":"","example":"As for dessert, we'll decide after the meal.","exampleTranslation":"至於甜點,我們吃完飯再決定。"},{"word":"as soon as","meaning":"一……就立刻","image":"","example":"Call me as soon as you land.","exampleTranslation":"你一落地就打給我。"},{"word":"as usual","meaning":"和平常一樣、照慣例","image":"","example":"As usual, she arrived at the gym before sunrise.","exampleTranslation":"她照例在日出前就到了健身房。"},{"word":"to ask for","meaning":"自找、罪有應得","image":"","example":"Skipping practice and then losing? He asked for it.","exampleTranslation":"翹掉練習然後又輸球?這是他自找的。"},{"word":"at all","meaning":"(用於否定)絲毫、一點也","image":"","example":"I'm not tired at all; let's keep going.","exampleTranslation":"我一點也不累,我們繼續吧。"},{"word":"at first","meaning":"最初、剛開始時","image":"","example":"At first the recipe looked hard, but it was actually simple.","exampleTranslation":"起初這道食譜看起來很難,其實很簡單。"},{"word":"at heart","meaning":"本質上、內心裡","image":"","example":"He seems strict, but he's kind at heart.","exampleTranslation":"他看似嚴厲,但骨子裡很善良。"},{"word":"at last","meaning":"經過許久之後終於","image":"","example":"After months of waiting, the results are here at last.","exampleTranslation":"等了好幾個月,結果終於出來了。"},{"word":"at least","meaning":"最少、不低於","image":"","example":"The repair will take at least three days.","exampleTranslation":"這修理至少要花三天。"},{"word":"under one's nose","meaning":"就在眼前(卻沒察覺)","image":"","example":"The keys were under my nose the whole time.","exampleTranslation":"鑰匙一直就在我眼前。"},{"word":"under the table","meaning":"檯面下、私底下(常指不合法)","image":"","example":"They paid the workers under the table to avoid taxes.","exampleTranslation":"他們私下付錢給工人以逃稅。"},{"word":"under the weather","meaning":"身體微恙、不太舒服","image":"","example":"I'm feeling a bit under the weather today.","exampleTranslation":"我今天覺得有點不舒服。"},{"word":"up in the air","meaning":"懸而未決、還沒定案","image":"","example":"Our vacation plans are still up in the air.","exampleTranslation":"我們的度假計畫還沒定案。"},{"word":"up to date","meaning":"最新的、合乎時代的","image":"","example":"We keep our software up to date to stay secure.","exampleTranslation":"我們讓軟體保持在最新版本以維持安全。"},{"word":"upside down","meaning":"上下顛倒","image":"","example":"The toddler held the book upside down.","exampleTranslation":"那小孩把書拿倒了。"},{"word":"used to","meaning":"過去經常(現已不再)","image":"","example":"I used to jog every morning before work.","exampleTranslation":"我以前上班前每天都會慢跑。"},{"word":"to wait on","meaning":"在商店或餐廳提供服務","image":"","example":"A friendly waiter waited on us all evening.","exampleTranslation":"整晚都有位親切的服務生招待我們。"},{"word":"to wait up for","meaning":"熬夜等候","image":"","example":"Don't wait up for me; I'll be home late.","exampleTranslation":"別等我了,我會很晚回家。"},{"word":"to wake up","meaning":"從睡眠中醒來","image":"","example":"I woke up before the alarm went off.","exampleTranslation":"鬧鐘還沒響我就醒了。"},{"word":"a walk in the park","meaning":"輕鬆容易的事","image":"","example":"The exam was no walk in the park.","exampleTranslation":"那場考試可不輕鬆。"},{"word":"to waste one's breath","meaning":"白費口舌","image":"","example":"Arguing with him is just wasting your breath.","exampleTranslation":"跟他爭辯根本是白費口舌。"},{"word":"to wear down","meaning":"逐漸磨損、磨薄","image":"","example":"Years of walking wore down the stone steps.","exampleTranslation":"多年的踩踏把石階磨損了。"},{"word":"to wear off","meaning":"逐漸消失、失效","image":"","example":"The numbness will wear off in an hour.","exampleTranslation":"麻痺感一小時內就會消退。"},{"word":"to wear out","meaning":"用到破損、失去功用","image":"","example":"These sneakers are completely worn out.","exampleTranslation":"這雙運動鞋已經完全穿壞了。"},{"word":"when pigs fly","meaning":"絕不可能(的時候)","image":"","example":"He'll clean his room when pigs fly.","exampleTranslation":"要他整理房間,除非太陽打西邊出來。"},{"word":"a white lie","meaning":"善意的謊言","image":"","example":"She told a white lie to spare his feelings.","exampleTranslation":"她說了個善意的謊,以免傷他的心。"},{"word":"to work out","meaning":"健身;想出(辦法)","image":"","example":"He works out at the gym three times a week.","exampleTranslation":"他每週上健身房三次。"},{"word":"would rather","meaning":"寧可、比較願意","image":"","example":"I'd rather stay home than sit in traffic.","exampleTranslation":"我寧願待在家也不想塞在車陣裡。"}],"B":[{"word":"back and forth","meaning":"來來回回地","image":"","example":"The pendulum swung back and forth.","exampleTranslation":"鐘擺來回擺動著。"},{"word":"to back down","meaning":"讓步、退縮","image":"","example":"Neither side would back down in the dispute.","exampleTranslation":"這場爭執中雙方都不肯讓步。"},{"word":"to back out","meaning":"把車倒出;打退堂鼓、退出","image":"","example":"He backed out of the deal at the last moment.","exampleTranslation":"他在最後一刻退出了這筆交易。"},{"word":"to back up","meaning":"倒車;支持、聲援","image":"","example":"Can you back up a little? You're too close.","exampleTranslation":"你能倒一點嗎?靠得太近了。"},{"word":"the ball is in your court","meaning":"該你決定或行動了","image":"","example":"I've made my offer; now the ball is in your court.","exampleTranslation":"我已經提出條件,現在就看你決定了。"},{"word":"to bank on","meaning":"指望、仰賴","image":"","example":"Don't bank on the weather staying nice.","exampleTranslation":"別指望天氣會一直這麼好。"},{"word":"to be a far cry from","meaning":"與……相差甚遠","image":"","example":"The remake is a far cry from the original.","exampleTranslation":"這部重拍版和原作相差甚遠。"},{"word":"to be about to","meaning":"即將、正準備要","image":"","example":"I was about to call you when you texted.","exampleTranslation":"你傳訊息來時,我正要打給你。"},{"word":"to be better off","meaning":"處境較好、更划算","image":"","example":"You'd be better off buying a season pass.","exampleTranslation":"你買季票會比較划算。"},{"word":"to be bound to","meaning":"勢必、注定會","image":"","example":"With such talent, she's bound to succeed.","exampleTranslation":"以她的才華,注定會成功。"},{"word":"to be carried away","meaning":"被強烈情緒沖昏頭、深受感染","image":"","example":"The crowd got carried away with excitement.","exampleTranslation":"群眾興奮得忘乎所以。"},{"word":"to be cut out for","meaning":"適合、是……的料","image":"","example":"He's not cut out for office work.","exampleTranslation":"他不是坐辦公室的料。"},{"word":"to be had","meaning":"受騙、上當","image":"","example":"The watch was fake — I'd been had.","exampleTranslation":"那隻錶是假的,我被騙了。"},{"word":"to be in","meaning":"流行、當紅;在(家或公司)","image":"","example":"Bright colors are in this season.","exampleTranslation":"亮色系是這一季的流行。"},{"word":"to be in charge of","meaning":"負責、掌管","image":"","example":"She is in charge of the whole marketing team.","exampleTranslation":"整個行銷團隊由她掌管。"},{"word":"to be in (someone's) shoes","meaning":"設身處地、站在……立場","image":"","example":"If I were in your shoes, I'd take the offer.","exampleTranslation":"如果我是你,我會接受這個提議。"},{"word":"to be in (the/one's) way","meaning":"擋路、礙事","image":"","example":"Move the boxes; they're in the way.","exampleTranslation":"把箱子移開,它們擋路了。"},{"word":"to be looking up","meaning":"漸有起色、好轉","image":"","example":"After a slow start, sales are looking up.","exampleTranslation":"在低迷的開頭後,銷售正逐漸好轉。"},{"word":"to be out","meaning":"過時;外出不在","image":"","example":"Sorry, the doctor is out until two o'clock.","exampleTranslation":"抱歉,醫生外出,兩點才回來。"},{"word":"to be over","meaning":"結束、告一段落","image":"","example":"Once the meeting is over, let's grab coffee.","exampleTranslation":"會議一結束,我們去喝杯咖啡吧。"},{"word":"to be over one's head","meaning":"忙得團團轉;超出理解","image":"","example":"I'm over my head with deadlines this week.","exampleTranslation":"這禮拜的截止期限讓我忙得團團轉。"},{"word":"to be the matter","meaning":"出了問題、不對勁","image":"","example":"Something is the matter with the printer.","exampleTranslation":"印表機出了點問題。"},{"word":"to be up","meaning":"(時間)結束、到期","image":"","example":"Your two hours are up; please hand in the exam.","exampleTranslation":"你的兩小時到了,請交卷。"},{"word":"to be up for grabs","meaning":"開放供人爭取","image":"","example":"With the manager gone, the position is up for grabs.","exampleTranslation":"經理離職後,那個職位開放讓大家爭取。"},{"word":"to be up to","meaning":"由某人決定;在忙什麼","image":"","example":"Where we eat tonight is up to you.","exampleTranslation":"今晚在哪吃由你決定。"},{"word":"to be up to (something)","meaning":"在忙什麼;暗中盤算","image":"","example":"You look guilty — what are you up to?","exampleTranslation":"你一臉心虛,在打什麼主意?"},{"word":"to be used to","meaning":"已經習慣(某事物)","image":"","example":"He's used to working late on weekdays.","exampleTranslation":"他習慣了平日加班到很晚。"},{"word":"to be well-off","meaning":"富裕、生活寬裕","image":"","example":"Her family has always been well-off.","exampleTranslation":"她家一向很富裕。"},{"word":"to be with it","meaning":"進入狀況、專注","image":"","example":"Sorry, I'm not really with it this morning.","exampleTranslation":"抱歉,我今天早上有點狀況外。"},{"word":"to be with (someone)","meaning":"支持;聽懂、跟得上","image":"","example":"Are you still with me, or should I explain again?","exampleTranslation":"你還跟得上嗎,還是我再解釋一次?"},{"word":"to beat around the bush","meaning":"拐彎抹角、繞圈子","image":"","example":"Stop beating around the bush and tell me.","exampleTranslation":"別再拐彎抹角了,直接告訴我。"},{"word":"to become of","meaning":"(人或物)下落如何","image":"","example":"Whatever became of your old bandmates?","exampleTranslation":"你以前的樂團夥伴後來都怎麼了?"},{"word":"to believe in","meaning":"相信、信奉","image":"","example":"She believes in treating everyone fairly.","exampleTranslation":"她信奉公平待人。"},{"word":"to bite off","meaning":"攬下(過多的責任)","image":"","example":"By taking three jobs, he bit off more than he could chew.","exampleTranslation":"他一次接三份工作,實在是貪多嚼不爛。"},{"word":"to bite the bullet","meaning":"咬牙撐過、硬著頭皮面對","image":"","example":"I hate dentists, but I'll bite the bullet and go.","exampleTranslation":"我討厭看牙醫,但我會硬著頭皮去。"},{"word":"a blessing in disguise","meaning":"因禍得福、塞翁失馬","image":"","example":"Losing that job was a blessing in disguise.","exampleTranslation":"丟了那份工作反而是因禍得福。"},{"word":"to blow out","meaning":"爆胎;吹熄","image":"","example":"A tire blew out as we drove down the freeway.","exampleTranslation":"我們開在高速公路上時爆了一個胎。"},{"word":"to blow up","meaning":"充氣;炸毀、爆炸","image":"","example":"It took ages to blow up all the party balloons.","exampleTranslation":"把派對氣球全吹好花了好久。"},{"word":"the bottom line","meaning":"最關鍵的一點、底線","image":"","example":"The bottom line is that we need more time.","exampleTranslation":"最關鍵的一點是,我們需要更多時間。"},{"word":"to bow out","meaning":"退出、抽身","image":"","example":"She bowed out of the race for health reasons.","exampleTranslation":"她因健康因素退出了這場競賽。"},{"word":"break a leg","meaning":"祝(演出)順利、祝好運","image":"","example":"Break a leg out there tonight!","exampleTranslation":"祝你今晚演出順利!"},{"word":"to break down","meaning":"(機器)故障、拋錨","image":"","example":"Our car broke down on the highway.","exampleTranslation":"我們的車在高速公路上拋錨了。"},{"word":"to break in","meaning":"把新東西用順、磨合;打斷","image":"","example":"You should break in new hiking boots before a long trek.","exampleTranslation":"長途健行前該先把新登山鞋穿順。"},{"word":"to break loose","meaning":"掙脫、脫困","image":"","example":"The dog broke loose and chased the cat.","exampleTranslation":"那隻狗掙脫繩子去追貓。"},{"word":"to break off","meaning":"中斷、斷絕","image":"","example":"The two sides broke off negotiations.","exampleTranslation":"雙方中斷了談判。"},{"word":"to break out","meaning":"突然爆發、蔓延開來","image":"","example":"A fire broke out in the warehouse overnight.","exampleTranslation":"倉庫在夜裡突然起火。"},{"word":"break the ice","meaning":"打破僵局、緩和初次見面的尷尬","image":"","example":"He told a joke to break the ice with the new team.","exampleTranslation":"他講了個笑話,和新團隊打破僵局。"},{"word":"to break the news","meaning":"(委婉地)宣布消息","image":"","example":"I didn't know how to break the news to her.","exampleTranslation":"我不知道該怎麼把這消息告訴她。"},{"word":"to break up","meaning":"分手;解散","image":"","example":"They broke up after dating for three years.","exampleTranslation":"他們交往三年後分手了。"},{"word":"to bring about","meaning":"引起、促成","image":"","example":"Careful planning brought about the project's success.","exampleTranslation":"周密的規劃促成了這個專案的成功。"},{"word":"to bring back","meaning":"歸還、退回","image":"","example":"Please bring back the umbrella you borrowed.","exampleTranslation":"請把你借的傘還回來。"},{"word":"to bring out","meaning":"推出、發表(產品)","image":"","example":"The brand brought out a new model this fall.","exampleTranslation":"這個品牌今秋推出了新機型。"},{"word":"to bring up","meaning":"養育;提起(話題)","image":"","example":"It's rude to bring up her age at the party.","exampleTranslation":"在派對上提她的年齡很失禮。"},{"word":"to brush up on","meaning":"複習、重拾生疏的技能","image":"","example":"I need to brush up on my French before the trip.","exampleTranslation":"旅行前我得把法文複習一下。"},{"word":"to build up","meaning":"逐漸累積、增強","image":"","example":"She built up her savings over several years.","exampleTranslation":"她花了好幾年慢慢累積存款。"},{"word":"to burn down","meaning":"(蠟燭)燒盡;(建物)燒毀","image":"","example":"The old barn burned down in minutes.","exampleTranslation":"那座舊穀倉幾分鐘內就燒毀了。"},{"word":"to burn out","meaning":"因過度使用而燒壞;使精疲力盡","image":"","example":"The motor burned out after years of heavy use.","exampleTranslation":"那具馬達重度使用多年後燒壞了。"},{"word":"to burn the midnight oil","meaning":"挑燈夜戰、熬夜","image":"","example":"She burned the midnight oil to finish the report.","exampleTranslation":"她熬夜趕完了那份報告。"},{"word":"to burn up","meaning":"燒毀;令人火大","image":"","example":"It burns me up when people cut in line.","exampleTranslation":"有人插隊真讓我火大。"},{"word":"to burst out","meaning":"突然衝出;突然(哭笑等)","image":"","example":"She burst out laughing at his joke.","exampleTranslation":"她被他的笑話逗得突然大笑。"},{"word":"to buy out","meaning":"收購(整家公司或股權)","image":"","example":"A larger firm bought out the startup.","exampleTranslation":"一家大公司收購了這家新創企業。"},{"word":"to buy up","meaning":"搶購一空、大量買進","image":"","example":"Shoppers bought up all the discounted goods.","exampleTranslation":"顧客把打折商品全搶購一空。"},{"word":"by all means","meaning":"一定、務必;想盡辦法","image":"","example":"By all means, call me if you need anything.","exampleTranslation":"有任何需要,務必打給我。"},{"word":"by far","meaning":"遠遠地、顯然","image":"","example":"This is by far the best pizza in town.","exampleTranslation":"這無疑是全鎮最好吃的披薩。"},{"word":"by heart","meaning":"熟記於心、背下來","image":"","example":"The actor knew all his lines by heart.","exampleTranslation":"那位演員把所有台詞都背得滾瓜爛熟。"},{"word":"by oneself","meaning":"獨自一人、不靠他人","image":"","example":"He fixed the leaking pipe all by himself.","exampleTranslation":"他獨自把漏水的水管修好了。"},{"word":"by the way","meaning":"順帶一提、對了","image":"","example":"By the way, did you finish the report?","exampleTranslation":"對了,你報告寫完了嗎?"}],"C、D":[{"word":"to call for","meaning":"需要;要求、呼籲","image":"","example":"This dish calls for two eggs.","exampleTranslation":"這道菜需要兩顆蛋。"},{"word":"to call it a day/night","meaning":"收工、結束一天的工作","image":"","example":"We've done enough for now; let's call it a day.","exampleTranslation":"目前做得夠多了,今天就到這吧。"},{"word":"to call it quits","meaning":"就此打住、收手","image":"","example":"After twenty years, the band called it quits.","exampleTranslation":"這個樂團在二十年後解散了。"},{"word":"to call off","meaning":"取消(既定活動)","image":"","example":"They called off the picnic because of the storm.","exampleTranslation":"他們因為暴風雨取消了野餐。"},{"word":"to call on","meaning":"請某人回答;登門造訪","image":"","example":"The teacher called on me to read the next paragraph.","exampleTranslation":"老師點我念下一段。"},{"word":"to call the shots","meaning":"發號施令、做主","image":"","example":"In this kitchen, the head chef calls the shots.","exampleTranslation":"在這間廚房,主廚說了算。"},{"word":"to call up","meaning":"打電話聯絡某人","image":"","example":"I'll call up the clinic to book an appointment.","exampleTranslation":"我會打電話給診所預約看診。"},{"word":"to calm down","meaning":"冷靜下來","image":"","example":"Take a deep breath and calm down.","exampleTranslation":"深呼吸,冷靜下來。"},{"word":"to carry on","meaning":"照常進行;胡鬧","image":"","example":"The show carried on despite the power cut.","exampleTranslation":"儘管停電,演出仍照常進行。"},{"word":"to carry out","meaning":"執行、貫徹","image":"","example":"The team carried out the plan without a hitch.","exampleTranslation":"團隊順利地執行了計畫。"},{"word":"to catch cold","meaning":"著涼而感冒","image":"","example":"Dry your hair or you'll catch cold.","exampleTranslation":"把頭髮擦乾,不然會著涼。"},{"word":"to catch fire","meaning":"起火、燃燒起來","image":"","example":"The dry grass could catch fire in this heat.","exampleTranslation":"這麼熱,乾草可能會起火。"},{"word":"to catch on","meaning":"流行起來;領會、聽懂","image":"","example":"The new dance move quickly caught on.","exampleTranslation":"那個新舞步很快就流行了起來。"},{"word":"to catch one's breath","meaning":"喘口氣、稍作休息","image":"","example":"Let me catch my breath before the next climb.","exampleTranslation":"下一段爬升前讓我先喘口氣。"},{"word":"to catch up","meaning":"趕上進度","image":"","example":"After being sick, he worked hard to catch up.","exampleTranslation":"生病後,他努力趕上進度。"},{"word":"to change one's mind","meaning":"改變原本的決定或想法","image":"","example":"She changed her mind and ordered tea instead.","exampleTranslation":"她改變主意,改點了茶。"},{"word":"to check in","meaning":"(旅館)辦理入住;託運","image":"","example":"We checked in at the hotel around noon.","exampleTranslation":"我們中午左右在飯店辦了入住。"},{"word":"to check out","meaning":"退房;查看、調查","image":"","example":"Guests must check out before eleven.","exampleTranslation":"住客必須在十一點前退房。"},{"word":"to check up on","meaning":"查核、檢查狀況","image":"","example":"The nurse came to check up on the patient.","exampleTranslation":"護理師來查看病人的情況。"},{"word":"to cheer up","meaning":"使振作、逗某人開心","image":"","example":"A short walk always cheers me up.","exampleTranslation":"散個步總能讓我心情好起來。"},{"word":"to clean out","meaning":"清空;洗劫;掃光","image":"","example":"It's time to clean out the garage.","exampleTranslation":"該把車庫清一清了。"},{"word":"to clear up","meaning":"說明白;(天氣)放晴","image":"","example":"The sky cleared up just in time for the picnic.","exampleTranslation":"天空正好在野餐前放晴了。"},{"word":"clear-cut","meaning":"明確而清晰","image":"","example":"The instructions were clear-cut and easy to follow.","exampleTranslation":"說明明確清楚,很容易照著做。"},{"word":"close call","meaning":"九死一生、驚險脫身","image":"","example":"That was a close call — the ladder nearly fell.","exampleTranslation":"好險,那梯子差點倒下來。"},{"word":"to come about","meaning":"發生、出現","image":"","example":"How did this misunderstanding come about?","exampleTranslation":"這場誤會是怎麼發生的?"},{"word":"to come across","meaning":"偶然遇見或發現","image":"","example":"I came across an old photo while cleaning.","exampleTranslation":"整理東西時我偶然翻到一張舊照片。"},{"word":"to come from","meaning":"來自、源於某地","image":"","example":"The best coffee beans come from that region.","exampleTranslation":"最好的咖啡豆產自那個地區。"},{"word":"to come to","meaning":"甦醒;合計為","image":"","example":"The bill came to more than we expected.","exampleTranslation":"帳單金額比我們預期的還多。"},{"word":"to come to an end","meaning":"結束、告一段落","image":"","example":"The festival came to an end at midnight.","exampleTranslation":"慶典在午夜落幕。"},{"word":"to come true","meaning":"成真、實現","image":"","example":"Her dream of owning a bakery finally came true.","exampleTranslation":"她開麵包店的夢想終於成真了。"},{"word":"to come up with","meaning":"想出、提出","image":"","example":"She came up with a brilliant solution.","exampleTranslation":"她想出了一個絕妙的辦法。"},{"word":"to cop out","meaning":"推卸責任、臨陣脫逃","image":"","example":"He copped out of the presentation at the last minute.","exampleTranslation":"他在最後關頭逃避了那場簡報。"},{"word":"to cope with","meaning":"應付、應對","image":"","example":"He's learning to cope with the stress of work.","exampleTranslation":"他正在學著應付工作的壓力。"},{"word":"to cost an arm and a leg","meaning":"所費不貲、非常昂貴","image":"","example":"A house in the city center can cost an arm and a leg.","exampleTranslation":"市中心的房子可能貴得嚇人。"},{"word":"a couch potato","meaning":"成天窩沙發看電視的人","image":"","example":"Since the injury, he's become a real couch potato.","exampleTranslation":"受傷後,他成了不折不扣的沙發馬鈴薯。"},{"word":"to count on","meaning":"信賴、指望某人","image":"","example":"You can count on me to be there on time.","exampleTranslation":"你可以放心,我一定會準時到。"},{"word":"to cover for","meaning":"暫代;替某人打掩護","image":"","example":"Can you cover for me while I take a call?","exampleTranslation":"我去接個電話,你能幫我頂一下嗎?"},{"word":"to cover ground","meaning":"涵蓋範圍很廣","image":"","example":"The lecture covered a lot of ground in one hour.","exampleTranslation":"這場講座一小時內涵蓋了很多內容。"},{"word":"to cover up","meaning":"掩蓋、隱瞞","image":"","example":"They tried to cover up the accounting errors.","exampleTranslation":"他們試圖掩蓋帳目上的錯誤。"},{"word":"to cross out","meaning":"劃掉、刪去","image":"","example":"He crossed out the wrong answer and rewrote it.","exampleTranslation":"他把錯的答案劃掉,重寫了一次。"},{"word":"cut and dried","meaning":"早有定論、了無新意;乏味","image":"","example":"The plot of that film felt cut and dried.","exampleTranslation":"那部電影的劇情感覺毫無新意。"},{"word":"to cut corners","meaning":"精打細算、省錢","image":"","example":"They cut corners to stay within budget.","exampleTranslation":"他們處處省錢,以控制在預算內。"},{"word":"to cut down on","meaning":"減少(用量或次數)","image":"","example":"The doctor told him to cut down on salt.","exampleTranslation":"醫生要他少吃鹽。"},{"word":"to cut off","meaning":"剪掉;突然切斷","image":"","example":"The call cut off right in the middle of a sentence.","exampleTranslation":"電話正講到一半就斷了。"},{"word":"to cut out","meaning":"剪下;停止(某行為)","image":"","example":"Cut out the noise — I'm trying to concentrate.","exampleTranslation":"別吵了,我正想專心。"},{"word":"to cut short","meaning":"縮短、打斷","image":"","example":"We had to cut the trip short due to a storm.","exampleTranslation":"因為暴風雨,我們只好提前結束旅程。"},{"word":"to cut to the chase","meaning":"開門見山、直說重點","image":"","example":"We're short on time, so let me cut to the chase.","exampleTranslation":"我們時間不多,我就直說重點了。"},{"word":"day in and day out","meaning":"日復一日、天天如此","image":"","example":"Day in and day out, she practices the violin.","exampleTranslation":"她日復一日地練小提琴。"},{"word":"to deal with","meaning":"處理、應對","image":"","example":"I'll deal with the complaint first thing tomorrow.","exampleTranslation":"我明天一早就處理這件申訴。"},{"word":"to die down","meaning":"減弱、平息","image":"","example":"The wind finally died down by evening.","exampleTranslation":"到了傍晚風勢終於減弱。"},{"word":"to die out","meaning":"絕跡、逐漸消失","image":"","example":"Many traditional crafts are dying out.","exampleTranslation":"許多傳統工藝正逐漸失傳。"},{"word":"to dish out","meaning":"大量分發;數落人","image":"","example":"He can criticize others but can't take it when it's dished out to him.","exampleTranslation":"他能數落別人,別人一說他就受不了。"},{"word":"to do over","meaning":"重做、重寫","image":"","example":"The essay was messy, so she did it over.","exampleTranslation":"那篇作文太亂,她就重寫了一遍。"},{"word":"to do without","meaning":"沒有……也能將就","image":"","example":"We had to do without electricity for a day.","exampleTranslation":"我們得將就過了一天沒電的日子。"},{"word":"down to earth","meaning":"腳踏實地、平易近人","image":"","example":"Despite her fame, she stays down to earth.","exampleTranslation":"儘管出了名,她依然平易近人。"},{"word":"to draw the line at","meaning":"劃清界線、堅決不做","image":"","example":"I help with chores, but I draw the line at ironing.","exampleTranslation":"我會幫忙做家事,但燙衣服我可不幹。"},{"word":"to draw up","meaning":"草擬、繪製(文件地圖)","image":"","example":"The lawyer will draw up the contract tomorrow.","exampleTranslation":"律師明天會擬好合約。"},{"word":"to dress up","meaning":"打扮得體、穿正式服裝","image":"","example":"We dressed up for my sister's wedding.","exampleTranslation":"我們為了姊姊的婚禮盛裝打扮。"},{"word":"to drop off","meaning":"睡著;順道送;減少","image":"","example":"I dropped off during the long lecture.","exampleTranslation":"冗長的講座中我睡著了。"},{"word":"to drop out of","meaning":"中途退出、輟學","image":"","example":"He dropped out of college to start a business.","exampleTranslation":"他大學輟學去創業。"},{"word":"to drop (someone) a line","meaning":"寫封短訊給某人","image":"","example":"Drop me a line when you get settled in.","exampleTranslation":"你安頓好後寫封短訊給我。"},{"word":"to dry out","meaning":"逐漸晾乾;戒酒","image":"","example":"Hang the tent up so it can dry out.","exampleTranslation":"把帳篷掛起來晾乾。"},{"word":"dry run","meaning":"排演、預演","image":"","example":"The crew did a dry run before opening night.","exampleTranslation":"劇組在首演前做了一次彩排。"},{"word":"to dry up","meaning":"乾涸;枯竭","image":"","example":"The pond dried up during the drought.","exampleTranslation":"旱災期間那口池塘乾涸了。"}],"E、F":[{"word":"to eat in/to eat out","meaning":"在家吃/外出用餐","image":"","example":"We usually eat in on weeknights.","exampleTranslation":"平日晚上我們通常在家吃。"},{"word":"to end up","meaning":"最後變成、結果落得","image":"","example":"We got lost and ended up at the wrong hotel.","exampleTranslation":"我們迷了路,最後跑到錯的飯店。"},{"word":"every other (one)","meaning":"每隔一個、交替","image":"","example":"The dentist recommends a checkup every other month.","exampleTranslation":"牙醫建議每隔一個月檢查一次。"},{"word":"to face the music","meaning":"承擔後果、面對現實","image":"","example":"He broke the vase and had to face the music.","exampleTranslation":"他打破了花瓶,只好承擔後果。"},{"word":"face-to-face","meaning":"面對面、當面","image":"","example":"Let's discuss this face-to-face rather than by email.","exampleTranslation":"這件事我們當面談,別用電子郵件。"},{"word":"to fade away","meaning":"逐漸消退、遠去","image":"","example":"The applause slowly faded away.","exampleTranslation":"掌聲漸漸消散。"},{"word":"to fall for","meaning":"迅速愛上;受騙上當","image":"","example":"Don't fall for those too-good-to-be-true offers.","exampleTranslation":"別被那些好得不真實的優惠給騙了。"},{"word":"to fall in love","meaning":"愛上、陷入戀愛","image":"","example":"They fell in love during their college years.","exampleTranslation":"他們在大學時期相戀。"},{"word":"to fall through","meaning":"落空、告吹","image":"","example":"Our holiday plans fell through at the last minute.","exampleTranslation":"我們的假期計畫在最後關頭泡湯了。"},{"word":"to feel like","meaning":"想要、有意做某事","image":"","example":"I feel like going for a swim.","exampleTranslation":"我想去游個泳。"},{"word":"to feel sorry for","meaning":"同情、為……感到難過","image":"","example":"I feel sorry for anyone stuck in this heat.","exampleTranslation":"我很同情困在這種酷熱裡的人。"},{"word":"few and far between","meaning":"罕見、不常發生","image":"","example":"Sunny days in this town are few and far between.","exampleTranslation":"這個鎮上晴天很少見。"},{"word":"fifty-fifty","meaning":"對半平分","image":"","example":"We split the bill fifty-fifty.","exampleTranslation":"我們把帳單對半分。"},{"word":"to figure out","meaning":"想出答案;弄明白","image":"","example":"It took me a while to figure out the puzzle.","exampleTranslation":"我花了一點時間才解開這個謎題。"},{"word":"to fill in","meaning":"填入(空格);告知情況","image":"","example":"Please fill in your name and phone number.","exampleTranslation":"請填上你的姓名和電話。"},{"word":"to fill out","meaning":"填寫完整份表格","image":"","example":"You need to fill out this form to register.","exampleTranslation":"報名要填好這份表格。"},{"word":"to fill (someone) in","meaning":"向某人說明情況","image":"","example":"Can you fill me in on what I missed?","exampleTranslation":"你能跟我說一下我錯過了什麼嗎?"},{"word":"to find fault with","meaning":"挑剔、找碴","image":"","example":"It's easy to find fault with others' work.","exampleTranslation":"挑別人工作的毛病很容易。"},{"word":"to find out","meaning":"設法得知、查清楚","image":"","example":"Let me find out whether the museum is open on Mondays.","exampleTranslation":"我來查一下博物館週一有沒有開。"},{"word":"first-rate","meaning":"一流的、極為出色","image":"","example":"The hotel offers first-rate service.","exampleTranslation":"這家飯店提供一流的服務。"},{"word":"to fix up","meaning":"修理、整修;為某人牽線","image":"","example":"We bought an old house and fixed it up.","exampleTranslation":"我們買了棟舊房子,自己整修好。"},{"word":"to focus on","meaning":"專注於、把重點放在","image":"","example":"Let's focus on the most urgent tasks first.","exampleTranslation":"我們先專注在最緊急的事情上。"},{"word":"to fool around","meaning":"鬼混、瞎搞;開玩笑","image":"","example":"Stop fooling around and finish your homework.","exampleTranslation":"別再混了,把作業寫完。"},{"word":"for good","meaning":"永久地、從此不再改變","image":"","example":"He moved abroad for good last year.","exampleTranslation":"他去年永久移居國外了。"},{"word":"for once","meaning":"就這麼一次、難得","image":"","example":"For once, everyone agreed without arguing.","exampleTranslation":"難得這一次,大家沒爭執就都同意了。"},{"word":"for sure","meaning":"確定無疑","image":"","example":"I don't know for sure when he'll arrive.","exampleTranslation":"我不確定他確切幾點會到。"},{"word":"for the time being","meaning":"目前、暫且","image":"","example":"For the time being, we'll share one car.","exampleTranslation":"我們暫時共用一輛車。"},{"word":"from now on","meaning":"從現在起、往後","image":"","example":"From now on, I'll double-check my work.","exampleTranslation":"從今以後,我會把工作再檢查一遍。"}],"G":[{"word":"to get a rise out of","meaning":"激得某人動怒或反應","image":"","example":"He teased her, hoping to get a rise out of her.","exampleTranslation":"他捉弄她,想惹她動怒。"},{"word":"to get along","meaning":"有進展;(健康)過得如何","image":"","example":"How is your grandfather getting along?","exampleTranslation":"你祖父近來過得如何?"},{"word":"to get along with","meaning":"與人相處融洽;順利應付","image":"","example":"She gets along with almost everyone at work.","exampleTranslation":"她和公司裡幾乎每個人都處得來。"},{"word":"to get away","meaning":"逃脫、脫身","image":"","example":"The thief got away before the police arrived.","exampleTranslation":"小偷在警察趕到前就逃走了。"},{"word":"to get away with","meaning":"逃過懲罰、僥倖矇混","image":"","example":"He thinks he can get away with cheating.","exampleTranslation":"他以為作弊可以矇混過去。"},{"word":"to get back","meaning":"返回、回到原處","image":"","example":"What time did you get back from the office?","exampleTranslation":"你幾點從辦公室回來的?"},{"word":"to get better, worse, etc.","meaning":"變得更好、更糟等","image":"","example":"His handwriting is getting better with practice.","exampleTranslation":"他的字經過練習正在變好。"},{"word":"to get by","meaning":"勉強度日、應付得來","image":"","example":"On such a low salary, they can barely get by.","exampleTranslation":"薪水這麼低,他們勉強才能過活。"},{"word":"to get cold feet","meaning":"臨陣退縮、打退堂鼓","image":"","example":"He got cold feet just before the interview.","exampleTranslation":"面試前他臨陣退縮了。"},{"word":"to get even with","meaning":"報復、扯平","image":"","example":"He vowed to get even with the person who cheated him.","exampleTranslation":"他發誓要向騙他的人報復。"},{"word":"to get in touch with","meaning":"與某人取得聯繫","image":"","example":"I'll get in touch with the supplier tomorrow.","exampleTranslation":"我明天會聯絡供應商。"},{"word":"to get in/to get on","meaning":"進入或搭上車輛、交通工具","image":"","example":"Hurry and get on the train — it's about to leave.","exampleTranslation":"快上火車,它就要開了。"},{"word":"to get lost","meaning":"迷路;走開別煩","image":"","example":"We got lost trying to find the trailhead.","exampleTranslation":"我們找登山口時迷了路。"},{"word":"to get off one's chest","meaning":"一吐為快、傾吐心事","image":"","example":"Talking to a friend helped her get it off her chest.","exampleTranslation":"跟朋友聊過後,她把心事一吐為快。"},{"word":"to get on one's nerves","meaning":"惹惱、使人心煩","image":"","example":"His constant humming gets on my nerves.","exampleTranslation":"他不停哼歌讓我心煩。"},{"word":"to get out from under","meaning":"擺脫財務困境","image":"","example":"After years of saving, they got out from under their loans.","exampleTranslation":"存了多年後,他們終於擺脫了貸款。"},{"word":"to get out of hand","meaning":"失控","image":"","example":"The party got out of hand after midnight.","exampleTranslation":"那場派對過了午夜就失控了。"},{"word":"to get out of line","meaning":"違規、逾矩","image":"","example":"Any player who gets out of line will be benched.","exampleTranslation":"任何逾矩的球員都會被換下場。"},{"word":"to get out of/to get off","meaning":"下車、離開交通工具","image":"","example":"She got off the bus two stops too early by mistake.","exampleTranslation":"她不小心提早兩站就下了公車。"},{"word":"to get over","meaning":"從疾病或傷痛中恢復","image":"","example":"It took her weeks to get over the flu.","exampleTranslation":"她花了好幾週才從流感中康復。"},{"word":"to get rid of","meaning":"除掉、擺脫","image":"","example":"I finally got rid of that annoying pop-up ad.","exampleTranslation":"我終於擺脫了那個惱人的彈出式廣告。"},{"word":"to get sick, well, tired, busy, wet, etc.","meaning":"變得生病、疲累、忙碌等","image":"","example":"I always get sleepy after a big lunch.","exampleTranslation":"我每次吃完豐盛的午餐就想睡。"},{"word":"to get the better of","meaning":"勝過、佔上風","image":"","example":"His temper often gets the better of him.","exampleTranslation":"他常被自己的脾氣牽著走。"},{"word":"to get the hang of","meaning":"掌握訣竅、上手","image":"","example":"After a week, I got the hang of the new software.","exampleTranslation":"一週後,我就掌握了新軟體的用法。"},{"word":"to get through","meaning":"完成、把某事做完","image":"","example":"I finally got through all my emails.","exampleTranslation":"我終於把所有電子郵件都處理完了。"},{"word":"to get through to","meaning":"使某人聽懂、把話說進心裡","image":"","example":"I just can't get through to my stubborn uncle.","exampleTranslation":"我就是沒辦法說服我那固執的叔叔。"},{"word":"to get to","meaning":"得以做某事;抵達某處","image":"","example":"We finally got to see the northern lights.","exampleTranslation":"我們終於得以看到北極光。"},{"word":"to get up","meaning":"起床;把某人叫醒","image":"","example":"I have to get up at five to catch my flight.","exampleTranslation":"我得五點起床趕飛機。"},{"word":"to get used to","meaning":"逐漸適應、變得習慣","image":"","example":"It took me a while to get used to the new keyboard.","exampleTranslation":"我花了一段時間才習慣新鍵盤。"},{"word":"give and take","meaning":"互相退讓、彼此配合","image":"","example":"A good team needs plenty of give and take.","exampleTranslation":"好的團隊需要大量的互相退讓。"},{"word":"to give birth to","meaning":"生下、產下","image":"","example":"Our cat gave birth to four kittens last night.","exampleTranslation":"我們的貓昨晚生下四隻小貓。"},{"word":"to give in","meaning":"屈服、讓步","image":"","example":"After hours of debate, he finally gave in.","exampleTranslation":"辯論好幾個小時後,他終於讓步了。"},{"word":"to give off","meaning":"散發、放出","image":"","example":"Fresh bread gives off a wonderful smell.","exampleTranslation":"剛出爐的麵包散發著誘人的香味。"},{"word":"to give out","meaning":"分發;耗盡","image":"","example":"Volunteers gave out blankets to the flood victims.","exampleTranslation":"志工向水災災民分發毛毯。"},{"word":"to give (someone) a big hand","meaning":"給予熱烈掌聲","image":"","example":"Let's give the performers a big hand.","exampleTranslation":"讓我們給表演者熱烈的掌聲。"},{"word":"to give (someone) a break","meaning":"給某人機會、通融一下","image":"","example":"Give him a break — it's his first day.","exampleTranslation":"通融他一下,今天是他第一天上班。"},{"word":"to give (someone) a hand","meaning":"幫忙、搭把手","image":"","example":"Could you give me a hand with these boxes?","exampleTranslation":"你能幫我搬一下這些箱子嗎?"},{"word":"to give someone the cold shoulder","meaning":"冷落、故意不理","image":"","example":"Ever since the argument, he's given me the cold shoulder.","exampleTranslation":"自從那次爭吵後,他就一直冷落我。"},{"word":"to give up","meaning":"放棄;戒除;投降","image":"","example":"Don't give up — you're almost there.","exampleTranslation":"別放棄,你就快成功了。"},{"word":"to go around","meaning":"夠分配;四處走動流傳","image":"","example":"There weren't enough chairs to go around.","exampleTranslation":"椅子不夠大家坐。"},{"word":"to go for","meaning":"以某價格賣出;力求","image":"","example":"This antique clock goes for a small fortune.","exampleTranslation":"這座古董鐘賣得非常貴。"},{"word":"to go in for","meaning":"熱衷於(興趣嗜好)","image":"","example":"She goes in for long-distance running.","exampleTranslation":"她熱衷於長跑。"},{"word":"to go off","meaning":"爆炸;(警報)響;突然離去","image":"","example":"The alarm went off at midnight for no reason.","exampleTranslation":"警報在半夜無緣無故響了起來。"},{"word":"to go off the deep end","meaning":"失控暴怒、衝動行事","image":"","example":"He went off the deep end when he heard the news.","exampleTranslation":"他一聽到消息就情緒失控。"},{"word":"to go on","meaning":"發生;持續進行","image":"","example":"What's going on outside? I hear sirens.","exampleTranslation":"外面發生什麼事?我聽到警笛聲。"},{"word":"to go out","meaning":"熄滅;停止運作;外出","image":"","example":"The candle went out in the draft.","exampleTranslation":"蠟燭被穿堂風吹熄了。"},{"word":"to go over","meaning":"受歡迎、被接受","image":"","example":"His speech went over well with the audience.","exampleTranslation":"他的演說很受聽眾歡迎。"},{"word":"to go the extra mile","meaning":"加倍努力、多付出","image":"","example":"Our staff always go the extra mile for customers.","exampleTranslation":"我們的員工總是為顧客多付出一分心力。"},{"word":"to go through","meaning":"經歷;耗用","image":"","example":"She went through a tough time after the move.","exampleTranslation":"搬家後她經歷了一段艱難的時期。"},{"word":"to go through channels","meaning":"循正規管道辦理","image":"","example":"To get approval, you must go through channels.","exampleTranslation":"要取得核准,你必須循正規管道。"},{"word":"to go to town","meaning":"卯足全力、大幹一場","image":"","example":"The decorators really went to town on the ballroom.","exampleTranslation":"布置人員把宴會廳布置得極盡盛大。"},{"word":"to go up","meaning":"上漲;興建","image":"","example":"Rents keep going up in this neighborhood.","exampleTranslation":"這一帶的租金一直在漲。"},{"word":"to go up to","meaning":"走近、上前","image":"","example":"A stranger went up to me and asked for directions.","exampleTranslation":"一個陌生人走上前來向我問路。"},{"word":"to go with","meaning":"(顏色款式)相配;與某人交往","image":"","example":"That scarf goes with your coat perfectly.","exampleTranslation":"那條圍巾和你的外套很搭。"},{"word":"to go without saying","meaning":"不言而喻、自不待言","image":"","example":"It goes without saying that safety comes first.","exampleTranslation":"安全第一,這是不言而喻的。"},{"word":"to go wrong","meaning":"出差錯、出岔子","image":"","example":"Something went wrong with the online payment.","exampleTranslation":"線上付款出了點問題。"},{"word":"to goof off","meaning":"打混、偷懶","image":"","example":"The crew tends to goof off when no one's watching.","exampleTranslation":"沒人盯著時,這群人就愛偷懶。"},{"word":"to goof up","meaning":"出錯、搞砸","image":"","example":"I goofed up and sent the email to the wrong person.","exampleTranslation":"我出了差錯,把郵件寄錯了人。"},{"word":"to grow out of","meaning":"(隨年紀)戒掉;由……衍生","image":"","example":"Most children grow out of their fear of the dark.","exampleTranslation":"多數孩子長大就不再怕黑了。"}],"H、I、J":[{"word":"had better","meaning":"最好、應當","image":"","example":"You'd better bring an umbrella just in case.","exampleTranslation":"你最好帶把傘以防萬一。"},{"word":"to hand in","meaning":"繳交、呈交","image":"","example":"Please hand in your reports by Friday.","exampleTranslation":"請在週五前繳交報告。"},{"word":"to hang up","meaning":"掛起衣物;掛斷電話","image":"","example":"He hung up before I could say goodbye.","exampleTranslation":"我還來不及道別他就掛了電話。"},{"word":"hard of hearing","meaning":"重聽、聽力不好","image":"","example":"Speak up — my uncle is hard of hearing.","exampleTranslation":"說大聲點,我叔叔重聽。"},{"word":"to have a good time","meaning":"玩得愉快、過得開心","image":"","example":"We had a good time at the beach.","exampleTranslation":"我們在海邊玩得很開心。"},{"word":"to have a voice in","meaning":"在……有發言權","image":"","example":"Employees want a voice in company decisions.","exampleTranslation":"員工希望在公司決策上有發言權。"},{"word":"have got","meaning":"擁有、有","image":"","example":"I've got two tickets for Saturday's game.","exampleTranslation":"我有兩張週六比賽的票。"},{"word":"have got to","meaning":"必須、不得不","image":"","example":"We've got to leave now or we'll miss the bus.","exampleTranslation":"我們得馬上走,不然會錯過公車。"},{"word":"to have in mind","meaning":"心裡想著、盤算","image":"","example":"Did you have a particular restaurant in mind?","exampleTranslation":"你心裡有想去的特定餐廳嗎?"},{"word":"to have it in for","meaning":"對……懷恨、想報復","image":"","example":"The referee seemed to have it in for our team.","exampleTranslation":"那位裁判似乎對我們隊有成見。"},{"word":"to have it out with","meaning":"與某人攤牌、理論","image":"","example":"She decided to have it out with her landlord.","exampleTranslation":"她決定和房東把話講清楚。"},{"word":"to have on","meaning":"身上穿戴著","image":"","example":"She had on a bright red coat.","exampleTranslation":"她身上穿著一件鮮紅色外套。"},{"word":"to have one's heart set on","meaning":"一心想要、決意","image":"","example":"She has her heart set on studying abroad.","exampleTranslation":"她一心想出國念書。"},{"word":"to have one's way","meaning":"隨自己的意、如願","image":"","example":"The toddler always wants to have his way.","exampleTranslation":"那個小孩總想事事順著他的意。"},{"word":"to have (time) off","meaning":"有休假、不用上班的時間","image":"","example":"She has Friday off and plans to sleep in.","exampleTranslation":"她週五放假,打算睡到自然醒。"},{"word":"to have to do with","meaning":"與某事有關聯","image":"","example":"His job has something to do with software design.","exampleTranslation":"他的工作和軟體設計有關。"},{"word":"to hear from","meaning":"得到某人的消息","image":"","example":"Have you heard from Mark since he moved?","exampleTranslation":"馬克搬走後你有他的消息嗎?"},{"word":"to hear of","meaning":"聽說過、知道","image":"","example":"I've never heard of that band before.","exampleTranslation":"我從沒聽過那個樂團。"},{"word":"to hit the nail on the head","meaning":"一針見血、說中要害","image":"","example":"Your comment hit the nail on the head.","exampleTranslation":"你這句話真是一針見血。"},{"word":"to hit the road","meaning":"動身上路、出發","image":"","example":"It's getting late; we should hit the road.","exampleTranslation":"時候不早了,我們該出發了。"},{"word":"to hit the sack","meaning":"上床睡覺","image":"","example":"I'm exhausted; I'm going to hit the sack.","exampleTranslation":"我累壞了,要去睡了。"},{"word":"to hold back","meaning":"抑制、忍住;隱瞞","image":"","example":"She couldn't hold back her tears.","exampleTranslation":"她忍不住流下淚來。"},{"word":"to hold off","meaning":"延緩、拖住","image":"","example":"Let's hold off on the decision until Monday.","exampleTranslation":"這個決定我們拖到週一再說吧。"},{"word":"to hold on","meaning":"抓緊;稍等別掛","image":"","example":"Hold on tight; the road gets bumpy here.","exampleTranslation":"抓緊了,這段路很顛。"},{"word":"to hold out","meaning":"支撐、夠用;堅持","image":"","example":"Our supplies should hold out for another week.","exampleTranslation":"我們的補給應該還能撐一週。"},{"word":"to hold over","meaning":"延長、續留","image":"","example":"The theater held the show over for a second month.","exampleTranslation":"劇院把這場演出加演了一個月。"},{"word":"to hold still","meaning":"保持不動","image":"","example":"Hold still while I take the photo.","exampleTranslation":"我拍照時別動。"},{"word":"to hold up","meaning":"耽誤;維持水準","image":"","example":"Roadwork held up traffic for an hour.","exampleTranslation":"道路施工把車流堵了一個小時。"},{"word":"ill at ease","meaning":"渾身不自在、緊張","image":"","example":"He felt ill at ease among so many strangers.","exampleTranslation":"在那麼多陌生人中他很不自在。"},{"word":"in a hurry","meaning":"急急忙忙、趕時間","image":"","example":"She left in a hurry and forgot her umbrella.","exampleTranslation":"她匆忙離開,忘了帶傘。"},{"word":"in case","meaning":"以防、萬一","image":"","example":"Take a jacket in case it gets cold.","exampleTranslation":"帶件外套,以防天氣變冷。"},{"word":"in hand","meaning":"在掌控之中","image":"","example":"Don't worry — I have everything in hand.","exampleTranslation":"別擔心,一切都在我掌控中。"},{"word":"in no time","meaning":"很快、轉眼間","image":"","example":"The mechanic fixed the tire in no time.","exampleTranslation":"技師三兩下就把輪胎補好了。"},{"word":"in the long run","meaning":"就長遠而言","image":"","example":"In the long run, saving now will pay off.","exampleTranslation":"就長遠來看,現在儲蓄會有回報。"},{"word":"in the same boat","meaning":"處境相同、同病相憐","image":"","example":"Don't worry — we're all in the same boat here.","exampleTranslation":"別擔心,我們大家處境都一樣。"},{"word":"in the worst way","meaning":"非常、極度地","image":"","example":"She wanted to win that award in the worst way.","exampleTranslation":"她非常渴望贏得那個獎。"},{"word":"in time to","meaning":"及時、趕在期限前","image":"","example":"We arrived just in time to board the ferry.","exampleTranslation":"我們正好及時趕上渡輪。"},{"word":"in touch","meaning":"保持聯絡","image":"","example":"Let's stay in touch after the course ends.","exampleTranslation":"課程結束後我們保持聯絡吧。"},{"word":"in vain","meaning":"徒勞、白費力氣","image":"","example":"All our efforts to save the tree were in vain.","exampleTranslation":"我們為搶救那棵樹所做的努力全白費了。"},{"word":"inside out","meaning":"裡外翻反","image":"","example":"Your sweater is on inside out.","exampleTranslation":"你的毛衣穿反了。"},{"word":"it figures","meaning":"果然如此、不意外","image":"","example":"It figures that the bus is late again today.","exampleTranslation":"公車今天又誤點,真是不意外。"},{"word":"to jump to conclusions","meaning":"妄下結論","image":"","example":"Don't jump to conclusions before you hear the facts.","exampleTranslation":"在聽到事實前別妄下結論。"}],"K、L":[{"word":"to keep a low profile","meaning":"保持低調","image":"","example":"After the scandal, he kept a low profile.","exampleTranslation":"醜聞之後,他保持低調。"},{"word":"to keep a promise","meaning":"遵守承諾","image":"","example":"A good leader always keeps a promise.","exampleTranslation":"好的領導者總是信守承諾。"},{"word":"to keep after","meaning":"不斷叮嚀、催促","image":"","example":"I have to keep after him to do his chores.","exampleTranslation":"我得不停催他做家事。"},{"word":"to keep an eye on","meaning":"看著、留意","image":"","example":"Could you keep an eye on my bag for a minute?","exampleTranslation":"可以幫我看一下包包嗎?"},{"word":"to keep away (from)","meaning":"遠離、避開","image":"","example":"Keep away from the wet paint.","exampleTranslation":"別靠近未乾的油漆。"},{"word":"to keep in mind","meaning":"牢記在心、別忘記","image":"","example":"Keep in mind that the store closes early today.","exampleTranslation":"記得店家今天提早打烊。"},{"word":"to keep in touch with","meaning":"與……保持聯絡","image":"","example":"We keep in touch with our old classmates.","exampleTranslation":"我們和老同學保持著聯絡。"},{"word":"to keep one's fingers crossed","meaning":"祈求好運、但願順利","image":"","example":"Keep your fingers crossed that it doesn't rain.","exampleTranslation":"但願別下雨,一起祈求好運吧。"},{"word":"to keep one's head","meaning":"臨危不亂、保持冷靜","image":"","example":"She kept her head during the emergency.","exampleTranslation":"緊急時刻她仍保持冷靜。"},{"word":"to keep one's word","meaning":"信守諾言、說到做到","image":"","example":"He always keeps his word.","exampleTranslation":"他總是說到做到。"},{"word":"to keep out","meaning":"不准進入、禁止進入","image":"","example":"A sign on the gate warned people to keep out.","exampleTranslation":"大門上的告示警告人們不得進入。"},{"word":"to keep time","meaning":"(鐘錶)走時準確","image":"","example":"This old clock still keeps perfect time.","exampleTranslation":"這座老鐘走時依然很準。"},{"word":"to keep track of","meaning":"記錄、掌握……的狀況","image":"","example":"It's hard to keep track of so many passwords.","exampleTranslation":"要記住這麼多密碼很難。"},{"word":"to keep up","meaning":"吵得無法入睡;維持(水準)","image":"","example":"The barking dog kept me up all night.","exampleTranslation":"那隻狂吠的狗害我整晚睡不著。"},{"word":"to keep up with","meaning":"跟上(速度或進度)","image":"","example":"She walks so fast I can't keep up with her.","exampleTranslation":"她走得好快,我跟不上。"},{"word":"to keep up with","meaning":"掌握最新資訊;跟得上","image":"","example":"It's hard to keep up with the latest tech.","exampleTranslation":"要跟上最新科技很不容易。"},{"word":"to kick (something) around","meaning":"非正式地討論、商量","image":"","example":"Let's kick the idea around before the meeting.","exampleTranslation":"開會前我們先隨意討論一下這個想法。"},{"word":"to kick the habit","meaning":"戒掉(壞習慣)","image":"","example":"He finally kicked the habit of biting his nails.","exampleTranslation":"他終於戒掉了咬指甲的習慣。"},{"word":"to knock one self out","meaning":"拚命努力、賣力去做","image":"","example":"Don't knock yourself out; a rough draft is fine.","exampleTranslation":"別把自己累壞,先寫個草稿就好。"},{"word":"to knock out","meaning":"擊昏、擊倒;令人驚豔","image":"","example":"The boxer knocked out his rival in round three.","exampleTranslation":"那名拳擊手在第三回合擊倒對手。"},{"word":"to know by sight","meaning":"面熟、認得","image":"","example":"I know her by sight but we've never spoken.","exampleTranslation":"我對她面熟,但我們從沒交談過。"},{"word":"to land on one's feet","meaning":"化險為夷、重新站穩","image":"","example":"However hard life gets, she always lands on her feet.","exampleTranslation":"無論日子多難,她總能化險為夷。"},{"word":"last straw","meaning":"壓垮的最後一根稻草","image":"","example":"His rudeness was the last straw for her.","exampleTranslation":"他的無禮成了讓她忍無可忍的最後一根稻草。"},{"word":"to lay off","meaning":"戒除;裁員","image":"","example":"The company had to lay off dozens of workers.","exampleTranslation":"公司不得不裁掉數十名員工。"},{"word":"to learn the ropes","meaning":"熟悉業務、上手","image":"","example":"It took her a month to learn the ropes.","exampleTranslation":"她花了一個月才摸熟工作。"},{"word":"to leave open","meaning":"暫不決定、留待日後","image":"","example":"Let's leave the date open for now.","exampleTranslation":"日期我們先暫時保留。"},{"word":"to leave (someone or something) alone","meaning":"別打擾、讓某人清靜","image":"","example":"Leave him alone; he needs some quiet.","exampleTranslation":"別煩他,他需要安靜一下。"},{"word":"let along","meaning":"更別提、遑論","image":"","example":"He can't afford rent, let alone a new car.","exampleTranslation":"他連房租都付不起,更別說買新車了。"},{"word":"to let down","meaning":"使失望、辜負","image":"","example":"I promise I won't let you down.","exampleTranslation":"我保證不會讓你失望。"},{"word":"to let on","meaning":"洩漏、透露(祕密)","image":"","example":"Don't let on that we planned a surprise.","exampleTranslation":"別洩漏我們準備了驚喜。"},{"word":"to let slide","meaning":"疏於處理、放任不管","image":"","example":"He let the paperwork slide and missed the deadline.","exampleTranslation":"他把文書工作擱著不管,結果錯過了期限。"},{"word":"to let up","meaning":"減弱、緩和;鬆懈","image":"","example":"The storm didn't let up until dawn.","exampleTranslation":"暴風雨直到天亮才緩和。"},{"word":"to lie down","meaning":"躺下休息","image":"","example":"I felt dizzy, so I went to lie down for a while.","exampleTranslation":"我覺得頭暈,就去躺了一會兒。"},{"word":"to line up","meaning":"排隊;張羅、安排到","image":"","example":"Fans lined up overnight for the tickets.","exampleTranslation":"粉絲為了搶票徹夜排隊。"},{"word":"little by little","meaning":"緩慢而逐步地","image":"","example":"Little by little, she paid off all her debts.","exampleTranslation":"她一點一點把所有債務都還清了。"},{"word":"to live it up","meaning":"盡情享樂、揮霍","image":"","example":"They lived it up on their honeymoon in Italy.","exampleTranslation":"他們在義大利的蜜月旅行中盡情享樂。"},{"word":"to live up to","meaning":"達到、不辜負(期望)","image":"","example":"The sequel didn't live up to the hype.","exampleTranslation":"續集沒有達到大家的期待。"},{"word":"to liven up","meaning":"炒熱氣氛、使有活力","image":"","example":"A little music will liven up the party.","exampleTranslation":"放點音樂能讓派對熱鬧起來。"},{"word":"to look after","meaning":"照顧、看顧","image":"","example":"Could you look after my dog this weekend?","exampleTranslation":"這週末你能幫我照顧狗嗎?"},{"word":"to look at","meaning":"把視線投向、注視","image":"","example":"Look at those clouds — it might rain soon.","exampleTranslation":"看那些雲,可能快下雨了。"},{"word":"to look down on","meaning":"瞧不起、看輕","image":"","example":"Don't look down on anyone for being new.","exampleTranslation":"別因為誰是新人就看輕他。"},{"word":"to look for","meaning":"設法找出、尋找","image":"","example":"I'm looking for my keys; have you seen them?","exampleTranslation":"我在找我的鑰匙,你看到了嗎?"},{"word":"to look forward to","meaning":"滿心期待、盼望","image":"","example":"I'm looking forward to the long weekend.","exampleTranslation":"我很期待這個連假。"},{"word":"to look into","meaning":"深入調查、仔細研究","image":"","example":"The committee will look into the complaint.","exampleTranslation":"委員會會調查這件申訴。"},{"word":"to look on","meaning":"在一旁觀看","image":"","example":"A crowd looked on as the street artist performed.","exampleTranslation":"街頭藝人表演時,一群人在旁圍觀。"},{"word":"to look out","meaning":"留神、當心","image":"","example":"Look out — there's a step there!","exampleTranslation":"小心,那裡有個台階!"},{"word":"to look out on","meaning":"面向、俯瞰","image":"","example":"Our balcony looks out on the harbor.","exampleTranslation":"我們的陽台面向港口。"},{"word":"to look over","meaning":"仔細查看、檢視","image":"","example":"Let me look over the contract before I sign it.","exampleTranslation":"簽名前讓我先把合約看過一遍。"},{"word":"to look up","meaning":"在字典或資料中查找","image":"","example":"If you don't know the word, look it up online.","exampleTranslation":"不懂這個字的話,上網查一下。"},{"word":"to look up to","meaning":"敬佩、景仰","image":"","example":"Younger players look up to the veteran captain.","exampleTranslation":"年輕球員都很敬佩這位老隊長。"},{"word":"to lose face","meaning":"丟臉、失面子","image":"","example":"He apologized privately so as not to lose face.","exampleTranslation":"他私下道歉,以免丟面子。"},{"word":"to lose one's cool","meaning":"失去冷靜、慌了神","image":"","example":"The waiter stayed polite and never lost his cool.","exampleTranslation":"那位服務生始終客氣,從沒失去冷靜。"},{"word":"to lose one's head","meaning":"慌了手腳、亂了方寸","image":"","example":"Don't lose your head just because of one bad review.","exampleTranslation":"別因為一則負評就亂了方寸。"},{"word":"to lose one's temper","meaning":"發脾氣","image":"","example":"Try not to lose your temper with the kids.","exampleTranslation":"盡量別對孩子發脾氣。"},{"word":"to lose one's touch","meaning":"失去往日的功力","image":"","example":"The veteran chef insists he hasn't lost his touch.","exampleTranslation":"這位資深主廚堅稱自己寶刀未老。"},{"word":"to lose track of","meaning":"忘了、失去(對……的)掌握","image":"","example":"I lost track of time and missed the bus.","exampleTranslation":"我忘了時間,結果錯過了公車。"},{"word":"a lost cause","meaning":"毫無希望的人或事","image":"","example":"Teaching him to cook is a lost cause.","exampleTranslation":"教他做菜根本是白費工夫。"}],"M、N、O":[{"word":"to make a decision","meaning":"做決定","image":"","example":"You don't have to make a decision right now.","exampleTranslation":"你不必現在就做決定。"},{"word":"to make a difference (to)","meaning":"產生影響、造成不同","image":"","example":"A few kind words can make a difference to someone's day.","exampleTranslation":"幾句貼心話能讓某人的一天大不同。"},{"word":"to make a fuss","meaning":"大驚小怪、小題大作","image":"","example":"Don't make a fuss over a tiny scratch.","exampleTranslation":"別為了一點小刮痕就大驚小怪。"},{"word":"to make a living","meaning":"謀生、維持生計","image":"","example":"She makes a living as a freelance writer.","exampleTranslation":"她靠當自由撰稿人維生。"},{"word":"to make an effort","meaning":"努力、盡力","image":"","example":"Please make an effort to arrive on time.","exampleTranslation":"請盡量準時到達。"},{"word":"to make clear","meaning":"解釋清楚、講明白","image":"","example":"Let me make clear what I expect from the team.","exampleTranslation":"讓我把我對團隊的期望說清楚。"},{"word":"to make do","meaning":"湊合、將就應付","image":"","example":"We had no tent, so we made do with a tarp.","exampleTranslation":"我們沒帳篷,只好用防水布將就。"},{"word":"to make ends meet","meaning":"收支打平、勉強度日","image":"","example":"With rising prices, it's hard to make ends meet.","exampleTranslation":"物價上漲,要收支打平很不容易。"},{"word":"to make friends","meaning":"結交朋友","image":"","example":"Kids usually make friends quickly at camp.","exampleTranslation":"孩子在營隊通常很快就交到朋友。"},{"word":"to make fun of","meaning":"取笑、嘲弄","image":"","example":"It's unkind to make fun of someone's accent.","exampleTranslation":"取笑別人的口音很不厚道。"},{"word":"to make good","meaning":"獲得成功、闖出成績","image":"","example":"She made good as a self-taught programmer.","exampleTranslation":"她靠自學當上程式設計師,闖出了名堂。"},{"word":"to make good time","meaning":"以合理速度順利趕路","image":"","example":"We made good time and arrived before noon.","exampleTranslation":"我們一路順暢,中午前就到了。"},{"word":"to make out","meaning":"應付、進展、看清","image":"","example":"How did you make out on the driving test?","exampleTranslation":"你路考考得怎麼樣?"},{"word":"to make out","meaning":"辨認出;開立(文件)","image":"","example":"I could barely make out the faded sign.","exampleTranslation":"那塊褪色的招牌我幾乎看不清楚。"},{"word":"to make progress","meaning":"取得進展","image":"","example":"The students are making good progress in English.","exampleTranslation":"學生們的英文正穩定進步。"},{"word":"to make sense","meaning":"合乎情理、說得通","image":"","example":"It makes sense to book the tickets early.","exampleTranslation":"早點訂票是合理的做法。"},{"word":"to make (someone) tick","meaning":"驅使某人如此行事","image":"","example":"I can't work out what makes him tick.","exampleTranslation":"我搞不懂是什麼在驅使他這麼做。"},{"word":"to make sure","meaning":"確認、務必做到","image":"","example":"Make sure the door is locked before you leave.","exampleTranslation":"離開前務必確認門鎖好了。"},{"word":"to make the best of","meaning":"在不利處境中盡力而為","image":"","example":"The campsite was muddy, but we made the best of it.","exampleTranslation":"營地泥濘不堪,但我們還是盡量將就。"},{"word":"to make up","meaning":"補做;編造;化妝;構成","image":"","example":"You can make up the quiz you missed next week.","exampleTranslation":"你缺考的小考下週可以補考。"},{"word":"to make up one's mind","meaning":"拿定主意、作出決定","image":"","example":"Have you made up your mind about the job offer?","exampleTranslation":"那份工作邀約你決定好了嗎?"},{"word":"to make up with","meaning":"和好、盡釋前嫌","image":"","example":"The two friends made up after their quarrel.","exampleTranslation":"那兩個朋友吵架後又和好了。"},{"word":"to make waves","meaning":"興風作浪、找麻煩(抱怨)","image":"","example":"New employees rarely want to make waves.","exampleTranslation":"新進員工通常不想惹是生非。"},{"word":"to meet a deadline","meaning":"趕上截止期限","image":"","example":"We stayed late to meet the deadline.","exampleTranslation":"我們留到很晚以趕上截止期限。"},{"word":"to meet (someone) halfway","meaning":"各退一步、折衷","image":"","example":"We couldn't agree, so we met halfway.","exampleTranslation":"我們談不攏,便各退一步。"},{"word":"to mind the store","meaning":"看家、留守顧店","image":"","example":"Someone has to mind the store during lunch.","exampleTranslation":"午餐時間得有人留守顧店。"},{"word":"to miss the boat","meaning":"錯失良機","image":"","example":"He missed the boat by applying too late.","exampleTranslation":"他申請得太晚,錯失了良機。"},{"word":"to mix up","meaning":"攪拌均勻;使混淆","image":"","example":"Mix up the batter until it's smooth.","exampleTranslation":"把麵糊攪拌到滑順為止。"},{"word":"more or less","meaning":"差不多、多少有點","image":"","example":"The two proposals are more or less the same.","exampleTranslation":"這兩份提案大同小異。"},{"word":"to name after","meaning":"以……的名字命名","image":"","example":"They named their son after his grandfather.","exampleTranslation":"他們用祖父的名字為兒子命名。"},{"word":"narrow-minded","meaning":"心胸狹隘、思想偏狹","image":"","example":"A narrow-minded attitude blocks new ideas.","exampleTranslation":"偏狹的心態會阻礙新想法。"},{"word":"never mind","meaning":"不必在意、算了","image":"","example":"Never mind the mess; we'll clean it up later.","exampleTranslation":"別管那些亂了,我們晚點再收拾。"},{"word":"no matter","meaning":"無論、不管","image":"","example":"No matter what happens, stay calm.","exampleTranslation":"不管發生什麼,保持冷靜。"},{"word":"no wonder","meaning":"難怪、不足為奇","image":"","example":"No wonder you're cold — the window's open.","exampleTranslation":"難怪你冷,窗戶開著呢。"},{"word":"not on your life","meaning":"絕對不行、想都別想","image":"","example":"Lend him my car? Not on your life.","exampleTranslation":"把車借他?想都別想。"},{"word":"now and then","meaning":"偶爾、有時候","image":"","example":"Now and then we treat ourselves to a nice dinner.","exampleTranslation":"我們偶爾會犒賞自己一頓大餐。"},{"word":"off the top of one's head","meaning":"一時想到、未經細想","image":"","example":"Off the top of my head, I'd say about fifty people.","exampleTranslation":"我一時想到,大概五十人左右。"},{"word":"on cloud nine","meaning":"樂不可支、欣喜若狂","image":"","example":"She was on cloud nine after getting the job.","exampleTranslation":"得到那份工作後,她開心得不得了。"},{"word":"on edge","meaning":"緊張不安、易怒","image":"","example":"Everyone was on edge before the results came out.","exampleTranslation":"結果公布前大家都很緊張。"},{"word":"on hand","meaning":"現成、在手邊","image":"","example":"Keep a flashlight on hand in case of a blackout.","exampleTranslation":"手邊備支手電筒,以防停電。"},{"word":"on one's toes","meaning":"保持警覺、機警","image":"","example":"A good goalkeeper stays on his toes.","exampleTranslation":"好的守門員總是保持警覺。"},{"word":"on purpose","meaning":"刻意、蓄意地","image":"","example":"I didn't spill the juice on purpose — it was an accident.","exampleTranslation":"我不是故意打翻果汁的,那是意外。"},{"word":"on second thought","meaning":"再想想、轉念一想","image":"","example":"On second thought, let's stay home tonight.","exampleTranslation":"再想想,今晚還是待在家吧。"},{"word":"on the ball","meaning":"機靈、反應快","image":"","example":"The new intern is really on the ball.","exampleTranslation":"那位新實習生真的很機靈。"},{"word":"on the other hand","meaning":"另一方面、相對地","image":"","example":"The plan is cheap; on the other hand, it's risky.","exampleTranslation":"這計畫便宜,但另一方面也有風險。"},{"word":"on the same page","meaning":"有共識、想法一致","image":"","example":"Let's make sure everyone is on the same page.","exampleTranslation":"我們確認一下大家的想法是否一致。"},{"word":"on the whole","meaning":"大致上、整體而言","image":"","example":"On the whole, the audience enjoyed the play.","exampleTranslation":"整體而言,觀眾很喜歡這齣戲。"},{"word":"on time","meaning":"準時、不遲不早","image":"","example":"The train left exactly on time.","exampleTranslation":"火車準時發車。"},{"word":"once and for all","meaning":"一勞永逸、徹底了斷","image":"","example":"Let's settle this argument once and for all.","exampleTranslation":"我們把這場爭執一次徹底解決吧。"},{"word":"once in a blue moon","meaning":"非常罕見、難得一次","image":"","example":"We only eat out once in a blue moon.","exampleTranslation":"我們難得才上一次館子。"},{"word":"out of date","meaning":"過時的、不再適用","image":"","example":"This map is out of date; several roads have changed.","exampleTranslation":"這張地圖過時了,好幾條路都變了。"},{"word":"out of order","meaning":"無法正常運作、故障","image":"","example":"The vending machine is out of order again.","exampleTranslation":"那台販賣機又故障了。"},{"word":"out of the blue","meaning":"突如其來、毫無預兆","image":"","example":"She called me out of the blue after ten years.","exampleTranslation":"睽違十年,她突然打電話給我。"},{"word":"out of the question","meaning":"不可能、想都別想","image":"","example":"Quitting now is out of the question.","exampleTranslation":"現在放棄是不可能的事。"},{"word":"out of touch","meaning":"失去聯絡;不了解狀況","image":"","example":"He's been out of touch since he went traveling.","exampleTranslation":"他去旅行後就一直失聯。"},{"word":"over and over (again)","meaning":"再三、反覆地","image":"","example":"She read the letter over and over.","exampleTranslation":"她把那封信讀了一遍又一遍。"}],"P、Q、R":[{"word":"to pass away","meaning":"過世、去世","image":"","example":"His grandmother passed away peacefully last night.","exampleTranslation":"他的祖母昨晚安詳地過世了。"},{"word":"to pass out","meaning":"分發;昏倒","image":"","example":"The volunteers passed out water to the runners.","exampleTranslation":"志工向跑者分發飲水。"},{"word":"to pay attention (to)","meaning":"專心注意、留神","image":"","example":"Please pay attention to the safety instructions.","exampleTranslation":"請留意這些安全須知。"},{"word":"to pay back","meaning":"償還;報復","image":"","example":"I'll pay you back as soon as I get paid.","exampleTranslation":"我一領到薪水就還你。"},{"word":"to pay off","meaning":"有回報、奏效","image":"","example":"All her hard work finally paid off.","exampleTranslation":"她的一切努力終於有了回報。"},{"word":"to pick out","meaning":"從中挑選出","image":"","example":"Help me pick out a tie for the interview.","exampleTranslation":"幫我挑一條面試要用的領帶。"},{"word":"to pick up","meaning":"用手把東西從表面拿起","image":"","example":"She bent down to pick up the coin on the sidewalk.","exampleTranslation":"她彎腰撿起人行道上的硬幣。"},{"word":"to pick up the tab","meaning":"買單、付帳","image":"","example":"Don't worry about the bill; I'll pick up the tab.","exampleTranslation":"帳單別擔心,我來買單。"},{"word":"a piece of cake","meaning":"輕而易舉的事","image":"","example":"The final exam was a piece of cake for her.","exampleTranslation":"那場期末考對她來說輕而易舉。"},{"word":"to pin on","meaning":"嫁禍、把罪名安在……頭上","image":"","example":"They tried to pin the blame on the intern.","exampleTranslation":"他們想把過錯推到實習生身上。"},{"word":"to play a role in","meaning":"在……中扮演角色、起作用","image":"","example":"Diet plays a big role in overall health.","exampleTranslation":"飲食對整體健康有很大的影響。"},{"word":"to play by ear","meaning":"憑聽力演奏;隨機應變","image":"","example":"We had no plan and just played it by ear.","exampleTranslation":"我們沒有計畫,只能隨機應變。"},{"word":"to play it safe","meaning":"求穩、不冒險","image":"","example":"Let's play it safe and leave an hour early.","exampleTranslation":"我們保險起見,提早一小時出發吧。"},{"word":"to play up to","meaning":"巴結、討好","image":"","example":"He's always playing up to the boss.","exampleTranslation":"他老是巴結老闆。"},{"word":"to point out","meaning":"指出、使人注意到","image":"","example":"She pointed out a mistake in my calculation.","exampleTranslation":"她指出我計算中的一個錯誤。"},{"word":"to pull off","meaning":"辦成難事;把車駛離公路","image":"","example":"Nobody thought she could pull it off, but she did.","exampleTranslation":"沒人以為她辦得到,結果她做到了。"},{"word":"to pull someone's leg","meaning":"開某人玩笑、逗弄","image":"","example":"Relax, I'm just pulling your leg.","exampleTranslation":"別緊張,我只是跟你開玩笑。"},{"word":"to pull together","meaning":"彙整(資訊);穩住情緒","image":"","example":"She pulled together the data for the report.","exampleTranslation":"她彙整了報告所需的資料。"},{"word":"to put an end to","meaning":"終結、徹底結束","image":"","example":"New rules put an end to the confusion.","exampleTranslation":"新規定終結了這場混亂。"},{"word":"to put away","meaning":"收拾好、放回定位","image":"","example":"Put away your toys before dinner.","exampleTranslation":"晚餐前把你的玩具收好。"},{"word":"to put down","meaning":"平息、鎮壓;貶低","image":"","example":"The security team quickly put down the disturbance.","exampleTranslation":"保安人員迅速平息了騷動。"},{"word":"to put off","meaning":"延後、拖延","image":"","example":"Don't put off the dentist appointment any longer.","exampleTranslation":"別再拖著不去看牙醫了。"},{"word":"to put on","meaning":"把衣物穿戴到身上","image":"","example":"Put on a jacket; it's cold outside.","exampleTranslation":"穿件外套吧,外面很冷。"},{"word":"to put on","meaning":"體重增加;上演","image":"","example":"He's put on a few pounds over the holidays.","exampleTranslation":"他假期裡胖了幾磅。"},{"word":"to put one's foot in","meaning":"說錯話、做錯事出糗","image":"","example":"I really put my foot in it by mentioning her ex.","exampleTranslation":"我提到她的前任,真是說錯話出了糗。"},{"word":"to put out","meaning":"熄滅火焰;使停止運作","image":"","example":"The firefighters quickly put out the small blaze.","exampleTranslation":"消防員很快撲滅了那場小火。"},{"word":"to put (someone) on","meaning":"開玩笑地唬人、逗弄","image":"","example":"You won the lottery? You're putting me on!","exampleTranslation":"你中樂透?你在唬我吧!"},{"word":"to put together","meaning":"組裝、拼裝","image":"","example":"It took an hour to put the shelf together.","exampleTranslation":"組好那個書架花了一小時。"},{"word":"to put up","meaning":"忍受、容忍","image":"","example":"I can't put up with this noise any longer.","exampleTranslation":"我再也受不了這噪音了。"},{"word":"quite a few","meaning":"為數不少、相當多","image":"","example":"Quite a few people showed up despite the rain.","exampleTranslation":"儘管下雨,還是來了不少人。"},{"word":"a rain check","meaning":"改天再約(延後的邀約)","image":"","example":"I can't make dinner tonight — can I take a rain check?","exampleTranslation":"今晚我沒法吃飯,改天再約好嗎?"},{"word":"to read between the lines","meaning":"領會言外之意","image":"","example":"Read between the lines and you'll see he's upset.","exampleTranslation":"讀懂言外之意,你就會發現他不高興。"},{"word":"to rely on","meaning":"依賴、信賴","image":"","example":"You can rely on her to get the job done.","exampleTranslation":"你可以信賴她把事情做好。"},{"word":"right away","meaning":"立刻、不拖延","image":"","example":"The manager promised to fix the problem right away.","exampleTranslation":"經理答應馬上處理這個問題。"},{"word":"to ring a bell","meaning":"聽起來耳熟、有印象","image":"","example":"That name rings a bell, but I can't place it.","exampleTranslation":"那個名字聽起來耳熟,但我想不起來。"},{"word":"to rule out","meaning":"排除、不予考慮","image":"","example":"The doctors ruled out any serious illness.","exampleTranslation":"醫生排除了任何重症的可能。"},{"word":"to run away","meaning":"私自跑走、逃離","image":"","example":"The puppy ran away through the open gate.","exampleTranslation":"小狗從敞開的門跑走了。"},{"word":"to run into","meaning":"巧遇;撞上","image":"","example":"I ran into an old friend at the airport.","exampleTranslation":"我在機場巧遇一位老朋友。"},{"word":"to run out of","meaning":"耗盡、用光","image":"","example":"We ran out of milk this morning.","exampleTranslation":"我們今早牛奶用完了。"}],"S":[{"word":"to save face","meaning":"保住面子","image":"","example":"The deal let both sides save face.","exampleTranslation":"這項協議讓雙方都保住了面子。"},{"word":"to screw up","meaning":"搞亂、弄糊塗;搞砸","image":"","example":"The last-minute changes screwed up our schedule.","exampleTranslation":"臨時的更動把我們的行程搞亂了。"},{"word":"search me","meaning":"我不知道、我哪知道","image":"","example":"Why is the printer beeping? Search me.","exampleTranslation":"印表機為什麼一直嗶?我哪知道。"},{"word":"second to none","meaning":"首屈一指、無人能及","image":"","example":"Their customer service is second to none.","exampleTranslation":"他們的客戶服務首屈一指。"},{"word":"to see about","meaning":"著手處理、安排","image":"","example":"I'll see about getting us better seats.","exampleTranslation":"我來想辦法幫我們弄到更好的座位。"},{"word":"to see eye to eye","meaning":"看法一致、意見相合","image":"","example":"The partners don't always see eye to eye.","exampleTranslation":"那幾位合夥人並非總是意見一致。"},{"word":"to see off","meaning":"為(某人)送行","image":"","example":"We went to the station to see her off.","exampleTranslation":"我們到車站為她送行。"},{"word":"to see out","meaning":"送(某人)到門口","image":"","example":"The host saw us out and waved goodbye.","exampleTranslation":"主人送我們到門口,揮手道別。"},{"word":"to sell out","meaning":"賣光;出售(公司)","image":"","example":"The concert tickets sold out in minutes.","exampleTranslation":"演唱會門票幾分鐘內就賣光了。"},{"word":"to serve (someone) right","meaning":"罪有應得、活該","image":"","example":"It serves him right for being so careless.","exampleTranslation":"他這麼粗心,活該。"},{"word":"to serve (the/one's) purpose","meaning":"合用、派上用場","image":"","example":"A box will serve the purpose as a temporary table.","exampleTranslation":"一個箱子就能充當臨時桌子。"},{"word":"to set a goal","meaning":"設定目標","image":"","example":"Set a realistic goal you can actually reach.","exampleTranslation":"設定一個你真正能達成的實際目標。"},{"word":"to set out","meaning":"動身出發;整齊擺放","image":"","example":"They set out at dawn to beat the crowds.","exampleTranslation":"他們天亮就出發,以避開人潮。"},{"word":"to set up","meaning":"建立、設立;安排","image":"","example":"They set up a small bakery downtown.","exampleTranslation":"他們在市區開了間小麵包店。"},{"word":"to shake hands","meaning":"以握手互相問候","image":"","example":"The two leaders shook hands for the cameras.","exampleTranslation":"兩位領袖為鏡頭握了手。"},{"word":"to show off","meaning":"炫耀、賣弄","image":"","example":"He loves to show off his new gadgets.","exampleTranslation":"他愛炫耀他的新玩意兒。"},{"word":"to show up","meaning":"現身、到場;被找到","image":"","example":"Only half the guests showed up.","exampleTranslation":"只有一半的客人到場。"},{"word":"to shut up","meaning":"歇業一陣子;閉嘴","image":"","example":"He told the noisy kids to shut up and behave.","exampleTranslation":"他叫那群吵鬧的孩子閉嘴、規矩點。"},{"word":"to sit down","meaning":"就座、坐下","image":"","example":"Please sit down and make yourself comfortable.","exampleTranslation":"請坐,別客氣。"},{"word":"to sit on the fence","meaning":"保持中立、觀望不表態","image":"","example":"You can't sit on the fence forever; pick a side.","exampleTranslation":"你不能永遠觀望,選個立場吧。"},{"word":"to slow down","meaning":"減速、放慢","image":"","example":"Slow down — there's a sharp curve ahead.","exampleTranslation":"減速,前面有個急彎。"},{"word":"so far","meaning":"截至目前為止","image":"","example":"So far, the trip has gone smoothly.","exampleTranslation":"到目前為止,這趟旅行都很順利。"},{"word":"sooner or later","meaning":"遲早、總有一天","image":"","example":"Sooner or later he'll realize he was wrong.","exampleTranslation":"他遲早會發現自己錯了。"},{"word":"to sort out","meaning":"整理、解決","image":"","example":"Give me a day to sort out this mess.","exampleTranslation":"給我一天時間把這團亂收拾好。"},{"word":"to speak one's mind","meaning":"直言不諱、有話直說","image":"","example":"She's not afraid to speak her mind at meetings.","exampleTranslation":"她在會議上不怕有話直說。"},{"word":"to spill the beans","meaning":"洩漏祕密","image":"","example":"Don't spill the beans about the surprise party.","exampleTranslation":"別把驚喜派對的祕密說出去。"},{"word":"to stand a chance","meaning":"有機會成功","image":"","example":"With her talent, she stands a good chance of winning.","exampleTranslation":"以她的才華,很有機會獲勝。"},{"word":"to stand by","meaning":"支持;待命","image":"","example":"She stood by her friend through hard times.","exampleTranslation":"在艱難時刻,她始終支持著朋友。"},{"word":"to stand for","meaning":"代表、象徵;容忍","image":"","example":"The dove stands for peace.","exampleTranslation":"鴿子象徵和平。"},{"word":"to stand out","meaning":"醒目、突出","image":"","example":"Her bold design stood out at the exhibition.","exampleTranslation":"她大膽的設計在展覽中格外醒目。"},{"word":"to stand up","meaning":"由坐或臥的姿勢起身站立","image":"","example":"Everyone stood up when the judge entered.","exampleTranslation":"法官進來時,大家都站了起來。"},{"word":"to stand up","meaning":"耐用、撐得住;放某人鴿子","image":"","example":"This backpack has stood up to years of travel.","exampleTranslation":"這個背包經得起多年旅行的考驗。"},{"word":"to stand up for","meaning":"捍衛、聲援","image":"","example":"You should stand up for what you believe.","exampleTranslation":"你該為自己的信念挺身而出。"},{"word":"stands to reason","meaning":"合乎邏輯、理所當然","image":"","example":"It stands to reason that practice improves skill.","exampleTranslation":"熟能生巧是理所當然的。"},{"word":"to stay in","meaning":"待在家不出門","image":"","example":"Let's stay in and watch a movie tonight.","exampleTranslation":"今晚我們待在家看電影吧。"},{"word":"to stay up","meaning":"熬夜、不去睡","image":"","example":"He stayed up late finishing the novel.","exampleTranslation":"他熬夜把那本小說看完。"},{"word":"a steal","meaning":"非常划算、超便宜","image":"","example":"At that price, the bike was a real steal.","exampleTranslation":"那個價錢,這台腳踏車真是超划算。"},{"word":"to step down","meaning":"卸任、辭職","image":"","example":"The CEO stepped down after ten years.","exampleTranslation":"執行長在任職十年後卸任。"},{"word":"to step in","meaning":"出面介入;短暫進入","image":"","example":"A neighbor stepped in to stop the argument.","exampleTranslation":"一位鄰居出面制止了爭吵。"},{"word":"to step on","meaning":"嚴加管束;加快","image":"","example":"We're late — step on it!","exampleTranslation":"我們遲到了,快一點!"},{"word":"to stick around","meaning":"留在原處、逗留等候","image":"","example":"Stick around after class if you have questions.","exampleTranslation":"有問題的話下課後留一下。"},{"word":"to stick it to","meaning":"坑人、佔便宜","image":"","example":"That repair shop really stuck it to me.","exampleTranslation":"那家修車廠真是狠狠敲了我一筆。"},{"word":"to stick to","meaning":"堅守、遵循","image":"","example":"Let's stick to the original plan.","exampleTranslation":"我們就照原本的計畫走吧。"},{"word":"to stick up","meaning":"朝上豎起;持械行搶","image":"","example":"A tuft of his hair was sticking up.","exampleTranslation":"他有一撮頭髮翹了起來。"},{"word":"to stir up","meaning":"激起(情緒);挑起(麻煩)","image":"","example":"The rumor stirred up a lot of anger.","exampleTranslation":"那則謠言激起了不少怒火。"},{"word":"to stop by","meaning":"順道拜訪、短暫停留","image":"","example":"I'll stop by the bakery on my way home.","exampleTranslation":"我回家路上會順道去麵包店。"}],"T":[{"word":"to take a chance","meaning":"冒險一試、碰運氣","image":"","example":"He took a chance and invested in the startup.","exampleTranslation":"他冒險投資了那家新創公司。"},{"word":"to take a nap","meaning":"小睡片刻","image":"","example":"I usually take a short nap after lunch.","exampleTranslation":"我通常午餐後會小睡一下。"},{"word":"to take a risk","meaning":"冒險","image":"","example":"Starting a business always means taking a risk.","exampleTranslation":"創業總是意味著要冒險。"},{"word":"to take a trip","meaning":"出門旅行","image":"","example":"They took a trip to Japan last spring.","exampleTranslation":"他們去年春天去日本旅行。"},{"word":"to take a walk, stroll, hike, etc.","meaning":"去散步、漫步或健行等","image":"","example":"Let's take a walk along the beach after dinner.","exampleTranslation":"晚餐後我們去海邊散個步吧。"},{"word":"to take advantage of","meaning":"善用;佔便宜、利用","image":"","example":"Take advantage of the free trial while it lasts.","exampleTranslation":"趁免費試用還在,好好把握。"},{"word":"to take after","meaning":"長得像(親人)","image":"","example":"She takes after her grandmother.","exampleTranslation":"她長得像她的祖母。"},{"word":"to take apart","meaning":"拆開、拆解","image":"","example":"He took the clock apart to see how it worked.","exampleTranslation":"他把時鐘拆開,看它怎麼運作。"},{"word":"to take at one's word","meaning":"相信某人的話","image":"","example":"He promised to help, and I took him at his word.","exampleTranslation":"他答應幫忙,我就相信了他的話。"},{"word":"to take by surprise","meaning":"使措手不及、大吃一驚","image":"","example":"The sudden news took us all by surprise.","exampleTranslation":"那突如其來的消息讓我們都嚇了一跳。"},{"word":"to take down","meaning":"取下;記下","image":"","example":"The secretary took down every detail of the call.","exampleTranslation":"祕書把通話的每個細節都記了下來。"},{"word":"to take for","meaning":"把……誤認為","image":"","example":"In the dark, I took him for a stranger.","exampleTranslation":"天黑,我把他錯認成陌生人。"},{"word":"to take for granted","meaning":"視為理所當然;想當然地認定","image":"","example":"We often take clean water for granted.","exampleTranslation":"我們常把乾淨的水視為理所當然。"},{"word":"to take hold of","meaning":"握住、抓緊","image":"","example":"Take hold of the rope and don't let go.","exampleTranslation":"抓緊繩子,別放手。"},{"word":"to take in","meaning":"遊覽;改小衣服;矇騙","image":"","example":"Let's take in a museum while we're in town.","exampleTranslation":"趁在城裡,我們去逛逛博物館吧。"},{"word":"to take into account","meaning":"把……納入考量","image":"","example":"The plan must take costs into account.","exampleTranslation":"這計畫必須把成本納入考量。"},{"word":"to take off","meaning":"把身上的衣物脫掉","image":"","example":"He took off his wet shoes at the door.","exampleTranslation":"他在門口脫下濕掉的鞋子。"},{"word":"to take off","meaning":"(飛機)起飛;匆匆離開","image":"","example":"Our flight took off half an hour late.","exampleTranslation":"我們的班機晚了半小時起飛。"},{"word":"to take on","meaning":"僱用;承接(工作)","image":"","example":"The café took on extra staff for the summer.","exampleTranslation":"那家咖啡館夏天多請了些人手。"},{"word":"to take one's time","meaning":"不慌不忙、從容而為","image":"","example":"Take your time; there's no rush at all.","exampleTranslation":"慢慢來,一點都不用急。"},{"word":"to take out","meaning":"取出;帶某人外出(約會)","image":"","example":"He took the trash out before breakfast.","exampleTranslation":"他早餐前把垃圾拿出去倒了。"},{"word":"to take over","meaning":"接管;重做","image":"","example":"A new director took over the department.","exampleTranslation":"一位新主管接管了這個部門。"},{"word":"to take pains","meaning":"費心、下工夫","image":"","example":"He takes great pains to keep his garden neat.","exampleTranslation":"他費盡心思把花園打理得整整齊齊。"},{"word":"to take part in","meaning":"參加、投入其中","image":"","example":"Hundreds of students took part in the charity run.","exampleTranslation":"數百名學生參加了這場慈善路跑。"},{"word":"to take place","meaning":"發生;依計畫舉行","image":"","example":"The concert will take place in the main hall.","exampleTranslation":"音樂會將在大禮堂舉行。"},{"word":"to take responsibility","meaning":"負起責任","image":"","example":"He took responsibility for the mistake.","exampleTranslation":"他為這個錯誤負起了責任。"},{"word":"to take the bull by the horns","meaning":"當機立斷、迎難而上","image":"","example":"She took the bull by the horns and confronted the issue.","exampleTranslation":"她當機立斷,正面處理了這個問題。"},{"word":"to take turns","meaning":"彼此輪流","image":"","example":"The kids took turns on the swing.","exampleTranslation":"孩子們輪流盪鞦韆。"},{"word":"to take up","meaning":"開始學/做;佔用(時間空間)","image":"","example":"She took up painting after retiring.","exampleTranslation":"她退休後開始學畫畫。"},{"word":"to take up with","meaning":"就要事找某人商量","image":"","example":"I'll take the matter up with my supervisor.","exampleTranslation":"這件事我會找主管商量。"},{"word":"to talk back to","meaning":"頂嘴、無禮回話","image":"","example":"It's rude to talk back to your elders.","exampleTranslation":"對長輩頂嘴很沒禮貌。"},{"word":"to talk over","meaning":"仔細討論、商量","image":"","example":"Let's talk over the budget before we decide.","exampleTranslation":"我們決定前先把預算討論一下。"},{"word":"to tear down","meaning":"拆除、拆掉","image":"","example":"The city plans to tear down the abandoned mall.","exampleTranslation":"市府打算拆掉那座廢棄商場。"},{"word":"to tear up","meaning":"撕成碎片","image":"","example":"She tore up the draft and started again.","exampleTranslation":"她把草稿撕碎,重新開始。"},{"word":"to tell apart","meaning":"分辨、區別開來","image":"","example":"The twins are so alike I can't tell them apart.","exampleTranslation":"這對雙胞胎太像了,我分不出來。"},{"word":"to think of","meaning":"對某人或某事持有看法、評價","image":"","example":"What do you think of the new manager?","exampleTranslation":"你覺得那位新經理怎麼樣?"},{"word":"to think outside the box","meaning":"跳脫框架思考","image":"","example":"Solving this will take thinking outside the box.","exampleTranslation":"解決這問題需要跳脫框架思考。"},{"word":"to think over","meaning":"做決定前審慎思量","image":"","example":"I need a day to think over your offer.","exampleTranslation":"你的提議我需要一天好好考慮。"},{"word":"to think up","meaning":"想出、憑空編造","image":"","example":"She thought up a clever name for the shop.","exampleTranslation":"她替那家店想了個巧妙的名字。"},{"word":"to throw away","meaning":"扔掉、丟棄","image":"","example":"Don't throw away those bottles; we can recycle them.","exampleTranslation":"別把那些瓶子丟掉,可以拿去回收。"},{"word":"to throw in the towel","meaning":"認輸、放棄","image":"","example":"Don't throw in the towel when you're so close.","exampleTranslation":"都這麼接近了,別現在認輸。"},{"word":"to throw out","meaning":"丟棄;趕出;駁回","image":"","example":"We should throw out these expired snacks.","exampleTranslation":"這些過期零食我們該丟了。"},{"word":"to throw (someone) a curve","meaning":"出其不意地拋出難題","image":"","example":"The interviewer threw me a curve with that question.","exampleTranslation":"面試官那個問題把我問得措手不及。"},{"word":"to throw the book at","meaning":"從重懲處、嚴懲","image":"","example":"The judge threw the book at the repeat offender.","exampleTranslation":"法官對這名累犯從重量刑。"},{"word":"to throw up","meaning":"匆匆搭建;嘔吐","image":"","example":"The volunteers threw up a tent for shelter.","exampleTranslation":"志工們匆匆搭起一頂帳篷遮蔽。"},{"word":"the tip of the iceberg","meaning":"冰山一角","image":"","example":"These complaints are just the tip of the iceberg.","exampleTranslation":"這些抱怨只是冰山一角。"},{"word":"to tire out","meaning":"使某人筋疲力盡","image":"","example":"The long hike tired out everyone in the group.","exampleTranslation":"那段長途健行讓大家都累壞了。"},{"word":"touch and go","meaning":"情勢危急、成敗難料","image":"","example":"For a while, the rescue was touch and go.","exampleTranslation":"有一陣子,那場救援情勢十分危急。"},{"word":"to trade in","meaning":"以舊折抵換新","image":"","example":"I traded in my old phone for a discount.","exampleTranslation":"我用舊手機折抵換了折扣。"},{"word":"to try on","meaning":"購買前試穿衣物","image":"","example":"Can I try on these jeans in a smaller size?","exampleTranslation":"這條牛仔褲我可以試穿小一號的嗎?"},{"word":"to try out","meaning":"試用、測試","image":"","example":"Let me try out the new app before I buy it.","exampleTranslation":"買之前讓我先試用這個新應用程式。"},{"word":"to turn a blind eye","meaning":"視而不見、睜一隻眼閉一隻眼","image":"","example":"The manager turned a blind eye to the lateness.","exampleTranslation":"經理對遲到一事睜一隻眼閉一隻眼。"},{"word":"to turn around","meaning":"轉向反方向;徹底扭轉局面","image":"","example":"The new coach turned the losing team around.","exampleTranslation":"新教練讓這支老是輸的隊伍徹底翻身。"},{"word":"to turn down","meaning":"調低(音量亮度);回絕","image":"","example":"Could you turn down the music a little?","exampleTranslation":"可以把音樂稍微關小聲嗎?"},{"word":"to turn off","meaning":"關閉電器或設備使其停止","image":"","example":"Remember to turn off the stove before you leave.","exampleTranslation":"出門前記得把爐火關掉。"},{"word":"to turn on","meaning":"開啟電器或設備使其運作","image":"","example":"Could you turn on the heater? The room feels chilly.","exampleTranslation":"可以把暖氣打開嗎?房間有點冷。"},{"word":"to turn on","meaning":"引起興趣、令人著迷","image":"","example":"Fast cars really turn him on.","exampleTranslation":"跑車真的讓他著迷。"},{"word":"to turn out","meaning":"結果變成;出席、到場","image":"","example":"The project turned out better than expected.","exampleTranslation":"這個專案的結果比預期還好。"},{"word":"to turn over","meaning":"翻面;翻覆;移交","image":"","example":"Turn the pancake over when it starts to bubble.","exampleTranslation":"鬆餅開始冒泡時就翻面。"}]};
+
+    let words = [];
+    let currentIndex = 0;
+    let isShowingMeaning = false;
+    let isRandom = false;
+    let fontSize = 44;
+    let currentSheetName = '';
+
+    // 觸控相關
+    let touchStartX = 0;
+    let touchEndX = 0;
+    let isSwiping = false;
+    const SWIPE_THRESHOLD = 30;
+
+    // ── localStorage helpers ──────────────────────────────────
+
+    function loadCustomWords() {
+      try {
+        return JSON.parse(localStorage.getItem(KEY_CUSTOM) || '[]');
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function saveCustomWords(list) {
+      localStorage.setItem(KEY_CUSTOM, JSON.stringify(list));
+    }
+
+    function savePosition(sheetName, word) {
+      localStorage.setItem(KEY_POSITION, JSON.stringify({ sheetName, word }));
+    }
+
+    function loadPosition() {
+      try {
+        return JSON.parse(localStorage.getItem(KEY_POSITION));
+      } catch (e) {
+        return null;
+      }
+    }
+
+    // ── 初始化 ────────────────────────────────────────────────
+
+    window.onload = function() {
+      const pos = loadPosition();
+      let restored = false;
+
+      if (pos && pos.sheetName && pos.word) {
+        // 嘗試還原上次位置
+        if (pos.sheetName === CUSTOM_SHEET_NAME) {
+          const customWords = loadCustomWords();
+          const idx = customWords.findIndex(w => w.word === pos.word);
+          if (idx !== -1) {
+            setSheet(CUSTOM_SHEET_NAME);
+            currentIndex = idx;
+            restored = true;
+          }
+        } else if (allSheetData[pos.sheetName]) {
+          const idx = allSheetData[pos.sheetName].findIndex(w => w.word === pos.word);
+          if (idx !== -1) {
+            setSheet(pos.sheetName);
+            currentIndex = idx;
+            restored = true;
+          }
+        }
+      }
+
+      // Fallback：第一個工作表第一個字
+      if (!restored) {
+        const firstSheet = Object.keys(allSheetData)[0];
+        setSheet(firstSheet);
+        currentIndex = 0;
+      }
+
+      const flashcard = document.getElementById('flashcard');
+      if (flashcard) {
+        flashcard.addEventListener('click', handleClick);
+        flashcard.addEventListener('touchstart', handleTouchStart, { passive: false });
+        flashcard.addEventListener('touchmove', handleTouchMove, { passive: false });
+        flashcard.addEventListener('touchend', handleTouchEnd);
+      }
+
+      document.documentElement.style.setProperty('--font-size', '44px');
+      showCurrentWord();
+    };
+
+    // ── 工作表切換 ────────────────────────────────────────────
+
+    function setSheet(sheetName) {
+      currentSheetName = sheetName;
+      document.getElementById('sheetSelect').value = sheetName;
+
+      if (sheetName === CUSTOM_SHEET_NAME) {
+        words = loadCustomWords();
+      } else {
+        words = allSheetData[sheetName] || [];
+      }
+
+      currentIndex = 0;
+      isShowingMeaning = false;
+      updateCustomButton();
+    }
+
+    function changeSheet() {
+      const sheetName = document.getElementById('sheetSelect').value;
+      setSheet(sheetName);
+      showCurrentWord();
+      if (words.length > 0) pronounceWord();
+    }
+
+    // ── 自訂單字庫操作 ────────────────────────────────────────
+
+    function isInCustom(word) {
+      const list = loadCustomWords();
+      return list.some(w => w.word === word);
+    }
+
+    function updateCustomButton() {
+      const btn = document.getElementById('customBtn');
+      if (currentSheetName === CUSTOM_SHEET_NAME) {
+        btn.textContent = '－';
+        btn.className = 'btn-remove';
+      } else {
+        if (words.length > 0 && isInCustom(words[currentIndex]?.word)) {
+          btn.textContent = '－';
+          btn.className = 'btn-remove';
+        } else {
+          btn.textContent = '＋';
+          btn.className = 'btn-add';
+        }
+      }
+    }
+
+    function toggleCustomWord() {
+      if (!words || words.length === 0) return;
+      const current = words[currentIndex];
+
+      if (currentSheetName === CUSTOM_SHEET_NAME) {
+        // 自訂庫頁面：直接移除
+        let list = loadCustomWords();
+        list = list.filter(w => w.word !== current.word);
+        saveCustomWords(list);
+        words = list;
+        if (words.length === 0) {
+          currentIndex = 0;
+        } else {
+          currentIndex = currentIndex % words.length;
+        }
+        showCurrentWord();
+      } else {
+        // 一般頁面：加入或移除自訂庫
+        let list = loadCustomWords();
+        const exists = list.some(w => w.word === current.word);
+        if (exists) {
+          list = list.filter(w => w.word !== current.word);
+        } else {
+          list.push({
+            word: current.word,
+            meaning: current.meaning,
+            example: current.example,
+            exampleTranslation: current.exampleTranslation
+          });
+        }
+        saveCustomWords(list);
+        updateCustomButton();
+      }
+    }
+
+    // ── 顯示卡片 ──────────────────────────────────────────────
+
+    function showCurrentWord() {
+      const flashcard = document.getElementById('flashcard');
+      const content = document.getElementById('content');
+
+      // 自訂庫為空
+      if (!words || words.length === 0) {
+        flashcard.className = 'flashcard';
+        content.innerHTML = '<div class="empty-custom">自訂單字庫是空的<br>在其他單字卡頁面按 ＋ 加入單字</div>';
+        document.getElementById('progressText').textContent = '0 / 0';
+        updateCustomButton();
+        return;
+      }
+
+      const currentWord = words[currentIndex];
+      savePosition(currentSheetName, currentWord.word);
+
+      if (!isShowingMeaning) {
+        content.innerHTML = currentWord.word +
+          (currentWord.example ?
+            '<div class="example-text">' + currentWord.example + '</div>' : '');
+        flashcard.className = 'flashcard ' +
+          (currentSheetName === CUSTOM_SHEET_NAME ? 'custom' : 'english');
+      } else {
+        content.innerHTML = currentWord.meaning +
+          (currentWord.exampleTranslation ?
+            '<div class="example-text">' + currentWord.exampleTranslation + '</div>' : '');
+        flashcard.className = 'flashcard chinese';
+      }
+
+      updateProgress();
+      updateCustomButton();
+    }
+
+    function updateProgress() {
+      const total = words ? words.length : 0;
+      const current = total > 0 ? currentIndex + 1 : 0;
+      document.getElementById('progressText').textContent = current + ' / ' + total;
+    }
+
+    // ── 卡片互動 ──────────────────────────────────────────────
+
+    function toggleCard() {
+      if (!words || words.length === 0) return;
+      isShowingMeaning = !isShowingMeaning;
+      showCurrentWord();
+      if (!isShowingMeaning) {
+        speechSynthesis.cancel();
+        pronounceWord();
+      }
+    }
+
+    function handleClick(event) {
+      if (!event.sourceCapabilities || !event.sourceCapabilities.firesTouchEvents) {
+        toggleCard();
+      }
+    }
+
+    function handleTouchStart(event) {
+      event.preventDefault();
+      touchStartX = event.touches[0].clientX;
+      touchEndX = touchStartX;
+      isSwiping = false;
+    }
+
+    function handleTouchMove(event) {
+      event.preventDefault();
+      touchEndX = event.touches[0].clientX;
+      if (Math.abs(touchEndX - touchStartX) > 10) {
+        isSwiping = true;
+      }
+    }
+
+    function handleTouchEnd(event) {
+      const swipeDistance = touchEndX - touchStartX;
+      if (!isSwiping || Math.abs(swipeDistance) < 10) {
+        toggleCard();
+      } else if (Math.abs(swipeDistance) > SWIPE_THRESHOLD) {
+        speechSynthesis.cancel();
+        if (swipeDistance > 0) {
+          goToPrevious();
+        } else {
+          goToNext();
+        }
+        showCurrentWord();
+        pronounceWord();
+      }
+    }
+
+    // ── 導航 ──────────────────────────────────────────────────
+
+    function goToNext() {
+      if (!words || words.length === 0) return;
+      if (isRandom) {
+        let newIndex;
+        do {
+          newIndex = Math.floor(Math.random() * words.length);
+        } while (newIndex === currentIndex && words.length > 1);
+        currentIndex = newIndex;
+      } else {
+        currentIndex = (currentIndex + 1) % words.length;
+      }
+    }
+
+    function goToPrevious() {
+      if (!words || words.length === 0) return;
+      currentIndex = (currentIndex - 1 + words.length) % words.length;
+    }
+
+    function clearSpeechQueue() {
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.resume();
+    }
+
+    function previousWord() {
+      clearSpeechQueue();
+      goToPrevious();
+      showCurrentWord();
+      pronounceWord();
+    }
+
+    function nextWord() {
+      clearSpeechQueue();
+      goToNext();
+      showCurrentWord();
+      pronounceWord();
+    }
+
+    function skip10Words() {
+      if (!words || words.length === 0) return;
+      clearSpeechQueue();
+      currentIndex = (currentIndex + 10) % words.length;
+      isShowingMeaning = false;
+      showCurrentWord();
+      pronounceWord();
+    }
+
+    // ── 語音 ──────────────────────────────────────────────────
+
+    function pronounceWord() {
+      if (!words || words.length === 0) return;
+      const currentWord = words[currentIndex];
+      const wordUtterance = new SpeechSynthesisUtterance(currentWord.word);
+      wordUtterance.lang = 'en-US';
+
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(wordUtterance);
+
+      if (currentWord.example) {
+        const exampleUtterance = new SpeechSynthesisUtterance(currentWord.example);
+        exampleUtterance.lang = 'en-US';
+        setTimeout(() => {
+          window.speechSynthesis.speak(exampleUtterance);
+        }, 300);
+      }
+    }
+
+    // ── 其他功能 ──────────────────────────────────────────────
+
+    function toggleRandom() {
+      isRandom = !isRandom;
+      const btn = document.querySelector('.btn-control[onclick="toggleRandom()"]');
+      if (btn) btn.textContent = isRandom ? '順序切換' : '隨機切換';
+    }
+
+    function adjustFontSize(change) {
+      fontSize = Math.max(16, Math.min(80, fontSize + change));
+      document.documentElement.style.setProperty('--font-size', fontSize + 'px');
+    }
+  </script>
+</body>
+</html>
