@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>x-t圖 (位置-時間) 判讀測驗</title>
+    <!-- 引入 Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入 Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-900 font-sans">
+
+    <!-- 開始畫面 -->
+    <div id="start-screen" class="flex flex-col items-center justify-center h-screen px-4">
+        <h1 class="text-3xl sm:text-4xl font-extrabold text-blue-700 mb-6 text-center">x-t圖判讀測驗</h1>
+        <p class="text-gray-600 mb-8 text-center max-w-md">透過觀察位置-時間圖，判斷物體的運動方向、速度變化以及合力方向。</p>
+        <button onclick="startGame()" class="text-xl sm:text-2xl px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-lg transition duration-300 ease-in-out transform hover:scale-105">
+            開始挑戰
+        </button>
+    </div>
+
+    <!-- 遊戲畫面 -->
+    <div id="game-screen" class="hidden p-2 sm:p-4 max-w-4xl mx-auto mt-2">
+        <h1 class="text-xl sm:text-2xl font-bold mb-2 text-center text-blue-700">位置-時間 (x-t) 圖判讀</h1>
+        
+        <!-- 計分板 -->
+        <div class="mb-3 flex justify-between items-center bg-white p-3 rounded-lg shadow border border-gray-200 text-sm">
+            <p><span class="font-bold text-blue-600">分數:</span> <span id="score-display">0</span></p>
+            <p><span class="font-bold text-blue-600">題數:</span> <span id="question-count-display">0</span></p>
+            <p><span class="font-bold text-blue-600">時間:</span> <span id="time-display">0.0</span>秒</p>
+        </div>
+
+        <!-- 圖表區塊 -->
+        <div class="mb-4 h-48 sm:h-64 relative w-full bg-white rounded-lg shadow p-2">
+            <canvas id="positionChart"></canvas>
+        </div>
+
+        <!-- 選項區塊：運動方向 -->
+        <div class="mb-3">
+            <p class="mb-1 font-bold text-sm sm:text-base text-gray-700">1. 請選擇「運動方向」：</p>
+            <div class="flex gap-2">
+                <button onclick="handleSelect('dir', '向前', this)" class="opt-dir flex-1 text-sm py-2 bg-gray-200 text-gray-800 rounded font-semibold transition-colors hover:bg-gray-300">向前</button>
+                <button onclick="handleSelect('dir', '向後', this)" class="opt-dir flex-1 text-sm py-2 bg-gray-200 text-gray-800 rounded font-semibold transition-colors hover:bg-gray-300">向後</button>
+                <button onclick="handleSelect('dir', '靜止', this)" class="opt-dir flex-1 text-sm py-2 bg-gray-200 text-gray-800 rounded font-semibold transition-colors hover:bg-gray-300">靜止</button>
+            </div>
+        </div>
+
+        <!-- 選項區塊：快慢變化 -->
+        <div class="mb-3">
+            <p class="mb-1 font-bold text-sm sm:text-base text-gray-700">2. 請選擇「快慢變化」：</p>
+            <div class="flex gap-2">
+                <button onclick="handleSelect('speed', '等速', this)" class="opt-speed flex-1 text-sm py-2 bg-gray-200 text-gray-800 rounded font-semibold transition-colors hover:bg-gray-300">等速</button>
+                <button onclick="handleSelect('speed', '靜止', this)" class="opt-speed flex-1 text-sm py-2 bg-gray-200 text-gray-800 rounded font-semibold transition-colors hover:bg-gray-300">靜止</button>
+                <button onclick="handleSelect('speed', '加速', this)" class="opt-speed flex-1 text-sm py-2 bg-gray-200 text-gray-800 rounded font-semibold transition-colors hover:bg-gray-300">加速</button>
+                <button onclick="handleSelect('speed', '減速', this)" class="opt-speed flex-1 text-sm py-2 bg-gray-200 text-gray-800 rounded font-semibold transition-colors hover:bg-gray-300">減速</button>
+            </div>
+        </div>
+
+        <!-- 選項區塊：合力方向 -->
+        <div class="mb-4">
+            <p class="mb-1 font-bold text-sm sm:text-base text-gray-700">3. 請選擇「合力方向」：</p>
+            <div class="flex gap-2">
+                <button onclick="handleSelect('force', '向前', this)" class="opt-force flex-1 text-sm py-2 bg-gray-200 text-gray-800 rounded font-semibold transition-colors hover:bg-gray-300">向前</button>
+                <button onclick="handleSelect('force', '向後', this)" class="opt-force flex-1 text-sm py-2 bg-gray-200 text-gray-800 rounded font-semibold transition-colors hover:bg-gray-300">向後</button>
+                <button onclick="handleSelect('force', '合力為0', this)" class="opt-force flex-1 text-sm py-2 bg-gray-200 text-gray-800 rounded font-semibold transition-colors hover:bg-gray-300">合力為0</button>
+            </div>
+        </div>
+
+        <!-- 正確提示 -->
+        <div id="alert-correct" class="hidden bg-green-100 border-l-4 border-green-500 text-green-700 rounded mb-3 p-3 shadow-sm">
+            <div class="flex justify-between items-center text-sm">
+                <span class="font-bold">🎉 答案正確！獲得 10 分</span>
+                <button onclick="handleNextQuestion()" class="bg-green-600 hover:bg-green-700 text-white rounded font-bold text-sm py-1 px-4 transition-colors">下一題</button>
+            </div>
+        </div>
+
+        <!-- 錯誤提示 -->
+        <div id="alert-error" class="hidden bg-red-100 border-l-4 border-red-500 text-red-700 rounded mb-3 p-3 shadow-sm">
+            <div class="flex flex-col text-sm">
+                <div class="flex justify-between items-center mb-2">
+                    <span class="font-bold">❌ 答案錯誤，扣 5 分。</span>
+                    <button onclick="handleNextQuestion()" class="bg-red-600 hover:bg-red-700 text-white rounded font-bold text-sm py-1 px-4 transition-colors">下一題</button>
+                </div>
+                <div class="bg-white p-2 rounded border border-red-200">
+                    <p id="error-ans-name" class="font-bold text-red-800 mb-1"></p>
+                    <p id="error-ans-detail" class="text-gray-700"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 結算畫面 -->
+    <div id="game-over-screen" class="hidden text-center p-4 flex flex-col items-center justify-center h-screen">
+        <h1 class="text-3xl font-extrabold mb-4 text-blue-700">測驗完成！</h1>
+        <div class="bg-white p-6 rounded-lg shadow-lg border border-gray-200 mb-6 w-full max-w-sm">
+            <p class="mb-2 text-lg">答題總數：<span id="final-question-count" class="font-bold text-blue-600"></span> 題</p>
+            <p class="mb-2 text-lg">最終分數：<span class="font-bold text-green-600">100</span> 分</p>
+            <p class="text-lg">總用時：<span id="final-time" class="font-bold text-blue-600"></span> 秒</p>
+        </div>
+        <button onclick="window.location.reload()" class="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow transition-colors text-lg">
+            再挑戰一次
+        </button>
+    </div>
+
+    <!-- 遊戲邏輯腳本 -->
+    <script>
+        // 定義七種運動狀態及其對應的答案 (結合運動學與牛頓第二運動定律)
+        const MOTION_TYPES = [
+            { name: '靜止', dir: '靜止', speed: '靜止', force: '合力為0' },
+            { name: '向前等速', dir: '向前', speed: '等速', force: '合力為0' },
+            { name: '向後等速', dir: '向後', speed: '等速', force: '合力為0' },
+            { name: '向前加速', dir: '向前', speed: '加速', force: '向前' },
+            { name: '向前減速', dir: '向前', speed: '減速', force: '向後' },
+            { name: '向後加速', dir: '向後', speed: '加速', force: '向後' },
+            { name: '向後減速', dir: '向後', speed: '減速', force: '向前' },
+        ];
+
+        // 狀態變數
+        let currentMotion = null;
+        let score = 0;
+        let questionCount = 0;
+        let timer = 0;
+        let timerInterval = null;
+        
+        // 儲存玩家的三個選擇
+        let selections = {
+            dir: null,
+            speed: null,
+            force: null
+        };
+        let isAnswerSubmitted = false;
+        let chartInstance = null;
+
+        // 產生 x-t 圖的資料點
+        const generateData = (motionType) => {
+            const data = [];
+            // 隨機產生 -25 到 +25 之間的初始位置 (起點)
+            let x0 = Math.floor(Math.random() * 51) - 25; 
+            let v0 = 0, a = 0;
+
+            switch (motionType.name) {
+                case '靜止':
+                    v0 = 0; a = 0; // 停在隨機位置 x0
+                    break;
+                case '向前等速':
+                    v0 = Math.random() * 2 + 1.5; // 隨機速度 1.5 ~ 3.5
+                    a = 0;
+                    break;
+                case '向後等速':
+                    v0 = -(Math.random() * 2 + 1.5); // 隨機速度 -1.5 ~ -3.5
+                    a = 0;
+                    break;
+                case '向前加速':
+                    v0 = Math.random() * 1.5; // 隨機初速 0 ~ 1.5
+                    a = Math.random() * 0.4 + 0.2; // 隨機加速度 0.2 ~ 0.6
+                    break;
+                case '向前減速':
+                    a = -(Math.random() * 0.3 + 0.2); // 隨機負加速度 -0.2 ~ -0.5
+                    v0 = -10 * a + Math.random() * 2; // 確保在10秒內速度仍大於等於0 (不會往後跑)
+                    break;
+                case '向後加速':
+                    v0 = -(Math.random() * 1.5); // 隨機初速 -1.5 ~ 0
+                    a = -(Math.random() * 0.4 + 0.2); // 隨機負加速度 -0.6 ~ -0.2
+                    break;
+                case '向後減速':
+                    a = Math.random() * 0.3 + 0.2; // 隨機正加速度 0.2 ~ 0.5
+                    v0 = -10 * a - Math.random() * 2; // 確保在10秒內速度仍小於等於0 (不會往前跑)
+                    break;
+            }
+
+            // 計算 0 到 10 秒的位置
+            for (let i = 0; i <= 10; i += 0.1) {
+                const t = Number(i.toFixed(1));
+                let position = x0 + v0 * t + 0.5 * a * t * t;
+                data.push({ time: t, position: Number(position.toFixed(2)) });
+            }
+            return data;
+        };
+
+        // 更新 Chart.js 圖表
+        const updateChart = (data) => {
+            const labels = data.map(d => d.time);
+            const positions = data.map(d => d.position);
+
+            if (chartInstance) {
+                chartInstance.data.labels = labels;
+                chartInstance.data.datasets[0].data = positions;
+                chartInstance.update();
+            } else {
+                const ctx = document.getElementById('positionChart').getContext('2d');
+                chartInstance = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: '位置',
+                            data: positions,
+                            borderColor: '#e11d48', // 玫瑰紅，區別之前的藍色v-t圖
+                            backgroundColor: 'rgba(225, 29, 72, 0.1)',
+                            borderWidth: 3,
+                            pointRadius: 0,
+                            fill: true,
+                            tension: 0.1 
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            x: {
+                                title: { display: true, text: '時間 (s)', font: {weight: 'bold'} },
+                                grid: { borderDash: [3, 3] },
+                                ticks: { maxTicksLimit: 11 }
+                            },
+                            y: {
+                                title: { display: true, text: '位置 (m)', font: {weight: 'bold'} },
+                                grid: { borderDash: [3, 3] }
+                                // 移除 min: 0, max: 25，讓圖表能依照起終點的數值自動擴張 Y 軸範圍
+                            }
+                        }
+                    }
+                });
+            }
+        };
+
+        // UI 狀態重置
+        const resetUI = () => {
+            ['dir', 'speed', 'force'].forEach(type => {
+                document.querySelectorAll(`.opt-${type}`).forEach(btn => {
+                    btn.className = btn.className.replace('bg-blue-600 text-white', 'bg-gray-200 text-gray-800');
+                });
+            });
+            
+            document.getElementById('alert-correct').classList.add('hidden');
+            document.getElementById('alert-error').classList.add('hidden');
+            
+            selections = { dir: null, speed: null, force: null };
+            isAnswerSubmitted = false;
+        };
+
+        // 出新題
+        const generateNewQuestion = () => {
+            const newMotion = MOTION_TYPES[Math.floor(Math.random() * MOTION_TYPES.length)];
+            currentMotion = newMotion;
+            questionCount++;
+            
+            document.getElementById('question-count-display').innerText = questionCount;
+            resetUI();
+            
+            const data = generateData(currentMotion);
+            updateChart(data);
+        };
+
+        // 遊戲開始
+        const startGame = () => {
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('game-screen').classList.remove('hidden');
+            
+            timerInterval = setInterval(() => {
+                timer += 0.1;
+                document.getElementById('time-display').innerText = timer.toFixed(1);
+            }, 100);
+
+            generateNewQuestion();
+        };
+
+        // 處理按鈕選擇
+        const handleSelect = (category, value, btnElement) => {
+            if (isAnswerSubmitted) return;
+            selections[category] = value;
+            
+            // 更新按鈕樣式
+            document.querySelectorAll(`.opt-${category}`).forEach(btn => {
+                btn.className = btn.className.replace('bg-blue-600 text-white', 'bg-gray-200 text-gray-800');
+            });
+            btnElement.className = btnElement.className.replace('bg-gray-200 text-gray-800', 'bg-blue-600 text-white');
+            
+            checkSubmit();
+        };
+
+        // 檢查是否三個選項都已選擇
+        const checkSubmit = () => {
+            if (selections.dir && selections.speed && selections.force && !isAnswerSubmitted) {
+                isAnswerSubmitted = true;
+                
+                // 驗證答案
+                if (selections.dir === currentMotion.dir && 
+                    selections.speed === currentMotion.speed && 
+                    selections.force === currentMotion.force) {
+                    
+                    score = Math.min(score + 10, 100);
+                    document.getElementById('score-display').innerText = score;
+                    document.getElementById('alert-correct').classList.remove('hidden');
+                    
+                    if (score >= 100) clearInterval(timerInterval);
+                } else {
+                    score = Math.max(score - 5, 0);
+                    document.getElementById('score-display').innerText = score;
+                    
+                    document.getElementById('error-ans-name').innerText = `此圖形為：「${currentMotion.name}」`;
+                    document.getElementById('error-ans-detail').innerText = `正確組合：方向【${currentMotion.dir}】、速度【${currentMotion.speed}】、合力【${currentMotion.force}】。`;
+                    document.getElementById('alert-error').classList.remove('hidden');
+                }
+            }
+        };
+
+        // 下一題或結束畫面
+        const handleNextQuestion = () => {
+            if (score >= 100) {
+                document.getElementById('game-screen').classList.add('hidden');
+                document.getElementById('game-over-screen').classList.remove('hidden');
+                
+                document.getElementById('final-question-count').innerText = questionCount;
+                document.getElementById('final-time').innerText = timer.toFixed(1);
+            } else {
+                generateNewQuestion();
+            }
+        };
+    </script>
+</body>
+</html>
