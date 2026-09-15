@@ -3,442 +3,407 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>運動學圖形轉換測驗</title>
+    <title>運動學圖形 (x-t / v-t / a-t) 轉換測驗</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         .hidden { display: none !important; }
-        ::-webkit-scrollbar { width: 0px; background: transparent; }
-        /* 自定義選項按鈕選取與錯誤狀態 */
-        .selected-opt { border-color: #3b82f6 !important; background-color: #eff6ff !important; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2); }
-        .correct-opt { border-color: #22c55e !important; background-color: #f0fdf4 !important; box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.2); }
-        .wrong-opt { border-color: #ef4444 !important; background-color: #fef2f2 !important; box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.2); opacity: 0.8; }
+        /* 專門為座標軸標籤設定斜體與襯線字體，模擬物理課本數學公式風格 */
+        .math-var {
+            font-family: 'Times New Roman', Times, serif;
+            font-style: italic;
+        }
+        /* 移除點擊時的預設外框 */
+        button:focus { outline: none; }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans min-h-screen">
 
     <!-- 開始畫面 -->
     <div id="start-screen" class="flex flex-col items-center justify-center min-h-screen px-4">
-        <h1 class="text-3xl sm:text-4xl font-extrabold text-indigo-700 mb-6 text-center tracking-wide">運動學圖形轉換挑戰</h1>
-        <div class="bg-white p-6 rounded-xl shadow-md max-w-lg mb-8 text-center text-slate-600 space-y-3">
-            <p>這是一個考驗你對 <strong>位置(x)</strong>、<strong>速度(v)</strong>、<strong>加速度(a)</strong> 之間關係的測驗。</p>
-            <p>不需要計算精確數字！請觀察題目的圖形特徵，並在下方<strong>分開選出對應的另外兩種圖形</strong>。</p>
-        </div>
-        <button onclick="startGame()" class="text-xl sm:text-2xl px-10 py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-full shadow-lg transition duration-300 transform hover:scale-105">
+        <h1 class="text-3xl sm:text-4xl font-extrabold text-indigo-700 mb-6 text-center tracking-wide">運動學圖形轉換測驗</h1>
+        <p class="text-slate-600 mb-8 text-center max-w-lg leading-relaxed text-sm sm:text-base">
+            系統會隨機顯示一種運動學圖形（<span class="math-var">x-t</span>、<span class="math-var">v-t</span> 或 <span class="math-var">a-t</span>）。<br>
+            請觀察其特徵（不需要計算數字），並在下方分開選出對應的另外兩種圖形。
+        </p>
+        <button onclick="startGame()" class="text-xl px-8 py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-lg transition-all duration-300 transform hover:-translate-y-1 hover:shadow-indigo-500/50">
             開始挑戰
         </button>
     </div>
 
     <!-- 遊戲畫面 -->
-    <div id="game-screen" class="hidden p-2 sm:p-4 max-w-6xl mx-auto flex flex-col min-h-screen">
+    <div id="game-screen" class="hidden max-w-5xl mx-auto p-3 sm:p-6">
         
-        <!-- 頂部計分 -->
-        <div class="mb-4 flex justify-between items-center bg-white p-3 rounded-xl shadow-sm border border-slate-200 text-sm sm:text-base font-medium">
-            <p class="text-indigo-700"><span class="font-bold">分數:</span> <span id="score-display" class="text-slate-800 text-lg">0</span></p>
-            <p class="text-indigo-700"><span class="font-bold">題數:</span> <span id="question-count-display" class="text-slate-800 text-lg">0</span></p>
-            <p class="text-indigo-700"><span class="font-bold">時間:</span> <span id="time-display" class="text-slate-800 text-lg">0.0</span> 秒</p>
+        <!-- 計分板 -->
+        <div class="mb-4 flex justify-between items-center bg-white p-3 sm:p-4 rounded-xl shadow-sm border border-slate-200">
+            <p class="text-sm sm:text-base"><span class="font-bold text-indigo-600">分數:</span> <span id="score-display" class="font-mono text-lg font-bold">0</span></p>
+            <p class="text-sm sm:text-base"><span class="font-bold text-indigo-600">題數:</span> <span id="question-count-display" class="font-mono text-lg font-bold">0</span></p>
+            <p class="text-sm sm:text-base"><span class="font-bold text-indigo-600">時間:</span> <span id="time-display" class="font-mono text-lg font-bold">0.0</span> <span class="text-xs text-slate-500">秒</span></p>
         </div>
 
-        <!-- 題目主圖區塊 -->
-        <div class="bg-white p-4 rounded-xl shadow border border-slate-200 mb-6 flex flex-col items-center">
-            <h2 id="question-text" class="text-lg sm:text-xl font-bold mb-2 text-center text-slate-700">
-                <!-- 題目敘述 -->
-            </h2>
-            <div class="w-full max-w-md h-56 sm:h-64 relative">
-                <canvas id="prompt-canvas"></canvas>
+        <!-- 題目區塊 -->
+        <div class="mb-6 bg-white rounded-xl shadow-md border border-slate-200 p-4 flex flex-col items-center">
+            <h2 class="text-lg sm:text-xl font-bold mb-3 text-slate-700">請觀察此圖形，找出對應的其他兩圖：</h2>
+            <div class="h-56 sm:h-72 w-full max-w-2xl relative">
+                <canvas id="mainChart"></canvas>
             </div>
         </div>
 
-        <!-- 第一個選擇區塊 -->
-        <div class="mb-6">
-            <p id="target1-title" class="text-center font-bold text-slate-700 mb-3 text-lg"></p>
-            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4" id="target1-options">
-                <button onclick="handleOptionSelect(1, 0)" id="t1-btn-0" class="t1-btn relative bg-white border-2 border-slate-200 rounded-xl p-2 hover:border-indigo-400 transition-all focus:outline-none"><div class="h-28 sm:h-32 w-full pointer-events-none"><canvas id="t1-canvas-0"></canvas></div></button>
-                <button onclick="handleOptionSelect(1, 1)" id="t1-btn-1" class="t1-btn relative bg-white border-2 border-slate-200 rounded-xl p-2 hover:border-indigo-400 transition-all focus:outline-none"><div class="h-28 sm:h-32 w-full pointer-events-none"><canvas id="t1-canvas-1"></canvas></div></button>
-                <button onclick="handleOptionSelect(1, 2)" id="t1-btn-2" class="t1-btn relative bg-white border-2 border-slate-200 rounded-xl p-2 hover:border-indigo-400 transition-all focus:outline-none"><div class="h-28 sm:h-32 w-full pointer-events-none"><canvas id="t1-canvas-2"></canvas></div></button>
-                <button onclick="handleOptionSelect(1, 3)" id="t1-btn-3" class="t1-btn relative bg-white border-2 border-slate-200 rounded-xl p-2 hover:border-indigo-400 transition-all focus:outline-none"><div class="h-28 sm:h-32 w-full pointer-events-none"><canvas id="t1-canvas-3"></canvas></div></button>
+        <!-- 提示訊息 -->
+        <div id="alert-correct" class="hidden bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-lg mb-4 p-3 shadow-sm transition-all">
+            <div class="flex justify-between items-center">
+                <span class="font-bold">🎉 答案正確！獲得 10 分</span>
+                <button onclick="handleNextQuestion()" class="bg-emerald-500 hover:bg-emerald-600 text-white rounded font-bold text-sm py-1.5 px-4 transition-colors">下一題</button>
             </div>
         </div>
-
-        <!-- 第二個選擇區塊 -->
-        <div class="mb-6">
-            <p id="target2-title" class="text-center font-bold text-slate-700 mb-3 text-lg"></p>
-            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4" id="target2-options">
-                <button onclick="handleOptionSelect(2, 0)" id="t2-btn-0" class="t2-btn relative bg-white border-2 border-slate-200 rounded-xl p-2 hover:border-indigo-400 transition-all focus:outline-none"><div class="h-28 sm:h-32 w-full pointer-events-none"><canvas id="t2-canvas-0"></canvas></div></button>
-                <button onclick="handleOptionSelect(2, 1)" id="t2-btn-1" class="t2-btn relative bg-white border-2 border-slate-200 rounded-xl p-2 hover:border-indigo-400 transition-all focus:outline-none"><div class="h-28 sm:h-32 w-full pointer-events-none"><canvas id="t2-canvas-1"></canvas></div></button>
-                <button onclick="handleOptionSelect(2, 2)" id="t2-btn-2" class="t2-btn relative bg-white border-2 border-slate-200 rounded-xl p-2 hover:border-indigo-400 transition-all focus:outline-none"><div class="h-28 sm:h-32 w-full pointer-events-none"><canvas id="t2-canvas-2"></canvas></div></button>
-                <button onclick="handleOptionSelect(2, 3)" id="t2-btn-3" class="t2-btn relative bg-white border-2 border-slate-200 rounded-xl p-2 hover:border-indigo-400 transition-all focus:outline-none"><div class="h-28 sm:h-32 w-full pointer-events-none"><canvas id="t2-canvas-3"></canvas></div></button>
+        <div id="alert-error" class="hidden bg-rose-50 border border-rose-200 text-rose-700 rounded-lg mb-4 p-3 shadow-sm transition-all">
+            <div class="flex justify-between items-center mb-2">
+                <span class="font-bold">❌ 答案錯誤，扣 5 分。</span>
+                <button onclick="handleNextQuestion()" class="bg-rose-500 hover:bg-rose-600 text-white rounded font-bold text-sm py-1.5 px-4 transition-colors">下一題</button>
             </div>
+            <p id="error-message" class="text-sm bg-white p-2 rounded border border-rose-100"></p>
         </div>
 
-        <!-- 反饋提示區塊 -->
-        <div id="feedback-alert" class="hidden rounded-xl p-4 shadow-sm mb-4">
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                <div id="feedback-content">
-                    <p id="feedback-title" class="font-bold text-lg mb-1"></p>
-                    <p id="feedback-desc" class="text-sm"></p>
+        <!-- 選項區塊：需要選擇兩種圖 -->
+        <div class="grid md:grid-cols-2 gap-4 sm:gap-6">
+            
+            <!-- 選項群組 1 -->
+            <div class="bg-slate-100 rounded-xl p-3 sm:p-4 border border-slate-200">
+                <h3 id="group1-title" class="font-bold text-slate-700 mb-3 text-center sm:text-left">請選擇對應的 圖形 1：</h3>
+                <div class="grid grid-cols-2 gap-2 sm:gap-3" id="group1-options">
+                    <!-- 動態生成的 Canvas 放這裡 -->
                 </div>
-                <button onclick="handleNextQuestion()" class="whitespace-nowrap px-6 py-2 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-lg transition-colors">
-                    下一題
-                </button>
             </div>
+
+            <!-- 選項群組 2 -->
+            <div class="bg-slate-100 rounded-xl p-3 sm:p-4 border border-slate-200">
+                <h3 id="group2-title" class="font-bold text-slate-700 mb-3 text-center sm:text-left">請選擇對應的 圖形 2：</h3>
+                <div class="grid grid-cols-2 gap-2 sm:gap-3" id="group2-options">
+                    <!-- 動態生成的 Canvas 放這裡 -->
+                </div>
+            </div>
+
         </div>
-        
-        <div class="flex-grow"></div>
     </div>
 
     <!-- 結算畫面 -->
-    <div id="game-over-screen" class="hidden flex flex-col items-center justify-center min-h-screen px-4 text-center">
+    <div id="game-over-screen" class="hidden flex-col items-center justify-center min-h-screen px-4">
         <h1 class="text-4xl font-extrabold mb-6 text-indigo-700">測驗完成！</h1>
-        <div class="bg-white p-8 rounded-2xl shadow-xl border border-slate-100 mb-8 w-full max-w-sm">
+        <div class="bg-white p-8 rounded-2xl shadow-xl border border-slate-100 mb-8 w-full max-w-sm text-center">
             <p class="mb-3 text-lg text-slate-600">答題總數：<span id="final-question-count" class="font-bold text-indigo-600 text-xl"></span> 題</p>
-            <p class="mb-3 text-lg text-slate-600">最終分數：<span class="font-bold text-green-500 text-2xl" id="final-score">100</span> 分</p>
+            <p class="mb-3 text-lg text-slate-600">最終分數：<span class="font-bold text-emerald-500 text-2xl">100</span> 分</p>
             <p class="text-lg text-slate-600">總用時：<span id="final-time" class="font-bold text-indigo-600 text-xl"></span> 秒</p>
         </div>
-        <button onclick="window.location.reload()" class="px-10 py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-full shadow-lg transition-colors text-lg">
+        <button onclick="window.location.reload()" class="px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-lg transition-all text-lg transform hover:-translate-y-1">
             再挑戰一次
         </button>
     </div>
 
     <script>
-        // 定義物理運動狀態與其解說
-        const MOTIONS = [
-            { id: 0, name: '靜止', desc: '物體停留在原地。' },
-            { id: 1, name: '向前等速', desc: '物體向正方向等速前進。' },
-            { id: 2, name: '向後等速', desc: '物體向負方向等速前進。' },
-            { id: 3, name: '向前加速', desc: '物體向前且速度漸增。' },
-            { id: 4, name: '向前減速', desc: '物體向前但速度漸減。' },
-            { id: 5, name: '向後加速', desc: '物體向後且速度漸增(變快)。' },
-            { id: 6, name: '向後減速', desc: '物體向後但速度漸減(變慢)。' },
-            // 干擾項
-            { id: 7, name: '變加速(假選項)', desc: '' },
-            { id: 8, name: '變減速(假選項)', desc: '' }
-        ];
-
-        // 圖表類型對應設定 (更新為要求的名稱，並移除中文標題，僅靠自定義標籤顯示)
-        const TYPE_MAP = {
-            'x': { name: '位置x-時間t', color: '#e11d48', yMin: -60, yMax: 60, axisY: 'x' }, 
-            'v': { name: '速度v-時間t', color: '#3b82f6', yMin: -12, yMax: 12, axisY: 'v' }, 
-            'a': { name: '加速度a-時間t', color: '#16a34a', yMin: -8, yMax: 8, axisY: 'a' }  
-        };
-
+        // 遊戲狀態
         let score = 0;
         let questionCount = 0;
         let timer = 0;
         let timerInterval = null;
-        let charts = {}; 
         
-        // 題目與解答狀態
-        let currentMotionInfo = null;
-        let currentTarget1 = null;
-        let currentTarget2 = null;
-        let t1CorrectIndex = -1;
-        let t2CorrectIndex = -1;
+        let targetMotionId = -1;
+        let mainType = '';
+        let type1 = '';
+        let type2 = '';
         
         // 玩家選擇狀態
         let selectedT1 = -1;
         let selectedT2 = -1;
         let hasAnswered = false;
 
-        // 產生無雜訊的純形狀數據 (供 x-t, v-t, a-t 使用)
+        // 儲存所有 Chart.js 實例以便更新與銷毀
+        let chartInstances = {};
+
+        // 運動狀態名稱對照表 (僅作解答提示用)
+        const motionNames = [
+            "靜止", "向前等速", "向後等速", 
+            "向前加速", "向前減速", "向後加速", "向後減速",
+            "干擾項A", "干擾項B"
+        ];
+
+        // 產生無數字的純形狀數據 (供 x, v, a 使用)
         const getGraphData = (motionId, type) => {
             const data = [];
-            for (let t = 0; t <= 10; t += 0.5) {
+            for (let t = 0; t <= 10; t += 0.1) {
                 let y = 0;
                 if (type === 'x') {
-                    if (motionId === 0) y = 20;
-                    if (motionId === 1) y = 5 * t;
-                    if (motionId === 2) y = 40 - 5 * t;
-                    if (motionId === 3) y = 0.5 * t * t;
-                    if (motionId === 4) y = 10 * t - 0.5 * t * t;
-                    if (motionId === 5) y = -0.5 * t * t;
-                    if (motionId === 6) y = -10 * t + 0.5 * t * t;
-                    if (motionId === 7) y = 0.06 * Math.pow(t, 3);
-                    if (motionId === 8) y = -0.06 * Math.pow(t, 3);
+                    // 為了在寬螢幕比例下讓弧度更明顯，使用 2.5 次方，呈現「平緩後急劇彎曲」
+                    const p = 2.5; 
+                    const t_norm = t / 10; 
+                    
+                    if (motionId === 0) y = 40;
+                    if (motionId === 1) y = 80 * t_norm;
+                    if (motionId === 2) y = -80 * t_norm;
+                    if (motionId === 3) y = 80 * Math.pow(t_norm, p); 
+                    if (motionId === 4) y = 80 * (1 - Math.pow(1 - t_norm, p)); 
+                    if (motionId === 5) y = -80 * Math.pow(t_norm, p); 
+                    if (motionId === 6) y = -80 * (1 - Math.pow(1 - t_norm, p)); 
+                    if (motionId === 7) y = 80 * Math.pow(t_norm, 4); 
+                    if (motionId === 8) y = -80 * Math.pow(t_norm, 4); 
                 }
                 if (type === 'v') {
+                    const t_norm = t / 10;
                     if (motionId === 0) y = 0;
-                    if (motionId === 1) y = 5;
-                    if (motionId === 2) y = -5;
-                    if (motionId === 3) y = t;
-                    if (motionId === 4) y = 10 - t;
-                    if (motionId === 5) y = -t;
-                    if (motionId === 6) y = -10 + t;
-                    if (motionId === 7) y = 0.15 * Math.pow(t, 2) - 4;
-                    if (motionId === 8) y = -0.15 * Math.pow(t, 2) + 4;
+                    if (motionId === 1) y = 60;
+                    if (motionId === 2) y = -60;
+                    if (motionId === 3) y = 80 * t_norm;
+                    if (motionId === 4) y = 80 * (1 - t_norm);
+                    if (motionId === 5) y = -80 * t_norm;
+                    if (motionId === 6) y = -80 * (1 - t_norm);
+                    if (motionId === 7) y = 80 * Math.pow(t_norm, 2); 
+                    if (motionId === 8) y = -80 * Math.pow(t_norm, 2); 
                 }
                 if (type === 'a') {
-                    if (motionId === 0 || motionId === 1 || motionId === 2) y = 0;
-                    if (motionId === 3 || motionId === 6) y = 4;
-                    if (motionId === 4 || motionId === 5) y = -4;
-                    if (motionId === 7) y = t - 5;
-                    if (motionId === 8) y = 5 - t;
+                    if ([0, 1, 2].includes(motionId)) y = 0;
+                    if ([3, 6].includes(motionId)) y = 60;  // 加速度為正
+                    if ([4, 5].includes(motionId)) y = -60; // 加速度為負
+                    if (motionId === 7) y = 80 * (t/10); 
+                    if (motionId === 8) y = -80 * (t/10); 
                 }
-                data.push(y);
+                data.push({ time: t, value: y });
             }
             return data;
         };
 
-        // 自定義 Chart.js 插件：在畫布上直接繪製 X/V/a 與 t 標籤
-        const getAxisLabelsPlugin = (yText, yColor, isPrompt) => {
-            return {
-                id: 'customAxisLabels',
-                afterDraw: (chart) => {
-                    const { ctx, chartArea: { top, right, bottom, left }, scales: { x, y } } = chart;
-                    ctx.save();
-                    
-                    // 獲取原點 (x=0, y=0) 在畫布上的精確像素位置
-                    const x0 = x.getPixelForValue(0);
-                    const y0 = y.getPixelForValue(0);
-                    
-                    const fontSize = isPrompt ? '28px' : '20px';
-                    
-                    // 繪製 Y 軸標籤 (x, v, a)
-                    ctx.font = `italic bold ${fontSize} serif`;
-                    ctx.fillStyle = yColor;
-                    ctx.textAlign = 'right';
-                    ctx.textBaseline = 'bottom';
-                    // 放置於 y 軸原點偏左上的位置
-                    ctx.fillText(yText, x0 - 8, top + (isPrompt ? 15 : 10));
-                    
-                    // 繪製 X 軸標籤 (t)
-                    ctx.fillStyle = '#7e22ce'; // Tailwind purple-700
-                    ctx.textAlign = 'right';
-                    ctx.textBaseline = 'top';
-                    // 放置於 x 軸最右側偏下的位置
-                    ctx.fillText('t', right - 5, y0 + 5);
-                    
-                    ctx.restore();
-                }
-            };
-        };
-
-        // 繪製圖表函數
-        const drawChart = (canvasId, chartKey, type, dataArr, isPrompt) => {
-            if (charts[chartKey]) {
-                charts[chartKey].destroy();
+        // 渲染圖表的共用函數
+        const renderChart = (canvasId, type, data, isMain = false) => {
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            
+            if (chartInstances[canvasId]) {
+                chartInstances[canvasId].destroy();
             }
 
-            const ctx = document.getElementById(canvasId).getContext('2d');
-            const config = TYPE_MAP[type];
-            const labels = Array.from({ length: 21 }, (_, i) => i * 0.5);
+            // 依據類型決定顏色
+            let color = '#3b82f6'; // 預設藍色
+            if (type === 'x') color = '#e11d48'; // 玫瑰紅
+            if (type === 'v') color = '#2563eb'; // 靛藍
+            if (type === 'a') color = '#059669'; // 翠綠
 
-            // 產生自定義標籤外掛
-            const plugin = getAxisLabelsPlugin(config.axisY, config.color, isPrompt);
+            const typeLabel = type === 'x' ? 'x' : type === 'v' ? 'v' : 'a';
 
-            charts[chartKey] = new Chart(ctx, {
+            chartInstances[canvasId] = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: labels,
+                    labels: data.map(d => d.time),
                     datasets: [{
-                        data: dataArr,
-                        borderColor: config.color,
-                        borderWidth: isPrompt ? 4 : 3,
+                        data: data.map(d => d.value),
+                        borderColor: color,
+                        borderWidth: isMain ? 4 : 2,
                         pointRadius: 0,
                         fill: false,
-                        tension: 0.1
+                        tension: 0.1 // 關閉過度平滑，保持物理真實感
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    animation: isPrompt ? { duration: 500 } : false,
-                    layout: {
-                        // 預留空間給自定義的文字標籤
-                        padding: { top: isPrompt ? 30 : 25, right: isPrompt ? 20 : 15, bottom: isPrompt ? 20 : 15, left: isPrompt ? 20 : 15 }
+                    plugins: { 
+                        legend: { display: false }, 
+                        tooltip: { enabled: false } 
                     },
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: { enabled: false }
+                    animation: false,
+                    layout: { 
+                        // 加大上方和右方的留白空間，確保標籤不會被切掉
+                        padding: {
+                            right: isMain ? 40 : 30,
+                            top: isMain ? 35 : 25,
+                            bottom: 10,
+                            left: 10
+                        }
                     },
                     scales: {
                         x: {
-                            min: -1, // 讓 x=0 軸有一點向內縮的空間
-                            max: 11,
-                            grid: {
-                                color: (ctx) => ctx.tick.value === 0 ? '#1f2937' : '#f3f4f6', // 0軸深色，其餘淺色
-                                lineWidth: (ctx) => ctx.tick.value === 0 ? 2 : 1,
-                                drawBorder: false
-                            },
-                            ticks: { display: false } // 不顯示數字
+                            title: { display: false },
+                            ticks: { 
+                                display: true, 
+                                callback: () => '', // 清空原本自動生成的 't'，避免重複
+                                maxRotation: 0,
+                                autoSkip: false
+                            }, 
+                            grid: { 
+                                color: (ctx) => ctx.tick.value === 0 ? '#1e293b' : 'transparent', // 只顯示 x 軸黑線
+                                lineWidth: (ctx) => ctx.tick.value === 0 ? 2 : 0,
+                                drawBorder: false,
+                                tickLength: 0 // 隱藏刻度線
+                            }
                         },
                         y: {
-                            min: config.yMin,
-                            max: config.yMax,
-                            grid: {
-                                color: (ctx) => ctx.tick.value === 0 ? '#1f2937' : '#f3f4f6',
+                            title: { display: false }, // 徹底關閉原本旋轉的 Y 軸標題
+                            min: -100,
+                            max: 100,
+                            ticks: { display: false }, // 隱藏數字
+                            grid: { 
+                                color: (ctx) => ctx.tick.value === 0 ? '#1e293b' : 'rgba(0,0,0,0.03)', // 顯示 y=0 中線與極淡的格線
                                 lineWidth: (ctx) => ctx.tick.value === 0 ? 2 : 1,
                                 drawBorder: false
-                            },
-                            ticks: { display: false } // 不顯示數字
+                            }
                         }
                     }
                 },
-                plugins: [plugin]
+                plugins: [{
+                    id: 'customAxisLabels',
+                    afterDraw: (chart) => {
+                        const { ctx, scales: { x, y } } = chart;
+                        const isMainChart = chart.canvas.id === 'mainChart';
+                        
+                        ctx.save();
+                        ctx.font = `bold italic ${isMainChart ? 22 : 16}px "Times New Roman", serif`;
+                        ctx.fillStyle = '#1e293b';
+                        
+                        // 1. 繪製正向的 Y 軸標題 (完美對齊 Y 軸正上方)
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'bottom';
+                        ctx.fillText(typeLabel, y.right, y.top - 4);
+
+                        // 2. 繪製 X 軸標題 't' (完美對齊 X 軸最右端)
+                        ctx.textAlign = 'left';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText('t', x.right + 6, y.getPixelForValue(0));
+                        
+                        ctx.restore();
+                    }
+                }]
             });
         };
 
-        // 產生具有獨特圖形的選項陣列
-        const generateTargetOptions = (correctMotionId, targetType) => {
-            let correctData = getGraphData(correctMotionId, targetType);
-            let options = [{ isCorrect: true, data: correctData, motionId: correctMotionId }];
+        // 判斷兩個 motionId 在特定圖形下是否長得一模一樣
+        const isEquivalent = (id1, id2, type) => {
+            if (type !== 'a') return id1 === id2; // x-t 和 v-t 每個動作都長得不一樣
             
-            let usedSignatures = new Set();
-            usedSignatures.add(JSON.stringify(correctData));
-            
-            let pool = [];
-            for (let i = 0; i < MOTIONS.length; i++) {
-                if (i === correctMotionId) continue;
-                let data = getGraphData(i, targetType);
-                let sig = JSON.stringify(data);
-                if (!usedSignatures.has(sig)) {
-                    usedSignatures.add(sig);
-                    pool.push({ isCorrect: false, data: data, motionId: i });
-                }
-            }
-            
-            // 洗牌並抽取3個錯誤選項
-            pool.sort(() => Math.random() - 0.5);
-            options.push(...pool.slice(0, 3));
-            
-            // 再次洗牌最終的4個選項
-            options.sort(() => Math.random() - 0.5);
-            
-            return {
-                optionsData: options,
-                correctIndex: options.findIndex(o => o.isCorrect)
-            };
+            // a-t 圖有共用的狀態
+            if ([0, 1, 2].includes(id1) && [0, 1, 2].includes(id2)) return true; // 加速度皆為 0
+            if ([3, 6].includes(id1) && [3, 6].includes(id2)) return true;       // 加速度皆為正
+            if ([4, 5].includes(id1) && [4, 5].includes(id2)) return true;       // 加速度皆為負
+            return id1 === id2;
         };
 
-        // 產生新題目
+        // 打亂陣列
+        const shuffleArray = (array) => {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        };
+
         const generateNewQuestion = () => {
-            // 重置狀態與UI
             hasAnswered = false;
             selectedT1 = -1;
             selectedT2 = -1;
-            document.querySelectorAll('.t1-btn, .t2-btn').forEach(btn => {
-                btn.classList.remove('selected-opt', 'correct-opt', 'wrong-opt');
-                btn.disabled = false;
-            });
-            document.getElementById('feedback-alert').classList.add('hidden');
-            
+            document.getElementById('alert-correct').classList.add('hidden');
+            document.getElementById('alert-error').classList.add('hidden');
+
             questionCount++;
             document.getElementById('question-count-display').innerText = questionCount;
 
-            // 隨機選定主圖形與對應要求轉換的圖形
-            const allTypes = ['x', 'v', 'a'];
-            const promptType = allTypes[Math.floor(Math.random() * allTypes.length)];
-            const remainingTypes = allTypes.filter(t => t !== promptType);
-            currentTarget1 = remainingTypes[0];
-            currentTarget2 = remainingTypes[1];
+            // 隨機決定主圖形與選項圖形
+            const types = ['x', 'v', 'a'];
+            shuffleArray(types);
+            mainType = types[0];
+            type1 = types[1];
+            type2 = types[2];
 
-            // 決定正確的物理狀態 (0~6)
-            const correctMotionId = Math.floor(Math.random() * 7);
-            currentMotionInfo = MOTIONS[correctMotionId];
+            // 隨機決定正確的運動狀態 (0~6為基礎運動)
+            targetMotionId = Math.floor(Math.random() * 7); 
 
-            // 更新 UI 文字
-            document.getElementById('question-text').innerHTML = 
-                `若物體的 <span style="color:${TYPE_MAP[promptType].color}" class="text-xl">【${TYPE_MAP[promptType].name}】</span> 如下圖：`;
-            
-            document.getElementById('target1-title').innerHTML = 
-                `1. 請選擇對應的 <span style="color:${TYPE_MAP[currentTarget1].color}">【${TYPE_MAP[currentTarget1].name}】</span> 圖形：`;
+            // 渲染主題目圖
+            renderChart('mainChart', mainType, getGraphData(targetMotionId, mainType), true);
+
+            // 設定選項標題
+            document.getElementById('group1-title').innerHTML = `請選擇對應的 <span class="math-var">${type1}-t</span> 圖：`;
+            document.getElementById('group2-title').innerHTML = `請選擇對應的 <span class="math-var">${type2}-t</span> 圖：`;
+
+            // 產生干擾選項 (從 0~8 中挑選不同的形狀)
+            const getOptions = (correctId, type) => {
+                let options = [correctId];
+                while(options.length < 4) {
+                    let rand = Math.floor(Math.random() * 9);
+                    // 確保不會選到長得一模一樣的圖形作為干擾
+                    let isDuplicateShape = options.some(opt => isEquivalent(opt, rand, type));
+                    if (!isDuplicateShape) {
+                        options.push(rand);
+                    }
+                }
+                return shuffleArray(options);
+            };
+
+            const options1 = getOptions(targetMotionId, type1);
+            const options2 = getOptions(targetMotionId, type2);
+
+            // 建立並渲染選項按鈕
+            const buildOptions = (groupId, type, options, groupIndex) => {
+                const container = document.getElementById(groupId);
+                container.innerHTML = '';
                 
-            document.getElementById('target2-title').innerHTML = 
-                `2. 請選擇對應的 <span style="color:${TYPE_MAP[currentTarget2].color}">【${TYPE_MAP[currentTarget2].name}】</span> 圖形：`;
+                options.forEach((optId, idx) => {
+                    const btn = document.createElement('button');
+                    const canvasId = `canvas-${groupIndex}-${idx}`;
+                    
+                    btn.className = `opt-btn-${groupIndex} bg-white rounded-lg p-1 border-2 border-slate-200 shadow-sm transition transform hover:scale-105 h-32 relative overflow-hidden`;
+                    btn.onclick = () => handleSelect(groupIndex, optId, btn);
+                    
+                    const canvas = document.createElement('canvas');
+                    canvas.id = canvasId;
+                    btn.appendChild(canvas);
+                    container.appendChild(btn);
 
-            // 繪製主圖
-            drawChart('prompt-canvas', 'prompt', promptType, getGraphData(correctMotionId, promptType), true);
+                    // 渲染該選項的圖
+                    renderChart(canvasId, type, getGraphData(optId, type), false);
+                });
+            };
 
-            // 產生並繪製 Target 1 (4個選項)
-            const t1Result = generateTargetOptions(correctMotionId, currentTarget1);
-            t1CorrectIndex = t1Result.correctIndex;
-            t1Result.optionsData.forEach((opt, idx) => {
-                drawChart(`t1-canvas-${idx}`, `t1_opt_${idx}`, currentTarget1, opt.data, false);
-            });
-
-            // 產生並繪製 Target 2 (4個選項)
-            const t2Result = generateTargetOptions(correctMotionId, currentTarget2);
-            t2CorrectIndex = t2Result.correctIndex;
-            t2Result.optionsData.forEach((opt, idx) => {
-                drawChart(`t2-canvas-${idx}`, `t2_opt_${idx}`, currentTarget2, opt.data, false);
-            });
+            buildOptions('group1-options', type1, options1, 1);
+            buildOptions('group2-options', type2, options2, 2);
         };
 
-        // 處理選項點擊
-        const handleOptionSelect = (group, index) => {
+        const handleSelect = (groupIndex, optId, btnElement) => {
             if (hasAnswered) return;
 
-            // 更新選擇狀態與UI
-            if (group === 1) {
-                selectedT1 = index;
-                document.querySelectorAll('.t1-btn').forEach((btn, i) => {
-                    if (i === index) btn.classList.add('selected-opt');
-                    else btn.classList.remove('selected-opt');
-                });
-            } else {
-                selectedT2 = index;
-                document.querySelectorAll('.t2-btn').forEach((btn, i) => {
-                    if (i === index) btn.classList.add('selected-opt');
-                    else btn.classList.remove('selected-opt');
-                });
-            }
+            if (groupIndex === 1) selectedT1 = optId;
+            if (groupIndex === 2) selectedT2 = optId;
 
-            // 檢查是否兩者都選了
+            // 樣式更新：移除該群組所有按鈕的高亮，並加上被選中的高亮 (藍色粗框)
+            document.querySelectorAll(`.opt-btn-${groupIndex}`).forEach(btn => {
+                btn.classList.remove('ring-4', 'ring-indigo-500', 'border-transparent');
+                btn.classList.add('border-slate-200');
+            });
+            btnElement.classList.remove('border-slate-200');
+            btnElement.classList.add('ring-4', 'ring-indigo-500', 'border-transparent');
+
+            // 檢查是否兩個都選了
             if (selectedT1 !== -1 && selectedT2 !== -1) {
-                checkAnswer();
+                checkSubmit();
             }
         };
 
-        // 驗證答案
-        const checkAnswer = () => {
+        const checkSubmit = () => {
             hasAnswered = true;
-            document.querySelectorAll('.t1-btn, .t2-btn').forEach(btn => btn.disabled = true);
             
-            const isT1Correct = selectedT1 === t1CorrectIndex;
-            const isT2Correct = selectedT2 === t2CorrectIndex;
-            
-            // UI 反饋 - 第一組
-            const t1Btns = document.querySelectorAll('.t1-btn');
-            t1Btns[t1CorrectIndex].classList.add('correct-opt');
-            if (!isT1Correct) t1Btns[selectedT1].classList.add('wrong-opt');
-
-            // UI 反饋 - 第二組
-            const t2Btns = document.querySelectorAll('.t2-btn');
-            t2Btns[t2CorrectIndex].classList.add('correct-opt');
-            if (!isT2Correct) t2Btns[selectedT2].classList.add('wrong-opt');
-
-            const feedbackBox = document.getElementById('feedback-alert');
-            const titleEl = document.getElementById('feedback-title');
-            const descEl = document.getElementById('feedback-desc');
-            feedbackBox.classList.remove('hidden', 'bg-green-100', 'bg-red-100', 'text-green-800', 'text-red-800');
+            // 驗證邏輯：判斷選中的選項形狀是否與目標等效
+            const isT1Correct = isEquivalent(selectedT1, targetMotionId, type1);
+            const isT2Correct = isEquivalent(selectedT2, targetMotionId, type2);
 
             if (isT1Correct && isT2Correct) {
                 score = Math.min(score + 10, 100);
-                feedbackBox.classList.add('bg-green-100', 'text-green-800');
-                titleEl.innerText = '🎉 完全正確！ (獲得 10 分)';
-                descEl.innerHTML = `此組合代表<strong>「${currentMotionInfo.name}」</strong>。<br>${currentMotionInfo.desc}`;
+                document.getElementById('score-display').innerText = score;
+                document.getElementById('alert-correct').classList.remove('hidden');
                 
                 if (score >= 100) clearInterval(timerInterval);
             } else {
                 score = Math.max(score - 5, 0);
-                feedbackBox.classList.add('bg-red-100', 'text-red-800');
-                titleEl.innerText = '❌ 答案有誤！ (扣 5 分)';
-                descEl.innerHTML = `請注意綠框標示的正確圖形。此運動狀態其實是<strong>「${currentMotionInfo.name}」</strong>。<br>${currentMotionInfo.desc}`;
-            }
-
-            document.getElementById('score-display').innerText = score;
-        };
-
-        // 下一題與遊戲開始
-        const handleNextQuestion = () => {
-            if (score >= 100) {
-                document.getElementById('game-screen').classList.add('hidden');
-                document.getElementById('game-over-screen').classList.remove('hidden');
-                document.getElementById('final-question-count').innerText = questionCount;
-                document.getElementById('final-score').innerText = score;
-                document.getElementById('final-time').innerText = timer.toFixed(1);
-            } else {
-                generateNewQuestion();
+                document.getElementById('score-display').innerText = score;
+                
+                let errorMsg = `原圖形為：「${motionNames[targetMotionId]}」。<br>`;
+                if (!isT1Correct) errorMsg += `<span class="math-var">${type1}-t</span> 圖選擇錯誤。 `;
+                if (!isT2Correct) errorMsg += `<span class="math-var">${type2}-t</span> 圖選擇錯誤。`;
+                
+                document.getElementById('error-message').innerHTML = errorMsg;
+                document.getElementById('alert-error').classList.remove('hidden');
             }
         };
 
@@ -452,6 +417,19 @@
             }, 100);
 
             generateNewQuestion();
+        };
+
+        const handleNextQuestion = () => {
+            if (score >= 100) {
+                document.getElementById('game-screen').classList.add('hidden');
+                document.getElementById('game-over-screen').classList.remove('hidden');
+                document.getElementById('game-over-screen').classList.add('flex');
+                
+                document.getElementById('final-question-count').innerText = questionCount;
+                document.getElementById('final-time').innerText = timer.toFixed(1);
+            } else {
+                generateNewQuestion();
+            }
         };
     </script>
 </body>
