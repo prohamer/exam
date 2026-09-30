@@ -3,289 +3,462 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>等加速運動測驗</title>
+    <title>等加速運動V-t圖測驗</title>
     <!-- 引入 Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- 引入 Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- 引入 Chart.js（固定版本，避免自動升級造成設定失效） -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <style>
-        /* 隱藏元素的 class，用來切換畫面 */
         .hidden { display: none !important; }
     </style>
 </head>
 <body class="bg-white text-gray-900">
 
-    <!-- 開始畫面 -->
-    <div id="start-screen" class="flex items-center justify-center h-screen px-4">
-        <button onclick="startGame()" class="text-xl sm:text-2xl px-6 py-3 sm:px-8 sm:py-4 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-lg shadow-lg transition duration-300 ease-in-out transform hover:scale-105">
-            開始遊戲
-        </button>
+    <!-- ===================== 開始畫面 ===================== -->
+    <div id="start-screen" class="max-w-2xl mx-auto p-4 sm:p-6">
+        <h1 class="text-2xl sm:text-3xl font-bold text-center text-blue-600 mt-2 sm:mt-6 mb-4">等加速運動測驗</h1>
+
+        <section class="bg-blue-50 rounded-lg p-4 mb-3 text-sm sm:text-base leading-relaxed">
+            <h2 class="font-bold text-blue-700 mb-1">測驗方式</h2>
+            <p>每題會出現一張「速度－時間（v-t）圖」，請依圖判斷物體的運動狀態，選好所有選項後按「送出答案」。</p>
+            <ul class="list-disc pl-5 mt-2 space-y-1">
+                <li>全部答對 <b>+10 分</b>，有任一項答錯 <b>−5 分</b>（最低 0 分）。</li>
+                <li>累積到 <b>100 分</b>即完成測驗，會記錄作答題數與用時。</li>
+                <li>規定向前為正方向。</li>
+            </ul>
+        </section>
+
+        <section class="bg-gray-50 rounded-lg p-4 mb-3 text-sm sm:text-base leading-relaxed">
+            <h2 class="font-bold text-gray-700 mb-1">看圖小提示</h2>
+            <ul class="list-disc pl-5 space-y-1">
+                <li><b>運動方向</b>：看速度的正負。圖線在 0 以上（v &gt; 0）為向前，在 0 以下（v &lt; 0）為向後，一直在 0 線上則是靜止。</li>
+                <li><b>加速度</b>：看圖線的斜率。往右上升為大於 0，水平為等於 0，往右下降為小於 0。</li>
+                <li><b>合力方向</b>：由牛頓第二運動定律 F = ma，合力方向與加速度方向相同；加速度為 0 時合力為零。</li>
+                <li>注意：判斷加速度的正負要看斜率，不能只看物體變快或變慢！</li>
+            </ul>
+        </section>
+
+        <section class="border rounded-lg p-4 mb-4 text-sm sm:text-base">
+            <h2 class="font-bold mb-2">選擇要測驗的項目</h2>
+            <div class="flex flex-col sm:flex-row gap-2 sm:gap-6">
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" class="layer-check w-4 h-4" value="direction" checked> 運動方向
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" class="layer-check w-4 h-4" value="acceleration" checked> 加速度
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" class="layer-check w-4 h-4" value="force" checked> 合力方向
+                </label>
+            </div>
+            <p id="layer-warning" class="hidden text-red-600 text-sm mt-2">請至少選擇一個測驗項目。</p>
+        </section>
+
+        <div class="text-center">
+            <button id="start-btn" onclick="startGame()" class="text-xl px-8 py-3 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-lg shadow-lg transition disabled:opacity-40 disabled:cursor-not-allowed">
+                開始測驗
+            </button>
+        </div>
     </div>
 
-    <!-- 遊戲畫面 -->
-    <div id="game-screen" class="hidden p-2 sm:p-4 max-w-4xl mx-auto mt-4">
+    <!-- ===================== 測驗畫面 ===================== -->
+    <div id="game-screen" class="hidden p-2 sm:p-4 max-w-4xl mx-auto mt-2 sm:mt-4">
         <h1 class="text-xl sm:text-2xl font-bold mb-2 sm:mb-3 text-center text-blue-600">等加速運動測驗</h1>
-        
+
         <!-- 計分板 -->
-        <div class="mb-2 sm:mb-3 flex justify-between items-center bg-gray-100 p-2 sm:p-3 rounded-lg shadow text-xs sm:text-sm">
+        <div class="mb-1 flex justify-between items-center bg-gray-100 p-2 sm:p-3 rounded-lg shadow text-xs sm:text-sm">
             <p><span class="font-bold text-blue-600">分數:</span> <span id="score-display">0</span></p>
             <p><span class="font-bold text-blue-600">題數:</span> <span id="question-count-display">0</span></p>
+            <p><span class="font-bold text-blue-600">答對:</span> <span id="correct-display">0</span></p>
             <p><span class="font-bold text-blue-600">時間:</span> <span id="time-display">0.0</span>秒</p>
         </div>
+        <div class="mb-2 sm:mb-3 h-2 bg-gray-200 rounded-full overflow-hidden">
+            <div id="progress-bar" class="h-full bg-blue-500 transition-all duration-300" style="width:0%"></div>
+        </div>
 
-        <!-- 圖表區塊 -->
-        <div class="mb-2 sm:mb-3 h-48 sm:h-64 relative w-full">
+        <!-- 圖表 -->
+        <div class="mb-2 sm:mb-3 h-56 sm:h-72 relative w-full">
             <canvas id="velocityChart"></canvas>
         </div>
 
-        <!-- 方向選擇 -->
-        <div class="mb-2 sm:mb-3">
-            <p class="mb-1 font-semibold text-sm sm:text-base">請選擇運動方向：</p>
-            <div class="flex gap-2">
-                <button onclick="handleDirectionSelect('向前', this)" class="dir-btn flex-1 text-xs sm:text-sm py-2 bg-gray-200 text-gray-800 rounded font-semibold transition-colors">向前</button>
-                <button onclick="handleDirectionSelect('向後', this)" class="dir-btn flex-1 text-xs sm:text-sm py-2 bg-gray-200 text-gray-800 rounded font-semibold transition-colors">向後</button>
+        <!-- 選項（依開始畫面的設定動態產生） -->
+        <div id="layers-container"></div>
+
+        <!-- 送出 -->
+        <button id="submit-btn" onclick="submitAnswer()" disabled
+            class="w-full mb-2 sm:mb-3 py-2 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded text-sm sm:text-base transition disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-blue-500">
+            送出答案
+        </button>
+
+        <!-- 回饋 -->
+        <div id="feedback" class="hidden border rounded mb-2 sm:mb-3 p-2 sm:p-3 shadow-sm text-xs sm:text-sm">
+            <div class="flex justify-between items-center mb-1">
+                <span id="feedback-title" class="font-bold"></span>
+                <button id="next-btn" onclick="handleNextQuestion()" class="text-white rounded font-bold py-1 px-3 transition-colors">下一題</button>
             </div>
+            <div id="feedback-result" class="mb-1"></div>
+            <ul id="feedback-explain" class="list-disc pl-5 space-y-0.5 text-gray-700"></ul>
         </div>
 
-        <!-- 加速度選擇 -->
-        <div class="mb-2 sm:mb-3">
-            <p class="mb-1 font-semibold text-sm sm:text-base">請選擇加速度：</p>
-            <div class="flex gap-2">
-                <button onclick="handleAccelerationSelect('大於0', this)" class="acc-btn flex-1 text-xs sm:text-sm py-2 bg-gray-200 text-gray-800 rounded font-semibold transition-colors">大於 0</button>
-                <button onclick="handleAccelerationSelect('等於0', this)" class="acc-btn flex-1 text-xs sm:text-sm py-2 bg-gray-200 text-gray-800 rounded font-semibold transition-colors">等於 0</button>
-                <button onclick="handleAccelerationSelect('小於0', this)" class="acc-btn flex-1 text-xs sm:text-sm py-2 bg-gray-200 text-gray-800 rounded font-semibold transition-colors">小於 0</button>
-            </div>
-        </div>
-
-        <!-- 正確提示 -->
-        <div id="alert-correct" class="hidden bg-green-100 border border-green-400 text-green-700 rounded mb-2 sm:mb-3 p-2 sm:p-3 shadow-sm">
-            <div class="flex justify-between items-center text-xs sm:text-sm">
-                <span class="font-bold">答案正確！得到10分</span>
-                <button onclick="handleNextQuestion()" class="bg-green-500 hover:bg-green-600 text-white rounded font-bold text-xs sm:text-sm py-1 px-3 transition-colors">下一題</button>
-            </div>
-        </div>
-
-        <!-- 錯誤提示 -->
-        <div id="alert-error" class="hidden bg-red-100 border border-red-400 text-red-700 rounded mb-2 sm:mb-3 p-2 sm:p-3 shadow-sm">
-            <div class="flex flex-col text-xs sm:text-sm">
-                <div class="flex justify-between items-center mb-1">
-                    <span class="font-bold">答案錯誤，扣5分。</span>
-                    <button onclick="handleNextQuestion()" class="bg-red-500 hover:bg-red-600 text-white rounded font-bold text-xs sm:text-sm py-1 px-3 transition-colors">下一題</button>
-                </div>
-                <span id="error-ans-name"></span>
-                <span id="error-ans-detail"></span>
-            </div>
+        <div class="text-center">
+            <button onclick="backToStart()" class="text-xs text-gray-500 underline">結束並回到首頁</button>
         </div>
     </div>
 
-    <!-- 結算畫面 -->
-    <div id="game-over-screen" class="hidden text-center p-4 flex flex-col items-center justify-center h-screen">
-        <h1 class="text-xl sm:text-2xl font-bold mb-3">恭喜你通過測驗!</h1>
-        <p class="mb-1 text-lg">你總共回答了 <span id="final-question-count" class="font-bold text-blue-600"></span> 題，獲得了 100 分。</p>
-        <p class="mb-4 text-lg">總用時：<span id="final-time" class="font-bold text-blue-600"></span> 秒</p>
-        <button onclick="window.location.reload()" class="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded shadow transition-colors">
-            重新開始
+    <!-- ===================== 結算畫面 ===================== -->
+    <div id="game-over-screen" class="hidden text-center p-4 flex flex-col items-center justify-center min-h-screen">
+        <h1 class="text-2xl font-bold mb-3 text-blue-600">恭喜你完成測驗！</h1>
+        <p class="mb-1 text-lg">測驗項目：<span id="final-layers" class="font-bold"></span></p>
+        <p class="mb-1 text-lg">共作答 <span id="final-question-count" class="font-bold text-blue-600"></span> 題，答對 <span id="final-correct" class="font-bold text-green-600"></span> 題、答錯 <span id="final-wrong" class="font-bold text-red-600"></span> 題</p>
+        <p class="mb-1 text-lg">答對率：<span id="final-rate" class="font-bold text-blue-600"></span></p>
+        <p class="mb-5 text-lg">總用時：<span id="final-time" class="font-bold text-blue-600"></span> 秒</p>
+        <button onclick="backToStart()" class="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded shadow transition-colors">
+            回到首頁
         </button>
     </div>
 
-    <!-- 遊戲邏輯腳本 -->
     <script>
+        // ===================== 題型設定 =====================
+        const LAYERS = {
+            direction:    { title: '運動方向', options: [['向前', '向前'], ['向後', '向後'], ['靜止', '靜止']] },
+            acceleration: { title: '加速度',   options: [['大於0', '大於 0'], ['等於0', '等於 0'], ['小於0', '小於 0']] },
+            force:        { title: '合力方向', options: [['向前', '向前'], ['向後', '向後'], ['合力為零', '合力為零']] },
+        };
+        const LAYER_ORDER = ['direction', 'acceleration', 'force'];
+
+        // kind: speedup 加速 / constant 等速 / slowdown 減速 / rest 靜止；sign: 速度正負
         const MOTION_TYPES = [
-            { name: '向前加速', direction: '向前', acceleration: '大於0' },
-            { name: '向前等速', direction: '向前', acceleration: '等於0' },
-            { name: '向前減速', direction: '向前', acceleration: '小於0' },
-            { name: '向後加速', direction: '向後', acceleration: '小於0' },
-            { name: '向後等速', direction: '向後', acceleration: '等於0' },
-            { name: '向後減速', direction: '向後', acceleration: '大於0' },
+            { name: '向前加速', kind: 'speedup',  sign:  1, answers: { direction: '向前', acceleration: '大於0', force: '向前' } },
+            { name: '向前等速', kind: 'constant', sign:  1, answers: { direction: '向前', acceleration: '等於0', force: '合力為零' } },
+            { name: '向前減速', kind: 'slowdown', sign:  1, answers: { direction: '向前', acceleration: '小於0', force: '向後' } },
+            { name: '向後加速', kind: 'speedup',  sign: -1, answers: { direction: '向後', acceleration: '小於0', force: '向後' } },
+            { name: '向後等速', kind: 'constant', sign: -1, answers: { direction: '向後', acceleration: '等於0', force: '合力為零' } },
+            { name: '向後減速', kind: 'slowdown', sign: -1, answers: { direction: '向後', acceleration: '大於0', force: '向前' } },
+            { name: '靜止',     kind: 'rest',     sign:  0, answers: { direction: '靜止', acceleration: '等於0', force: '合力為零' } },
         ];
 
-        // 狀態變數
+        const T_MAX = 10;   // 圖表時間軸上限 (s)
+        const V_AXIS = 40;  // 速度軸範圍 ±40 (m/s)
+        const V_LIMIT = 36; // 產生數據時的速度上限
+
+        // ===================== 狀態 =====================
+        let enabledLayers = [...LAYER_ORDER];
         let currentMotion = null;
-        let score = 0;
-        let questionCount = 0;
-        let timer = 0;
-        let timerInterval = null;
-        let selectedDirection = null;
-        let selectedAcceleration = null;
-        let isAnswerSubmitted = false;
+        let lastTypeIndex = -1;
+        let score = 0, questionCount = 0, correctCount = 0, wrongCount = 0;
+        let startTime = 0, elapsed = 0, timerInterval = null;
+        let selections = {};
+        let submitted = false;
         let chartInstance = null;
 
-        const generateData = (motionType) => {
-            const data = [];
-            const isForward = motionType.direction === '向前';
-            let acceleration, initialVelocity;
+        // ===================== 工具函式 =====================
+        // 在 [min, max] 之間以 step 為間隔取亂數
+        const randStep = (min, max, step) => {
+            const n = Math.round((max - min) / step);
+            return Number((min + step * Math.floor(Math.random() * (n + 1))).toFixed(2));
+        };
+        const fmt = (n) => String(Number(n.toFixed(2)));
+        const labelOf = (layer, value) => LAYERS[layer].options.find(o => o[0] === value)[1];
 
-            switch (motionType.acceleration) {
-                case '大於0':
-                    acceleration = 2;
-                    initialVelocity = isForward ? 5 : -15;
-                    break;
-                case '小於0':
-                    acceleration = -2;
-                    initialVelocity = isForward ? 15 : -5;
-                    break;
-                case '等於0':
-                    acceleration = 0;
-                    initialVelocity = isForward ? 10 : -10;
-                    break;
-            }
+        // ===================== 產生題目數據 =====================
+        const generateMotion = (type) => {
+            let speed0, amag = 0, T, speed1;
 
-            for (let i = 0; i <= 10; i += 0.1) {
-                const time = Number(i.toFixed(1));
-                const velocity = initialVelocity + acceleration * time;
-                
-                if ((isForward && velocity <= 0) || (!isForward && velocity >= 0)) {
-                    if (velocity === 0) data.push({ time, velocity: 0 });
+            switch (type.kind) {
+                case 'speedup':
+                    speed0 = randStep(1, 12, 1);
+                    amag = randStep(0.5, 3, 0.5);
+                    T = Math.min(randStep(4, T_MAX, 1), Math.floor((V_LIMIT - speed0) / amag));
+                    speed1 = speed0 + amag * T;
+                    break;
+                case 'constant':
+                    speed0 = randStep(3, 30, 1);
+                    T = randStep(5, T_MAX, 1);
+                    speed1 = speed0;
+                    break;
+                case 'slowdown': {
+                    // 先決定加速度大小與停止時間，讓數字漂亮且不會越過 0
+                    amag = randStep(1, 4, 0.5);
+                    let tStop = randStep(3, T_MAX, 1);
+                    tStop = Math.max(3, Math.min(tStop, Math.floor(V_LIMIT / amag)));
+                    speed0 = amag * tStop;
+                    // 一半機率減速到停止，一半機率只減速一段
+                    T = Math.random() < 0.5 ? tStop : randStep(Math.max(2, Math.ceil(tStop / 2)), tStop - 1, 1);
+                    speed1 = speed0 - amag * T;
                     break;
                 }
-                data.push({ time, velocity });
+                case 'rest':
+                    speed0 = 0;
+                    T = randStep(5, T_MAX, 1);
+                    speed1 = 0;
+                    break;
             }
-            return data;
+
+            const vStart = type.sign * speed0;
+            const vEnd = type.sign * speed1;
+            const a = T > 0 ? (vEnd - vStart) / T : 0;
+            return { type, vStart, vEnd, T, a };
         };
 
-        const updateChart = (data) => {
-            const labels = data.map(d => d.time);
-            const velocities = data.map(d => d.velocity);
+        // ===================== 圖表 =====================
+        const updateChart = (m) => {
+            const points = [{ x: 0, y: m.vStart }, { x: m.T, y: m.vEnd }];
 
             if (chartInstance) {
-                chartInstance.data.labels = labels;
-                chartInstance.data.datasets[0].data = velocities;
+                chartInstance.data.datasets[0].data = points;
                 chartInstance.update();
-            } else {
-                const ctx = document.getElementById('velocityChart').getContext('2d');
-                chartInstance = new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: labels,
-                        datasets: [{
-                            label: '速度',
-                            data: velocities,
-                            borderColor: '#3b82f6',
-                            borderWidth: 2,
-                            pointRadius: 0,
-                            fill: false,
-                            tension: 0.4 // 呈現曲線效果
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: { legend: { display: false } },
-                        scales: {
-                            x: {
-                                title: { display: true, text: '時間' },
-                                grid: { borderDash: [3, 3] },
-                                ticks: { font: { size: 10 } }
-                            },
-                            y: {
-                                title: { display: true, text: '速度' },
-                                grid: { borderDash: [3, 3] },
-                                ticks: { font: { size: 10 } }
+                return;
+            }
+
+            const ctx = document.getElementById('velocityChart').getContext('2d');
+            const isZero = (c) => c.tick && c.tick.value === 0;
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    datasets: [{
+                        data: points,
+                        borderColor: '#2563eb',
+                        borderWidth: 3,
+                        pointRadius: 0,
+                        fill: false,
+                        tension: 0 // 等加速度運動的 v-t 圖為直線
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: { duration: 300 },
+                    plugins: { legend: { display: false }, tooltip: { enabled: false } },
+                    scales: {
+                        x: {
+                            type: 'linear',
+                            min: 0, max: T_MAX,
+                            title: { display: true, text: '時間 t (s)' },
+                            ticks: { stepSize: 1, font: { size: 10 } },
+                            grid: { color: '#e5e7eb' }
+                        },
+                        y: {
+                            min: -V_AXIS, max: V_AXIS,
+                            title: { display: true, text: '速度 v (m/s)' },
+                            ticks: { stepSize: 10, font: { size: 10 } },
+                            // v = 0 的線加粗加深，方便判斷正負
+                            grid: {
+                                color: (c) => isZero(c) ? '#374151' : '#e5e7eb',
+                                lineWidth: (c) => isZero(c) ? 2 : 1
                             }
                         }
                     }
-                });
-            }
-        };
-
-        const resetUI = () => {
-            // 重置按鈕樣式
-            document.querySelectorAll('.dir-btn, .acc-btn').forEach(btn => {
-                btn.className = btn.className.replace('bg-blue-600 text-white', 'bg-gray-200 text-gray-800');
-                btn.classList.add('bg-gray-200', 'text-gray-800');
-            });
-            // 隱藏提示
-            document.getElementById('alert-correct').classList.add('hidden');
-            document.getElementById('alert-error').classList.add('hidden');
-            
-            selectedDirection = null;
-            selectedAcceleration = null;
-            isAnswerSubmitted = false;
-        };
-
-        const generateNewQuestion = () => {
-            const newMotion = MOTION_TYPES[Math.floor(Math.random() * MOTION_TYPES.length)];
-            currentMotion = newMotion;
-            questionCount++;
-            
-            document.getElementById('question-count-display').innerText = questionCount;
-            resetUI();
-            
-            const data = generateData(currentMotion);
-            updateChart(data);
-        };
-
-        const startGame = () => {
-            document.getElementById('start-screen').classList.add('hidden');
-            document.getElementById('game-screen').classList.remove('hidden');
-            
-            // 啟動計時器
-            timerInterval = setInterval(() => {
-                timer += 0.1;
-                document.getElementById('time-display').innerText = timer.toFixed(1);
-            }, 100);
-
-            generateNewQuestion();
-        };
-
-        const handleDirectionSelect = (direction, btnElement) => {
-            if (isAnswerSubmitted) return;
-            selectedDirection = direction;
-            
-            // 更新 UI 狀態
-            document.querySelectorAll('.dir-btn').forEach(btn => {
-                btn.className = btn.className.replace('bg-blue-600 text-white', 'bg-gray-200 text-gray-800');
-            });
-            btnElement.className = btnElement.className.replace('bg-gray-200 text-gray-800', 'bg-blue-600 text-white');
-            
-            checkSubmit();
-        };
-
-        const handleAccelerationSelect = (acceleration, btnElement) => {
-            if (isAnswerSubmitted) return;
-            selectedAcceleration = acceleration;
-            
-            // 更新 UI 狀態
-            document.querySelectorAll('.acc-btn').forEach(btn => {
-                btn.className = btn.className.replace('bg-blue-600 text-white', 'bg-gray-200 text-gray-800');
-            });
-            btnElement.className = btnElement.className.replace('bg-gray-200 text-gray-800', 'bg-blue-600 text-white');
-            
-            checkSubmit();
-        };
-
-        const checkSubmit = () => {
-            if (selectedDirection && selectedAcceleration && !isAnswerSubmitted) {
-                isAnswerSubmitted = true;
-                
-                if (selectedDirection === currentMotion.direction && selectedAcceleration === currentMotion.acceleration) {
-                    score = Math.min(score + 10, 100);
-                    document.getElementById('score-display').innerText = score;
-                    document.getElementById('alert-correct').classList.remove('hidden');
-                    
-                    if (score >= 100) clearInterval(timerInterval);
-                } else {
-                    score = Math.max(score - 5, 0);
-                    document.getElementById('score-display').innerText = score;
-                    
-                    document.getElementById('error-ans-name').innerText = `正確答案是：${currentMotion.name}。`;
-                    document.getElementById('error-ans-detail').innerText = `方向是${currentMotion.direction}，加速度${currentMotion.acceleration}。`;
-                    document.getElementById('alert-error').classList.remove('hidden');
                 }
+            });
+        };
+
+        // ===================== 選項按鈕 =====================
+        const BTN_BASE = 'opt-btn flex-1 text-xs sm:text-sm py-2 rounded font-semibold transition-colors';
+        const BTN_STYLE = {
+            normal:  'bg-gray-200 text-gray-800 hover:bg-gray-300',
+            selected:'bg-blue-600 text-white',
+            correct: 'bg-green-500 text-white',
+            wrong:   'bg-red-500 text-white',
+            dim:     'bg-gray-100 text-gray-400',
+        };
+
+        const renderLayers = () => {
+            const container = document.getElementById('layers-container');
+            container.innerHTML = '';
+            enabledLayers.forEach(layer => {
+                const wrap = document.createElement('div');
+                wrap.className = 'mb-2 sm:mb-3';
+                wrap.innerHTML = `<p class="mb-1 font-semibold text-sm sm:text-base">請選擇${LAYERS[layer].title}：</p>`;
+                const row = document.createElement('div');
+                row.className = 'flex gap-2';
+                LAYERS[layer].options.forEach(([value, label]) => {
+                    const btn = document.createElement('button');
+                    btn.textContent = label;
+                    btn.dataset.layer = layer;
+                    btn.dataset.value = value;
+                    btn.onclick = () => handleSelect(layer, value);
+                    row.appendChild(btn);
+                });
+                wrap.appendChild(row);
+                container.appendChild(wrap);
+            });
+            styleButtons();
+        };
+
+        const styleButtons = () => {
+            document.querySelectorAll('.opt-btn, #layers-container button').forEach(btn => {
+                const { layer, value } = btn.dataset;
+                const chosen = selections[layer] === value;
+                let style;
+                if (!submitted) {
+                    style = chosen ? 'selected' : 'normal';
+                } else {
+                    const isAnswer = currentMotion.type.answers[layer] === value;
+                    style = isAnswer ? 'correct' : (chosen ? 'wrong' : 'dim');
+                }
+                btn.className = `${BTN_BASE} ${BTN_STYLE[style]}`;
+            });
+        };
+
+        const handleSelect = (layer, value) => {
+            if (submitted) return;
+            selections[layer] = value;
+            styleButtons();
+            document.getElementById('submit-btn').disabled = !enabledLayers.every(k => selections[k]);
+        };
+
+        // ===================== 題目流程 =====================
+        const generateNewQuestion = () => {
+            let idx;
+            do { idx = Math.floor(Math.random() * MOTION_TYPES.length); } while (idx === lastTypeIndex);
+            lastTypeIndex = idx;
+
+            currentMotion = generateMotion(MOTION_TYPES[idx]);
+            questionCount++;
+            document.getElementById('question-count-display').innerText = questionCount;
+
+            selections = {};
+            submitted = false;
+            styleButtons();
+            document.getElementById('submit-btn').disabled = true;
+            document.getElementById('submit-btn').classList.remove('hidden');
+            document.getElementById('feedback').classList.add('hidden');
+
+            updateChart(currentMotion);
+        };
+
+        const buildExplanation = (m) => {
+            const { type, vStart, vEnd, T, a } = m;
+            if (type.kind === 'rest') {
+                return [
+                    '速度始終為 0 m/s，物體靜止不動。',
+                    '速度沒有改變，圖線斜率為 0，加速度等於 0。',
+                    '加速度為 0，由 F = ma 可知合力為零。'
+                ];
             }
+            const s0 = Math.abs(vStart), s1 = Math.abs(vEnd);
+            const lines = [`速度${vStart > 0 ? '為正' : '為負'}，表示運動方向${vStart > 0 ? '向前' : '向後'}。`];
+            if (type.kind === 'speedup') lines.push(`速率從 ${fmt(s0)} 增加到 ${fmt(s1)} m/s，越來越快（加速）。`);
+            else if (type.kind === 'constant') lines.push(`速率維持 ${fmt(s0)} m/s（等速）。`);
+            else lines.push(`速率從 ${fmt(s0)} 減少到 ${fmt(s1)} m/s，越來越慢（減速）。`);
+            lines.push(`斜率 = [(${fmt(vEnd)}) − (${fmt(vStart)})] ÷ ${fmt(T)} = ${fmt(a)} m/s²，所以加速度${a > 0 ? '大於' : a < 0 ? '小於' : '等於'} 0。`);
+            lines.push(a === 0
+                ? '加速度為 0，由 F = ma 可知合力為零。'
+                : `合力方向與加速度方向相同，所以合力${a > 0 ? '向前' : '向後'}。`);
+            return lines;
+        };
+
+        const submitAnswer = () => {
+            if (submitted || !enabledLayers.every(k => selections[k])) return;
+            submitted = true;
+
+            const answers = currentMotion.type.answers;
+            const allCorrect = enabledLayers.every(k => selections[k] === answers[k]);
+
+            if (allCorrect) {
+                score = Math.min(score + 10, 100);
+                correctCount++;
+            } else {
+                score = Math.max(score - 5, 0);
+                wrongCount++;
+            }
+            document.getElementById('score-display').innerText = score;
+            document.getElementById('correct-display').innerText = correctCount;
+            document.getElementById('progress-bar').style.width = `${score}%`;
+
+            if (score >= 100) stopTimer();
+
+            // 顯示回饋
+            const fb = document.getElementById('feedback');
+            const title = document.getElementById('feedback-title');
+            const nextBtn = document.getElementById('next-btn');
+            fb.className = `border rounded mb-2 sm:mb-3 p-2 sm:p-3 shadow-sm text-xs sm:text-sm ${allCorrect ? 'bg-green-50 border-green-400' : 'bg-red-50 border-red-400'}`;
+            title.className = `font-bold ${allCorrect ? 'text-green-700' : 'text-red-700'}`;
+            title.innerText = allCorrect ? '答案正確！得到 10 分' : '答案錯誤，扣 5 分。';
+            nextBtn.className = `text-white rounded font-bold py-1 px-3 transition-colors ${allCorrect ? 'bg-green-500 hover:bg-green-600' : 'bg-red-500 hover:bg-red-600'}`;
+            nextBtn.innerText = score >= 100 ? '查看成績' : '下一題';
+
+            document.getElementById('feedback-result').innerHTML =
+                `<b>這是「${currentMotion.type.name}」</b>　` +
+                enabledLayers.map(k => {
+                    const ok = selections[k] === answers[k];
+                    return `${LAYERS[k].title}：${ok ? '✅' : '❌'}${ok ? '' : `（正確：${labelOf(k, answers[k])}）`}`;
+                }).join('　');
+
+            document.getElementById('feedback-explain').innerHTML =
+                buildExplanation(currentMotion).map(t => `<li>${t}</li>`).join('');
+
+            document.getElementById('submit-btn').classList.add('hidden');
+            styleButtons();
         };
 
         const handleNextQuestion = () => {
-            if (score >= 100) {
-                document.getElementById('game-screen').classList.add('hidden');
-                document.getElementById('game-over-screen').classList.remove('hidden');
-                
-                document.getElementById('final-question-count').innerText = questionCount;
-                document.getElementById('final-time').innerText = timer.toFixed(1);
-            } else {
-                generateNewQuestion();
+            if (score >= 100) showGameOver();
+            else generateNewQuestion();
+        };
+
+        // ===================== 計時 =====================
+        const startTimer = () => {
+            startTime = Date.now();
+            elapsed = 0;
+            timerInterval = setInterval(() => {
+                elapsed = (Date.now() - startTime) / 1000;
+                document.getElementById('time-display').innerText = elapsed.toFixed(1);
+            }, 100);
+        };
+        const stopTimer = () => {
+            if (timerInterval) {
+                elapsed = (Date.now() - startTime) / 1000;
+                clearInterval(timerInterval);
+                timerInterval = null;
+                document.getElementById('time-display').innerText = elapsed.toFixed(1);
             }
         };
+
+        // ===================== 畫面切換 =====================
+        const showScreen = (id) => {
+            ['start-screen', 'game-screen', 'game-over-screen'].forEach(s =>
+                document.getElementById(s).classList.toggle('hidden', s !== id));
+        };
+
+        const startGame = () => {
+            enabledLayers = LAYER_ORDER.filter(k =>
+                document.querySelector(`.layer-check[value="${k}"]`).checked);
+            if (enabledLayers.length === 0) return;
+
+            score = 0; questionCount = 0; correctCount = 0; wrongCount = 0; lastTypeIndex = -1;
+            document.getElementById('score-display').innerText = 0;
+            document.getElementById('correct-display').innerText = 0;
+            document.getElementById('time-display').innerText = '0.0';
+            document.getElementById('progress-bar').style.width = '0%';
+
+            showScreen('game-screen');
+            renderLayers();
+            startTimer();
+            generateNewQuestion();
+        };
+
+        const showGameOver = () => {
+            showScreen('game-over-screen');
+            document.getElementById('final-layers').innerText = enabledLayers.map(k => LAYERS[k].title).join('、');
+            document.getElementById('final-question-count').innerText = questionCount;
+            document.getElementById('final-correct').innerText = correctCount;
+            document.getElementById('final-wrong').innerText = wrongCount;
+            document.getElementById('final-rate').innerText = `${Math.round(correctCount / questionCount * 100)}%`;
+            document.getElementById('final-time').innerText = elapsed.toFixed(1);
+        };
+
+        const backToStart = () => {
+            stopTimer();
+            showScreen('start-screen');
+        };
+
+        // 開始畫面：至少勾選一項才能開始
+        document.querySelectorAll('.layer-check').forEach(cb => cb.addEventListener('change', () => {
+            const any = [...document.querySelectorAll('.layer-check')].some(c => c.checked);
+            document.getElementById('start-btn').disabled = !any;
+            document.getElementById('layer-warning').classList.toggle('hidden', any);
+        }));
     </script>
 </body>
 </html>
