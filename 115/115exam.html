@@ -4,7 +4,7 @@
   <base target="_top">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>115技藝學程</title>
+  <title>測驗系統</title>
   
   <!-- 引入 Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
@@ -357,7 +357,7 @@
 <body>
   <div class="container">
     <div id="setup-view">
-      <h1>線上測驗系統</h1>
+      <h1>115技藝學程</h1>
       <div class="setup-form">
         <div class="form-group">
           <label for="sheet-select">選擇測驗類型：</label>
@@ -526,7 +526,28 @@
 	  
 	  document.getElementById('progress-bar').style.width = ((currentQuestionIndex + 1) / questions.length * 100) + '%';
 
-	  // 媒體處理代碼省略...
+	  	  // 媒體處理：有圖片網址就顯示圖片
+	  const mediaContainer = document.getElementById('media-container');
+	  mediaContainer.innerHTML = '';
+	  const url = (question.mediaUrl || '').toString().trim();
+	  if (url) {
+		const lowerUrl = url.toLowerCase().split('?')[0];
+		if (lowerUrl.endsWith('.mp4') || lowerUrl.endsWith('.webm')) {
+		  const video = document.createElement('video');
+		  video.src = url;
+		  video.controls = true;
+		  video.style.maxWidth = '100%';
+		  mediaContainer.appendChild(video);
+		} else {
+		  const img = document.createElement('img');
+		  img.src = url;
+		  img.alt = '題目附圖';
+		  img.onerror = function() {
+			mediaContainer.innerHTML = '<p style="color:#dc3545;">圖片載入失敗：' + url + '</p>';
+		  };
+		  mediaContainer.appendChild(img);
+		}
+	  }
 
 	  // 創建選項的複製並打亂順序
 	  const options = [...question.options];
