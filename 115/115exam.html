@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>易混淆字測驗系統</title>
+  
+  <!-- 引入 Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+  
+  <style>
+    body {
+      font-family: 'Noto Sans TC', sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f5f5f5;
+      color: #333;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    h1 {
+      color: #2196F3;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .setup-form {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+      color: #666;
+      font-weight: 500;
+    }
+
+    .range-inputs {
+      display: flex;
+      gap: 20px;
+    }
+    
+    .range-inputs > div {
+      flex: 1;
+    }
+
+    select, input {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 16px;
+      background-color: #fff;
+    }
+
+    .range-inputs input::-webkit-inner-spin-button,
+    .range-inputs input::-webkit-outer-spin-button {
+      opacity: 1;
+    }
+
+    button {
+      background-color: #4CAF50;
+      color: white;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background-color 0.3s;
+      font-weight: 500;
+    }
+
+    button:hover {
+      background-color: #45a049;
+    }
+
+    button:disabled {
+      background-color: #cccccc;
+      cursor: not-allowed;
+    }
+
+    .question-container {
+	  margin-top: 5px;
+	  position: relative;
+	}
+
+    .question-text {
+      font-size: 18px;
+      margin-bottom: 15px;
+      line-height: 1.5;
+      background-color: #f8f9fa;
+      padding: 12px 15px;
+      border-radius: 8px;
+    }
+
+    .question-label {
+      color: #666;
+      font-weight: 400;
+      display: block;
+      margin-bottom: 8px;
+      font-size: 0.9em;
+    }
+
+    .question-content {
+      color: #0d47a1;
+      font-weight: 500;
+    }
+
+    .media-container {
+      margin: 10px 0;
+      text-align: center;
+    }
+
+    .media-container img {
+      max-width: 100%;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .options-container {
+	  display: flex;
+	  flex-direction: column;
+	  gap: 2px;  /* 從 10px 改為 2px */
+	}
+
+    .option {
+	  background-color: #f8f9fa;
+	  padding: 5px 10px;  /* 從 10px 15px 改為 5px 10px */
+	  border-radius: 6px;
+	  cursor: pointer;
+	  transition: all 0.3s;
+	  border: 2px solid transparent;
+	  margin-bottom: 1px;  /* 從 2px 改為 1px */
+	  min-height: 32px;    /* 從 44px 改為 32px */
+	  display: flex;
+	  align-items: center;
+	  line-height: 1.2;    /* 加入這行來縮小行距 */
+	}
+
+    .option:hover {
+      background-color: #e9ecef;
+      border-color: #4CAF50;
+    }
+
+    .selected {
+      background-color: #cce5ff;
+      border-color: #2196F3;
+    }
+
+    .correct {
+      background-color: #d4edda;
+      border-color: #28a745;
+    }
+
+    .incorrect {
+      background-color: #f8d7da;
+      border-color: #dc3545;
+    }
+
+    .feedback {
+      margin-top: 15px;
+      padding: 12px;
+      border-radius: 6px;
+    }
+
+    .feedback.correct {
+      background-color: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+
+    .feedback.incorrect {
+      background-color: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+
+    .explanation {
+      margin-top: 12px;
+      padding: 12px;
+      background-color: #fff3cd;
+      border-radius: 6px;
+      color: #856404;
+      border: 1px solid #ffeeba;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 10px;
+      background-color: #e9ecef;
+      border-radius: 5px;
+      margin: 15px 0;
+      overflow: hidden;
+    }
+
+    .progress {
+      height: 100%;
+      background-color: #4CAF50;
+      transition: width 0.3s;
+    }
+
+    .header {
+	  display: flex;
+	  flex-wrap: wrap;           /* 允許換行 */
+	  justify-content: center;   /* 置中對齊 */
+	  align-items: center;
+	  background-color: #f8f9fa;
+	  padding: 2px 4px;         /* 縮小 padding */
+	  margin-bottom: 2px;       /* 縮小 margin */
+	  border-radius: 6px;
+	  gap: 2px;                 /* 縮小元素間距 */
+	  row-gap: 0px;             /* 行間距為 0 */
+	  line-height: 1;           /* 最小行高 */
+	}
+
+    .progress-text {
+	  padding: 1px 2px;
+	  margin: 0;                /* 移除邊距 */
+	  border-radius: 4px;
+	  font-weight: bold;
+	  white-space: nowrap;
+	  font-size: 0.85em;       /* 較小的字體大小 */
+	  line-height: 1;          /* 最小行高 */
+	  color: #2c3e50;
+	}
+
+	.timer {
+	  padding: 1px 2px;
+	  margin: 0;
+	  border-radius: 4px;
+	  font-weight: bold;
+	  white-space: nowrap;
+	  font-size: 0.85em;
+	  line-height: 1;
+	  color: #666;
+	}
+
+    .results {
+      text-align: center;
+    }
+
+    .results h2 {
+      color: #2196F3;
+      margin-bottom: 20px;
+    }
+
+    .score {
+      font-size: 48px;
+      color: #4CAF50;
+      margin: 20px 0;
+      font-weight: bold;
+    }
+
+    .wrong-questions {
+      text-align: left;
+      margin-top: 30px;
+    }
+
+    .wrong-question {
+      background-color: #fff3cd;
+      padding: 15px;
+      border-radius: 6px;
+      margin-bottom: 15px;
+      border: 1px solid #ffeeba;
+    }
+
+    .font-size-controls {
+	  padding: 1px;
+	  margin: 0;
+	  display: flex;
+	  gap: 2px;               /* 縮小按鈕間距 */
+	}
+	
+	.font-size-controls {
+	  position: absolute;
+	  top: 10px;
+	  right: 10px;
+	  padding: 1px;
+	  margin: 0;
+	  display: flex;
+	  gap: 2px;
+	}
+
+
+    .result-section {
+      background-color: #f8f9fa;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      border: 1px solid #e9ecef;
+    }
+
+    .result-section h3 {
+      color: #2196F3;
+      margin-top: 0;
+      margin-bottom: 15px;
+      font-size: 1.2em;
+    }
+
+    .result-section p {
+      margin: 8px 0;
+      line-height: 1.6;
+    }
+
+    .wrong-question h4 {
+      color: #856404;
+      margin-top: 0;
+      margin-bottom: 10px;
+    }
+
+    .wrong-question p {
+      margin: 5px 0;
+    }
+
+    #summary {
+      text-align: left;
+      margin: 20px 0;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        padding: 15px;
+      }
+      
+      .option {
+		padding: 4px 8px;  /* 從 8px 12px 改為 4px 8px */
+		min-height: 28px;  /* 從 44px 改為 28px */
+	  }
+      
+      .question-text {
+        padding: 10px 12px;
+      }
+      
+      .result-section,
+      .wrong-question {
+        padding: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div id="setup-view">
+      <h1>線上測驗系統</h1>
+      <div class="setup-form">
+        <div class="form-group">
+          <label for="sheet-select">選擇測驗類型：</label>
+          <select id="sheet-select" onchange="updateQuestionRange()">
+            <option value="">載入中...</option>
+          </select>
+        </div>
+        <div class="form-group range-inputs">
+          <div>
+            <label for="start-row">開始題號：</label>
+            <input type="number" id="start-row" min="1" value="1" />
+          </div>
+          <div>
+            <label for="end-row">結束題號：</label>
+            <input type="number" id="end-row" min="1" value="1" />
+          </div>
+        </div>
+        <button onclick="startQuiz()">開始測驗</button>
+      </div>
+    </div>
+
+    <div id="quiz-view" style="display: none;">
+      <div class="header">
+        <div class="progress-text">題目 <span id="current-question">1</span>/<span id="total-questions">10</span></div>
+        <div class="timer" id="timer">00:00</div>
+      </div>
+
+      <div class="progress-bar">
+        <div class="progress" id="progress-bar"></div>
+      </div>
+
+      <div class="question-container">
+		  <div class="font-size-controls">
+			<button onclick="changeFontSize(2)">A+</button>
+			<button onclick="changeFontSize(-2)">A-</button>
+		  </div>
+		  <div class="question-text" id="question-text"></div>
+		  <div class="media-container" id="media-container"></div>
+		  <div class="options-container" id="options-container"></div>
+		</div>
+
+      <div class="feedback" id="feedback" style="display: none;"></div>
+      
+    </div>
+
+    <div id="results-view" style="display: none;">
+      <div class="results">
+        <h2>測驗結果</h2>
+        <div class="score" id="final-score"></div>
+        <div id="summary"></div>
+        <div class="wrong-questions" id="wrong-questions"></div>
+        <button onclick="location.reload()">重新測驗</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 注入題目資料
+	  const questionsData = {"115家政職群A":{"name":"115家政職群A","questions":[{"correctAnswer":"接待者在前，訪客在後","question":"遇有訪客需引導時，接待者與訪客行進時的位置","mediaUrl":"","options":["接待者在前，訪客在後","接待者在後，訪客在前","兩者並行","隨意"],"explanation":""},{"correctAnswer":"走在前面","question":"上樓梯時的禮儀是，應讓女士與尊長","mediaUrl":"","options":["走在前面","走在後面","走在中間","前後隨意"],"explanation":""},{"correctAnswer":"杯中倒七~八分滿的茶水","question":"遇有訪客，奉茶水時","mediaUrl":"","options":["請其自行取用","杯中茶水倒滿","杯中倒七~八分滿的茶水","杯中茶水五分滿"],"explanation":""},{"correctAnswer":"剪齊","question":"美容從業人員的手指甲，長度應該是","mediaUrl":"","options":["0.3公分","0.5公分","0.8公分","剪齊"],"explanation":""},{"correctAnswer":"皮膚科醫師","question":"痤瘡(青春痘)的治療是誰的工作？","mediaUrl":"","options":["美容從業人員","皮膚科醫師","皮膚科醫師美容從業人員均可","有經驗者即可"],"explanation":""},{"correctAnswer":"肝功能不良","question":"以下何者不是造成黑斑的原因？","mediaUrl":"","options":["服用某些藥物","使用不當的化粧品","紫外線照射","肝功能不良"],"explanation":""},{"correctAnswer":"清潔霜","question":"不屬於含藥化粧品的是","mediaUrl":"","options":["染髮劑","青春痘乳膏","清潔霜","漂白霜"],"explanation":""},{"correctAnswer":"正常皮膚的pH值是7","question":"下列何者敘述錯誤？","mediaUrl":"","options":["皮脂腺與青春痘有關","美容師不應該為顧客換膚","正常皮膚的pH值是7","每日落髮的數目是50~100根左右"],"explanation":""},{"correctAnswer":"手掌","question":"身體沒有皮脂腺的部位是：","mediaUrl":"","options":["手掌","背部","臉部","腰部"],"explanation":""},{"correctAnswer":"血液","question":"皮膚所須之營養素由","mediaUrl":"","options":["神經","肌肉","血液","脂肪供應"],"explanation":""},{"correctAnswer":"表皮層","question":"皮膚最外層為","mediaUrl":"","options":["表皮層","乳頭層","真皮層","皮下組織"],"explanation":""},{"correctAnswer":"扁平狀","question":"角質層的細胞為","mediaUrl":"","options":["圓形","扁平狀","柱狀","纖維狀"],"explanation":""},{"correctAnswer":"皮下組織","question":"女性的曲線美是決定於","mediaUrl":"","options":["表皮","真皮","皮下組織","角質層"],"explanation":""},{"correctAnswer":"生髮層","question":"基底層也叫做","mediaUrl":"","options":["角質層","顆粒層","有棘層","生髮層"],"explanation":""},{"correctAnswer":"黑色素","question":"下列何者不存在真皮的網狀層中？","mediaUrl":"","options":["小神經末梢","血管","淋巴管","黑色素"],"explanation":""},{"correctAnswer":"紫外線","question":"黑色素可以保護皮膚對抗有害的：","mediaUrl":"","options":["細菌","壓力","電流","紫外線"],"explanation":""},{"correctAnswer":"神經系統","question":"皮膚的排汗作用是由什麼系統所控制？","mediaUrl":"","options":["肌肉系統","循環系統","呼吸系統","神經系統"],"explanation":""},{"correctAnswer":"攝氏37°","question":"皮膚中的血液及汗腺可調節體溫，使體溫保持在正常的","mediaUrl":"","options":["攝氏10°","攝氏23.8°","攝氏65.5°","攝氏37°"],"explanation":""},{"correctAnswer":"真皮之下","question":"皮下組織的位置是在：","mediaUrl":"","options":["角質層之上","表皮之上","真皮之下","脂肪組織之下"],"explanation":""},{"correctAnswer":"角質素","question":"顆粒層細胞中的顆粒是：","mediaUrl":"","options":["黑色素","脂質","角質素","氣泡"],"explanation":""},{"correctAnswer":"基底層","question":"表皮中最年輕的細胞是在","mediaUrl":"","options":["角質層","透明層","有棘層","基底層"],"explanation":""},{"correctAnswer":"弱鹼性","question":"我們的血液是：","mediaUrl":"","options":["弱酸性","弱鹼性","中性","不一定"],"explanation":""},{"correctAnswer":"下巴","question":"「T」字部位是指額頭，鼻子及","mediaUrl":"","options":["臉頰","太陽穴","下巴","眼眶"],"explanation":""},{"correctAnswer":"網狀層","question":"膠原纖維在下列那一層中存在","mediaUrl":"","options":["表皮層","基底層","網狀層","乳頭層"],"explanation":""},{"correctAnswer":"弱酸性","question":"皮膚的pH值在4~6時，皮膚屬於","mediaUrl":"","options":["弱酸性","弱鹼性","酸性","鹼性"],"explanation":""},{"correctAnswer":"易呈現小紅點、發癢","question":"敏感皮膚的特徵：","mediaUrl":"","options":["易長黑斑、面皰","易呈現小紅點、發癢","油分多、水分少","油分少、水分多"],"explanation":""},{"correctAnswer":"基底層","question":"表皮內有：","mediaUrl":"","options":["基底層","彈性纖維","豎毛肌","脂肪層"],"explanation":""},{"correctAnswer":"角質層","question":"表皮的最外層是？","mediaUrl":"","options":["透明層","顆粒層","角質層","基底層"],"explanation":""},{"correctAnswer":"角質層","question":"表皮層中其細胞會不斷剝落、遞補的是：","mediaUrl":"","options":["透明層","角質層","顆粒層","有棘層"],"explanation":""},{"correctAnswer":"皮膚","question":"人體之最大器官是","mediaUrl":"","options":["心臟","肺臟","皮膚","胃"],"explanation":""},{"correctAnswer":"真皮層","question":"內部含有血管、神經、汗腺、皮脂腺等構造的是：","mediaUrl":"","options":["表皮層","真皮層","皮下組織","基底層"],"explanation":""},{"correctAnswer":"皮膚","question":"人體熱量有80%靠（　）來發散，以調節體溫。","mediaUrl":"","options":["肺","鼻子","皮膚","唇"],"explanation":""},{"correctAnswer":"基底層","question":"表皮層中最新的細胞是產生在","mediaUrl":"","options":["角質層","顆粒層","有棘層","基底層"],"explanation":""},{"correctAnswer":"調節體溫作用","question":"體溫經常保持恆定，是因皮膚的那一項功能？","mediaUrl":"","options":["保護作用","分泌作用","調節體溫作用","吸收作用"],"explanation":""},{"correctAnswer":"混合性皮膚","question":"T型區域易出油、毛孔粗大，但雙頰呈乾燥現象的是","mediaUrl":"","options":["乾性皮膚","油性皮膚","混合性皮膚","敏感性皮膚"],"explanation":""},{"correctAnswer":"10%~20%","question":"角質層中水分的含量在（　）最理想。","mediaUrl":"","options":["50%~60%","5%~10%","10%~20%","70%~80%"],"explanation":""},{"correctAnswer":"小汗腺","question":"多汗症是由於（　）分泌過量所致。","mediaUrl":"","options":["大汗腺","小汗腺","皮脂腺","頂漿腺"],"explanation":""},{"correctAnswer":"神經","question":"皮膚能將外界刺激傳遞到大腦，是因皮膚有：","mediaUrl":"","options":["神經","血管","肌肉","脂肪"],"explanation":""},{"correctAnswer":"1%","question":"皮膚能行呼吸作用，其呼吸量與肺相較約為肺之：","mediaUrl":"","options":["80%","50%","10%","1%"],"explanation":""},{"correctAnswer":"皮溝","question":"皮膚表面呈現許多細而凹凸不平的紋路，其凹處稱為","mediaUrl":"","options":["皮溝","皮丘","汗孔","毛囊"],"explanation":""},{"correctAnswer":"額頭","question":"下列部位中，何者的皮脂腺分泌最豐富？","mediaUrl":"","options":["手掌","腳掌","額頭","臉頰"],"explanation":""},{"correctAnswer":"顆粒層","question":"表皮細胞在那一層開始蛻變出角質物質：","mediaUrl":"","options":["基底層","有棘層","顆粒層","角質層"],"explanation":""},{"correctAnswer":"彈性纖維","question":"賦予皮膚彈力和張力的是：","mediaUrl":"","options":["平滑肌纖維","乳頭層纖維","彈性纖維","皮下組織"],"explanation":""},{"correctAnswer":"無核的死細胞","question":"角質層是表皮的最外層，它是一種：","mediaUrl":"","options":["有核的細胞","無核的死細胞","新生的細胞","健康的細胞"],"explanation":""},{"correctAnswer":"性荷爾蒙","question":"青春痘通常與青春期的（　）分泌量變化有關。","mediaUrl":"","options":["汗腺","淋巴液","性荷爾蒙","血液"],"explanation":""},{"correctAnswer":"無核細胞","question":"透明層是由何種細胞構成？","mediaUrl":"","options":["有核細胞","無核細胞","半核細胞","核心細胞"],"explanation":""},{"correctAnswer":"表皮→真皮→皮下組織","question":"皮膚由外而內依次分為那三大部份？","mediaUrl":"","options":["真皮→皮下組織→表皮","皮下組織→表皮→真皮","表皮→真皮→皮下組織","真皮→表皮→皮下組織"],"explanation":""},{"correctAnswer":"真皮的血液","question":"表皮本身沒有血管，故其營養依靠","mediaUrl":"","options":["細胞","真皮的血液","肌肉","皮脂腺供給"],"explanation":""},{"correctAnswer":"皮脂腺","question":"影響皮膚性質的主要因素是","mediaUrl":"","options":["胸腺","皮脂腺","毛細血管","淋巴腺"],"explanation":""},{"correctAnswer":"大汗腺","question":"開口於毛囊，存在腋下及陰部處，分泌物含蛋白質，經氧化易產生體臭的是：","mediaUrl":"","options":["大汗腺","小汗腺","皮脂腺","淋巴腺"],"explanation":""},{"correctAnswer":"15~20歲","question":"皮脂分泌最旺盛的年齡約：","mediaUrl":"","options":["10~12歲","15~20歲","20~25歲","25~30歲"],"explanation":""},{"correctAnswer":"皮膚乾燥","question":"下列何者是皮膚老化的現象之一：","mediaUrl":"","options":["皮膚乾燥","有光澤","油脂分泌多","有彈性"],"explanation":""},{"correctAnswer":"汗腺","question":"皮膚之所以能調節體溫，主要是因為（　）的排泄作用。","mediaUrl":"","options":["汗腺","皮脂腺","血液","淋巴腺"],"explanation":""},{"correctAnswer":"角質層","question":"天然保濕因子(N.M.F)係皮膚那一層的產物？","mediaUrl":"","options":["角質層","顆粒層","有棘層","基底層"],"explanation":""},{"correctAnswer":"有棘層","question":"表皮中最厚的一層，且有淋巴液流通者為：","mediaUrl":"","options":["角質層","透明層","基底層","有棘層"],"explanation":""},{"correctAnswer":"透明層","question":"（　）是一種無核細胞，分佈在手掌、足蹠。","mediaUrl":"","options":["有棘層","透明層","顆粒層","基底層"],"explanation":""},{"correctAnswer":"擴張","question":"皮膚有體溫調節的作用，受熱時血管會：","mediaUrl":"","options":["擴張","收縮","散發","分泌"],"explanation":""},{"correctAnswer":"真皮層","question":"血管、淋巴管分佈於","mediaUrl":"","options":["角質層","表皮層","基底層","真皮層"],"explanation":""},{"correctAnswer":"汗液、皮脂","question":"皮膚的表面覆蓋著一層膜，稱為皮脂膜，它是由：","mediaUrl":"","options":["汗液、皮脂","真皮、表皮","汗水、污垢","纖維、皮脂混合而成"],"explanation":""},{"correctAnswer":"紫外線C","question":"在大氣中被臭氧層吸收，未達地面而對皮膚影響不大的光線是","mediaUrl":"","options":["紫外線A","紫外線B","紫外線C","紅外線"],"explanation":""},{"correctAnswer":"二十八天","question":"正常皮膚由表皮基底層不斷上推，呈角質化後剝離，需費時","mediaUrl":"","options":["七天","十四天","二十一天","二十八天"],"explanation":""},{"correctAnswer":"角質層、透明層、顆粒層、有棘層、基底層","question":"表皮可分為五層，由外至內依次可分為：","mediaUrl":"","options":["角質層、顆粒層、透明層、有棘層、基底層","角質層、透明層、顆粒層、有棘層、基底層","角質層、透明層、有棘層、顆粒層、基底層","角質層、顆粒層、有棘層、透明層、基底層"],"explanation":""},{"correctAnswer":"角質層所含的水份","question":"皮膚的光澤度，與下列何者有關：","mediaUrl":"","options":["顆粒層所含的油脂","角質層所含的水份","有棘層所含的水份","基底層所含的油脂"],"explanation":""},{"correctAnswer":"540","question":"每蒸發一公升的汗所散發的體熱約為","mediaUrl":"","options":["540","640","740","840仟卡路里(kcal)"],"explanation":""},{"correctAnswer":"0.1mm","question":"指甲平均每天長出","mediaUrl":"","options":["0.1mm","0.01 mm","0.1 cm","1mm"],"explanation":""},{"correctAnswer":"供給表皮營養","question":"真皮的功用為","mediaUrl":"","options":["產生黑色素","防止電解質流失","調節體溫","供給表皮營養"],"explanation":""},{"correctAnswer":"神經末梢","question":"癢覺的皮膚接受器是","mediaUrl":"","options":["神經末梢","毛囊","皮脂腺","小汗腺"],"explanation":""},{"correctAnswer":"1:10","question":"正常皮膚中黑色素細胞和基底細胞的比率大約為：","mediaUrl":"","options":["1:10","1:20","1:30","1:40"],"explanation":""},{"correctAnswer":"15%","question":"一般成年人全身的皮膚重量約佔體重的","mediaUrl":"","options":["5%","10%","15%","20%"],"explanation":""},{"correctAnswer":"0.3~3毫米","question":"真皮的厚度約為：","mediaUrl":"","options":["0.1~1毫米","0.2~2毫米","0.3~3毫米","0.4~4毫米"],"explanation":""},{"correctAnswer":"纖維母細胞","question":"傷口的癒合，需依賴下列何種細胞的增殖來達成：","mediaUrl":"","options":["組織球","單核球","脂肪細胞","纖維母細胞"],"explanation":""},{"correctAnswer":"頂漿腺","question":"乳腺是一種變型的","mediaUrl":"","options":["皮脂腺","小汗腺","頂漿腺","腎上腺"],"explanation":""},{"correctAnswer":"自主神經","question":"支配豎毛肌機能的是：","mediaUrl":"","options":["感覺神經","中樞神經","自主神經","腦幹"],"explanation":""},{"correctAnswer":"角質層的游離脂肪","question":"皮膚主要的化學屏障為：","mediaUrl":"","options":["角質層的游離脂肪","基底層和汗液","顆粒層和皮脂膜","有棘層和黑色素"],"explanation":""},{"correctAnswer":"豬","question":"就滲透性而言，下列何種動物皮膚與人類皮膚較相似？","mediaUrl":"","options":["豬","牛","馬","羊"],"explanation":""},{"correctAnswer":"溫水","question":"要保持皮膚清潔，洗澡、洗臉時應使用","mediaUrl":"","options":["牛奶","茶葉水","溫水","果菜汁"],"explanation":""},{"correctAnswer":"維生素A","question":"下列何種維生素缺乏時，皮脂和汗水的分泌也會衰退：","mediaUrl":"","options":["維生素A","維生素B","維生素C","維生素D"],"explanation":""},{"correctAnswer":"維生素C","question":"與皮膚的氧化還原有密切關係的是","mediaUrl":"","options":["維生素A","維生素B","維生素C","維生素D"],"explanation":""},{"correctAnswer":"維生素D","question":"皮膚經紫外線照射，皮脂的成份會製造出","mediaUrl":"","options":["維生素A","維生素B","維生素C","維生素D"],"explanation":""},{"correctAnswer":"革蘭氏陽性菌","question":"存在於腋下大汗腺上，使其產生特殊氣味的大多是：","mediaUrl":"","options":["革蘭氏陽性菌","革蘭氏陰性菌","皮黴菌","寄生蟲"],"explanation":""},{"correctAnswer":"毛髮的退化期很短是1~2年","question":"錯誤的敘述是","mediaUrl":"","options":["每根毛髮的生長期約2~6年","毛髮的退化期很短是1~2年","睫毛眉毛的生長期和休止期大致等長約為5~6個月","一般人的毛髮總數大約十萬根"],"explanation":""},{"correctAnswer":"水份","question":"所謂多孔性是頭髮吸收下列何者的能力","mediaUrl":"","options":["角質素","陽光","水份","紫外線"],"explanation":""},{"correctAnswer":"纖毛","question":"過濾空氣中的小塵埃是","mediaUrl":"","options":["粗鼻毛","纖毛","鼻黏膜","微血管"],"explanation":""},{"correctAnswer":"人中","question":"鼻子下到上唇中央凹陷的溝稱為","mediaUrl":"","options":["鼻翼","鼻尖","人中","下巴"],"explanation":""},{"correctAnswer":"細胞膜","question":"封閉原生質，有選擇性讓物質進出細胞的能力是","mediaUrl":"","options":["細胞膜","細胞核","細胞液","細胞質"],"explanation":""},{"correctAnswer":"紅血球","question":"人體內最小的細胞是","mediaUrl":"","options":["肝細胞","卵細胞","紅血球","白血球"],"explanation":""},{"correctAnswer":"手掌","question":"身上沒有皮脂腺的地方是","mediaUrl":"","options":["手掌","眼皮","鼻翼","臉頰"],"explanation":""},{"correctAnswer":"基底層","question":"皮膚進行有絲分裂是在","mediaUrl":"","options":["角質層","顆粒層","棘狀層","基底層"],"explanation":""},{"correctAnswer":"角質層","question":"表皮細胞因摩擦而不斷剝落，具有防水防曬功能的是","mediaUrl":"","options":["顆粒層","棘狀層","透明層","角質層"],"explanation":""},{"correctAnswer":"微血管","question":"作為血液與組織間氣體及物質交換場所是","mediaUrl":"","options":["動脈","靜脈","心房","微血管"],"explanation":""},{"correctAnswer":"細胞、組織、器官、系統","question":"構成人體的是","mediaUrl":"","options":["細胞","細胞、組織","細胞、組織、器官","細胞、組織、器官、系統"],"explanation":""},{"correctAnswer":"微血管","question":"下面那一項不是皮膚的附屬品","mediaUrl":"","options":["指甲","毛髮","趾甲","微血管"],"explanation":""},{"correctAnswer":"臉部","question":"皮脂腺分佈最多的是","mediaUrl":"","options":["手掌","臉部","腳底","關節"],"explanation":""},{"correctAnswer":"毛孔","question":"皮膚上汗腺的小開孔稱為","mediaUrl":"","options":["毛囊","微血管","毛孔","毛孔頭"],"explanation":""},{"correctAnswer":"手掌","question":"最厚的皮膚是在","mediaUrl":"","options":["手掌","兩額","前額","下額"],"explanation":""},{"correctAnswer":"眼皮","question":"最薄的皮膚是在","mediaUrl":"","options":["眉毛","眼皮","前額","手背"],"explanation":""},{"correctAnswer":"表皮","question":"皮膚組織中沒有血管分佈的是","mediaUrl":"","options":["真皮","上皮","皮下組織","表皮"],"explanation":""},{"correctAnswer":"可動關節","question":"具有關節囊的結締組織，內含液體而可減少關節活動磨擦的是","mediaUrl":"","options":["可動關節","稍微動關節","不可動關節","完全不可動關節"],"explanation":""},{"correctAnswer":"內收運動","question":"大腿由稍息回到立正姿勢的動作為","mediaUrl":"","options":["旋前運動","旋後運動","內收運動","外展運動"],"explanation":""},{"correctAnswer":"12對","question":"人體的肋骨共有","mediaUrl":"","options":["10對","11對","12對","13對"],"explanation":""},{"correctAnswer":"椎間盤","question":"脊椎骨之間的軟骨稱為","mediaUrl":"","options":["頂骨","篩骨","椎間盤","椎小骨"],"explanation":""},{"correctAnswer":"橢圓關節","question":"手腕可作側屈之動作是屬於","mediaUrl":"","options":["車軸關節","橢圓關節","鞍關節","杵臼關節"],"explanation":""},{"correctAnswer":"脊椎骨","question":"屬於不規則骨的是","mediaUrl":"","options":["脊椎骨","小腿骨","手指骨","骨骼"],"explanation":""},{"correctAnswer":"胸骨、肋骨、胸椎","question":"構成胸廓的是","mediaUrl":"","options":["胸骨、腰骨、胸椎","胸骨、肋骨、胸椎","頸椎、胸椎、腰椎","頸椎、腰椎、腰骨"],"explanation":""},{"correctAnswer":"骨髓","question":"骨骼構造中具有造血功能的是","mediaUrl":"","options":["骨膜","骨端","骨髓","骨幹"],"explanation":""},{"correctAnswer":"下頜骨","question":"顏面骨之中唯一可動的骨是","mediaUrl":"","options":["上頜骨","下頜骨","淚骨","顴骨"],"explanation":""},{"correctAnswer":"骨骼肌","question":"可受意志控制的肌肉是","mediaUrl":"","options":["骨骼肌","心肌","平滑肌","肌束"],"explanation":""},{"correctAnswer":"肌腹","question":"肌肉的中央部份膨大，而二端漸細，其中央部分稱為","mediaUrl":"","options":["肌頭","肌腹","肌腱","肌尾"],"explanation":""},{"correctAnswer":"肱三頭肌","question":"肱二頭肌的收縮可使手臂彎曲，而使其產生拮抗作用的是","mediaUrl":"","options":["伸指長肌","收縮長肌","三角肌","肱三頭肌"],"explanation":""},{"correctAnswer":"腺嘌呤核苷三磷酸(ATP)","question":"肌肉收縮所需的能量乃直接來自","mediaUrl":"","options":["磷酸肌酸","肝醣","乳酸","腺嘌呤核苷三磷酸(ATP)"],"explanation":""},{"correctAnswer":"乳酸","question":"肌肉疲勞是（　）儲存的結果。","mediaUrl":"","options":["鹽酸","磷酸","乳酸","脂肪酸"],"explanation":""},{"correctAnswer":"心肌","question":"（　）不會感到疲勞可以長時間工作。","mediaUrl":"","options":["內臟肌","骨骼肌","心肌","平滑肌"],"explanation":""},{"correctAnswer":"自律運動","question":"肌肉在神經麻醉後無須刺激仍能有規律跳動稱為","mediaUrl":"","options":["全能運動","無氧運動","自律運動","無能運動"],"explanation":""},{"correctAnswer":"枕動脈","question":"供應人體後腦血液的動脈是","mediaUrl":"","options":["後耳動脈","枕動脈","顳淺動脈","顏面動脈"],"explanation":""},{"correctAnswer":"AB型","question":"（　）血型者，是全能受血者。","mediaUrl":"","options":["A型","B型","AB型","O型"],"explanation":""},{"correctAnswer":"大循環","question":"由左心室輸出充氧血而供給氧氣至全身細胞的是","mediaUrl":"","options":["大循環","小循環","肺循環","門脈循環"],"explanation":""},{"correctAnswer":"60~80","question":"正常成年人的心跳次數，在休息狀態時每分鐘為","mediaUrl":"","options":["40~60","60~80","80~100","100~120次"],"explanation":""},{"correctAnswer":"120","question":"一個人血壓測得為120mmHg/80mmHg時，其收縮壓為","mediaUrl":"","options":["80","100","120","140 mmHg"],"explanation":""},{"correctAnswer":"淋巴球","question":"可產生抗體蛋白以保護身體免疫功能的是","mediaUrl":"","options":["淋巴球","紅血球","血小板","血餅"],"explanation":""},{"correctAnswer":"AB型","question":"帶有A、B抗原之血液是","mediaUrl":"","options":["A型","B型","O型","AB型"],"explanation":""},{"correctAnswer":"鈣","question":"心跳受（　）的影響會加速。","mediaUrl":"","options":["鉀","鈉","磷","鈣"],"explanation":""},{"correctAnswer":"飽和脂肪","question":"容易引起心臟病的食物是","mediaUrl":"","options":["醣類","蛋白質","飽和脂肪","不飽和脂肪"],"explanation":""},{"correctAnswer":"脾臟","question":"衰老的紅血球會在（　）破壞分解。","mediaUrl":"","options":["肝臟","心臟","肺臟","脾臟"],"explanation":""},{"correctAnswer":"運動神經","question":"心跳不受哪項因素的影響？","mediaUrl":"","options":["自主神經","交感神經","副交感神經","運動神經"],"explanation":""},{"correctAnswer":"嬰兒","question":"一般人以（　）的心跳次數最高。","mediaUrl":"","options":["嬰兒","年輕人","中年人","老年人"],"explanation":""},{"correctAnswer":"二氧化碳","question":"血液的運輸中，由全身細胞送到肺的物質是","mediaUrl":"","options":["氧","二氧化碳","鈣","水"],"explanation":""},{"correctAnswer":"腎臟","question":"尿主要由（　）排泄。","mediaUrl":"","options":["腎臟","肝臟","皮膚","大腸"],"explanation":""},{"correctAnswer":"外括約肌","question":"「尿失禁」是大腦對（　）的控制力喪失。","mediaUrl":"","options":["內括約肌","外括約肌","膀胱","腎小管"],"explanation":""},{"correctAnswer":"過濾作用","question":"尿液形成的第一步是","mediaUrl":"","options":["過濾作用","再吸收作用","分泌作用","濃縮作用"],"explanation":""},{"correctAnswer":"小腦","question":"負責肢體肌肉平衡與調節各部肌肉運動的中樞為","mediaUrl":"","options":["大腦","中腦","小腦","延腦"],"explanation":""},{"correctAnswer":"由內而外","question":"運動神經的傳遞路線是","mediaUrl":"","options":["由內而外","由外而內","由左而右","由右而左"],"explanation":""},{"correctAnswer":"交感神經","question":"會引起「雞皮疙瘩」的是","mediaUrl":"","options":["交感神經","副交感神經","顏面神經","迷走神經"],"explanation":""},{"correctAnswer":"唇部","question":"汗腺廣佈於全身，唯一不存在於下列那一部份？","mediaUrl":"","options":["手掌","腳底","腋下","唇部"],"explanation":""},{"correctAnswer":"皮質層","question":"人類頭髮的粗硬、細軟決定在","mediaUrl":"","options":["表皮層","皮質層","髓質層","毛乳頭"],"explanation":""},{"correctAnswer":"扁平形","question":"捲曲型頭髮在顯微鏡下觀察外形幾乎是","mediaUrl":"","options":["圓形","橢圓形","扁平形","三角形"],"explanation":""},{"correctAnswer":"7~9層","question":"頭髮的表皮層是由髮根處向髮梢圍著毛髮的四周約（　）如鱗片般順次重疊。","mediaUrl":"","options":["1~2層","3~5層","7~9層","15~20層"],"explanation":""},{"correctAnswer":"髮根朝髮尾","question":"毛髮的鱗片張口重疊方向應是","mediaUrl":"","options":["髮根朝髮尾","髮尾朝髮根","髮根無開口","髮尾任意重疊"],"explanation":""},{"correctAnswer":"碳、氫、氮、氧、硫","question":"毛髮中的蛋白質由胺基酸構成，而胺基酸是由","mediaUrl":"","options":["碳、氫、氮、氧、硫","碳、氮、磷、氧、硫","碳、氫、氧、鐵、硫","氫、氧、鈷、鋅、硫構成"],"explanation":""},{"correctAnswer":"髮幹","question":"頭髮露出表皮可見的部份稱為","mediaUrl":"","options":["髮根","髮幹","髮骨","毛囊"],"explanation":""},{"correctAnswer":"黑、褐、紅、黃","question":"頭髮的顏色由下列幾種色素決定","mediaUrl":"","options":["黑、褐、紅、黃","黑、紅、黃","黑、橘、白","黑、橘、紅、黃"],"explanation":""},{"correctAnswer":"半透明狀","question":"頭髮的表皮層是一種","mediaUrl":"","options":["透明狀","半透明狀","不透明狀","黑色狀"],"explanation":""},{"correctAnswer":"圓形","question":"直髮的頭髮結構，其橫斷面為","mediaUrl":"","options":["方形","橢圓形","圓形","扁形"],"explanation":""},{"correctAnswer":"血管","question":"頭髮的營養來自於頭髮的毛乳頭，因為它含有","mediaUrl":"","options":["血管","肌肉","腺體","脂肪組織"],"explanation":""},{"correctAnswer":"眉毛","question":"沒有起毛肌的毛髮是","mediaUrl":"","options":["眉毛","頭髮","手部的毛髮","腳部的毛髮"],"explanation":""},{"correctAnswer":"乾燥髮","question":"用水噴濕頭髮時、吸濕性良好的是屬","mediaUrl":"","options":["中性髮","油性髮","乾燥髮","混合性髮"],"explanation":""},{"correctAnswer":"毛乳頭","question":"有「毛髮之母」之稱的是","mediaUrl":"","options":["毛幹","毛根","毛乳頭","根鞘"],"explanation":""},{"correctAnswer":"蛋白質","question":"毛髮的主要成份是","mediaUrl":"","options":["碳水化合物","脂肪","重金屬","蛋白質"],"explanation":""},{"correctAnswer":"碳","question":"淡色的毛髮含有較少的","mediaUrl":"","options":["氧","硫","碳","鋅"],"explanation":""},{"correctAnswer":"立方細胞","question":"組成毛髮髓質的是","mediaUrl":"","options":["鱗狀細胞","棘狀細胞","立方細胞","顆粒細胞"],"explanation":""},{"correctAnswer":"「硬」型","question":"毛髮皮質層的細胞內角蛋白屬於","mediaUrl":"","options":["「油」型","「硬」型","「軟」型","「中」型"],"explanation":""},{"correctAnswer":"硫","question":"毛髮的角質蛋白含有","mediaUrl":"","options":["硫","鐵","銅","鋅"],"explanation":""},{"correctAnswer":"纖毛髮","question":"在於兩頰的毛髮是","mediaUrl":"","options":["短毛髮","長毛髮","纖毛髮","絨毛"],"explanation":""},{"correctAnswer":"皮質","question":"毛髮的伸縮特性主要依靠","mediaUrl":"","options":["髓質","皮質","毛乳頭","毛根"],"explanation":""},{"correctAnswer":"分為三部份：髓質、皮質及表皮","question":"毛髮的橫切面構造是","mediaUrl":"","options":["像是一根吸管，中間空的","像是一根實心的棒子，心外組織相同","分為五層：髓質、皮質、棘層、顆粒層及角質層","分為三部份：髓質、皮質及表皮"],"explanation":""},{"correctAnswer":"皮質層","question":"毛髮上色素粒子在","mediaUrl":"","options":["皮質層","髓質層","毛表皮層","毛根"],"explanation":""},{"correctAnswer":"皮質層","question":"毛髮組織由毛母細胞延長所形成的纖維狀物構成","mediaUrl":"","options":["表皮層","皮質層","髓質層","皮下層"],"explanation":""},{"correctAnswer":"角蛋白質","question":"毛髮的組成主要是","mediaUrl":"","options":["軟蛋白質","角蛋白質","鈣質","磷質"],"explanation":""},{"correctAnswer":"陰離子","question":"頭髮本身所帶的電荷為","mediaUrl":"","options":["陽離子","陰離子","正負都有","正負都沒"],"explanation":""},{"correctAnswer":"97%","question":"頭髮的成份蛋白質佔頭髮的百分比","mediaUrl":"","options":["57%","67%","97%","37%"],"explanation":""},{"correctAnswer":"紫外線","question":"長時間的曝曬於強烈日光中，毛髮中的角蛋白質一部份會被","mediaUrl":"","options":["紫外線","紅外線","灰塵","X光線破壞"],"explanation":""},{"correctAnswer":"120~180公克","question":"所謂頭髮的張力是指頭髮拉到極限而不致斷裂的力量，健康的毛髮約可承受","mediaUrl":"","options":["0~30公克","30~60公克","120~180公克","300公克以上"],"explanation":""},{"correctAnswer":"40~50%","question":"頭髮濕潤之後，可被拉長比原長度多","mediaUrl":"","options":["10~20%","20~30%","30~40%","40~50%"],"explanation":""},{"correctAnswer":"100~150公克","question":"亞洲人一根毛髮可支撐的拉力約","mediaUrl":"","options":["0~50公克","100~150公克","200~250公克","300~350公克"],"explanation":""},{"correctAnswer":"10萬根","question":"一般人的毛髮總數大約","mediaUrl":"","options":["5萬根","10萬根","15萬根","20萬根"],"explanation":""},{"correctAnswer":"毛髮上面也有神經，所以有感覺","question":"選出錯誤的觀念","mediaUrl":"","options":["正常健康的頭髮吸水性較差","毛髮能吸收水份","毛髮上面也有神經，所以有感覺","毛髮有彈性和張力"],"explanation":""},{"correctAnswer":"毛乳頭","question":"含有血液和神經，以提供頭髮的成長和再生是","mediaUrl":"","options":["毛囊","油脂腺","毛乳頭","毛表皮"],"explanation":""},{"correctAnswer":"3個月","question":"毛髮是嬰兒在母親腹中","mediaUrl":"","options":["3個月","5個月","7個月","出生時即開始生長"],"explanation":""},{"correctAnswer":"15%","question":"一般而言，停止生長的頭髮約佔頭髮總數的","mediaUrl":"","options":["50%","15%","70%","3%"],"explanation":""},{"correctAnswer":"2~6年","question":"一般頭髮生命週期為","mediaUrl":"","options":["2~6月","2~6年","8~10月","8~10年"],"explanation":""},{"correctAnswer":"休止期","question":"毛髮完全脫離毛乳頭是屬於","mediaUrl":"","options":["生長期","活躍期","退化期","休止期"],"explanation":""},{"correctAnswer":"0.5~0.8毫米","question":"毛髮生長速率平均每天約","mediaUrl":"","options":["0.1~0.2毫米","0.2~0.5毫米","0.5~0.8毫米","0.8~1.0毫米"],"explanation":""},{"correctAnswer":"男性荷爾蒙","question":"下列何者有抑制頭髮生長的作用","mediaUrl":"","options":["女性荷爾蒙","維生素C","男性荷爾蒙","酸性潤髮劑"],"explanation":""},{"correctAnswer":"1%","question":"退化期的頭髮約佔頭髮總量的","mediaUrl":"","options":["1%","5%","10%","20%"],"explanation":""},{"correctAnswer":"百分之九十","question":"正常人的頭髮約多少比例處於生長期？","mediaUrl":"","options":["百分之十","百分之三十","百分之六十","百分之九十"],"explanation":""},{"correctAnswer":"刺激體毛生長抑制頭髮的生長","question":"男性荷爾蒙會","mediaUrl":"","options":["刺激體毛和頭髮的生長","抑制體毛和頭髮的生長","刺激體毛生長抑制頭髮的生長","對體毛和頭髮沒有影響"],"explanation":""},{"correctAnswer":"50~100根","question":"每個人的頭髮因新陳代謝的關係會掉髮，通常每天約掉（　）是正常的。","mediaUrl":"","options":["10~20根","20~30根","50~100根","100~200根"],"explanation":""},{"correctAnswer":"橢圓型","question":"波狀髮的橫切面呈","mediaUrl":"","options":["圓型","扁平","橢圓型","三角型"],"explanation":""},{"correctAnswer":"高密度","question":"一平方公分頭髮有220~240根髮量是屬於","mediaUrl":"","options":["低密度","中密度","高密度","超高密度"],"explanation":""},{"correctAnswer":"彎曲狀","question":"捲毛型毛髮的外型是扁平，其毛囊在皮膚內呈","mediaUrl":"","options":["直立狀","歪斜狀","微彎曲狀","彎曲狀"],"explanation":""},{"correctAnswer":"原來長度的五分之一","question":"正常乾燥頭髮可伸展至","mediaUrl":"","options":["原來長度的一半","原來長度的五分之一","原來長度的四分之三","原來長度的兩倍"],"explanation":""},{"correctAnswer":"遺傳","question":"頭髮的髮色、強度及髮質主要原因為","mediaUrl":"","options":["飲食","生活習慣","遺傳","心情"],"explanation":""},{"correctAnswer":"由髮根向髮梢梳","question":"要使梳頭順暢，梳頭時應","mediaUrl":"","options":["用力梳刷","由髮根向髮梢梳","由髮梢向髮根梳","用冷風邊梳邊吹"],"explanation":""},{"correctAnswer":"55℃","question":"在濕熱的狀態下，溫度達到幾度時，毛髮的角質蛋白就開始變化","mediaUrl":"","options":["45℃","55℃","70℃","100℃"],"explanation":""},{"correctAnswer":"160℃","question":"使乾髮會變得脆弱、易斷的溫度是","mediaUrl":"","options":["60℃","80℃","100℃","160℃"],"explanation":""},{"correctAnswer":"髮油、髮蠟的傷害","question":"不會造成頭髮分叉的原因是","mediaUrl":"","options":["紫外線曝曬","吹髮時過熱","燙髮液的傷害","髮油、髮蠟的傷害"],"explanation":""},{"correctAnswer":"九排梳","question":"吹直髮型時使用","mediaUrl":"","options":["尖尾梳","包頭梳","九排梳","剪髮梳"],"explanation":""},{"correctAnswer":"排骨梳","question":"梳理前額線條髮型時採用","mediaUrl":"","options":["九排梳","排骨梳","包頭梳","剪髮梳"],"explanation":""},{"correctAnswer":"硬塑膠","question":"一般梳子材質可用（　）來製造。","mediaUrl":"","options":["玻璃","橡皮","錫","硬塑膠"],"explanation":""},{"correctAnswer":"S彎梳","question":"吹風時較不易吹出層次、線條的髮梳是","mediaUrl":"","options":["九排梳","排骨梳","圓梳","S彎梳"],"explanation":""},{"correctAnswer":"削刀","question":"剪髮時可同時剪去長度及薄度的是","mediaUrl":"","options":["手推剪","剪刀","削刀","電剪"],"explanation":""},{"correctAnswer":"護髮性","question":"較適合嚴重受損髮質使用的染髮劑是","mediaUrl":"","options":["金屬性","護髮性","半永久性","永久性"],"explanation":""},{"correctAnswer":"深色","question":"染髮用圍巾宜選用","mediaUrl":"","options":["深色","淺色","花色","白色"],"explanation":""},{"correctAnswer":"蒸氣機","question":"整髮時不適於烘乾頭髮的機具是","mediaUrl":"","options":["大吹風機","吹風機","蒸氣機","手提罩燈"],"explanation":""},{"correctAnswer":"鯊魚夾","question":"整髮時不適於固定髮捲的是","mediaUrl":"","options":["髮夾","小單夾","U型夾","鯊魚夾"],"explanation":""},{"correctAnswer":"髮網","question":"整髮烘乾前為固定捲子位置應圍上","mediaUrl":"","options":["髮網","塑膠帽","毛巾","保鮮膜"],"explanation":""},{"correctAnswer":"5至10公分","question":"使用手持式吹風機時，最適宜與頭髮的距離為","mediaUrl":"","options":["5至10公分","10至20公分","20至30公分","30公分以下"],"explanation":""},{"correctAnswer":"110V","question":"我國的吹風機所採用電壓為","mediaUrl":"","options":["100V","110V","200V","220V"],"explanation":""},{"correctAnswer":"安定劑","question":"冷燙還原劑之乙硫醇酸在水溶液中極易氧化、分解，故貯藏時除應避免與空氣接觸外且必須加","mediaUrl":"","options":["安定劑","催化劑","氧化劑","還原劑"],"explanation":""},{"correctAnswer":"植物油、礦物油、動物油","question":"髮油的原料","mediaUrl":"","options":["植物油、礦物油、動物油","植物油、沙拉油、動物油","乳質油、植物油、動物油","汽油、植物油、礦物油"],"explanation":""},{"correctAnswer":"慕絲","question":"吹風造型前須將瓶罐搖動均勻後，擠壓出泡沫的美髮用品是","mediaUrl":"","options":["髮麗香","洗髮精","髮膠","慕絲"],"explanation":""}],"totalQuestions":200},"115動力機械F":{"name":"115動力機械F","questions":[{"correctAnswer":"錐度","question":"游標卡尺無法直接量測的是","mediaUrl":"","options":["深度","錐度","外徑","內徑"],"explanation":""},{"correctAnswer":"0.05mm","question":"1/20公制游標卡尺其精度為","mediaUrl":"","options":["0.02mm","0.03mm","0.05mm","0.01mm"],"explanation":""},{"correctAnswer":"本尺19公厘，游尺20等分","question":"1/20公厘精度的游標卡尺，其原理為","mediaUrl":"","options":["本尺20公厘，游尺(副尺)30等分","本尺19公厘，游尺20等分","本尺49公厘，游尺50等分","本尺50公厘，游尺49等分"],"explanation":""},{"correctAnswer":"量內徑","question":"游標卡尺的內測顎是用於","mediaUrl":"","options":["量內徑","量外徑","當圓規用","當劃線針用"],"explanation":""},{"correctAnswer":"離本尺愈近愈好","question":"游標卡尺量測外徑時，工件應靠在","mediaUrl":"","options":["離本尺愈遠愈好","離本尺愈近愈好","任何位置都一樣","依工件形狀而定"],"explanation":""},{"correctAnswer":"0.05mm","question":"游標卡尺，本尺刻度是1公厘，游尺(副尺)為19/20公厘，其精度為若干公厘？","mediaUrl":"","options":["0.05mm","0.04mm","0.03mm","0.02mm"],"explanation":""},{"correctAnswer":"火星塞間隙規","question":"下列何者量具可以檢查火星塞間隙？","mediaUrl":"","options":["鋼尺","游標卡尺","火星塞間隙規","厚薄規"],"explanation":""},{"correctAnswer":"kg-m","question":"公制扭力扳手之單位為","mediaUrl":"","options":["kg-m","ft-lb","lb-cm","psi"],"explanation":""},{"correctAnswer":"扭力扳手","question":"欲知所鎖之螺桿扭力，則必需使用","mediaUrl":"","options":["開口扳手","梅花扳手","套筒扳手","扭力扳手"],"explanation":""},{"correctAnswer":"厚薄規","question":"氣門腳間隙可用下列那一種量具量測？","mediaUrl":"","options":["鋼尺","游標卡尺","厚薄規","火星塞間隙規"],"explanation":""},{"correctAnswer":"游標卡尺","question":"氣門桿直徑可用下列那一種量具量測？","mediaUrl":"","options":["鋼尺","游標卡尺","厚薄規","火星塞間隙規"],"explanation":""},{"correctAnswer":"1000公厘","question":"1公尺等於","mediaUrl":"","options":["100公厘","10公厘","1000公厘","10000公厘"],"explanation":""},{"correctAnswer":"公厘","question":"公制長度單位中、英文\"mm\"是表示","mediaUrl":"","options":["公厘","公分","公尺","公丈"],"explanation":""},{"correctAnswer":"200kg-cm","question":"螺絲的鎖緊扭力為2kg-m，如果扭力扳手的單位為kg-cm，則應鎖至","mediaUrl":"","options":["20kg-cm","200kg-cm","2000kg-cm","20000kg-cm"],"explanation":""},{"correctAnswer":"0.001公尺","question":"1mm可換算為","mediaUrl":"","options":["0.1公尺","0.01公尺","0.001公尺","0.0001公尺"],"explanation":""},{"correctAnswer":"Hz","question":"頻率的單位是","mediaUrl":"","options":["DCA","DCV","Hz","ACV"],"explanation":""},{"correctAnswer":"kg-cm","question":"下列何者是扭力之單位？","mediaUrl":"","options":["kg-cm","kg","cm","kg/cm"],"explanation":""},{"correctAnswer":"鎖緊螺桿","question":"扭力扳手只能用於","mediaUrl":"","options":["放鬆螺桿","鎖緊螺桿","打擊螺桿","放鬆螺桿或鎖緊螺桿"],"explanation":""},{"correctAnswer":"游標卡尺","question":"下列何者可量測深度","mediaUrl":"","options":["比重計","扭力扳手","游標卡尺","三用電錶"],"explanation":""},{"correctAnswer":"游標卡尺","question":"氣門導管的高度或深度，是用什麼工具量測的","mediaUrl":"","options":["外徑分厘卡","千分錶","直鋼尺","游標卡尺"],"explanation":""},{"correctAnswer":"1/8吋","question":"一般機車修護場所，稱呼英制的一分為","mediaUrl":"","options":["1/2吋","1/4吋","1/8吋","1/16吋"],"explanation":""},{"correctAnswer":"96.54","question":"機車行駛時速為60哩/小時，則約為______公里/小時。","mediaUrl":"","options":["66.54","76.54","86.54","96.54"],"explanation":""},{"correctAnswer":"AC500V或OFF檔","question":"指針式三用電錶不用時，選擇鈕要轉到","mediaUrl":"","options":["DC10V","AC500V或OFF檔","250歐姆","R×1"],"explanation":""},{"correctAnswer":"電阻","question":"指針式三用電錶中，那一項是非等分刻度？","mediaUrl":"","options":["交流電壓","直流電壓","電流","電阻"],"explanation":""},{"correctAnswer":"小","question":"指針式三用電錶量測電阻時，若待測電阻愈大，則指針偏轉角越","mediaUrl":"","options":["大","小","一樣","無法確定"],"explanation":""},{"correctAnswer":"0.025","question":"下列何者不是比重計之刻度值","mediaUrl":"","options":["1.215","1.3","0.025","1.105"],"explanation":""},{"correctAnswer":"DC50V","question":"用三用電錶量測機器腳踏車電瓶充電電壓應選擇","mediaUrl":"","options":["R×10","AC50V","DC50V","DC3V"],"explanation":""},{"correctAnswer":"電瓶水","question":"比重計常用於量測那一種液體比重？","mediaUrl":"","options":["汽油","機油","電瓶水","蒸餾水"],"explanation":""},{"correctAnswer":"全開","question":"將火星塞拆下後，量汽缸壓縮壓力，化油器的節氣門位置應在","mediaUrl":"","options":["全開","全關","半開","自然開"],"explanation":""},{"correctAnswer":"歐姆","question":"電阻的單位是","mediaUrl":"","options":["伏特","安培","歐姆","瓦特"],"explanation":""},{"correctAnswer":"電功率","question":"瓦特是什麼單位？","mediaUrl":"","options":["電阻","電壓","電流","電功率"],"explanation":""},{"correctAnswer":"V","question":"伏特的代表符號是","mediaUrl":"","options":["V","A","W","P"],"explanation":""},{"correctAnswer":"小蘇打水","question":"皮膚沾到電解液，應用什麼溶液清洗較好？","mediaUrl":"","options":["小蘇打水","醋","酒精","汽油"],"explanation":""},{"correctAnswer":"0.005A","question":"5mA等於","mediaUrl":"","options":["5000A","0.5A","0.005A","0.05A"],"explanation":""},{"correctAnswer":"伏特V","question":"電壓的單位表示為","mediaUrl":"","options":["安培A","伏特V","歐姆Ω","電功率W"],"explanation":""},{"correctAnswer":"7.5公斤","question":"假如汽油的比重為0.75，那麼10公升的汽油重量是","mediaUrl":"","options":["1.75公斤","7.5公斤","10公斤","10.75公斤"],"explanation":""},{"correctAnswer":"電流錶","question":"圖示（附圖）為______的符號。","mediaUrl":"https://prohamer.github.io/exam/115/115F37.png","options":["電壓錶","瓦特錶","電流錶","三用電錶"],"explanation":""},{"correctAnswer":"E=I·R","question":"下列公式，何者可表示歐姆定律？","mediaUrl":"","options":["E=I·R","P=I·R","R=I·E","I=E·R"],"explanation":""},{"correctAnswer":"快","question":"使用電鑽鑽軟金屬時，其轉速應調整為","mediaUrl":"","options":["快","慢","先快後慢","忽快忽慢"],"explanation":""},{"correctAnswer":"塑膠榔頭","question":"若要保護受衝面光滑細緻應使用：","mediaUrl":"","options":["鐵質榔頭","銅頭榔頭","塑膠榔頭","鋼質榔頭"],"explanation":""},{"correctAnswer":"尖嘴鉗","question":"在位於狹窄處工作所，適用鉗子為：","mediaUrl":"","options":["斜口鉗","尖嘴鉗","鯉魚鉗","電工鉗"],"explanation":""},{"correctAnswer":"螺帽的大小","question":"開口扳手上所刻的尺寸是指：","mediaUrl":"","options":["螺帽的大小","螺紋外徑","螺距","導程"],"explanation":""},{"correctAnswer":"慢","question":"金屬硬度愈大，其拉動鋸條之速度要：","mediaUrl":"","options":["快","慢","皆可","忽快忽慢"],"explanation":""},{"correctAnswer":"梅花扳手","question":"不易從螺帽上滑脫之扳手為：","mediaUrl":"","options":["開口扳手","梅花扳手","活動扳手","管子扳手"],"explanation":""},{"correctAnswer":"向前","question":"在安裝鋸條時，其鋸齒尖應","mediaUrl":"","options":["向前","向後","均可","視工作物而定"],"explanation":""},{"correctAnswer":"套筒扳手","question":"拆裝螺絲時，應以下列何者列為最優先使用？","mediaUrl":"","options":["開口扳手","梅花扳手","套筒扳手","活動扳手"],"explanation":""},{"correctAnswer":"套筒扳手","question":"螺絲或螺帽置於機器比較凹進去的地方，應使用","mediaUrl":"","options":["開口扳手","扭力扳手","套筒扳手","梅花扳手"],"explanation":""},{"correctAnswer":"86.10%","question":"指示馬力為180HP，摩擦馬力為25HP，請問機械效率為多少？","mediaUrl":"","options":["13.80%","25%","56.20%","86.10%"],"explanation":""},{"correctAnswer":"免定期換發","question":"機器腳踏車行車執照，每幾年換發一次？","mediaUrl":"","options":["1年","2年","3年","免定期換發"],"explanation":""},{"correctAnswer":"5年","question":"100年1月1日實施，自領牌日起幾年內之機器腳踏車不需每年實施排放空氣污染物定期檢驗？","mediaUrl":"","options":["3年","4年","5年","6年"],"explanation":""},{"correctAnswer":"水","question":"烙鐵架上的海棉可清除烙鐵頭上之餘錫，故海棉應加","mediaUrl":"","options":["酒精","水","機油","接點復活劑"],"explanation":""},{"correctAnswer":"斜口鉗","question":"焊接電子元件後，剪除接腳應使用","mediaUrl":"","options":["尖嘴鉗","鋼絲鉗","剝線鉗","斜口鉗"],"explanation":""},{"correctAnswer":"去除銲接表面之氧化物","question":"銲錫中的助銲劑主要功能為","mediaUrl":"","options":["幫助溫度升高","降低熔點","去除銲接表面之氧化物","加速銲點凝固"],"explanation":""},{"correctAnswer":"消除焊點污垢","question":"焊接作業中，使用松香之主要功能為","mediaUrl":"","options":["消除焊點污垢","清除電烙鐵之氧化物","助熔","冷卻"],"explanation":""},{"correctAnswer":"紅色","question":"用以標示消防設備、器具、危險、停止及禁止，其顏色的標誌為","mediaUrl":"","options":["紅色","黃色","綠色","藍色"],"explanation":""},{"correctAnswer":"綠色","question":"用以表示安全和急救設備存放位置，其顏色的標誌為","mediaUrl":"","options":["綠色","黃色","橙色","藍色"],"explanation":""},{"correctAnswer":"防止螺絲或螺帽鬆脫","question":"下列何者為彈簧墊圈之主要功能？","mediaUrl":"","options":["保護工作面","增大承壓面積","防止螺絲或螺帽鬆脫","增大固定力"],"explanation":""},{"correctAnswer":"固定邊","question":"使用活動扳手時，應以下列何者為受力端","mediaUrl":"","options":["轉動邊","固定邊","螺紋端","活動邊"],"explanation":""},{"correctAnswer":"專用於將螺絲鎖緊至規定之扭力值","question":"使用扭力扳手之目的主要是","mediaUrl":"","options":["用於拆卸螺絲","專用於將螺絲鎖緊至規定之扭力值","用於拆卸和鎖緊螺絲","專用於拆卸一般扳手扭不動之螺絲"],"explanation":""},{"correctAnswer":"軟金屬刷","question":"應用銼刀銼削金屬物件時，銼刀表面常佈滿金屬細屑，適宜用下列何者物品清理","mediaUrl":"","options":["手指","抹布","敲擊","軟金屬刷"],"explanation":""},{"correctAnswer":"絕緣材料","question":"應用在電工工具中之螺絲起子，其握持的手柄，皆以何材料製成","mediaUrl":"","options":["鐵材","金屬","鋼材","絕緣材料"],"explanation":""},{"correctAnswer":"3","question":"選擇手動式攻製內螺紋的螺絲攻工具分別組成一組為幾支","mediaUrl":"","options":["2","3","4","5"],"explanation":""},{"correctAnswer":"厚度","question":"度量儀器中外徑分厘卡可以直接量測的項目","mediaUrl":"","options":["深度","階段差","偏擺","厚度"],"explanation":""},{"correctAnswer":"0.0254mm","question":"尺寸標示0.001英吋等於","mediaUrl":"","options":["0.254mm","0.0254mm","0.00254mm","0.000254mm"],"explanation":""},{"correctAnswer":"2kg","question":"如下圖所示扭力扳手作用臂，長2m，鎖緊螺絲的扭力刻度，如下圖所示，則施力為（附圖，詳見原檔）","mediaUrl":"https://prohamer.github.io/exam/115/115F65.png","options":["1kg","2kg","4kg","8kg"],"explanation":""},{"correctAnswer":"21.43mm","question":"下圖測微器所示刻度是（附圖，詳見原檔）","mediaUrl":"https://prohamer.github.io/exam/115/115F66.png","options":["22.43mm","21.93mm","21.47mm","21.43mm"],"explanation":""},{"correctAnswer":"15.25mm","question":"下圖所示游標卡尺刻度是（附圖，詳見原檔）","mediaUrl":"https://prohamer.github.io/exam/115/115F67.png","options":["20.21mm","15.25mm","15.4mm","15.10mm"],"explanation":""},{"correctAnswer":"逐項登錄並複頌一次、並請顧客確認","question":"顧客交辦維修事項時應","mediaUrl":"","options":["知道怎麼做就好","逐項登錄並複頌一次、並請顧客確認","交代店內同事處理","事情正忙、要顧客等一下立即處理"],"explanation":""},{"correctAnswer":"逐項檢視顧客交修項目是否完成","question":"顧客車輛維修完畢後應先","mediaUrl":"","options":["收拾工具","清潔車輛","計價","逐項檢視顧客交修項目是否完成"],"explanation":""},{"correctAnswer":"10~14kg/cm²","question":"機器腳踏車修護手冊，記載汽缸壓縮壓力規格為 12±2kg/cm² 表示______測試範圍為正常。","mediaUrl":"","options":["12±2%kg/cm²","12~14kg/cm²","10~14kg/cm²","12~10kg/cm²"],"explanation":""},{"correctAnswer":"依廠牌、年份之修護手冊操作步驟調整","question":"調整機器腳踏車汽門間隙時應","mediaUrl":"","options":["依個人累計之工作經驗","依車主使用手冊操作步驟","依與同事交換之工作經驗","依廠牌、年份之修護手冊操作步驟調整"],"explanation":""},{"correctAnswer":"輪胎氣嘴帽","question":"安裝機器腳踏車之組件時，下列何項不須依規定扭力值鎖緊？","mediaUrl":"","options":["引擎汽缸頭","火星塞","引擎洩油螺栓","輪胎氣嘴帽"],"explanation":""},{"correctAnswer":"D","question":"如圖所示，關於機器腳踏車車身高度是指何者？（附圖，詳見原檔）","mediaUrl":"https://prohamer.github.io/exam/115/115F73.png","options":["A","B","C","D"],"explanation":""},{"correctAnswer":"10⁻⁹","question":"請問 1 奈米等於多少 m？","mediaUrl":"","options":["10⁻⁹","10⁻⁸","10⁻¹⁰","10⁻⁷"],"explanation":""},{"correctAnswer":"安全","question":"下列何者非機器腳踏車服務站所提倡之5S運動之項目","mediaUrl":"","options":["整理","整頓","清潔","安全"],"explanation":""},{"correctAnswer":"降低血紅素輸送氧氣之功能","question":"一氧化碳對人體健康的危害主要是","mediaUrl":"","options":["致癌","降低血紅素輸送氧氣之功能","氣管炎","肝傷害"],"explanation":""},{"correctAnswer":"需將病患平躺並將腳部墊高，頭部放低促進血液循環","question":"下列何者非一氧化碳中毒時之處理方法？","mediaUrl":"","options":["打開窗戶","將病患移置通風處","病患呼吸困難時應立即施行人工呼吸","需將病患平躺並將腳部墊高，頭部放低促進血液循環"],"explanation":""},{"correctAnswer":"先以清水沖洗，再送醫檢查治療","question":"在進行機器腳踏車煞車系統維修過程中，若不慎被煞車油噴濺到眼睛時，下列何者為處置之方式？","mediaUrl":"","options":["先以清水沖洗，再送醫檢查治療","使用衛生紙擦拭即可","使用空氣吹乾即可","閉上眼睛休息即可"],"explanation":""},{"correctAnswer":"使用專用清潔噴劑進行清潔","question":"在進行機器腳踏車煞車系統維修過程中，若需清潔煞車來令片時，下列何者為正確之清潔方式？","mediaUrl":"","options":["以清水沖洗","使用高壓空氣吹落粉末","使用專用清潔噴劑進行清潔","使用抹布擦拭即可"],"explanation":""},{"correctAnswer":"熱能轉變為機械能","question":"所謂引擎是一種燃燒燃料的機構，由","mediaUrl":"","options":["熱能轉變為機械能","機械能轉變為熱能","電能轉變為機械能","機械能轉變為電能"],"explanation":""},{"correctAnswer":"壓縮行程","question":"二行程引擎活塞由排氣口關閉上行至上死點止，汽缸為何行程？","mediaUrl":"","options":["進氣行程","預壓行程","壓縮行程","動力行程"],"explanation":""},{"correctAnswer":"預壓行程","question":"二行程引擎活塞由上死點下行至掃氣口打開期間，曲軸箱為何行程？","mediaUrl":"","options":["進氣行程","預壓行程","動力行程","排氣行程"],"explanation":""},{"correctAnswer":"進氣行程","question":"四行程引擎：吸入適當比例的燃料與空氣之混合氣進入汽缸的行程稱","mediaUrl":"","options":["進氣行程","壓縮行程","動力行程","排氣行程"],"explanation":""},{"correctAnswer":"壓縮","question":"將汽缸內的混合氣予以壓縮，此為四行程引擎中的","mediaUrl":"","options":["進氣","壓縮","動力","排氣行程"],"explanation":""},{"correctAnswer":"混合氣","question":"機器腳踏車四行程引擎進氣行程時吸入汽缸內的為","mediaUrl":"","options":["純空氣","混合氣","汽油","機油+混合氣"],"explanation":""},{"correctAnswer":"720度","question":"四行程汽油引擎，活塞上下移動共四次，完成一次循環，曲軸共旋轉","mediaUrl":"","options":["360度","720度","180度","540度"],"explanation":""},{"correctAnswer":"進氣—壓縮—動力—排氣","question":"四行程汽油引擎，完成一次循環時，行程的先後次序是","mediaUrl":"","options":["進氣—壓縮—動力—排氣","壓縮—排氣—動力—進氣","排氣—壓縮—動力—進氣","進氣—排氣—動力—壓縮"],"explanation":""},{"correctAnswer":"使混合氣充分進入汽缸","question":"進氣行程時，進氣門必須早開晚關目的是","mediaUrl":"","options":["使混合氣充分進入汽缸","減少混合氣進入","使點火提前","使點火延後"],"explanation":""},{"correctAnswer":"上死點前5度","question":"一般汽油引擎之進氣行程時，進氣門早開度數約為","mediaUrl":"","options":["上死點後20度","上死點後10度","上死點前5度","上死點後15度"],"explanation":""},{"correctAnswer":"汽缸總容積與燃燒室容積之比","question":"引擎的壓縮比為","mediaUrl":"","options":["汽缸總容積與燃燒室容積之比","汽缸容積與活塞行程之比","活塞行程與燃燒室容積之比","燃燒室容積與氣缸容積之比"],"explanation":""},{"correctAnswer":"燃燒溫度增高","question":"壓縮比低之引擎，使用高辛烷值汽油時","mediaUrl":"","options":["增加引擎動力","燃燒溫度增高","馬力較大","較省油"],"explanation":""},{"correctAnswer":"由熱能變為機械能","question":"何謂熱機？","mediaUrl":"","options":["由機械能變為熱能","由熱能變為化學能","由熱能變為機械能","由電能變為機械能"],"explanation":""},{"correctAnswer":"二倍於曲軸臂長","question":"一個行程之定義為等於","mediaUrl":"","options":["曲軸轉360度","二倍於曲軸臂長","完成一個循環活塞所行的距離","凸輪軸轉360度"],"explanation":""},{"correctAnswer":"活塞移動行程容積","question":"何謂排氣量？","mediaUrl":"","options":["引擎排除廢氣之總容積","活塞吸入混合氣之總容積","活塞移動行程容積","化油器之大小"],"explanation":""},{"correctAnswer":"8:1","question":"引擎排氣量為700cc，燃燒室容積為100cc，則引擎壓縮比為","mediaUrl":"","options":["7:1","8:1","9:1","10:1"],"explanation":""},{"correctAnswer":"1次","question":"單缸四行程引擎，曲軸旋轉二轉進氣門共開啟","mediaUrl":"","options":["1次","2次","4次","3次"],"explanation":""},{"correctAnswer":"180度","question":"四行程引擎，曲軸轉一轉，凸輪軸共轉","mediaUrl":"","options":["180度","360度","720度","540度"],"explanation":""},{"correctAnswer":"2:1","question":"四行程引擎，曲軸與凸輪軸之轉速比為","mediaUrl":"","options":["1:1","1:2","2:1","3:1"],"explanation":""},{"correctAnswer":"先自動衝出，再由活塞壓出，最後由混合氣趕出","question":"廢氣之排出是由","mediaUrl":"","options":["自動衝出","活塞壓出","混合氣趕出","先自動衝出，再由活塞壓出，最後由混合氣趕出"],"explanation":""},{"correctAnswer":"下死點前開、上死點後關","question":"汽油引擎之排氣門的作動是活塞在","mediaUrl":"","options":["上死點開、下死點關","上死點前開、下死點前關","下死點前開、上死點後關","上死點後開、下死點前關"],"explanation":""},{"correctAnswer":"燃燒壓力","question":"動力行程中氣缸最大之壓力是","mediaUrl":"","options":["壓縮壓力","燃燒壓力","活塞壓力","進氣壓力"],"explanation":""},{"correctAnswer":"720度","question":"四行程引擎每產生一次動力，曲軸旋轉","mediaUrl":"","options":["120度","360度","720度","180度"],"explanation":""},{"correctAnswer":"1/2轉","question":"四行程引擎曲軸旋轉一轉，其凸輪軸旋轉","mediaUrl":"","options":["1/2轉","1轉","1又1/2轉","2轉"],"explanation":""},{"correctAnswer":"100CC","question":"壓縮比為10:1的單缸引擎，某活塞位移容積為900CC，則活塞到上死點時，燃燒室的容積為","mediaUrl":"","options":["100CC","90CC","10CC","50CC"],"explanation":""},{"correctAnswer":"預壓和掃氣","question":"二行程引擎較四行程引擎在行程作動上多了","mediaUrl":"","options":["預壓(初次壓縮)","掃氣","排氣","預壓和掃氣"],"explanation":""},{"correctAnswer":"活塞在汽缸內位移距離","question":"所謂行程是指","mediaUrl":"","options":["活塞長度","汽缸套長度","汽缸距離(長度)","活塞在汽缸內位移距離"],"explanation":""},{"correctAnswer":"360","question":"四行程引擎曲軸旋轉二轉，凸輪軸旋轉幾度？","mediaUrl":"","options":["90","180","360","720度"],"explanation":""},{"correctAnswer":"早開晚關","question":"一般引擎之進排氣門在設計上是","mediaUrl":"","options":["早開早關","早開晚關","晚開早關","晚開晚關"],"explanation":""},{"correctAnswer":"基圓","question":"四行程引擎調整氣門間隙時，其凸輪是位於","mediaUrl":"","options":["凸角","基圓","剛頂到凸角時","剛轉過凸角時"],"explanation":""},{"correctAnswer":"45","question":"氣門面及氣門座的斜面角一般為______度","mediaUrl":"","options":["35","45","55","60"],"explanation":""},{"correctAnswer":"鋁合金或鑄鐵","question":"目前使用汽缸頭材料是：","mediaUrl":"","options":["鋼","合金鋼","鋁合金或鑄鐵","錫鐵"],"explanation":""},{"correctAnswer":"使彈簧不容易發生諧和震動","question":"氣門彈簧各圈間的距離常不相同，其目的是","mediaUrl":"","options":["使彈簧力量更大","使彈簧不容易發生諧和震動","使彈簧的長度合規定","美觀"],"explanation":""},{"correctAnswer":"搖臂","question":"一般進、排氣門都在汽缸頭上之引擎，其氣門的開和閉大多利用","mediaUrl":"","options":["搖臂","氣門導管","氣門頂子","鎖緊螺帽"],"explanation":""},{"correctAnswer":"壓縮上死點位置","question":"檢查汽油引擎進排氣門開與關的位置必需確知","mediaUrl":"","options":["發火次序","壓縮上死點位置","曲柄軸上死點","進氣行程之位置"],"explanation":""},{"correctAnswer":"縮短","question":"氣門腳間隙增大，氣門開啟時間會","mediaUrl":"","options":["延長","縮短","不變","關不緊"],"explanation":""},{"correctAnswer":"氣門彈簧座圈裡面","question":"氣門鎖扣是裝在氣門桿的什麼地方？","mediaUrl":"","options":["氣門頭下面","氣門彈簧座圈裡面","氣門導管裡面","氣缸上方"],"explanation":""},{"correctAnswer":"氣門導管上方","question":"氣門導管油封應該裝在什麼地方？","mediaUrl":"","options":["氣門頭下面","氣門彈簧座圈裡面","氣門導管上方","鎖扣上方"],"explanation":""},{"correctAnswer":"壓縮行程上死點","question":"一般機器腳踏車檢查氣門正時，其活塞應位於","mediaUrl":"","options":["進汽行程上死點","壓縮行程上死點","排氣行程上死點","動力行程下死點"],"explanation":""},{"correctAnswer":"熱傳導性佳","question":"引擎的汽缸頭由鋁合金鑄成，主因是鋁","mediaUrl":"","options":["熱傳導性佳","不易變形","硬度佳","鋁質承受壓力高於鑄鐵"],"explanation":""},{"correctAnswer":"使彈簧不易震動而斷裂","question":"氣門彈簧各圈距不同，其目的在於","mediaUrl":"","options":["使彈簧安裝容易","使彈簧的力量更大","製造方便","使彈簧不易震動而斷裂"],"explanation":""},{"correctAnswer":"早開晚關","question":"氣門間隙太小時會使氣門","mediaUrl":"","options":["早開早關","早開晚關","晚開早關","晚開晚關"],"explanation":""},{"correctAnswer":"進氣門大而薄，排氣門小而厚","question":"單缸二氣門引擎之進排氣門在構造上有何不同？","mediaUrl":"","options":["進氣門小而薄，排氣門大而厚","進氣門大而厚，排氣門小而薄","進氣門小而厚，排氣門大而薄","進氣門大而薄，排氣門小而厚"],"explanation":""},{"correctAnswer":"壓縮行程上死點","question":"氣門正時記號互相對正時，是表示活塞位置在","mediaUrl":"","options":["進氣行程上死點","壓縮行程上死點","排氣行程上死點","動力行程下死點"],"explanation":""},{"correctAnswer":"百分之百密封","question":"有關氣門導管油封的設計，下列敘述何者錯誤？","mediaUrl":"","options":["百分之百密封","防止下機油","拆過最好更換","一定要裝在氣門處的氣門導管上方"],"explanation":""},{"correctAnswer":"圓頂室式","question":"燃燒室設計成半球形，表面積與容積之比最小，熱損失少，進排氣之效率甚佳，但氣門機構較複雜的型式是","mediaUrl":"","options":["圓頂室式","浴桶室式","楔形室式","特殊燃燒室"],"explanation":""},{"correctAnswer":"氣門正時","question":"配合曲軸與凸輪軸間的相關位置，間接地配合氣門與活塞的位置稱為","mediaUrl":"","options":["點火正時","氣門正時","活塞銷孔偏置","氣門重疊"],"explanation":""},{"correctAnswer":"氣門面角度比氣門座角度大1/2~1度","question":"有關氣門，下列敘述何者錯誤？","mediaUrl":"","options":["進氣門與排氣門的材質不同","排氣門較進氣門的受溫高","進氣門做成45度或30度，是30度氣體流量大","氣門面角度比氣門座角度大1/2~1度"],"explanation":""},{"correctAnswer":"裝了油封使氣門桿與導管間完全密封","question":"有關氣門導管及導管油封，下列敘述何者錯誤？","mediaUrl":"","options":["氣門導管材質用合金鋼","氣門導管油封一定要裝在氣門處的氣門導管，否則容易下機油","導管油封上的小鋼環，可防止下機油","裝了油封使氣門桿與導管間完全密封"],"explanation":""},{"correctAnswer":"手動式、半自動式和全自動式","question":"正時鍊條調整器的型式有","mediaUrl":"","options":["手動式、全自動式","手動式、半自動式","半自動式、全自動式","手動式、半自動式和全自動式"],"explanation":""},{"correctAnswer":"四行程與二行程排氣管可互換","question":"有關排氣管，下列敘述何者錯誤？","mediaUrl":"","options":["四行程排氣管較易腐爛","二行程排氣管較四行程易阻塞","排氣管內裝有消音器，以減低排氣噪音","四行程與二行程排氣管可互換"],"explanation":""},{"correctAnswer":"變成正圓形","question":"橢圓形活塞，當溫度增高應","mediaUrl":"","options":["不變形","變成正圓形","變成長方形","仍為橢圓形"],"explanation":""},{"correctAnswer":"冷引擎運轉，噪音小","question":"橢圓形活塞，最大之優點是","mediaUrl":"","options":["溫度高時，接觸面積小","冷引擎運轉，噪音小","活塞與缸壁之間隙，可以較小","省油"],"explanation":""},{"correctAnswer":"增加壓縮壓力","question":"四行程引擎活塞壓縮環的主要功用是","mediaUrl":"","options":["阻止機油上昇","增加壓縮壓力","使汽缸壁得到適當的油潤滑","防止汽缸過熱，增加冷卻效果"],"explanation":""},{"correctAnswer":"導熱性良好","question":"現代引擎汽缸，多用鋁合金鑄造而成，採用鋁合金的主要理由是","mediaUrl":"","options":["導熱性良好","不生銹","比鑄鐵膨脹率低","重量輕"],"explanation":""},{"correctAnswer":"曲軸銷","question":"用來安裝連桿大端之部位稱為","mediaUrl":"","options":["曲軸頸","曲軸壁","曲軸銷","凸輪軸"],"explanation":""},{"correctAnswer":"易發生爆震","question":"汽缸內積碳過多則","mediaUrl":"","options":["壓縮比減少","易發生爆震","引擎過冷","省油"],"explanation":""},{"correctAnswer":"活塞環漏氣","question":"量測汽缸之壓縮力特別低，如加少許機油後，壓力即刻升高則","mediaUrl":"","options":["活塞環漏氣","汽缸頭墊片漏氣","氣門座漏氣","汽缸蓋破裂"],"explanation":""},{"correctAnswer":"增高壓縮比","question":"活塞頂部成拱型的目的是：","mediaUrl":"","options":["增高壓縮比","減少壓縮比","增大燃燒室容積","防止積碳"],"explanation":""},{"correctAnswer":"鋁合金","question":"目前汽油引擎活塞的材料是","mediaUrl":"","options":["鋁合金","鋼","合金鋼","鑄鐵"],"explanation":""},{"correctAnswer":"和活塞銷成90度的方向","question":"活塞的哪一個方向，叫做法推力面(衝擊面)","mediaUrl":"","options":["活塞銷的方向","活塞銷成45度的方向","和活塞銷成90度的方向","和活塞銷成60度的方向"],"explanation":""},{"correctAnswer":"與活塞銷成90度之裙部","question":"橢圓形活塞，直徑最大處是","mediaUrl":"","options":["活塞環岸","活塞銷","與活塞銷成90度之裙部","活塞頂部"],"explanation":""},{"correctAnswer":"鋁合金或鑄鐵","question":"通常鑄造氣缸體的材料是","mediaUrl":"","options":["鋼","合金鋼","鋁合金或鑄鐵","鉛錫合金"],"explanation":""},{"correctAnswer":"活塞與連桿小端","question":"活塞銷用來連接","mediaUrl":"","options":["活塞與活塞環","活塞與連桿小端","活塞與連桿大端","連桿大端與曲軸"],"explanation":""},{"correctAnswer":"氣門正時","question":"曲軸齒輪與凸輪軸齒輪之記號對正表示","mediaUrl":"","options":["氣門正時","點火正時","洛克位置","排氣門打開"],"explanation":""},{"correctAnswer":"環岸及環容易折斷","question":"活塞環在氣缸內開口間隙太小時會使","mediaUrl":"","options":["環岸及環容易折斷","引擎有力","壽命增長","省油"],"explanation":""},{"correctAnswer":"與原氣缸尺寸相同者","question":"引擎修理不搪缸僅換活塞環則活塞環尺寸應採用","mediaUrl":"","options":["比原氣缸尺寸加大者","與原氣缸尺寸相同者","比原氣缸尺寸為小者","依情況選用"],"explanation":""},{"correctAnswer":"適當的花紋","question":"一般磨缸的目的","mediaUrl":"","options":["越光越好","越粗糙越好","適當的花紋","越亮越好"],"explanation":""},{"correctAnswer":"越光越好","question":"曲軸軸頭的表面應當","mediaUrl":"","options":["越光越好","有適當的花紋","越粗糙越好","表面有斜差"],"explanation":""},{"correctAnswer":"油環","question":"四行程引擎，在裝回活塞環時應先裝那一道環？","mediaUrl":"","options":["第一道壓縮環","第二道壓縮環","油環","依引擎有所不同"],"explanation":""},{"correctAnswer":"鋁合金","question":"汽油引擎通常採用下列何種活塞？","mediaUrl":"","options":["鑄鐵","合金鋼","鋁合金","鎳鉻合金"],"explanation":""},{"correctAnswer":"刮除汽缸機油流回油底殼","question":"油環的主要功用是","mediaUrl":"","options":["阻止機油上升","增加汽缸壓力","刮除汽缸機油流回油底殼","與壓縮環相同"],"explanation":""},{"correctAnswer":"90°","question":"四行程活塞環安裝時，其合口不可位於活塞銷口及與活塞銷成______之方位處","mediaUrl":"","options":["90°","45°","120°","135°"],"explanation":""},{"correctAnswer":"C","question":"圖中那一活塞環的刮油及舖油效果最佳？（附圖，詳見原檔）","mediaUrl":"https://prohamer.github.io/exam/115/115F153.png","options":["A","B","C","D"],"explanation":""},{"correctAnswer":"橢圓型","question":"活塞的裙部是","mediaUrl":"","options":["正圓型","橢圓型","與活塞頭部相同形狀","四行程活塞裙部較二行程變化多"],"explanation":""},{"correctAnswer":"活塞銷孔偏置應偏向壓縮衝擊面","question":"有關活塞的敘述，下列何者錯誤？","mediaUrl":"","options":["四行程活塞頂形狀變化多","四行程活塞環槽有回油孔","二行程活塞環槽內有定位銷","活塞銷孔偏置應偏向壓縮衝擊面"],"explanation":""},{"correctAnswer":"凸形","question":"活塞頂部製成______的目的是提供高度壓縮比，使燃燒完全，排氣效果好。","mediaUrl":"","options":["凸形","凹形","特殊形","槽形"],"explanation":""},{"correctAnswer":"燃燒室","question":"活塞在上死點時，活塞頂部與汽缸頭底部間所形成的空間，稱","mediaUrl":"","options":["行程","上死點","燃燒室","容積效率"],"explanation":""},{"correctAnswer":"汽缸與活塞組合時，汽缸內用綿布沾機油潤滑","question":"有關汽缸，下列敘述何者錯誤？","mediaUrl":"","options":["汽缸套通常用鑄鐵製成","汽缸新品時，汽缸壁有網狀細花紋","汽缸是正圓形","汽缸與活塞組合時，汽缸內用綿布沾機油潤滑"],"explanation":""},{"correctAnswer":"活塞","question":"引擎中呈現往復直線運動的構件是","mediaUrl":"","options":["曲軸","活塞","變速齒輪","離合器"],"explanation":""},{"correctAnswer":"曲軸","question":"引擎中呈現旋轉運動的構件是","mediaUrl":"","options":["曲軸","活塞","離合器","變速齒輪"],"explanation":""},{"correctAnswer":"朝上","question":"活塞環安裝時，其表面打刻有英文字母，請問英文字母的應","mediaUrl":"","options":["朝上","朝下","任何方向都沒關係","打刻方向不會影響引擎性能"],"explanation":""},{"correctAnswer":"配重","question":"為抵消活塞及連桿之慣性作用，而在曲柄軸設有","mediaUrl":"","options":["軸承","華司","配重","曲軸銷"],"explanation":""},{"correctAnswer":"負壓","question":"一般機器腳踏車為淨化排放廢氣加裝之二次空氣導入裝置係利用排氣時產生之______將新鮮空氣導入排氣管。","mediaUrl":"","options":["大氣壓","正壓","負壓","排氣壓"],"explanation":""},{"correctAnswer":"引擎溫度過高","question":"使機油變稀失去粘性，下列敘述何者影響最大？","mediaUrl":"","options":["混合氣太稀","點火太早","引擎溫度過高","引擎溫度過低"],"explanation":""},{"correctAnswer":"約500km","question":"剛剛大修好之引擎裝修於車上，在最初行駛多少公里後，即應更換機油：","mediaUrl":"","options":["約500km","約1000km","約1500km","約2000km"],"explanation":""},{"correctAnswer":"油量最低限度","question":"油尺上之\"L\"刻劃代表","mediaUrl":"","options":["油滿","油量最低限度","油量適中","油量上限"],"explanation":""},{"correctAnswer":"第一道氣環與氣缸間","question":"引擎最難以潤滑部分為","mediaUrl":"","options":["氣門導管","活塞銷","第一道氣環與氣缸間","凸輪軸"],"explanation":""},{"correctAnswer":"機油號數愈小，黏度愈大","question":"有關引擎機油，下列敘述何者錯誤？","mediaUrl":"","options":["機油的功用之一是減震(減少噪音)","機油號數愈小，黏度愈大","機油規格可用SAE(美國汽車工程學會)表示","齒輪油比引擎機油黏度大"],"explanation":""},{"correctAnswer":"機油泵進油口較出油口小","question":"有關四行程機油泵下列敘述何者錯誤？","mediaUrl":"","options":["轉子式機油泵有內轉子與外轉子","轉子式機油泵大部份，用於機器腳踏車引擎","機油泵是利用容積變化將機油送出","機油泵進油口較出油口小"],"explanation":""},{"correctAnswer":"愈大","question":"愈炎熱地區選用機油時，SAE號數應","mediaUrl":"","options":["愈大","愈小","無關","與冷天號數相同"],"explanation":""},{"correctAnswer":"筒狀濾油網安裝，其開口應朝鎖緊螺絲","question":"有關潤滑系統，下列敘述何者錯誤？","mediaUrl":"","options":["檢查機油量時，引擎應暖車後實施","濾油網的型式大部分為筒狀","油濾轉子是利用引擎的離心力，將濾油網未過濾的雜質再分離","筒狀濾油網安裝，其開口應朝鎖緊螺絲"],"explanation":""},{"correctAnswer":"氣冷、水冷和油冷式","question":"目前機器腳踏車的冷卻方式有","mediaUrl":"","options":["氣冷、水冷","氣冷、油冷","氣冷、水冷和油冷式","水冷、油冷"],"explanation":""},{"correctAnswer":"水箱的接點通常用鋁焊接，以避免生銹、腐蝕","question":"有關水冷式引擎之水箱，下列敘述何者錯誤？","mediaUrl":"","options":["水箱型式有管式、蜂巢式","水箱通常用銅、黃銅或鋁製成","水箱的接點通常用鋁焊接，以避免生銹、腐蝕","檢查水箱水量，要在引擎冷車"],"explanation":""},{"correctAnswer":"冷車","question":"檢查冷卻水量時，應在引擎","mediaUrl":"","options":["冷車","溫車","熱車","任何時機皆可"],"explanation":""},{"correctAnswer":"若用蠟球型式，其優點是對於壓力不敏感","question":"壓力式冷卻系統中的溫度調節器(俗稱水龜)下列敘述何者正確？","mediaUrl":"","options":["是一種防止引擎過熱機構","冷車時溫度調節器是打開狀態","若用蠟球型式，其優點是對於壓力不敏感","熱車時溫度調節器是關閉狀態"],"explanation":""},{"correctAnswer":"壓力和真空","question":"壓力式水箱蓋的功用是控制冷卻系之","mediaUrl":"","options":["壓力","真空","水","壓力和真空"],"explanation":""},{"correctAnswer":"後者消耗於冷卻系的動力較小","question":"氣冷式和水冷式系統作比較，下列敘述何者錯誤？","mediaUrl":"","options":["前者引擎溫車時間較短，較省油","前者故障少，保養容易","後者冷卻作用較為穩定","後者消耗於冷卻系的動力較小"],"explanation":""},{"correctAnswer":"冷卻水定期換新後，不用洩除水管中的空氣","question":"有關水冷式系統，下列敘述何者錯誤？","mediaUrl":"","options":["水箱芯子有管式、蜂巢式","水泵浦的作動是採用離心式","水箱精的優點是熱效率高","冷卻水定期換新後，不用洩除水管中的空氣"],"explanation":""},{"correctAnswer":"可以降低水的沸點","question":"有關壓力式水箱蓋，下列敘述何者錯誤？","mediaUrl":"","options":["壓力高於標準，則壓力活門打開","壓力低於標準則真空活門開啟","可以提高冷卻效率，減少冷卻水流失","可以降低水的沸點"],"explanation":""},{"correctAnswer":"92無鉛汽油比95無鉛汽油的辛烷值還要高","question":"有關汽油，下列敘述何者錯誤？","mediaUrl":"","options":["汽油是碳與氫原子合成的化合物","以辛烷值來表示汽油號數","汽油的特性是燃點低","92無鉛汽油比95無鉛汽油的辛烷值還要高"],"explanation":""},{"correctAnswer":"超過廢氣試驗標準一點點沒關係","question":"有關汽油品質，下列敘述何者錯誤？","mediaUrl":"","options":["能完全燃燒","燃燒穩定","防止氣阻","超過廢氣試驗標準一點點沒關係"],"explanation":""},{"correctAnswer":"碳氫化合物","question":"燃料系統中的汽油其主要成份是","mediaUrl":"","options":["碳、矽","碳、鉻","碳、氮","碳氫化合物"],"explanation":""},{"correctAnswer":"自動式油杯","question":"利用引擎的負壓及汽油的重力，將汽油輸送至化油器的機件是","mediaUrl":"","options":["傳統手動式油杯","自動式油杯","浮筒室","汽油濾清器"],"explanation":""},{"correctAnswer":"引擎進氣歧管的負壓","question":"燃料系統中自動式油杯是利用","mediaUrl":"","options":["引擎進氣歧管的負壓","汽油的重量","曲軸箱的正壓","大氣壓力，克服油杯中彈簧的彈力，使汽油往下流"],"explanation":""},{"correctAnswer":"汽油的重量及大氣壓力","question":"燃料系統中手動式油杯是利用______使汽油往下流","mediaUrl":"","options":["引擎進氣歧管的負壓","汽油的重量及大氣壓力","曲軸箱的正負壓","曲軸箱的負壓"],"explanation":""},{"correctAnswer":"塑膠質乾式","question":"目前機器腳踏車空氣濾清器的型式，下列敘述何者錯誤？","mediaUrl":"","options":["海綿溼式","紙質半溼式","紙質半溼式加上海綿","塑膠質乾式"],"explanation":""},{"correctAnswer":"蒸氣","question":"燃料燃燒的必要條件，下列敘述何者錯誤？","mediaUrl":"","options":["溫度","氧氣(空氣)","燃料","蒸氣"],"explanation":""},{"correctAnswer":"15:1","question":"燃料系統中理論混合比為","mediaUrl":"","options":["10:1","12:1","15:1","17:1"],"explanation":""},{"correctAnswer":"一氧化碳","question":"當混合氣經完全燃燒後，排氣管所排出的氣體，不包含","mediaUrl":"","options":["一氧化碳","二氧化碳","水份","氮氣"],"explanation":""},{"correctAnswer":"15克","question":"燃料系統中混合氣能完全燃燒，其汽油1克，而空氣是","mediaUrl":"","options":["10克","15克","20克","25克"],"explanation":""},{"correctAnswer":"稀","question":"化油器中的中速油路比低速油路的混合比","mediaUrl":"","options":["濃","稀","相同","各種引擎有不同"],"explanation":""},{"correctAnswer":"濃","question":"要使化油器式機器腳踏車行駛到高山上作動正常，通常混合比要比平地","mediaUrl":"","options":["濃","稀","不變","各種引擎有不同"],"explanation":""},{"correctAnswer":"使汽油揮發快而破壞化學成份","question":"有關汽油箱裝有隔板的目的，下列敘述何者錯誤？","mediaUrl":"","options":["加強汽油箱的強度","避免汽油幌動而揮發快","避免靜電產生","使汽油揮發快而破壞化學成份"],"explanation":""},{"correctAnswer":"引擎冷時易於發動","question":"化油器阻風門的作用是","mediaUrl":"","options":["增加馬力","減少馬力","引擎冷時易於發動","省油"],"explanation":""},{"correctAnswer":"抗爆性","question":"汽油號數是表示汽油的","mediaUrl":"","options":["揮發性好壞","含熱量高低","抗爆性","馬力大小"],"explanation":""},{"correctAnswer":"氧與氮","question":"空氣中主要之元素為","mediaUrl":"","options":["氧與氮","碳與氫","二氧化碳與水蒸氣","一氧化碳與二氧化碳"],"explanation":""},{"correctAnswer":"熱度較高的火星塞","question":"引擎本體和燃料系統的情況正常，但拆下的火星塞有嚴重的積碳現象時應該更換","mediaUrl":"","options":["熱度較高的火星塞","其他廠牌的火星塞","螺牙較短的火星塞","熱度較低的火星塞"],"explanation":""},{"correctAnswer":"流速愈快，負壓愈大","question":"化油器文氏管原理是文氏管口徑愈小者","mediaUrl":"","options":["流速愈快，負壓愈小","流速愈快，負壓愈大","流速愈慢，負壓愈大","文氏管口徑與負壓大小無關"],"explanation":""},{"correctAnswer":"混合氣變稀","question":"固定喉管式化油器混合氣螺絲，當此螺絲順時針旋轉時，則","mediaUrl":"","options":["混合氣變稀","混合氣變濃","汽油變多","不會影響混合比"],"explanation":""},{"correctAnswer":"汽油箱油氣蒸發控制","question":"廢氣控制系統中的EEC系統是","mediaUrl":"","options":["曲軸箱吹漏氣回收","汽油箱油氣蒸發控制","二次空氣導入系統","觸媒轉化器系統"],"explanation":""}],"totalQuestions":200}};
+	  
+	  // 其他變數
+	  let questions = [];
+	  let currentQuestionIndex = 0;
+	  let score = 0;
+	  let startTime;
+	  let timerInterval;
+	  let wrongQuestions = [];
+	  let fontSize = 18;
+	
+
+    // 頁面載入時初始化
+    window.onload = function() {
+      loadSheets();
+    };
+
+    // 修改 loadSheets 函數
+    function loadSheets() {
+      const sheets = Object.values(questionsData);
+      
+      if (sheets.length === 0) {
+        alert('找不到可用的工作表！');
+        return;
+      }
+
+      const select = document.getElementById('sheet-select');
+      select.innerHTML = '';
+      
+      sheets.forEach(sheet => {
+        const option = document.createElement('option');
+        option.value = sheet.name;
+        option.textContent = sheet.name;
+        option.dataset.total = sheet.totalQuestions;
+        select.appendChild(option);
+      });
+
+      select.selectedIndex = 0;
+      updateQuestionRange();
+    }
+
+    function updateQuestionRange() {
+      const select = document.getElementById('sheet-select');
+      const selectedOption = select.options[select.selectedIndex];
+      const total = parseInt(selectedOption.dataset.total) || 0;
+      
+      const startRow = document.getElementById('start-row');
+      const endRow = document.getElementById('end-row');
+      
+      startRow.max = total;
+      endRow.max = total;
+      
+      let currentStart = parseInt(startRow.value);
+      if (currentStart > total) {
+        currentStart = 1;
+      }
+      
+      startRow.value = currentStart;
+      endRow.value = total;
+    }
+
+    function startQuiz() {
+      const sheetName = document.getElementById('sheet-select').value;
+      const startRow = parseInt(document.getElementById('start-row').value);
+      const endRow = parseInt(document.getElementById('end-row').value);
+
+      if (!sheetName) {
+        alert('請選擇測驗類型！');
+        return;
+      }
+
+      if (startRow > endRow) {
+        alert('開始題號不能大於結束題號！');
+        return;
+      }
+
+      const selectedQuestions = questionsData[sheetName].questions
+        .slice(startRow - 1, endRow)
+        .map(q => ({...q}));
+      
+      initQuiz(shuffleArray(selectedQuestions));
+    }
+
+    function shuffleArray(array) {
+      const newArray = [...array];
+      for (let i = newArray.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+      }
+      return newArray;
+    }
+
+    function initQuiz(quizQuestions) {
+      questions = quizQuestions;
+      document.getElementById('setup-view').style.display = 'none';
+      document.getElementById('quiz-view').style.display = 'block';
+      document.getElementById('total-questions').textContent = questions.length;
+      startTime = new Date();
+      startTimer();
+      showQuestion();
+    }
+
+    function showQuestion() {
+	  const question = questions[currentQuestionIndex];
+	  document.getElementById('current-question').textContent = currentQuestionIndex + 1;
+	  
+	  document.getElementById('question-text').innerHTML = '		<span class="question-label">第' + (currentQuestionIndex + 1) + '題</span>		<div class="question-content">' + question.question + '</div>	  ';
+	  
+	  document.getElementById('progress-bar').style.width = ((currentQuestionIndex + 1) / questions.length * 100) + '%';
+
+	  // 媒體處理代碼省略...
+
+	  // 創建選項的複製並打亂順序
+	  const options = [...question.options];
+	  const correctAnswer = question.correctAnswer;
+	  
+	  // 選項洗牌
+	  for (let i = options.length - 1; i > 0; i--) {
+		const j = Math.floor(Math.random() * (i + 1));
+		[options[i], options[j]] = [options[j], options[i]];
+	  }
+	  
+	  const optionsContainer = document.getElementById('options-container');
+	  optionsContainer.innerHTML = '';
+	  options.forEach((option, index) => {
+		const button = document.createElement('div');
+		button.className = 'option';
+		button.textContent = option;
+		button.onclick = () => selectOption(option); // 注意這裡傳入的是選項文字而非索引
+		optionsContainer.appendChild(button);
+	  });
+
+	  document.getElementById('feedback').style.display = 'none';
+	}
+
+    // 修改 selectOption 函數以接受選項文字
+	function selectOption(selectedOption) {
+	  const question = questions[currentQuestionIndex];
+	  const options = document.querySelectorAll('.option');
+	  
+	  // 找出所選選項在當前顯示選項中的索引
+	  const selectedIndex = Array.from(options).findIndex(option => option.textContent === selectedOption);
+	  
+	  options.forEach(option => option.classList.remove('selected'));
+	  options[selectedIndex].classList.add('selected');
+
+	  const result = {
+		isCorrect: selectedOption === question.correctAnswer,
+		correctAnswer: question.correctAnswer,
+		explanation: question.explanation
+	  };
+	  
+	  showFeedback(result);
+	}
+
+    function showFeedback(result) {
+      const feedback = document.getElementById('feedback');
+      const options = document.querySelectorAll('.option');
+      
+      feedback.style.display = 'block';
+      feedback.className = 'feedback ' + (result.isCorrect ? 'correct' : 'incorrect');
+      
+      if (result.isCorrect) {
+          feedback.innerHTML = '<h3>太棒了！答對了！</h3>' +
+            '<div class="explanation">' + result.explanation + '</div>' +
+            '<button onclick="nextQuestion()" style="margin-top: 15px;">下一題</button>';
+          score++;
+        } else {
+          feedback.innerHTML = '<h3>答錯了...</h3>' +
+            '<p>正確答案是：' + result.correctAnswer + '</p>' +
+            '<div class="explanation">' + result.explanation + '</div>' +
+            '<button onclick="nextQuestion()" style="margin-top: 15px;">下一題</button>';
+        wrongQuestions.push({
+          question: questions[currentQuestionIndex].question,
+          userAnswer: questions[currentQuestionIndex].options[Array.from(options)
+            .findIndex(opt => opt.classList.contains('selected'))],
+          correctAnswer: result.correctAnswer
+        });
+      }
+
+      options.forEach(option => {
+        option.onclick = null;
+        if (option.textContent === result.correctAnswer) {
+          option.classList.add('correct');
+        } else if (option.classList.contains('selected')) {
+          option.classList.add('incorrect');
+        }
+      });
+    }
+
+    function nextQuestion() {
+      currentQuestionIndex++;
+      if (currentQuestionIndex < questions.length) {
+        showQuestion();
+      } else {
+        showResults();
+      }
+    }
+
+    function showResults() {
+	  clearInterval(timerInterval);
+	  const endTime = new Date();
+	  const duration = Math.floor((endTime - startTime) / 1000);
+	  const minutes = Math.floor(duration / 60);
+	  const seconds = duration % 60;
+
+	  // 加入變數宣告
+	  const sheetName = document.getElementById('sheet-select').value;
+	  const startRow = document.getElementById('start-row').value;
+	  const endRow = document.getElementById('end-row').value;
+
+	  const dateOptions = { year: 'numeric', month: '2-digit', day: '2-digit', weekday: 'long' };
+	  const timeOptions = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
+	  const formattedDate = endTime.toLocaleDateString('zh-TW', dateOptions);
+	  const formattedTime = endTime.toLocaleTimeString('zh-TW', timeOptions);
+
+	  document.getElementById('quiz-view').style.display = 'none';
+	  document.getElementById('results-view').style.display = 'block';
+
+	  const scorePercentage = Math.round((score / questions.length) * 100);
+	  document.getElementById('final-score').textContent = scorePercentage + '%';
+
+	  document.getElementById('summary').innerHTML = 
+		'<div class="result-section">' +
+		  '<h3>測驗資訊</h3>' +
+		  '<p>題組：' + sheetName + '</p>' +
+		  '<p>測驗範圍：第 ' + startRow + ' 題 至 第 ' + endRow + ' 題</p>' +
+		  '<p>完成時間：' + formattedDate + ' ' + formattedTime + '</p>' +
+		'</div>' +
+		'<div class="result-section">' +
+		  '<h3>測驗成績</h3>' +
+		  '<p>測驗時間：' + minutes + '分' + seconds + '秒</p>' +
+		  '<p>總題數：' + questions.length + '</p>' +
+		  '<p>答對題數：' + score + '</p>' +
+		  '<p>答錯題數：' + (questions.length - score) + '</p>' +
+		'</div>';
+
+	  if (wrongQuestions.length > 0) {
+		const wrongQuestionsHtml = wrongQuestions.map(function(q, index) {
+		  return '<div class="wrong-question">' +
+			'<h4>題目 ' + (index + 1) + '</h4>' +
+			'<p>' + q.question + '</p>' +
+			'<p>你的答案：' + q.userAnswer + '</p>' +
+			'<p>正確答案：' + q.correctAnswer + '</p>' +
+		  '</div>';
+		}).join('');
+
+		document.getElementById('wrong-questions').innerHTML = 
+		  '<div class="result-section">' +
+			'<h3>錯題複習</h3>' +
+			wrongQuestionsHtml +
+		  '</div>';
+	  }
+	}
+	
+	function startTimer() {
+      timerInterval = setInterval(function() {
+        const now = new Date();
+        const diff = Math.floor((now - startTime) / 1000);
+        const minutes = Math.floor(diff / 60);
+        const seconds = diff % 60;
+        document.getElementById('timer').textContent = 
+          String(minutes).padStart(2, '0') + ':' + String(seconds).padStart(2, '0');
+      }, 1000);
+    }
+
+    function changeFontSize(change) {
+	  fontSize += change;
+	  // 修改題目文字大小
+	  const questionText = document.getElementById('question-text');
+	  const label = questionText.querySelector('.question-label');
+	  const content = questionText.querySelector('.question-content');
+	  
+	  if (label) label.style.fontSize = (fontSize * 0.9) + 'px';
+	  if (content) content.style.fontSize = fontSize + 'px';
+	  
+	  // 修改選項文字大小
+	  const options = document.querySelectorAll('.option');
+	  options.forEach(option => {
+		option.style.fontSize = fontSize + 'px';
+	  });
+	}
+
+    function handleError(error) {
+      console.error('Error:', error);
+      alert('發生錯誤：' + error);
+    }
+  </script>
+</body>
+</html>
