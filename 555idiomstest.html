@@ -1,0 +1,1192 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>555idiomstest</title>
+<style>
+* { box-sizing: border-box; }
+body {
+  font-family: 'Noto Sans TC', 'Microsoft JhengHei', Arial, sans-serif;
+  margin: 10px;
+  background-color: #f0f0f0;
+  color: #2c3e50;
+  font-weight: bold;
+  font-size: 18px;
+}
+.hidden { display: none !important; }
+#app {
+  max-width: 800px;
+  margin: 0 auto;
+  background-color: #fff;
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+h1 { text-align: center; font-size: 1.35em; margin: 10px 0 15px; }
+h2 { text-align: center; font-size: 1.15em; margin: 12px 0; }
+h3 { font-size: 1.05em; margin: 14px 0 8px; }
+button {
+  font: inherit;
+  font-size: 0.85em;
+  padding: 8px 14px;
+  background-color: #3498db;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin: 3px;
+}
+button:hover:not(:disabled) { background-color: #2980b9; }
+button:disabled { background-color: #bdbdbd !important; cursor: not-allowed; }
+button.secondary { background-color: #7f8c8d; }
+button.secondary:hover:not(:disabled) { background-color: #6c7a7b; }
+button.danger { background-color: #e74c3c; }
+button.danger:hover:not(:disabled) { background-color: #c0392b; }
+button.success { background-color: #2ecc71; }
+button.success:hover:not(:disabled) { background-color: #27ae60; }
+select, input[type=number] {
+  font: inherit;
+  font-size: 0.85em;
+  padding: 7px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  margin: 3px;
+  max-width: 100%;
+}
+input[type=number] { width: 7em; }
+input[type=checkbox] { width: 1.1em; height: 1.1em; vertical-align: middle; }
+.control-panel {
+  margin-bottom: 12px;
+  padding: 12px 15px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+}
+.control-panel > label:first-child { display: inline-block; min-width: 5em; }
+.hint { font-size: 0.75em; color: #7f8c8d; font-weight: normal; margin-top: 6px; }
+.banner { padding: 10px 14px; border-radius: 8px; margin-bottom: 12px; font-size: 0.85em; }
+.banner.warn { background: #fff3cd; color: #8a6d3b; }
+.banner.error { background: #ffebee; color: #c62828; }
+.banner button { font-size: 0.9em; padding: 4px 10px; }
+.actions { text-align: center; margin: 12px 0; }
+.big-btn {
+  display: block;
+  width: 80%;
+  max-width: 300px;
+  margin: 12px auto;
+  padding: 12px;
+  font-size: 1em;
+}
+
+/* ---------- 測驗畫面 ---------- */
+.status-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  background-color: #f0f7ff;
+  padding: 8px 10px;
+  margin-bottom: 12px;
+  border-radius: 8px;
+  font-size: 0.85em;
+}
+.status-item { padding: 4px 8px; border-radius: 4px; white-space: nowrap; }
+.sheet-name { color: #1565c0; background-color: #e3f2fd; }
+.timer { color: #e53935; background-color: #ffebee; }
+.progress { color: #2e7d32; background-color: #e8f5e9; }
+.status-tools { margin-left: auto; display: flex; gap: 2px; }
+.status-tools button { padding: 4px 10px; margin: 0; font-size: 0.9em; }
+#questionText {
+  font-size: 1.2em;
+  margin: 12px 0;
+  padding: 12px;
+  text-align: center;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+}
+.q-label { color: #0066cc; }
+.option {
+  display: block;
+  width: 80%;
+  max-width: 500px;
+  margin: 10px auto;
+  padding: 10px;
+  font-size: 1.1em;
+  text-align: center;
+  transition: transform 0.15s ease;
+}
+.option:hover:not(:disabled) { transform: translateY(-1px); }
+.option .key { opacity: 0.7; font-size: 0.75em; margin-right: 8px; }
+.option.is-correct { background-color: #2ecc71 !important; }
+.option.is-wrong { background-color: #e74c3c !important; }
+.feedback-box { margin: 10px 0; padding: 12px; border-radius: 8px; text-align: center; }
+.feedback-box.correct { background-color: #fff; color: green; border: 2px solid #c8e6c9; }
+.feedback-box.incorrect { background-color: #ffdc35; color: red; }
+.wb-note { margin-top: 6px; font-size: 0.85em; color: #6a1b9a; }
+
+/* ---------- 結果與回顧 ---------- */
+.summary p { margin: 6px 0; }
+.review-item { padding: 12px 15px; margin: 10px 0; border-radius: 8px; text-align: left; }
+.review-item:nth-child(odd) { background-color: #fff3e0; }
+.review-item:nth-child(even) { background-color: #e3f2fd; }
+.review-item p { margin: 4px 0; }
+.review-question { color: #1a237e; }
+.review-wrong { color: #d32f2f; }
+.review-correct { color: #2e7d32; }
+.review-explanation { color: #1a237e; font-weight: normal; }
+.empty { text-align: center; color: #95a5a6; padding: 20px; font-weight: normal; }
+
+/* ---------- 錯題管理 ---------- */
+.tabs { display: flex; gap: 4px; border-bottom: 2px solid #3498db; margin-bottom: 12px; }
+.tab { background-color: #ecf0f1; color: #2c3e50; border-radius: 6px 6px 0 0; margin: 0; }
+.tab:hover:not(:disabled) { background-color: #d6dbdf; }
+.tab.active, .tab.active:hover:not(:disabled) { background-color: #3498db; color: #fff; }
+.toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 8px; font-size: 0.9em; }
+.wb-list { list-style: none; padding: 0; margin: 0; }
+.wb-row { display: flex; gap: 10px; align-items: flex-start; padding: 10px; border-bottom: 1px solid #eee; }
+.wb-row:nth-child(odd) { background: #fafafa; }
+.wb-row input[type=checkbox] { margin-top: 5px; flex-shrink: 0; }
+.wb-main { flex: 1; min-width: 0; }
+.wb-word { font-size: 1.05em; color: #1a237e; }
+.wb-meaning { font-weight: normal; margin-top: 2px; }
+.wb-meta { font-size: 0.75em; color: #7f8c8d; font-weight: normal; margin-top: 3px; }
+.wb-row > button { padding: 4px 10px; font-size: 0.75em; flex-shrink: 0; }
+.badge { display: inline-block; padding: 1px 7px; border-radius: 10px; background: #ffebee; color: #c62828; font-size: 0.7em; margin-left: 4px; vertical-align: middle; }
+.badge.streak { background: #e8f5e9; color: #2e7d32; }
+#sessionSelect { flex: 1; min-width: 0; }
+.info-lines { font-size: 0.8em; font-weight: normal; line-height: 1.7; word-break: break-all; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ========== 設定頁 ========== -->
+  <section id="screen-setup">
+    <h1 id="titleText"></h1>
+    <div id="setupBanners"></div>
+    <div class="control-panel">
+      <label for="sheetSelect">測驗範圍：</label>
+      <select id="sheetSelect"></select>
+      <div class="hint" id="poolHint"></div>
+    </div>
+    <div class="control-panel">
+      <label for="startRow">起始題號：</label>
+      <input type="number" id="startRow" min="1">
+      <label for="endRow">結束題號：</label>
+      <input type="number" id="endRow" min="1">
+    </div>
+    <div class="control-panel">
+      <label for="randomCount">隨機題數：</label>
+      <input type="number" id="randomCount" min="1" placeholder="留空＝全部">
+      <div class="hint">留空＝依範圍全部出題（順序隨機）</div>
+    </div>
+    <div class="control-panel">
+      <label for="timeSelect">測驗時間：</label>
+      <select id="timeSelect">
+        <option value="5">5 分鐘</option>
+        <option value="10">10 分鐘</option>
+      </select>
+    </div>
+    <div class="control-panel">
+      <label>字體大小：</label>
+      <button type="button" data-font="-2">A-</button>
+      <button type="button" data-font="2">A+</button>
+    </div>
+    <button type="button" class="big-btn success" id="startBtn">開始測驗</button>
+    <button type="button" class="big-btn secondary" id="manageBtn">錯題管理</button>
+  </section>
+
+  <!-- ========== 測驗頁 ========== -->
+  <section id="screen-quiz" class="hidden">
+    <div class="status-bar">
+      <span class="status-item sheet-name" id="sheetTitle"></span>
+      <span class="status-item timer" id="timer"></span>
+      <span class="status-item progress" id="progress"></span>
+      <span class="status-tools">
+        <button type="button" data-font="-2">A-</button>
+        <button type="button" data-font="2">A+</button>
+        <button type="button" class="danger" id="quitBtn">交卷</button>
+      </span>
+    </div>
+    <div id="questionText"></div>
+    <div id="options"></div>
+    <div id="feedback"></div>
+    <button type="button" id="nextBtn" class="big-btn success" disabled>下一題</button>
+    <div class="hint" style="text-align:center">鍵盤：1–4 選答，Enter 下一題</div>
+  </section>
+
+  <!-- ========== 結果頁 ========== -->
+  <section id="screen-result" class="hidden">
+    <div id="resultBody"></div>
+    <div class="actions">
+      <button type="button" class="success" id="retestLastBtn">重測本次錯題</button>
+      <button type="button" id="backHomeBtn">回到首頁</button>
+      <button type="button" class="secondary" id="resultManageBtn">錯題管理</button>
+    </div>
+    <div id="resultReview"></div>
+  </section>
+
+  <!-- ========== 錯題管理頁 ========== -->
+  <section id="screen-manage" class="hidden">
+    <h2>錯題管理</h2>
+    <div class="tabs">
+      <button type="button" class="tab active" data-tab="book">錯題本</button>
+      <button type="button" class="tab" data-tab="sessions">測驗紀錄</button>
+      <button type="button" class="tab" data-tab="backup">備份</button>
+    </div>
+
+    <div id="tab-book">
+      <div class="toolbar">
+        <label>工作表：<select id="bookFilter"></select></label>
+        <label>排序：<select id="bookSort">
+          <option value="count">錯誤次數</option>
+          <option value="recent">最近答錯</option>
+          <option value="alpha">單字 A–Z</option>
+        </select></label>
+      </div>
+      <div class="toolbar">
+        <label><input type="checkbox" id="bookSelectAll"> 全選</label>
+        <button type="button" class="success" id="bookQuiz">測驗這些錯題</button>
+        <button type="button" class="danger" id="bookDeleteSelected">刪除勾選</button>
+        <button type="button" class="danger" id="bookClear">清空全部錯題</button>
+      </div>
+      <div class="hint" id="bookCount"></div>
+      <ul class="wb-list" id="bookList"></ul>
+    </div>
+
+    <div id="tab-sessions" class="hidden">
+      <div class="toolbar"><select id="sessionSelect"></select></div>
+      <div class="actions">
+        <button type="button" class="success" id="sessionRetest">重測此次錯題</button>
+        <button type="button" class="danger" id="sessionDelete">刪除此筆紀錄</button>
+        <button type="button" class="danger" id="sessionClear">清空全部紀錄</button>
+      </div>
+      <div id="sessionDetail"></div>
+    </div>
+
+    <div id="tab-backup" class="hidden">
+      <div class="control-panel">
+        <h3>匯出</h3>
+        <div class="info-lines" id="exportInfo"></div>
+        <button type="button" class="success" id="exportBtn">匯出備份檔（JSON）</button>
+      </div>
+      <div class="control-panel">
+        <h3>匯入</h3>
+        <input type="file" id="importFile" accept=".json,application/json">
+        <div style="margin:8px 0"><label><input type="checkbox" id="importSessions" checked> 一併匯入測驗紀錄</label></div>
+        <button type="button" id="importBtn">匯入並合併</button>
+        <div class="hint">匯入會和目前資料合併，不會覆蓋。同一個單字取較多的錯誤次數、較少的連續答對次數。</div>
+      </div>
+      <div class="control-panel">
+        <h3>儲存狀態</h3>
+        <div class="info-lines" id="storageInfo"></div>
+      </div>
+    </div>
+
+    <div class="actions"><button type="button" id="manageBackBtn">回到首頁</button></div>
+  </section>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  var QUIZ = {"id":"1Pz2t93PB_HXbqeTGYe8H_vaz7nocZcJCQ2Up5bh6RqM","name":"555_Idioms(ON)","title":"Idioms Test","generatedAt":"2026-10-07T08:30:12.909Z","sheetOrder":["A、U、W","B","C、D","E、F","G","H、I、J","K、L","M、N、O","P、Q、R","S","T","ALL"],"sheets":{"A、U、W":[["about to","即將、正要",""],["above all","尤其、最重要的是",""],["according to","依照;根據",""],["to account for","說明、解釋;占(比例)",""],["all along","自始至終、一直都",""],["all (day, week, month, year) long","一整天/週/月/年之久",""],["all in all","總的來說、整體而言",""],["all of a sudden","突如其來、毫無預警",""],["all right","可以接受的;好、沒問題",""],["as a matter of fact","事實上、其實",""],["as for","至於、談到",""],["as soon as","一……就立刻",""],["as usual","和平常一樣、照慣例",""],["to ask for","自找、罪有應得",""],["at all","(用於否定)絲毫、一點也",""],["at first","最初、剛開始時",""],["at heart","本質上、內心裡",""],["at last","經過許久之後終於",""],["at least","最少、不低於",""],["under one's nose","就在眼前(卻沒察覺)",""],["under the table","檯面下、私底下(常指不合法)",""],["under the weather","身體微恙、不太舒服",""],["up in the air","懸而未決、還沒定案",""],["up to date","最新的、合乎時代的",""],["upside down","上下顛倒",""],["used to","過去經常(現已不再)",""],["to wait on","在商店或餐廳提供服務",""],["to wait up for","熬夜等候",""],["to wake up","從睡眠中醒來",""],["a walk in the park","輕鬆容易的事",""],["to waste one's breath","白費口舌",""],["to wear down","逐漸磨損、磨薄",""],["to wear off","逐漸消失、失效",""],["to wear out","用到破損、失去功用",""],["when pigs fly","絕不可能(的時候)",""],["a white lie","善意的謊言",""],["to work out","健身;想出(辦法)",""],["would rather","寧可、比較願意",""]],"B":[["back and forth","來來回回地",""],["to back down","讓步、退縮",""],["to back out","把車倒出;打退堂鼓、退出",""],["to back up","倒車;支持、聲援",""],["the ball is in your court","該你決定或行動了",""],["to bank on","指望、仰賴",""],["to be a far cry from","與……相差甚遠",""],["to be about to","即將、正準備要",""],["to be better off","處境較好、更划算",""],["to be bound to","勢必、注定會",""],["to be carried away","被強烈情緒沖昏頭、深受感染",""],["to be cut out for","適合、是……的料",""],["to be had","受騙、上當",""],["to be in","流行、當紅;在(家或公司)",""],["to be in charge of","負責、掌管",""],["to be in (someone's) shoes","設身處地、站在……立場",""],["to be in (the/one's) way","擋路、礙事",""],["to be looking up","漸有起色、好轉",""],["to be out","過時;外出不在",""],["to be over","結束、告一段落",""],["to be over one's head","忙得團團轉;超出理解",""],["to be the matter","出了問題、不對勁",""],["to be up","(時間)結束、到期",""],["to be up for grabs","開放供人爭取",""],["to be up to","由某人決定;在忙什麼",""],["to be up to (something)","在忙什麼;暗中盤算",""],["to be used to","已經習慣(某事物)",""],["to be well-off","富裕、生活寬裕",""],["to be with it","進入狀況、專注",""],["to be with (someone)","支持;聽懂、跟得上",""],["to beat around the bush","拐彎抹角、繞圈子",""],["to become of","(人或物)下落如何",""],["to believe in","相信、信奉",""],["to bite off","攬下(過多的責任)",""],["to bite the bullet","咬牙撐過、硬著頭皮面對",""],["a blessing in disguise","因禍得福、塞翁失馬",""],["to blow out","爆胎;吹熄",""],["to blow up","充氣;炸毀、爆炸",""],["the bottom line","最關鍵的一點、底線",""],["to bow out","退出、抽身",""],["break a leg","祝(演出)順利、祝好運",""],["to break down","(機器)故障、拋錨",""],["to break in","把新東西用順、磨合;打斷",""],["to break loose","掙脫、脫困",""],["to break off","中斷、斷絕",""],["to break out","突然爆發、蔓延開來",""],["break the ice","打破僵局、緩和初次見面的尷尬",""],["to break the news","(委婉地)宣布消息",""],["to break up","分手;解散",""],["to bring about","引起、促成",""],["to bring back","歸還、退回",""],["to bring out","推出、發表(產品)",""],["to bring up","養育;提起(話題)",""],["to brush up on","複習、重拾生疏的技能",""],["to build up","逐漸累積、增強",""],["to burn down","(蠟燭)燒盡;(建物)燒毀",""],["to burn out","因過度使用而燒壞;使精疲力盡",""],["to burn the midnight oil","挑燈夜戰、熬夜",""],["to burn up","燒毀;令人火大",""],["to burst out","突然衝出;突然(哭笑等)",""],["to buy out","收購(整家公司或股權)",""],["to buy up","搶購一空、大量買進",""],["by all means","一定、務必;想盡辦法",""],["by far","遠遠地、顯然",""],["by heart","熟記於心、背下來",""],["by oneself","獨自一人、不靠他人",""],["by the way","順帶一提、對了",""]],"C、D":[["to call for","需要;要求、呼籲",""],["to call it a day/night","收工、結束一天的工作",""],["to call it quits","就此打住、收手",""],["to call off","取消(既定活動)",""],["to call on","請某人回答;登門造訪",""],["to call the shots","發號施令、做主",""],["to call up","打電話聯絡某人",""],["to calm down","冷靜下來",""],["to carry on","照常進行;胡鬧",""],["to carry out","執行、貫徹",""],["to catch cold","著涼而感冒",""],["to catch fire","起火、燃燒起來",""],["to catch on","流行起來;領會、聽懂",""],["to catch one's breath","喘口氣、稍作休息",""],["to catch up","趕上進度",""],["to change one's mind","改變原本的決定或想法",""],["to check in","(旅館)辦理入住;託運",""],["to check out","退房;查看、調查",""],["to check up on","查核、檢查狀況",""],["to cheer up","使振作、逗某人開心",""],["to clean out","清空;洗劫;掃光",""],["to clear up","說明白;(天氣)放晴",""],["clear-cut","明確而清晰",""],["close call","九死一生、驚險脫身",""],["to come about","發生、出現",""],["to come across","偶然遇見或發現",""],["to come from","來自、源於某地",""],["to come to","甦醒;合計為",""],["to come to an end","結束、告一段落",""],["to come true","成真、實現",""],["to come up with","想出、提出",""],["to cop out","推卸責任、臨陣脫逃",""],["to cope with","應付、應對",""],["to cost an arm and a leg","所費不貲、非常昂貴",""],["a couch potato","成天窩沙發看電視的人",""],["to count on","信賴、指望某人",""],["to cover for","暫代;替某人打掩護",""],["to cover ground","涵蓋範圍很廣",""],["to cover up","掩蓋、隱瞞",""],["to cross out","劃掉、刪去",""],["cut and dried","早有定論、了無新意;乏味",""],["to cut corners","精打細算、省錢",""],["to cut down on","減少(用量或次數)",""],["to cut off","剪掉;突然切斷",""],["to cut out","剪下;停止(某行為)",""],["to cut short","縮短、打斷",""],["to cut to the chase","開門見山、直說重點",""],["day in and day out","日復一日、天天如此",""],["to deal with","處理、應對",""],["to die down","減弱、平息",""],["to die out","絕跡、逐漸消失",""],["to dish out","大量分發;數落人",""],["to do over","重做、重寫",""],["to do without","沒有……也能將就",""],["down to earth","腳踏實地、平易近人",""],["to draw the line at","劃清界線、堅決不做",""],["to draw up","草擬、繪製(文件地圖)",""],["to dress up","打扮得體、穿正式服裝",""],["to drop off","睡著;順道送;減少",""],["to drop out of","中途退出、輟學",""],["to drop (someone) a line","寫封短訊給某人",""],["to dry out","逐漸晾乾;戒酒",""],["dry run","排演、預演",""],["to dry up","乾涸;枯竭",""]],"E、F":[["to eat in/to eat out","在家吃/外出用餐",""],["to end up","最後變成、結果落得",""],["every other (one)","每隔一個、交替",""],["to face the music","承擔後果、面對現實",""],["face-to-face","面對面、當面",""],["to fade away","逐漸消退、遠去",""],["to fall for","迅速愛上;受騙上當",""],["to fall in love","愛上、陷入戀愛",""],["to fall through","落空、告吹",""],["to feel like","想要、有意做某事",""],["to feel sorry for","同情、為……感到難過",""],["few and far between","罕見、不常發生",""],["fifty-fifty","對半平分",""],["to figure out","想出答案;弄明白",""],["to fill in","填入(空格);告知情況",""],["to fill out","填寫完整份表格",""],["to fill (someone) in","向某人說明情況",""],["to find fault with","挑剔、找碴",""],["to find out","設法得知、查清楚",""],["first-rate","一流的、極為出色",""],["to fix up","修理、整修;為某人牽線",""],["to focus on","專注於、把重點放在",""],["to fool around","鬼混、瞎搞;開玩笑",""],["for good","永久地、從此不再改變",""],["for once","就這麼一次、難得",""],["for sure","確定無疑",""],["for the time being","目前、暫且",""],["from now on","從現在起、往後",""]],"G":[["to get a rise out of","激得某人動怒或反應",""],["to get along","有進展;(健康)過得如何",""],["to get along with","與人相處融洽;順利應付",""],["to get away","逃脫、脫身",""],["to get away with","逃過懲罰、僥倖矇混",""],["to get back","返回、回到原處",""],["to get better, worse, etc.","變得更好、更糟等",""],["to get by","勉強度日、應付得來",""],["to get cold feet","臨陣退縮、打退堂鼓",""],["to get even with","報復、扯平",""],["to get in touch with","與某人取得聯繫",""],["to get in/to get on","進入或搭上車輛、交通工具",""],["to get lost","迷路;走開別煩",""],["to get off one's chest","一吐為快、傾吐心事",""],["to get on one's nerves","惹惱、使人心煩",""],["to get out from under","擺脫財務困境",""],["to get out of hand","失控",""],["to get out of line","違規、逾矩",""],["to get out of/to get off","下車、離開交通工具",""],["to get over","從疾病或傷痛中恢復",""],["to get rid of","除掉、擺脫",""],["to get sick, well, tired, busy, wet, etc.","變得生病、疲累、忙碌等",""],["to get the better of","勝過、佔上風",""],["to get the hang of","掌握訣竅、上手",""],["to get through","完成、把某事做完",""],["to get through to","使某人聽懂、把話說進心裡",""],["to get to","得以做某事;抵達某處",""],["to get up","起床;把某人叫醒",""],["to get used to","逐漸適應、變得習慣",""],["give and take","互相退讓、彼此配合",""],["to give birth to","生下、產下",""],["to give in","屈服、讓步",""],["to give off","散發、放出",""],["to give out","分發;耗盡",""],["to give (someone) a big hand","給予熱烈掌聲",""],["to give (someone) a break","給某人機會、通融一下",""],["to give (someone) a hand","幫忙、搭把手",""],["to give someone the cold shoulder","冷落、故意不理",""],["to give up","放棄;戒除;投降",""],["to go around","夠分配;四處走動流傳",""],["to go for","以某價格賣出;力求",""],["to go in for","熱衷於(興趣嗜好)",""],["to go off","爆炸;(警報)響;突然離去",""],["to go off the deep end","失控暴怒、衝動行事",""],["to go on","發生;持續進行",""],["to go out","熄滅;停止運作;外出",""],["to go over","受歡迎、被接受",""],["to go the extra mile","加倍努力、多付出",""],["to go through","經歷;耗用",""],["to go through channels","循正規管道辦理",""],["to go to town","卯足全力、大幹一場",""],["to go up","上漲;興建",""],["to go up to","走近、上前",""],["to go with","(顏色款式)相配;與某人交往",""],["to go without saying","不言而喻、自不待言",""],["to go wrong","出差錯、出岔子",""],["to goof off","打混、偷懶",""],["to goof up","出錯、搞砸",""],["to grow out of","(隨年紀)戒掉;由……衍生",""]],"H、I、J":[["had better","最好、應當",""],["to hand in","繳交、呈交",""],["to hang up","掛起衣物;掛斷電話",""],["hard of hearing","重聽、聽力不好",""],["to have a good time","玩得愉快、過得開心",""],["to have a voice in","在……有發言權",""],["have got","擁有、有",""],["have got to","必須、不得不",""],["to have in mind","心裡想著、盤算",""],["to have it in for","對……懷恨、想報復",""],["to have it out with","與某人攤牌、理論",""],["to have on","身上穿戴著",""],["to have one's heart set on","一心想要、決意",""],["to have one's way","隨自己的意、如願",""],["to have (time) off","有休假、不用上班的時間",""],["to have to do with","與某事有關聯",""],["to hear from","得到某人的消息",""],["to hear of","聽說過、知道",""],["to hit the nail on the head","一針見血、說中要害",""],["to hit the road","動身上路、出發",""],["to hit the sack","上床睡覺",""],["to hold back","抑制、忍住;隱瞞",""],["to hold off","延緩、拖住",""],["to hold on","抓緊;稍等別掛",""],["to hold out","支撐、夠用;堅持",""],["to hold over","延長、續留",""],["to hold still","保持不動",""],["to hold up","耽誤;維持水準",""],["ill at ease","渾身不自在、緊張",""],["in a hurry","急急忙忙、趕時間",""],["in case","以防、萬一",""],["in hand","在掌控之中",""],["in no time","很快、轉眼間",""],["in the long run","就長遠而言",""],["in the same boat","處境相同、同病相憐",""],["in the worst way","非常、極度地",""],["in time to","及時、趕在期限前",""],["in touch","保持聯絡",""],["in vain","徒勞、白費力氣",""],["inside out","裡外翻反",""],["it figures","果然如此、不意外",""],["to jump to conclusions","妄下結論",""]],"K、L":[["to keep a low profile","保持低調",""],["to keep a promise","遵守承諾",""],["to keep after","不斷叮嚀、催促",""],["to keep an eye on","看著、留意",""],["to keep away (from)","遠離、避開",""],["to keep in mind","牢記在心、別忘記",""],["to keep in touch with","與……保持聯絡",""],["to keep one's fingers crossed","祈求好運、但願順利",""],["to keep one's head","臨危不亂、保持冷靜",""],["to keep one's word","信守諾言、說到做到",""],["to keep out","不准進入、禁止進入",""],["to keep time","(鐘錶)走時準確",""],["to keep track of","記錄、掌握……的狀況",""],["to keep up","吵得無法入睡;維持(水準)",""],["to keep up with","跟上(速度或進度)",""],["to keep up with","掌握最新資訊;跟得上",""],["to kick (something) around","非正式地討論、商量",""],["to kick the habit","戒掉(壞習慣)",""],["to knock one self out","拚命努力、賣力去做",""],["to knock out","擊昏、擊倒;令人驚豔",""],["to know by sight","面熟、認得",""],["to land on one's feet","化險為夷、重新站穩",""],["last straw","壓垮的最後一根稻草",""],["to lay off","戒除;裁員",""],["to learn the ropes","熟悉業務、上手",""],["to leave open","暫不決定、留待日後",""],["to leave (someone or something) alone","別打擾、讓某人清靜",""],["let along","更別提、遑論",""],["to let down","使失望、辜負",""],["to let on","洩漏、透露(祕密)",""],["to let slide","疏於處理、放任不管",""],["to let up","減弱、緩和;鬆懈",""],["to lie down","躺下休息",""],["to line up","排隊;張羅、安排到",""],["little by little","緩慢而逐步地",""],["to live it up","盡情享樂、揮霍",""],["to live up to","達到、不辜負(期望)",""],["to liven up","炒熱氣氛、使有活力",""],["to look after","照顧、看顧",""],["to look at","把視線投向、注視",""],["to look down on","瞧不起、看輕",""],["to look for","設法找出、尋找",""],["to look forward to","滿心期待、盼望",""],["to look into","深入調查、仔細研究",""],["to look on","在一旁觀看",""],["to look out","留神、當心",""],["to look out on","面向、俯瞰",""],["to look over","仔細查看、檢視",""],["to look up","在字典或資料中查找",""],["to look up to","敬佩、景仰",""],["to lose face","丟臉、失面子",""],["to lose one's cool","失去冷靜、慌了神",""],["to lose one's head","慌了手腳、亂了方寸",""],["to lose one's temper","發脾氣",""],["to lose one's touch","失去往日的功力",""],["to lose track of","忘了、失去(對……的)掌握",""],["a lost cause","毫無希望的人或事",""]],"M、N、O":[["to make a decision","做決定",""],["to make a difference (to)","產生影響、造成不同",""],["to make a fuss","大驚小怪、小題大作",""],["to make a living","謀生、維持生計",""],["to make an effort","努力、盡力",""],["to make clear","解釋清楚、講明白",""],["to make do","湊合、將就應付",""],["to make ends meet","收支打平、勉強度日",""],["to make friends","結交朋友",""],["to make fun of","取笑、嘲弄",""],["to make good","獲得成功、闖出成績",""],["to make good time","以合理速度順利趕路",""],["to make out","應付、進展、看清",""],["to make out","辨認出;開立(文件)",""],["to make progress","取得進展",""],["to make sense","合乎情理、說得通",""],["to make (someone) tick","驅使某人如此行事",""],["to make sure","確認、務必做到",""],["to make the best of","在不利處境中盡力而為",""],["to make up","補做;編造;化妝;構成",""],["to make up one's mind","拿定主意、作出決定",""],["to make up with","和好、盡釋前嫌",""],["to make waves","興風作浪、找麻煩(抱怨)",""],["to meet a deadline","趕上截止期限",""],["to meet (someone) halfway","各退一步、折衷",""],["to mind the store","看家、留守顧店",""],["to miss the boat","錯失良機",""],["to mix up","攪拌均勻;使混淆",""],["more or less","差不多、多少有點",""],["to name after","以……的名字命名",""],["narrow-minded","心胸狹隘、思想偏狹",""],["never mind","不必在意、算了",""],["no matter","無論、不管",""],["no wonder","難怪、不足為奇",""],["not on your life","絕對不行、想都別想",""],["now and then","偶爾、有時候",""],["off the top of one's head","一時想到、未經細想",""],["on cloud nine","樂不可支、欣喜若狂",""],["on edge","緊張不安、易怒",""],["on hand","現成、在手邊",""],["on one's toes","保持警覺、機警",""],["on purpose","刻意、蓄意地",""],["on second thought","再想想、轉念一想",""],["on the ball","機靈、反應快",""],["on the other hand","另一方面、相對地",""],["on the same page","有共識、想法一致",""],["on the whole","大致上、整體而言",""],["on time","準時、不遲不早",""],["once and for all","一勞永逸、徹底了斷",""],["once in a blue moon","非常罕見、難得一次",""],["out of date","過時的、不再適用",""],["out of order","無法正常運作、故障",""],["out of the blue","突如其來、毫無預兆",""],["out of the question","不可能、想都別想",""],["out of touch","失去聯絡;不了解狀況",""],["over and over (again)","再三、反覆地",""]],"P、Q、R":[["to pass away","過世、去世",""],["to pass out","分發;昏倒",""],["to pay attention (to)","專心注意、留神",""],["to pay back","償還;報復",""],["to pay off","有回報、奏效",""],["to pick out","從中挑選出",""],["to pick up","用手把東西從表面拿起",""],["to pick up the tab","買單、付帳",""],["a piece of cake","輕而易舉的事",""],["to pin on","嫁禍、把罪名安在……頭上",""],["to play a role in","在……中扮演角色、起作用",""],["to play by ear","憑聽力演奏;隨機應變",""],["to play it safe","求穩、不冒險",""],["to play up to","巴結、討好",""],["to point out","指出、使人注意到",""],["to pull off","辦成難事;把車駛離公路",""],["to pull someone's leg","開某人玩笑、逗弄",""],["to pull together","彙整(資訊);穩住情緒",""],["to put an end to","終結、徹底結束",""],["to put away","收拾好、放回定位",""],["to put down","平息、鎮壓;貶低",""],["to put off","延後、拖延",""],["to put on","把衣物穿戴到身上",""],["to put on","體重增加;上演",""],["to put one's foot in","說錯話、做錯事出糗",""],["to put out","熄滅火焰;使停止運作",""],["to put (someone) on","開玩笑地唬人、逗弄",""],["to put together","組裝、拼裝",""],["to put up","忍受、容忍",""],["quite a few","為數不少、相當多",""],["a rain check","改天再約(延後的邀約)",""],["to read between the lines","領會言外之意",""],["to rely on","依賴、信賴",""],["right away","立刻、不拖延",""],["to ring a bell","聽起來耳熟、有印象",""],["to rule out","排除、不予考慮",""],["to run away","私自跑走、逃離",""],["to run into","巧遇;撞上",""],["to run out of","耗盡、用光",""]],"S":[["to save face","保住面子",""],["to screw up","搞亂、弄糊塗;搞砸",""],["search me","我不知道、我哪知道",""],["second to none","首屈一指、無人能及",""],["to see about","著手處理、安排",""],["to see eye to eye","看法一致、意見相合",""],["to see off","為(某人)送行",""],["to see out","送(某人)到門口",""],["to sell out","賣光;出售(公司)",""],["to serve (someone) right","罪有應得、活該",""],["to serve (the/one's) purpose","合用、派上用場",""],["to set a goal","設定目標",""],["to set out","動身出發;整齊擺放",""],["to set up","建立、設立;安排",""],["to shake hands","以握手互相問候",""],["to show off","炫耀、賣弄",""],["to show up","現身、到場;被找到",""],["to shut up","歇業一陣子;閉嘴",""],["to sit down","就座、坐下",""],["to sit on the fence","保持中立、觀望不表態",""],["to slow down","減速、放慢",""],["so far","截至目前為止",""],["sooner or later","遲早、總有一天",""],["to sort out","整理、解決",""],["to speak one's mind","直言不諱、有話直說",""],["to spill the beans","洩漏祕密",""],["to stand a chance","有機會成功",""],["to stand by","支持;待命",""],["to stand for","代表、象徵;容忍",""],["to stand out","醒目、突出",""],["to stand up","由坐或臥的姿勢起身站立",""],["to stand up","耐用、撐得住;放某人鴿子",""],["to stand up for","捍衛、聲援",""],["stands to reason","合乎邏輯、理所當然",""],["to stay in","待在家不出門",""],["to stay up","熬夜、不去睡",""],["a steal","非常划算、超便宜",""],["to step down","卸任、辭職",""],["to step in","出面介入;短暫進入",""],["to step on","嚴加管束;加快",""],["to stick around","留在原處、逗留等候",""],["to stick it to","坑人、佔便宜",""],["to stick to","堅守、遵循",""],["to stick up","朝上豎起;持械行搶",""],["to stir up","激起(情緒);挑起(麻煩)",""],["to stop by","順道拜訪、短暫停留",""]],"T":[["to take a chance","冒險一試、碰運氣",""],["to take a nap","小睡片刻",""],["to take a risk","冒險",""],["to take a trip","出門旅行",""],["to take a walk, stroll, hike, etc.","去散步、漫步或健行等",""],["to take advantage of","善用;佔便宜、利用",""],["to take after","長得像(親人)",""],["to take apart","拆開、拆解",""],["to take at one's word","相信某人的話",""],["to take by surprise","使措手不及、大吃一驚",""],["to take down","取下;記下",""],["to take for","把……誤認為",""],["to take for granted","視為理所當然;想當然地認定",""],["to take hold of","握住、抓緊",""],["to take in","遊覽;改小衣服;矇騙",""],["to take into account","把……納入考量",""],["to take off","把身上的衣物脫掉",""],["to take off","(飛機)起飛;匆匆離開",""],["to take on","僱用;承接(工作)",""],["to take one's time","不慌不忙、從容而為",""],["to take out","取出;帶某人外出(約會)",""],["to take over","接管;重做",""],["to take pains","費心、下工夫",""],["to take part in","參加、投入其中",""],["to take place","發生;依計畫舉行",""],["to take responsibility","負起責任",""],["to take the bull by the horns","當機立斷、迎難而上",""],["to take turns","彼此輪流",""],["to take up","開始學/做;佔用(時間空間)",""],["to take up with","就要事找某人商量",""],["to talk back to","頂嘴、無禮回話",""],["to talk over","仔細討論、商量",""],["to tear down","拆除、拆掉",""],["to tear up","撕成碎片",""],["to tell apart","分辨、區別開來",""],["to think of","對某人或某事持有看法、評價",""],["to think outside the box","跳脫框架思考",""],["to think over","做決定前審慎思量",""],["to think up","想出、憑空編造",""],["to throw away","扔掉、丟棄",""],["to throw in the towel","認輸、放棄",""],["to throw out","丟棄;趕出;駁回",""],["to throw (someone) a curve","出其不意地拋出難題",""],["to throw the book at","從重懲處、嚴懲",""],["to throw up","匆匆搭建;嘔吐",""],["the tip of the iceberg","冰山一角",""],["to tire out","使某人筋疲力盡",""],["touch and go","情勢危急、成敗難料",""],["to trade in","以舊折抵換新",""],["to try on","購買前試穿衣物",""],["to try out","試用、測試",""],["to turn a blind eye","視而不見、睜一隻眼閉一隻眼",""],["to turn around","轉向反方向;徹底扭轉局面",""],["to turn down","調低(音量亮度);回絕",""],["to turn off","關閉電器或設備使其停止",""],["to turn on","開啟電器或設備使其運作",""],["to turn on","引起興趣、令人著迷",""],["to turn out","結果變成;出席、到場",""],["to turn over","翻面;翻覆;移交",""]],"ALL":[["about to","即將、正要",""],["above all","尤其、最重要的是",""],["according to","依照;根據",""],["to account for","說明、解釋;占(比例)",""],["all along","自始至終、一直都",""],["all (day, week, month, year) long","一整天/週/月/年之久",""],["all in all","總的來說、整體而言",""],["all of a sudden","突如其來、毫無預警",""],["all right","可以接受的;好、沒問題",""],["as a matter of fact","事實上、其實",""],["as for","至於、談到",""],["as soon as","一……就立刻",""],["as usual","和平常一樣、照慣例",""],["to ask for","自找、罪有應得",""],["at all","(用於否定)絲毫、一點也",""],["at first","最初、剛開始時",""],["at heart","本質上、內心裡",""],["at last","經過許久之後終於",""],["at least","最少、不低於",""],["back and forth","來來回回地",""],["to back down","讓步、退縮",""],["to back out","把車倒出;打退堂鼓、退出",""],["to back up","倒車;支持、聲援",""],["the ball is in your court","該你決定或行動了",""],["to bank on","指望、仰賴",""],["to be a far cry from","與……相差甚遠",""],["to be about to","即將、正準備要",""],["to be better off","處境較好、更划算",""],["to be bound to","勢必、注定會",""],["to be carried away","被強烈情緒沖昏頭、深受感染",""],["to be cut out for","適合、是……的料",""],["to be had","受騙、上當",""],["to be in","流行、當紅;在(家或公司)",""],["to be in charge of","負責、掌管",""],["to be in (someone's) shoes","設身處地、站在……立場",""],["to be in (the/one's) way","擋路、礙事",""],["to be looking up","漸有起色、好轉",""],["to be out","過時;外出不在",""],["to be over","結束、告一段落",""],["to be over one's head","忙得團團轉;超出理解",""],["to be the matter","出了問題、不對勁",""],["to be up","(時間)結束、到期",""],["to be up for grabs","開放供人爭取",""],["to be up to","由某人決定;在忙什麼",""],["to be up to (something)","在忙什麼;暗中盤算",""],["to be used to","已經習慣(某事物)",""],["to be well-off","富裕、生活寬裕",""],["to be with it","進入狀況、專注",""],["to be with (someone)","支持;聽懂、跟得上",""],["to beat around the bush","拐彎抹角、繞圈子",""],["to become of","(人或物)下落如何",""],["to believe in","相信、信奉",""],["to bite off","攬下(過多的責任)",""],["to bite the bullet","咬牙撐過、硬著頭皮面對",""],["a blessing in disguise","因禍得福、塞翁失馬",""],["to blow out","爆胎;吹熄",""],["to blow up","充氣;炸毀、爆炸",""],["the bottom line","最關鍵的一點、底線",""],["to bow out","退出、抽身",""],["break a leg","祝(演出)順利、祝好運",""],["to break down","(機器)故障、拋錨",""],["to break in","把新東西用順、磨合;打斷",""],["to break loose","掙脫、脫困",""],["to break off","中斷、斷絕",""],["to break out","突然爆發、蔓延開來",""],["break the ice","打破僵局、緩和初次見面的尷尬",""],["to break the news","(委婉地)宣布消息",""],["to break up","分手;解散",""],["to bring about","引起、促成",""],["to bring back","歸還、退回",""],["to bring out","推出、發表(產品)",""],["to bring up","養育;提起(話題)",""],["to brush up on","複習、重拾生疏的技能",""],["to build up","逐漸累積、增強",""],["to burn down","(蠟燭)燒盡;(建物)燒毀",""],["to burn out","因過度使用而燒壞;使精疲力盡",""],["to burn the midnight oil","挑燈夜戰、熬夜",""],["to burn up","燒毀;令人火大",""],["to burst out","突然衝出;突然(哭笑等)",""],["to buy out","收購(整家公司或股權)",""],["to buy up","搶購一空、大量買進",""],["by all means","一定、務必;想盡辦法",""],["by far","遠遠地、顯然",""],["by heart","熟記於心、背下來",""],["by oneself","獨自一人、不靠他人",""],["by the way","順帶一提、對了",""],["to call for","需要;要求、呼籲",""],["to call it a day/night","收工、結束一天的工作",""],["to call it quits","就此打住、收手",""],["to call off","取消(既定活動)",""],["to call on","請某人回答;登門造訪",""],["to call the shots","發號施令、做主",""],["to call up","打電話聯絡某人",""],["to calm down","冷靜下來",""],["to carry on","照常進行;胡鬧",""],["to carry out","執行、貫徹",""],["to catch cold","著涼而感冒",""],["to catch fire","起火、燃燒起來",""],["to catch on","流行起來;領會、聽懂",""],["to catch one's breath","喘口氣、稍作休息",""],["to catch up","趕上進度",""],["to change one's mind","改變原本的決定或想法",""],["to check in","(旅館)辦理入住;託運",""],["to check out","退房;查看、調查",""],["to check up on","查核、檢查狀況",""],["to cheer up","使振作、逗某人開心",""],["to clean out","清空;洗劫;掃光",""],["to clear up","說明白;(天氣)放晴",""],["clear-cut","明確而清晰",""],["close call","九死一生、驚險脫身",""],["to come about","發生、出現",""],["to come across","偶然遇見或發現",""],["to come from","來自、源於某地",""],["to come to","甦醒;合計為",""],["to come to an end","結束、告一段落",""],["to come true","成真、實現",""],["to come up with","想出、提出",""],["to cop out","推卸責任、臨陣脫逃",""],["to cope with","應付、應對",""],["to cost an arm and a leg","所費不貲、非常昂貴",""],["a couch potato","成天窩沙發看電視的人",""],["to count on","信賴、指望某人",""],["to cover for","暫代;替某人打掩護",""],["to cover ground","涵蓋範圍很廣",""],["to cover up","掩蓋、隱瞞",""],["to cross out","劃掉、刪去",""],["cut and dried","早有定論、了無新意;乏味",""],["to cut corners","精打細算、省錢",""],["to cut down on","減少(用量或次數)",""],["to cut off","剪掉;突然切斷",""],["to cut out","剪下;停止(某行為)",""],["to cut short","縮短、打斷",""],["to cut to the chase","開門見山、直說重點",""],["day in and day out","日復一日、天天如此",""],["to deal with","處理、應對",""],["to die down","減弱、平息",""],["to die out","絕跡、逐漸消失",""],["to dish out","大量分發;數落人",""],["to do over","重做、重寫",""],["to do without","沒有……也能將就",""],["down to earth","腳踏實地、平易近人",""],["to draw the line at","劃清界線、堅決不做",""],["to draw up","草擬、繪製(文件地圖)",""],["to dress up","打扮得體、穿正式服裝",""],["to drop off","睡著;順道送;減少",""],["to drop out of","中途退出、輟學",""],["to drop (someone) a line","寫封短訊給某人",""],["to dry out","逐漸晾乾;戒酒",""],["dry run","排演、預演",""],["to dry up","乾涸;枯竭",""],["to eat in/to eat out","在家吃/外出用餐",""],["to end up","最後變成、結果落得",""],["every other (one)","每隔一個、交替",""],["to face the music","承擔後果、面對現實",""],["face-to-face","面對面、當面",""],["to fade away","逐漸消退、遠去",""],["to fall for","迅速愛上;受騙上當",""],["to fall in love","愛上、陷入戀愛",""],["to fall through","落空、告吹",""],["to feel like","想要、有意做某事",""],["to feel sorry for","同情、為……感到難過",""],["few and far between","罕見、不常發生",""],["fifty-fifty","對半平分",""],["to figure out","想出答案;弄明白",""],["to fill in","填入(空格);告知情況",""],["to fill out","填寫完整份表格",""],["to fill (someone) in","向某人說明情況",""],["to find fault with","挑剔、找碴",""],["to find out","設法得知、查清楚",""],["first-rate","一流的、極為出色",""],["to fix up","修理、整修;為某人牽線",""],["to focus on","專注於、把重點放在",""],["to fool around","鬼混、瞎搞;開玩笑",""],["for good","永久地、從此不再改變",""],["for once","就這麼一次、難得",""],["for sure","確定無疑",""],["for the time being","目前、暫且",""],["from now on","從現在起、往後",""],["to get a rise out of","激得某人動怒或反應",""],["to get along","有進展;(健康)過得如何",""],["to get along with","與人相處融洽;順利應付",""],["to get away","逃脫、脫身",""],["to get away with","逃過懲罰、僥倖矇混",""],["to get back","返回、回到原處",""],["to get better, worse, etc.","變得更好、更糟等",""],["to get by","勉強度日、應付得來",""],["to get cold feet","臨陣退縮、打退堂鼓",""],["to get even with","報復、扯平",""],["to get in touch with","與某人取得聯繫",""],["to get in/to get on","進入或搭上車輛、交通工具",""],["to get lost","迷路;走開別煩",""],["to get off one's chest","一吐為快、傾吐心事",""],["to get on one's nerves","惹惱、使人心煩",""],["to get out from under","擺脫財務困境",""],["to get out of hand","失控",""],["to get out of line","違規、逾矩",""],["to get out of/to get off","下車、離開交通工具",""],["to get over","從疾病或傷痛中恢復",""],["to get rid of","除掉、擺脫",""],["to get sick, well, tired, busy, wet, etc.","變得生病、疲累、忙碌等",""],["to get the better of","勝過、佔上風",""],["to get the hang of","掌握訣竅、上手",""],["to get through","完成、把某事做完",""],["to get through to","使某人聽懂、把話說進心裡",""],["to get to","得以做某事;抵達某處",""],["to get up","起床;把某人叫醒",""],["to get used to","逐漸適應、變得習慣",""],["give and take","互相退讓、彼此配合",""],["to give birth to","生下、產下",""],["to give in","屈服、讓步",""],["to give off","散發、放出",""],["to give out","分發;耗盡",""],["to give (someone) a big hand","給予熱烈掌聲",""],["to give (someone) a break","給某人機會、通融一下",""],["to give (someone) a hand","幫忙、搭把手",""],["to give someone the cold shoulder","冷落、故意不理",""],["to give up","放棄;戒除;投降",""],["to go around","夠分配;四處走動流傳",""],["to go for","以某價格賣出;力求",""],["to go in for","熱衷於(興趣嗜好)",""],["to go off","爆炸;(警報)響;突然離去",""],["to go off the deep end","失控暴怒、衝動行事",""],["to go on","發生;持續進行",""],["to go out","熄滅;停止運作;外出",""],["to go over","受歡迎、被接受",""],["to go the extra mile","加倍努力、多付出",""],["to go through","經歷;耗用",""],["to go through channels","循正規管道辦理",""],["to go to town","卯足全力、大幹一場",""],["to go up","上漲;興建",""],["to go up to","走近、上前",""],["to go with","(顏色款式)相配;與某人交往",""],["to go without saying","不言而喻、自不待言",""],["to go wrong","出差錯、出岔子",""],["to goof off","打混、偷懶",""],["to goof up","出錯、搞砸",""],["to grow out of","(隨年紀)戒掉;由……衍生",""],["had better","最好、應當",""],["to hand in","繳交、呈交",""],["to hang up","掛起衣物;掛斷電話",""],["hard of hearing","重聽、聽力不好",""],["to have a good time","玩得愉快、過得開心",""],["to have a voice in","在……有發言權",""],["have got","擁有、有",""],["have got to","必須、不得不",""],["to have in mind","心裡想著、盤算",""],["to have it in for","對……懷恨、想報復",""],["to have it out with","與某人攤牌、理論",""],["to have on","身上穿戴著",""],["to have one's heart set on","一心想要、決意",""],["to have one's way","隨自己的意、如願",""],["to have (time) off","有休假、不用上班的時間",""],["to have to do with","與某事有關聯",""],["to hear from","得到某人的消息",""],["to hear of","聽說過、知道",""],["to hit the nail on the head","一針見血、說中要害",""],["to hit the road","動身上路、出發",""],["to hit the sack","上床睡覺",""],["to hold back","抑制、忍住;隱瞞",""],["to hold off","延緩、拖住",""],["to hold on","抓緊;稍等別掛",""],["to hold out","支撐、夠用;堅持",""],["to hold over","延長、續留",""],["to hold still","保持不動",""],["to hold up","耽誤;維持水準",""],["ill at ease","渾身不自在、緊張",""],["in a hurry","急急忙忙、趕時間",""],["in case","以防、萬一",""],["in hand","在掌控之中",""],["in no time","很快、轉眼間",""],["in the long run","就長遠而言",""],["in the same boat","處境相同、同病相憐",""],["in the worst way","非常、極度地",""],["in time to","及時、趕在期限前",""],["in touch","保持聯絡",""],["in vain","徒勞、白費力氣",""],["inside out","裡外翻反",""],["it figures","果然如此、不意外",""],["to jump to conclusions","妄下結論",""],["to keep a low profile","保持低調",""],["to keep a promise","遵守承諾",""],["to keep after","不斷叮嚀、催促",""],["to keep an eye on","看著、留意",""],["to keep away (from)","遠離、避開",""],["to keep in mind","牢記在心、別忘記",""],["to keep in touch with","與……保持聯絡",""],["to keep one's fingers crossed","祈求好運、但願順利",""],["to keep one's head","臨危不亂、保持冷靜",""],["to keep one's word","信守諾言、說到做到",""],["to keep out","不准進入、禁止進入",""],["to keep time","(鐘錶)走時準確",""],["to keep track of","記錄、掌握……的狀況",""],["to keep up","吵得無法入睡;維持(水準)",""],["to keep up with","跟上(速度或進度)",""],["to keep up with","掌握最新資訊;跟得上",""],["to kick (something) around","非正式地討論、商量",""],["to kick the habit","戒掉(壞習慣)",""],["to knock one self out","拚命努力、賣力去做",""],["to knock out","擊昏、擊倒;令人驚豔",""],["to know by sight","面熟、認得",""],["to land on one's feet","化險為夷、重新站穩",""],["last straw","壓垮的最後一根稻草",""],["to lay off","戒除;裁員",""],["to learn the ropes","熟悉業務、上手",""],["to leave open","暫不決定、留待日後",""],["to leave (someone or something) alone","別打擾、讓某人清靜",""],["let along","更別提、遑論",""],["to let down","使失望、辜負",""],["to let on","洩漏、透露(祕密)",""],["to let slide","疏於處理、放任不管",""],["to let up","減弱、緩和;鬆懈",""],["to lie down","躺下休息",""],["to line up","排隊;張羅、安排到",""],["little by little","緩慢而逐步地",""],["to live it up","盡情享樂、揮霍",""],["to live up to","達到、不辜負(期望)",""],["to liven up","炒熱氣氛、使有活力",""],["to look after","照顧、看顧",""],["to look at","把視線投向、注視",""],["to look down on","瞧不起、看輕",""],["to look for","設法找出、尋找",""],["to look forward to","滿心期待、盼望",""],["to look into","深入調查、仔細研究",""],["to look on","在一旁觀看",""],["to look out","留神、當心",""],["to look out on","面向、俯瞰",""],["to look over","仔細查看、檢視",""],["to look up","在字典或資料中查找",""],["to look up to","敬佩、景仰",""],["to lose face","丟臉、失面子",""],["to lose one's cool","失去冷靜、慌了神",""],["to lose one's head","慌了手腳、亂了方寸",""],["to lose one's temper","發脾氣",""],["to lose one's touch","失去往日的功力",""],["to lose track of","忘了、失去(對……的)掌握",""],["a lost cause","毫無希望的人或事",""],["to make a decision","做決定",""],["to make a difference (to)","產生影響、造成不同",""],["to make a fuss","大驚小怪、小題大作",""],["to make a living","謀生、維持生計",""],["to make an effort","努力、盡力",""],["to make clear","解釋清楚、講明白",""],["to make do","湊合、將就應付",""],["to make ends meet","收支打平、勉強度日",""],["to make friends","結交朋友",""],["to make fun of","取笑、嘲弄",""],["to make good","獲得成功、闖出成績",""],["to make good time","以合理速度順利趕路",""],["to make out","應付、進展、看清",""],["to make out","辨認出;開立(文件)",""],["to make progress","取得進展",""],["to make sense","合乎情理、說得通",""],["to make (someone) tick","驅使某人如此行事",""],["to make sure","確認、務必做到",""],["to make the best of","在不利處境中盡力而為",""],["to make up","補做;編造;化妝;構成",""],["to make up one's mind","拿定主意、作出決定",""],["to make up with","和好、盡釋前嫌",""],["to make waves","興風作浪、找麻煩(抱怨)",""],["to meet a deadline","趕上截止期限",""],["to meet (someone) halfway","各退一步、折衷",""],["to mind the store","看家、留守顧店",""],["to miss the boat","錯失良機",""],["to mix up","攪拌均勻;使混淆",""],["more or less","差不多、多少有點",""],["to name after","以……的名字命名",""],["narrow-minded","心胸狹隘、思想偏狹",""],["never mind","不必在意、算了",""],["no matter","無論、不管",""],["no wonder","難怪、不足為奇",""],["not on your life","絕對不行、想都別想",""],["now and then","偶爾、有時候",""],["off the top of one's head","一時想到、未經細想",""],["on cloud nine","樂不可支、欣喜若狂",""],["on edge","緊張不安、易怒",""],["on hand","現成、在手邊",""],["on one's toes","保持警覺、機警",""],["on purpose","刻意、蓄意地",""],["on second thought","再想想、轉念一想",""],["on the ball","機靈、反應快",""],["on the other hand","另一方面、相對地",""],["on the same page","有共識、想法一致",""],["on the whole","大致上、整體而言",""],["on time","準時、不遲不早",""],["once and for all","一勞永逸、徹底了斷",""],["once in a blue moon","非常罕見、難得一次",""],["out of date","過時的、不再適用",""],["out of order","無法正常運作、故障",""],["out of the blue","突如其來、毫無預兆",""],["out of the question","不可能、想都別想",""],["out of touch","失去聯絡;不了解狀況",""],["over and over (again)","再三、反覆地",""],["to pass away","過世、去世",""],["to pass out","分發;昏倒",""],["to pay attention (to)","專心注意、留神",""],["to pay back","償還;報復",""],["to pay off","有回報、奏效",""],["to pick out","從中挑選出",""],["to pick up","用手把東西從表面拿起",""],["to pick up the tab","買單、付帳",""],["a piece of cake","輕而易舉的事",""],["to pin on","嫁禍、把罪名安在……頭上",""],["to play a role in","在……中扮演角色、起作用",""],["to play by ear","憑聽力演奏;隨機應變",""],["to play it safe","求穩、不冒險",""],["to play up to","巴結、討好",""],["to point out","指出、使人注意到",""],["to pull off","辦成難事;把車駛離公路",""],["to pull someone's leg","開某人玩笑、逗弄",""],["to pull together","彙整(資訊);穩住情緒",""],["to put an end to","終結、徹底結束",""],["to put away","收拾好、放回定位",""],["to put down","平息、鎮壓;貶低",""],["to put off","延後、拖延",""],["to put on","把衣物穿戴到身上",""],["to put on","體重增加;上演",""],["to put one's foot in","說錯話、做錯事出糗",""],["to put out","熄滅火焰;使停止運作",""],["to put (someone) on","開玩笑地唬人、逗弄",""],["to put together","組裝、拼裝",""],["to put up","忍受、容忍",""],["quite a few","為數不少、相當多",""],["a rain check","改天再約(延後的邀約)",""],["to read between the lines","領會言外之意",""],["to rely on","依賴、信賴",""],["right away","立刻、不拖延",""],["to ring a bell","聽起來耳熟、有印象",""],["to rule out","排除、不予考慮",""],["to run away","私自跑走、逃離",""],["to run into","巧遇;撞上",""],["to run out of","耗盡、用光",""],["to save face","保住面子",""],["to screw up","搞亂、弄糊塗;搞砸",""],["search me","我不知道、我哪知道",""],["second to none","首屈一指、無人能及",""],["to see about","著手處理、安排",""],["to see eye to eye","看法一致、意見相合",""],["to see off","為(某人)送行",""],["to see out","送(某人)到門口",""],["to sell out","賣光;出售(公司)",""],["to serve (someone) right","罪有應得、活該",""],["to serve (the/one's) purpose","合用、派上用場",""],["to set a goal","設定目標",""],["to set out","動身出發;整齊擺放",""],["to set up","建立、設立;安排",""],["to shake hands","以握手互相問候",""],["to show off","炫耀、賣弄",""],["to show up","現身、到場;被找到",""],["to shut up","歇業一陣子;閉嘴",""],["to sit down","就座、坐下",""],["to sit on the fence","保持中立、觀望不表態",""],["to slow down","減速、放慢",""],["so far","截至目前為止",""],["sooner or later","遲早、總有一天",""],["to sort out","整理、解決",""],["to speak one's mind","直言不諱、有話直說",""],["to spill the beans","洩漏祕密",""],["to stand a chance","有機會成功",""],["to stand by","支持;待命",""],["to stand for","代表、象徵;容忍",""],["to stand out","醒目、突出",""],["to stand up","由坐或臥的姿勢起身站立",""],["to stand up","耐用、撐得住;放某人鴿子",""],["to stand up for","捍衛、聲援",""],["stands to reason","合乎邏輯、理所當然",""],["to stay in","待在家不出門",""],["to stay up","熬夜、不去睡",""],["a steal","非常划算、超便宜",""],["to step down","卸任、辭職",""],["to step in","出面介入;短暫進入",""],["to step on","嚴加管束;加快",""],["to stick around","留在原處、逗留等候",""],["to stick it to","坑人、佔便宜",""],["to stick to","堅守、遵循",""],["to stick up","朝上豎起;持械行搶",""],["to stir up","激起(情緒);挑起(麻煩)",""],["to stop by","順道拜訪、短暫停留",""],["to take a chance","冒險一試、碰運氣",""],["to take a nap","小睡片刻",""],["to take a risk","冒險",""],["to take a trip","出門旅行",""],["to take a walk, stroll, hike, etc.","去散步、漫步或健行等",""],["to take advantage of","善用;佔便宜、利用",""],["to take after","長得像(親人)",""],["to take apart","拆開、拆解",""],["to take at one's word","相信某人的話",""],["to take by surprise","使措手不及、大吃一驚",""],["to take down","取下;記下",""],["to take for","把……誤認為",""],["to take for granted","視為理所當然;想當然地認定",""],["to take hold of","握住、抓緊",""],["to take in","遊覽;改小衣服;矇騙",""],["to take into account","把……納入考量",""],["to take off","把身上的衣物脫掉",""],["to take off","(飛機)起飛;匆匆離開",""],["to take on","僱用;承接(工作)",""],["to take one's time","不慌不忙、從容而為",""],["to take out","取出;帶某人外出(約會)",""],["to take over","接管;重做",""],["to take pains","費心、下工夫",""],["to take part in","參加、投入其中",""],["to take place","發生;依計畫舉行",""],["to take responsibility","負起責任",""],["to take the bull by the horns","當機立斷、迎難而上",""],["to take turns","彼此輪流",""],["to take up","開始學/做;佔用(時間空間)",""],["to take up with","就要事找某人商量",""],["to talk back to","頂嘴、無禮回話",""],["to talk over","仔細討論、商量",""],["to tear down","拆除、拆掉",""],["to tear up","撕成碎片",""],["to tell apart","分辨、區別開來",""],["to think of","對某人或某事持有看法、評價",""],["to think outside the box","跳脫框架思考",""],["to think over","做決定前審慎思量",""],["to think up","想出、憑空編造",""],["to throw away","扔掉、丟棄",""],["to throw in the towel","認輸、放棄",""],["to throw out","丟棄;趕出;駁回",""],["to throw (someone) a curve","出其不意地拋出難題",""],["to throw the book at","從重懲處、嚴懲",""],["to throw up","匆匆搭建;嘔吐",""],["the tip of the iceberg","冰山一角",""],["to tire out","使某人筋疲力盡",""],["touch and go","情勢危急、成敗難料",""],["to trade in","以舊折抵換新",""],["to try on","購買前試穿衣物",""],["to try out","試用、測試",""],["to turn a blind eye","視而不見、睜一隻眼閉一隻眼",""],["to turn around","轉向反方向;徹底扭轉局面",""],["to turn down","調低(音量亮度);回絕",""],["to turn off","關閉電器或設備使其停止",""],["to turn on","開啟電器或設備使其運作",""],["to turn on","引起興趣、令人著迷",""],["to turn out","結果變成;出席、到場",""],["to turn over","翻面;翻覆;移交",""],["under one's nose","就在眼前(卻沒察覺)",""],["under the table","檯面下、私底下(常指不合法)",""],["under the weather","身體微恙、不太舒服",""],["up in the air","懸而未決、還沒定案",""],["up to date","最新的、合乎時代的",""],["upside down","上下顛倒",""],["used to","過去經常(現已不再)",""],["to wait on","在商店或餐廳提供服務",""],["to wait up for","熬夜等候",""],["to wake up","從睡眠中醒來",""],["a walk in the park","輕鬆容易的事",""],["to waste one's breath","白費口舌",""],["to wear down","逐漸磨損、磨薄",""],["to wear off","逐漸消失、失效",""],["to wear out","用到破損、失去功用",""],["when pigs fly","絕不可能(的時候)",""],["a white lie","善意的謊言",""],["to work out","健身;想出(辦法)",""],["would rather","寧可、比較願意",""]]}};
+
+  // ===================== 設定 =====================
+  var STORE_KEY = 'vocabQuiz:' + QUIZ.id;
+  var WRONG_BOOK = '__WRONG_BOOK__';   // 下拉選單中「錯題本」的內部代號
+  var STREAK_TO_REMOVE = 2;            // 連續答對幾次自動移出錯題本
+  var MAX_SESSIONS = 50;               // 測驗紀錄保留筆數
+  var BACKUP_REMIND_DAYS = 7;          // 幾天未備份就提醒
+
+  // ===================== 工具函式 =====================
+  function $(id) { return document.getElementById(id); }
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function norm(w) { return String(w == null ? '' : w).trim().replace(/\s+/g, ' ').toLowerCase(); }
+  function shuffle(arr) {
+    var a = arr.slice();
+    for (var i = a.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  }
+  function pad2(n) { return String(n).padStart(2, '0'); }
+  function fmtDate(iso, withYear) {
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return '—';
+    return (withYear ? d.getFullYear() + '/' : '') + pad2(d.getMonth() + 1) + '/' + pad2(d.getDate()) +
+      ' ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes());
+  }
+  function daysSince(iso) {
+    if (!iso) return null;
+    var t = new Date(iso).getTime();
+    return isNaN(t) ? null : Math.floor((Date.now() - t) / 86400000);
+  }
+  function fmtDuration(sec) { return Math.floor(sec / 60) + ' 分 ' + (sec % 60) + ' 秒'; }
+  function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
+  function line(k, v) { return '<p>' + esc(k) + '：' + esc(v) + '</p>'; }
+  function sheetLabel(v) { return v === WRONG_BOOK ? '錯題本' : v; }
+
+  // ===================== 儲存層 =====================
+  var Store = (function () {
+    var ok = true;
+    var state = blank();
+
+    function blank() {
+      return { version: 1, quizName: QUIZ.name, wrongBook: {}, sessions: [], lastExport: null, prefs: {} };
+    }
+    function sanitize(d) {
+      var s = blank();
+      if (d && typeof d === 'object') {
+        if (d.wrongBook && typeof d.wrongBook === 'object') s.wrongBook = d.wrongBook;
+        if (Array.isArray(d.sessions)) s.sessions = d.sessions;
+        if (d.lastExport) s.lastExport = d.lastExport;
+        if (d.prefs && typeof d.prefs === 'object') s.prefs = d.prefs;
+      }
+      return s;
+    }
+    function load() {
+      var raw = null;
+      try { raw = window.localStorage.getItem(STORE_KEY); }
+      catch (e) { ok = false; state = blank(); return; }
+      if (!raw) { state = blank(); return; }
+      try {
+        state = sanitize(JSON.parse(raw));
+      } catch (e) {
+        // 資料損毀：另存一份原始內容後重新開始，不直接丟棄
+        try { window.localStorage.setItem(STORE_KEY + ':corrupt:' + Date.now(), raw); } catch (e2) {}
+        state = blank();
+      }
+    }
+    function save() {
+      if (!ok) return false;
+      try {
+        state.quizName = QUIZ.name;
+        window.localStorage.setItem(STORE_KEY, JSON.stringify(state));
+        return true;
+      } catch (e) {
+        ok = false;
+        renderBanners();
+        return false;
+      }
+    }
+    return {
+      load: load,
+      save: save,
+      get state() { return state; },
+      get ok() { return ok; }
+    };
+  })();
+
+  // ===================== 錯題本 =====================
+  var WrongBook = {
+    size: function () { return Object.keys(Store.state.wrongBook).length; },
+    list: function () {
+      var book = Store.state.wrongBook;
+      return Object.keys(book).map(function (k) {
+        var it = book[k];
+        return {
+          key: k, word: it.word, meaning: it.meaning, explanation: it.explanation || '', sheet: it.sheet || '',
+          wrongCount: it.wrongCount || 1, streak: it.streak || 0, lastSelected: it.lastSelected || '',
+          firstWrongAt: it.firstWrongAt || it.lastWrongAt || '', lastWrongAt: it.lastWrongAt || ''
+        };
+      });
+    },
+    recordWrong: function (q, selected) {
+      var key = norm(q.word);
+      var now = new Date().toISOString();
+      var book = Store.state.wrongBook;
+      var it = book[key];
+      if (it) {
+        it.wrongCount = (it.wrongCount || 0) + 1;
+        it.streak = 0;
+        // 以最近一次答錯的內容為準（試算表修改過的中文會自然同步）
+        it.word = q.word; it.meaning = q.meaning; it.explanation = q.explanation; it.sheet = q.sheet;
+        it.lastSelected = selected;
+        it.lastWrongAt = now;
+      } else {
+        book[key] = {
+          word: q.word, meaning: q.meaning, explanation: q.explanation, sheet: q.sheet,
+          wrongCount: 1, streak: 0, lastSelected: selected, firstWrongAt: now, lastWrongAt: now
+        };
+      }
+      Store.save();
+      return book[key];
+    },
+    recordCorrect: function (q) {
+      var key = norm(q.word);
+      var it = Store.state.wrongBook[key];
+      if (!it) return null;
+      it.streak = (it.streak || 0) + 1;
+      if (it.streak >= STREAK_TO_REMOVE) {
+        delete Store.state.wrongBook[key];
+        Store.save();
+        return { removed: true };
+      }
+      Store.save();
+      return { removed: false, streak: it.streak };
+    },
+    remove: function (keys) {
+      keys.forEach(function (k) { delete Store.state.wrongBook[k]; });
+      Store.save();
+    }
+  };
+
+  // ===================== 測驗紀錄 =====================
+  function sortAndTrimSessions() {
+    Store.state.sessions.sort(function (a, b) { return String(b.at).localeCompare(String(a.at)); });
+    if (Store.state.sessions.length > MAX_SESSIONS) Store.state.sessions.length = MAX_SESSIONS;
+  }
+  var Sessions = {
+    all: function () { return Store.state.sessions; },
+    get: function (id) { return Store.state.sessions.filter(function (s) { return s.id === id; })[0] || null; },
+    add: function (s) { Store.state.sessions.unshift(s); sortAndTrimSessions(); Store.save(); },
+    remove: function (id) {
+      Store.state.sessions = Store.state.sessions.filter(function (s) { return s.id !== id; });
+      Store.save();
+    },
+    clear: function () { Store.state.sessions = []; Store.save(); }
+  };
+
+  // ===================== 題庫 =====================
+  function sheetQuestions(name) {
+    return (QUIZ.sheets[name] || []).map(function (r) {
+      return { word: r[0], meaning: r[1], explanation: r[2] || '', sheet: name };
+    });
+  }
+  function itemToQuestion(it) {
+    return { word: it.word, meaning: it.meaning, explanation: it.explanation || '', sheet: it.sheet };
+  }
+  function sortBook(list, mode) {
+    var c = list.slice();
+    if (mode === 'recent') {
+      c.sort(function (a, b) { return String(b.lastWrongAt).localeCompare(String(a.lastWrongAt)); });
+    } else if (mode === 'alpha') {
+      c.sort(function (a, b) { return norm(a.word).localeCompare(norm(b.word)); });
+    } else {
+      c.sort(function (a, b) {
+        return (b.wrongCount - a.wrongCount) || String(b.lastWrongAt).localeCompare(String(a.lastWrongAt));
+      });
+    }
+    return c;
+  }
+  function getPool(value) {
+    if (value === WRONG_BOOK) return sortBook(WrongBook.list(), 'count').map(itemToQuestion);
+    return sheetQuestions(value);
+  }
+
+  var ALL_WORDS = null;   // 整個檔案不重複的單字 [[正規化, 原文], ...]
+  function allWords() {
+    if (!ALL_WORDS) {
+      var seen = {};
+      ALL_WORDS = [];
+      QUIZ.sheetOrder.forEach(function (n) {
+        QUIZ.sheets[n].forEach(function (r) {
+          var k = norm(r[0]);
+          if (!seen[k]) { seen[k] = true; ALL_WORDS.push([k, r[0]]); }
+        });
+      });
+    }
+    return ALL_WORDS;
+  }
+
+  // 錯誤選項：優先取自該字的來源工作表；不足 3 個（或工作表已移除）時從全部單字補足
+  function buildOptions(q) {
+    var seen = {};
+    seen[norm(q.word)] = true;
+    var picks = [];
+    function addFrom(pairs) {
+      shuffle(pairs).forEach(function (p) {
+        if (picks.length < 3 && !seen[p[0]]) { seen[p[0]] = true; picks.push(p[1]); }
+      });
+    }
+    if (QUIZ.sheets[q.sheet]) addFrom(QUIZ.sheets[q.sheet].map(function (r) { return [norm(r[0]), r[0]]; }));
+    if (picks.length < 3) addFrom(allWords());
+    var opts = [{ text: q.word, correct: true }].concat(picks.map(function (w) { return { text: w, correct: false }; }));
+    return shuffle(opts);
+  }
+
+  // ===================== 畫面切換與字體 =====================
+  function showScreen(name) {
+    ['setup', 'quiz', 'result', 'manage'].forEach(function (n) {
+      $('screen-' + n).classList.toggle('hidden', n !== name);
+    });
+    window.scrollTo(0, 0);
+  }
+
+  var fontSize = 18;
+  function applyFont() { document.body.style.fontSize = fontSize + 'px'; }
+  function adjustFont(d) {
+    fontSize = Math.max(14, Math.min(28, fontSize + d));
+    applyFont();
+    Store.state.prefs.fontSize = fontSize;
+    Store.save();
+  }
+
+  // ===================== 設定頁 =====================
+  function refreshSheetSelect() {
+    var sel = $('sheetSelect');
+    var prev = sel.value;
+    sel.innerHTML = '';
+    QUIZ.sheetOrder.forEach(function (n) {
+      sel.add(new Option(n + '（' + QUIZ.sheets[n].length + '題）', n));
+    });
+    var cnt = WrongBook.size();
+    var opt = new Option('★ 錯題本（' + cnt + '題）', WRONG_BOOK);
+    opt.disabled = cnt === 0;
+    sel.add(opt);
+
+    var valid = Array.prototype.some.call(sel.options, function (o) { return o.value === prev && !o.disabled; });
+    sel.value = valid ? prev : QUIZ.sheetOrder[0];
+    onPoolChange();
+  }
+
+  function onPoolChange() {
+    var v = $('sheetSelect').value;
+    var n = getPool(v).length;
+    $('startRow').value = 1;
+    $('endRow').value = n;
+    $('startRow').max = n;
+    $('endRow').max = n;
+    $('poolHint').textContent = v === WRONG_BOOK
+      ? '錯題本依「錯誤次數由多到少」排序，例如第 1～10 題＝錯最多次的 10 題。'
+      : '共 ' + n + ' 題';
+  }
+
+  function renderBanners() {
+    var h = '';
+    if (!Store.ok) {
+      h += '<div class="banner error">⚠️ 這個瀏覽器無法使用本機儲存（可能是無痕模式），錯題記錄在關閉網頁後會消失。</div>';
+    } else {
+      var list = WrongBook.list();
+      if (list.length) {
+        var last = Store.state.lastExport;
+        var days;
+        if (last) {
+          days = daysSince(last);
+        } else {
+          // 從未備份：從最早的錯題日期起算，避免第一次答錯就跳提醒
+          var oldest = list.reduce(function (m, it) { return (!m || it.firstWrongAt < m) ? it.firstWrongAt : m; }, '');
+          days = daysSince(oldest);
+        }
+        if (days !== null && days >= BACKUP_REMIND_DAYS) {
+          h += '<div class="banner warn">錯題本有 ' + list.length + ' 題，' +
+            (last ? '已 ' + days + ' 天未備份' : '尚未備份過') +
+            '。<button type="button" class="secondary" id="bannerBackup">前往備份</button></div>';
+        }
+      }
+    }
+    $('setupBanners').innerHTML = h;
+    var b = $('bannerBackup');
+    if (b) b.addEventListener('click', function () { openManage('backup'); });
+  }
+
+  function startFromSetup() {
+    var v = $('sheetSelect').value;
+    var pool = getPool(v);
+    if (!pool.length) { alert('這個範圍沒有題目。'); return; }
+
+    var start = parseInt($('startRow').value, 10);
+    var end = parseInt($('endRow').value, 10);
+    if (isNaN(start) || isNaN(end) || start < 1 || end < start || end > pool.length) {
+      alert('請輸入有效的題目範圍（1～' + pool.length + '）。');
+      return;
+    }
+
+    var list = shuffle(pool.slice(start - 1, end));
+    var rangeText = '第 ' + start + '～' + end + ' 題';
+    var rc = parseInt($('randomCount').value, 10);
+    if (!isNaN(rc) && rc > 0 && rc < list.length) {
+      list = list.slice(0, rc);
+      rangeText = '隨機 ' + list.length + ' 題（取自第 ' + start + '～' + end + ' 題）';
+    }
+    startQuiz(list, sheetLabel(v), rangeText);
+  }
+
+  // ===================== 測驗流程 =====================
+  var S = { timer: null, ended: true, lastSession: null };
+
+  function startQuiz(list, label, rangeText) {
+    if (!list.length) { alert('沒有可測驗的題目。'); return; }
+    clearInterval(S.timer);
+    var mins = parseInt($('timeSelect').value, 10) || 5;
+    S.questions = list;
+    S.idx = 0;
+    S.correct = 0;
+    S.wrong = 0;
+    S.answered = 0;
+    S.wrongs = [];
+    S.label = label;
+    S.rangeText = rangeText;
+    S.timeLimitMin = mins;
+    S.startTime = new Date();
+    S.endTime = new Date(S.startTime.getTime() + mins * 60000);
+    S.ended = false;
+    S.answeredCurrent = false;
+
+    $('sheetTitle').textContent = label;
+    showScreen('quiz');
+    updateTimer();
+    S.timer = setInterval(updateTimer, 1000);
+    showQuestion();
+  }
+
+  function updateTimer() {
+    var remain = Math.ceil((S.endTime.getTime() - Date.now()) / 1000);
+    if (remain <= 0) {
+      $('timer').textContent = '剩餘 0:00';
+      endQuiz('timeup');
+      return;
+    }
+    $('timer').textContent = '剩餘 ' + Math.floor(remain / 60) + ':' + pad2(remain % 60);
+  }
+
+  function updateProgress() {
+    var shown = Math.min(S.idx + 1, S.questions.length);
+    $('progress').textContent = '第 ' + shown + '/' + S.questions.length + ' 題｜對 ' + S.correct + '｜錯 ' + S.wrong;
+  }
+
+  function showQuestion() {
+    if (S.idx >= S.questions.length) { endQuiz('done'); return; }
+    var q = S.questions[S.idx];
+    S.answeredCurrent = false;
+    S.currentOptions = buildOptions(q);
+
+    $('questionText').innerHTML = '<span class="q-label">Which is：</span>' + esc(q.meaning);
+    var box = $('options');
+    box.innerHTML = '';
+    S.currentOptions.forEach(function (o, i) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'option';
+      b.innerHTML = '<span class="key">' + (i + 1) + '</span>' + esc(o.text);
+      b.addEventListener('click', function () { answer(i); });
+      box.appendChild(b);
+    });
+    $('feedback').innerHTML = '';
+    $('nextBtn').disabled = true;
+    updateProgress();
+  }
+
+  function answer(i) {
+    if (S.ended || S.answeredCurrent) return;
+    var opt = S.currentOptions[i];
+    if (!opt) return;
+    var q = S.questions[S.idx];
+    S.answeredCurrent = true;
+    S.answered++;
+
+    var buttons = $('options').children;
+    S.currentOptions.forEach(function (o, j) {
+      buttons[j].disabled = true;
+      if (o.correct) buttons[j].classList.add('is-correct');
+    });
+
+    var note = '';
+    if (opt.correct) {
+      S.correct++;
+      var r = WrongBook.recordCorrect(q);
+      if (r && r.removed) note = '🎉 連續答對 ' + STREAK_TO_REMOVE + ' 次，已從錯題本移除';
+      else if (r) note = '錯題本：連續答對 ' + r.streak + '/' + STREAK_TO_REMOVE;
+    } else {
+      S.wrong++;
+      buttons[i].classList.add('is-wrong');
+      var it = WrongBook.recordWrong(q, opt.text);
+      S.wrongs.push({ word: q.word, meaning: q.meaning, explanation: q.explanation, sheet: q.sheet, selected: opt.text });
+      note = '已記入錯題本（累計錯 ' + it.wrongCount + ' 次）';
+    }
+
+    $('feedback').innerHTML =
+      '<div class="feedback-box ' + (opt.correct ? 'correct' : 'incorrect') + '">' +
+      (opt.correct ? '答對了！' : '答錯了！') +
+      '<br>正確答案：' + esc(q.word) +
+      (q.explanation ? '<br>解釋：' + esc(q.explanation) : '') +
+      (note ? '<div class="wb-note">' + esc(note) + '</div>' : '') +
+      (Store.ok ? '' : '<div class="wb-note">（無法儲存，關閉網頁後記錄會消失）</div>') +
+      '</div>';
+    $('nextBtn').disabled = false;
+    updateProgress();
+  }
+
+  function nextQuestion() {
+    if (S.ended || !S.answeredCurrent) return;
+    S.idx++;
+    showQuestion();
+  }
+
+  function endQuiz(reason) {
+    if (S.ended) return;
+    S.ended = true;
+    clearInterval(S.timer);
+
+    var finish = new Date();
+    var total = S.questions.length;
+    var session = {
+      id: uid(),
+      at: finish.toISOString(),
+      label: S.label,
+      rangeText: S.rangeText,
+      total: total,
+      answered: S.answered,
+      correct: S.correct,
+      wrong: S.wrong,
+      score: total ? Math.round(S.correct / total * 100) : 0,
+      durationSec: Math.round((finish.getTime() - S.startTime.getTime()) / 1000),
+      timeLimitMin: S.timeLimitMin,
+      endReason: reason,
+      wrongs: S.wrongs.slice()
+    };
+    if (session.answered > 0) Sessions.add(session);   // 一題都沒答就不留紀錄
+    S.lastSession = session;
+
+    renderResult(session);
+    refreshSheetSelect();
+    renderBanners();
+    showScreen('result');
+  }
+
+  function summaryHtml(s) {
+    var reasonText = { timeup: '時間到，自動交卷', quit: '提前交卷', done: '全部作答完畢' }[s.endReason] || '';
+    return '<div class="summary">' +
+      line('測驗日期時間', fmtDate(s.at, true)) +
+      line('測驗範圍', s.label + '｜' + s.rangeText) +
+      line('測驗時間', fmtDuration(s.durationSec) + (reasonText ? '（' + reasonText + '）' : '')) +
+      line('總題數', s.total) +
+      line('答對題數', s.correct) +
+      line('答錯題數', s.wrong) +
+      (s.total - s.answered > 0 ? line('未作答題數', s.total - s.answered) : '') +
+      line('得分', s.score + ' 分') +
+      '</div>';
+  }
+
+  function reviewHtml(s) {
+    if (!s.wrongs.length) {
+      return '<p class="empty">' + (s.answered === s.total ? '全部答對，太棒了！' : '作答的題目都沒有答錯。') + '</p>';
+    }
+    return '<h3>答錯題目回顧</h3>' + s.wrongs.map(function (w, i) {
+      return '<div class="review-item">' +
+        '<p class="review-question">題目 ' + (i + 1) + '：' + esc(w.meaning) + '</p>' +
+        '<p class="review-wrong">您的答案：' + esc(w.selected) + '</p>' +
+        '<p class="review-correct">正確答案：' + esc(w.word) + '</p>' +
+        (w.explanation ? '<p class="review-explanation">解釋：' + esc(w.explanation) + '</p>' : '') +
+        '</div>';
+    }).join('');
+  }
+
+  function renderResult(s) {
+    $('resultBody').innerHTML = '<h2>' + esc(s.label) + ' 測驗結果</h2>' + summaryHtml(s) +
+      '<p class="hint" style="text-align:center">錯題本目前共 ' + WrongBook.size() + ' 題</p>';
+    var btn = $('retestLastBtn');
+    btn.classList.toggle('hidden', !s.wrongs.length);
+    btn.textContent = '重測本次錯題（' + uniqueWrongs(s.wrongs).length + '題）';
+    $('resultReview').innerHTML = reviewHtml(s);
+  }
+
+  function uniqueWrongs(wrongs) {
+    var seen = {};
+    return wrongs.filter(function (w) {
+      var k = norm(w.word);
+      if (seen[k]) return false;
+      seen[k] = true;
+      return true;
+    });
+  }
+
+  function retestWrongs(wrongs, label) {
+    var list = shuffle(uniqueWrongs(wrongs).map(itemToQuestion));
+    startQuiz(list, label, '重測 ' + list.length + ' 題');
+  }
+
+  // ===================== 錯題管理 =====================
+  var manageTab = 'book';
+  var shownBook = [];
+
+  function openManage(tab) {
+    showScreen('manage');
+    switchTab(tab || manageTab);
+  }
+
+  function switchTab(t) {
+    manageTab = t;
+    Array.prototype.forEach.call(document.querySelectorAll('.tab'), function (b) {
+      b.classList.toggle('active', b.getAttribute('data-tab') === t);
+    });
+    ['book', 'sessions', 'backup'].forEach(function (n) {
+      $('tab-' + n).classList.toggle('hidden', n !== t);
+    });
+    if (t === 'book') renderBook();
+    else if (t === 'sessions') renderSessions();
+    else renderBackup();
+  }
+
+  // ---- 錯題本 ----
+  function renderBook() {
+    var filterSel = $('bookFilter');
+    var prev = filterSel.value;
+    var list = WrongBook.list();
+
+    var sheetSet = {};
+    list.forEach(function (it) { sheetSet[it.sheet] = (sheetSet[it.sheet] || 0) + 1; });
+    var sheetNames = Object.keys(sheetSet).sort(function (a, b) {
+      var ia = QUIZ.sheetOrder.indexOf(a), ib = QUIZ.sheetOrder.indexOf(b);
+      if (ia < 0) ia = 99999;
+      if (ib < 0) ib = 99999;
+      return (ia - ib) || a.localeCompare(b);
+    });
+    filterSel.innerHTML = '';
+    filterSel.add(new Option('全部（' + list.length + '）', ''));
+    sheetNames.forEach(function (s) {
+      filterSel.add(new Option(s + (QUIZ.sheets[s] ? '' : '〔已移除〕') + '（' + sheetSet[s] + '）', s));
+    });
+    filterSel.value = sheetSet[prev] ? prev : '';
+
+    var f = filterSel.value;
+    shownBook = sortBook(f ? list.filter(function (it) { return it.sheet === f; }) : list, $('bookSort').value);
+
+    $('bookClear').textContent = f ? '清空此工作表錯題' : '清空全部錯題';
+    $('bookCount').textContent = '顯示 ' + shownBook.length + ' 題｜連續答對 ' + STREAK_TO_REMOVE + ' 次會自動移除';
+    $('bookSelectAll').checked = false;
+    ['bookQuiz', 'bookDeleteSelected', 'bookClear'].forEach(function (id) { $(id).disabled = !shownBook.length; });
+
+    $('bookList').innerHTML = shownBook.length ? shownBook.map(function (it) {
+      return '<li class="wb-row">' +
+        '<input type="checkbox" class="bookChk" value="' + esc(it.key) + '">' +
+        '<div class="wb-main">' +
+          '<div class="wb-word">' + esc(it.word) +
+            '<span class="badge">錯 ' + it.wrongCount + ' 次</span>' +
+            (it.streak ? '<span class="badge streak">連對 ' + it.streak + '/' + STREAK_TO_REMOVE + '</span>' : '') +
+          '</div>' +
+          '<div class="wb-meaning">' + esc(it.meaning) + '</div>' +
+          '<div class="wb-meta">' + esc(it.sheet) + '｜最近答錯 ' + fmtDate(it.lastWrongAt, true) +
+            (it.lastSelected ? '｜曾誤選 ' + esc(it.lastSelected) : '') + '</div>' +
+        '</div>' +
+        '<button type="button" class="danger" data-del="' + esc(it.key) + '">刪除</button>' +
+      '</li>';
+    }).join('') : '<li class="empty">' + (list.length ? '這個工作表沒有錯題' : '錯題本是空的') + '</li>';
+  }
+
+  function checkedBookKeys() {
+    return Array.prototype.filter.call(document.querySelectorAll('.bookChk'), function (c) { return c.checked; })
+      .map(function (c) { return c.value; });
+  }
+
+  function afterBookChange() {
+    renderBook();
+    refreshSheetSelect();
+    renderBanners();
+  }
+
+  // ---- 測驗紀錄 ----
+  function renderSessions() {
+    var sel = $('sessionSelect');
+    var prev = sel.value;
+    var list = Sessions.all();
+    sel.innerHTML = '';
+    if (!list.length) {
+      sel.add(new Option('（尚無測驗紀錄）', ''));
+      sel.disabled = true;
+      $('sessionDetail').innerHTML = '<p class="empty">尚無測驗紀錄。最多保留最近 ' + MAX_SESSIONS + ' 筆。</p>';
+      ['sessionRetest', 'sessionDelete', 'sessionClear'].forEach(function (id) { $(id).disabled = true; });
+      return;
+    }
+    sel.disabled = false;
+    list.forEach(function (s) {
+      sel.add(new Option(fmtDate(s.at) + '｜' + s.label + '｜' + s.score + '分｜錯 ' + s.wrong + ' 題', s.id));
+    });
+    sel.value = Sessions.get(prev) ? prev : list[0].id;
+    renderSessionDetail();
+  }
+
+  function renderSessionDetail() {
+    var s = Sessions.get($('sessionSelect').value);
+    if (!s) return;
+    $('sessionDetail').innerHTML = '<div class="control-panel">' + summaryHtml(s) + '</div>' + reviewHtml(s) +
+      '<p class="hint" style="text-align:center">共 ' + Sessions.all().length + ' 筆紀錄，最多保留最近 ' + MAX_SESSIONS + ' 筆</p>';
+    $('sessionRetest').disabled = !s.wrongs.length;
+    $('sessionRetest').textContent = '重測此次錯題' + (s.wrongs.length ? '（' + uniqueWrongs(s.wrongs).length + '題）' : '');
+    $('sessionDelete').disabled = false;
+    $('sessionClear').disabled = false;
+  }
+
+  // ---- 備份 ----
+  var persistState = null;   // true / false / null(不支援)
+  function requestPersist() {
+    if (!(navigator.storage && navigator.storage.persisted)) return;
+    navigator.storage.persisted()
+      .then(function (p) { return p || (navigator.storage.persist ? navigator.storage.persist() : false); })
+      .then(function (p) { persistState = !!p; })
+      .catch(function () {});
+  }
+
+  function renderBackup() {
+    var st = Store.state;
+    var d = daysSince(st.lastExport);
+    $('exportInfo').innerHTML =
+      '錯題本 ' + WrongBook.size() + ' 題、測驗紀錄 ' + st.sessions.length + ' 筆<br>' +
+      (st.lastExport ? '上次匯出：' + fmtDate(st.lastExport, true) + '（' + d + ' 天前）' : '尚未匯出過');
+    $('storageInfo').innerHTML =
+      '題庫：' + esc(QUIZ.name) + '<br>' +
+      '儲存代號：' + esc(STORE_KEY) + '<br>' +
+      '網頁產生時間：' + fmtDate(QUIZ.generatedAt, true) + '<br>' +
+      '本機儲存：' + (Store.ok ? '可用' : '<span style="color:#c62828">無法使用</span>') + '<br>' +
+      '長期保存：' + (persistState === true ? '已取得'
+        : persistState === false ? '未取得（瀏覽器仍可能在長期未使用時清除資料，請定期匯出）'
+        : '此瀏覽器不支援查詢') +
+      '<br>資料只存在這台裝置的這個瀏覽器；換裝置請用匯出／匯入。';
+  }
+
+  function exportBackup() {
+    var st = Store.state;
+    var data = {
+      format: 'vocabQuiz-backup',
+      version: 1,
+      quizId: QUIZ.id,
+      quizName: QUIZ.name,
+      exportedAt: new Date().toISOString(),
+      wrongBook: st.wrongBook,
+      sessions: st.sessions
+    };
+    var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    var url = URL.createObjectURL(blob);
+    var d = new Date();
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = '錯題備份_' + String(QUIZ.name).replace(/[\\/:*?"<>|]/g, '_') + '_' +
+      d.getFullYear() + pad2(d.getMonth() + 1) + pad2(d.getDate()) + '.json';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
+
+    st.lastExport = data.exportedAt;
+    Store.save();
+    renderBackup();
+    renderBanners();
+  }
+
+  function mergeBackup(data, withSessions) {
+    var book = Store.state.wrongBook;
+    var added = 0, merged = 0, sessionsAdded = 0;
+
+    Object.keys(data.wrongBook).forEach(function (rawKey) {
+      var inc = data.wrongBook[rawKey];
+      if (!inc || !inc.word || !inc.meaning) return;
+      var key = norm(inc.word);
+      var cur = book[key];
+      if (!cur) {
+        book[key] = {
+          word: inc.word, meaning: inc.meaning, explanation: inc.explanation || '', sheet: inc.sheet || '',
+          wrongCount: inc.wrongCount || 1, streak: Math.min(inc.streak || 0, STREAK_TO_REMOVE - 1),
+          lastSelected: inc.lastSelected || '', firstWrongAt: inc.firstWrongAt || inc.lastWrongAt || '',
+          lastWrongAt: inc.lastWrongAt || ''
+        };
+        added++;
+        return;
+      }
+      var newer = String(inc.lastWrongAt || '') > String(cur.lastWrongAt || '') ? inc : cur;
+      var firsts = [cur.firstWrongAt, inc.firstWrongAt].filter(Boolean).sort();
+      book[key] = {
+        word: newer.word, meaning: newer.meaning, explanation: newer.explanation || '', sheet: newer.sheet || '',
+        wrongCount: Math.max(cur.wrongCount || 1, inc.wrongCount || 1),
+        streak: Math.min(cur.streak || 0, inc.streak || 0),
+        lastSelected: newer.lastSelected || '',
+        firstWrongAt: firsts[0] || newer.lastWrongAt || '',
+        lastWrongAt: newer.lastWrongAt || ''
+      };
+      merged++;
+    });
+
+    if (withSessions && Array.isArray(data.sessions)) {
+      var ids = {};
+      Store.state.sessions.forEach(function (s) { ids[s.id] = true; });
+      data.sessions.forEach(function (s) {
+        if (s && s.id && s.at && !ids[s.id] && Array.isArray(s.wrongs)) {
+          Store.state.sessions.push(s);
+          ids[s.id] = true;
+          sessionsAdded++;
+        }
+      });
+      sortAndTrimSessions();
+    }
+    return { added: added, merged: merged, sessionsAdded: sessionsAdded };
+  }
+
+  function importBackup() {
+    var f = $('importFile').files[0];
+    if (!f) { alert('請先選擇備份檔。'); return; }
+    var withSessions = $('importSessions').checked;
+    var reader = new FileReader();
+    reader.onload = function () {
+      var data;
+      try { data = JSON.parse(reader.result); }
+      catch (e) { alert('檔案格式錯誤，無法讀取。'); return; }
+      if (!data || data.format !== 'vocabQuiz-backup' || !data.wrongBook || typeof data.wrongBook !== 'object') {
+        alert('這不是錯題備份檔。');
+        return;
+      }
+      if (data.quizId !== QUIZ.id &&
+          !confirm('這個備份來自另一份題庫「' + (data.quizName || '未知') + '」，和目前的題庫「' + QUIZ.name + '」不同。\n仍要合併匯入嗎？')) {
+        return;
+      }
+      var r = mergeBackup(data, withSessions);
+      Store.save();
+      $('importFile').value = '';
+      alert('匯入完成：\n錯題本新增 ' + r.added + ' 筆、合併 ' + r.merged + ' 筆' +
+        (withSessions ? '\n測驗紀錄新增 ' + r.sessionsAdded + ' 筆' : ''));
+      renderBackup();
+      refreshSheetSelect();
+      renderBanners();
+    };
+    reader.onerror = function () { alert('讀取檔案失敗。'); };
+    reader.readAsText(f);
+  }
+
+  // ===================== 事件綁定 =====================
+  function bindEvents() {
+    Array.prototype.forEach.call(document.querySelectorAll('[data-font]'), function (b) {
+      b.addEventListener('click', function () { adjustFont(parseInt(b.getAttribute('data-font'), 10)); });
+    });
+
+    $('sheetSelect').addEventListener('change', onPoolChange);
+    $('timeSelect').addEventListener('change', function () {
+      Store.state.prefs.timeMin = $('timeSelect').value;
+      Store.save();
+    });
+    $('startBtn').addEventListener('click', startFromSetup);
+    $('manageBtn').addEventListener('click', function () { openManage(); });
+
+    $('nextBtn').addEventListener('click', nextQuestion);
+    $('quitBtn').addEventListener('click', function () {
+      if (confirm('確定要提前交卷嗎？未作答的題目不會記入錯題本。')) endQuiz('quit');
+    });
+
+    $('retestLastBtn').addEventListener('click', function () {
+      if (S.lastSession && S.lastSession.wrongs.length) retestWrongs(S.lastSession.wrongs, S.lastSession.label + '（重測）');
+    });
+    $('backHomeBtn').addEventListener('click', function () { renderBanners(); showScreen('setup'); });
+    $('resultManageBtn').addEventListener('click', function () { openManage(); });
+
+    Array.prototype.forEach.call(document.querySelectorAll('.tab'), function (b) {
+      b.addEventListener('click', function () { switchTab(b.getAttribute('data-tab')); });
+    });
+    $('manageBackBtn').addEventListener('click', function () { refreshSheetSelect(); renderBanners(); showScreen('setup'); });
+
+    // 錯題本
+    $('bookFilter').addEventListener('change', renderBook);
+    $('bookSort').addEventListener('change', renderBook);
+    $('bookSelectAll').addEventListener('change', function () {
+      var on = $('bookSelectAll').checked;
+      Array.prototype.forEach.call(document.querySelectorAll('.bookChk'), function (c) { c.checked = on; });
+    });
+    $('bookList').addEventListener('click', function (e) {
+      var btn = e.target.closest('[data-del]');
+      if (!btn) return;
+      var key = btn.getAttribute('data-del');
+      var it = Store.state.wrongBook[key];
+      if (it && confirm('確定刪除「' + it.word + '」這筆錯題？')) {
+        WrongBook.remove([key]);
+        afterBookChange();
+      }
+    });
+    $('bookDeleteSelected').addEventListener('click', function () {
+      var keys = checkedBookKeys();
+      if (!keys.length) { alert('請先勾選要刪除的錯題。'); return; }
+      if (confirm('確定刪除勾選的 ' + keys.length + ' 筆錯題？')) {
+        WrongBook.remove(keys);
+        afterBookChange();
+      }
+    });
+    $('bookClear').addEventListener('click', function () {
+      var f = $('bookFilter').value;
+      var keys = shownBook.map(function (it) { return it.key; });
+      if (!keys.length) return;
+      var msg = f ? '確定清空「' + f + '」的 ' + keys.length + ' 筆錯題？' : '確定清空全部 ' + keys.length + ' 筆錯題？此動作無法復原。';
+      if (confirm(msg)) {
+        WrongBook.remove(keys);
+        afterBookChange();
+      }
+    });
+    $('bookQuiz').addEventListener('click', function () {
+      var keys = checkedBookKeys();
+      var items = keys.length
+        ? shownBook.filter(function (it) { return keys.indexOf(it.key) >= 0; })
+        : shownBook;
+      if (!items.length) return;
+      var f = $('bookFilter').value;
+      startQuiz(shuffle(items.map(itemToQuestion)), '錯題本' + (f ? '－' + f : ''),
+        (keys.length ? '勾選 ' : '') + items.length + ' 題');
+    });
+
+    // 測驗紀錄
+    $('sessionSelect').addEventListener('change', renderSessionDetail);
+    $('sessionRetest').addEventListener('click', function () {
+      var s = Sessions.get($('sessionSelect').value);
+      if (s && s.wrongs.length) retestWrongs(s.wrongs, s.label + '（重測 ' + fmtDate(s.at) + '）');
+    });
+    $('sessionDelete').addEventListener('click', function () {
+      var s = Sessions.get($('sessionSelect').value);
+      if (s && confirm('確定刪除「' + fmtDate(s.at) + '｜' + s.label + '」這筆紀錄？\n（不影響錯題本）')) {
+        Sessions.remove(s.id);
+        renderSessions();
+      }
+    });
+    $('sessionClear').addEventListener('click', function () {
+      if (confirm('確定清空全部 ' + Sessions.all().length + ' 筆測驗紀錄？\n（不影響錯題本）此動作無法復原。')) {
+        Sessions.clear();
+        renderSessions();
+      }
+    });
+
+    // 備份
+    $('exportBtn').addEventListener('click', exportBackup);
+    $('importBtn').addEventListener('click', importBackup);
+
+    // 鍵盤操作（只在測驗畫面）
+    document.addEventListener('keydown', function (e) {
+      if ($('screen-quiz').classList.contains('hidden')) return;
+      if (/^[1-4]$/.test(e.key)) {
+        e.preventDefault();
+        answer(parseInt(e.key, 10) - 1);
+      } else if (e.key === 'Enter') {
+        e.preventDefault();   // 避免焦點在按鈕上時重複觸發
+        nextQuestion();
+      }
+    });
+
+    // 同時開了兩個分頁時，同步另一個分頁寫入的資料
+    window.addEventListener('storage', function (e) {
+      if (e.key !== STORE_KEY) return;
+      Store.load();
+      if (!$('screen-setup').classList.contains('hidden')) { refreshSheetSelect(); renderBanners(); }
+    });
+  }
+
+  // ===================== 初始化 =====================
+  function init() {
+    Store.load();
+    document.title = QUIZ.title;
+    $('titleText').textContent = QUIZ.title;
+
+    fontSize = parseInt(Store.state.prefs.fontSize, 10) || 18;
+    applyFont();
+    if (Store.state.prefs.timeMin && $('timeSelect').querySelector('option[value="' + Store.state.prefs.timeMin + '"]')) {
+      $('timeSelect').value = Store.state.prefs.timeMin;
+    }
+
+    bindEvents();
+    refreshSheetSelect();
+    renderBanners();
+    requestPersist();
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,1192 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Proverbstest</title>
+<style>
+* { box-sizing: border-box; }
+body {
+  font-family: 'Noto Sans TC', 'Microsoft JhengHei', Arial, sans-serif;
+  margin: 10px;
+  background-color: #f0f0f0;
+  color: #2c3e50;
+  font-weight: bold;
+  font-size: 18px;
+}
+.hidden { display: none !important; }
+#app {
+  max-width: 800px;
+  margin: 0 auto;
+  background-color: #fff;
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+h1 { text-align: center; font-size: 1.35em; margin: 10px 0 15px; }
+h2 { text-align: center; font-size: 1.15em; margin: 12px 0; }
+h3 { font-size: 1.05em; margin: 14px 0 8px; }
+button {
+  font: inherit;
+  font-size: 0.85em;
+  padding: 8px 14px;
+  background-color: #3498db;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin: 3px;
+}
+button:hover:not(:disabled) { background-color: #2980b9; }
+button:disabled { background-color: #bdbdbd !important; cursor: not-allowed; }
+button.secondary { background-color: #7f8c8d; }
+button.secondary:hover:not(:disabled) { background-color: #6c7a7b; }
+button.danger { background-color: #e74c3c; }
+button.danger:hover:not(:disabled) { background-color: #c0392b; }
+button.success { background-color: #2ecc71; }
+button.success:hover:not(:disabled) { background-color: #27ae60; }
+select, input[type=number] {
+  font: inherit;
+  font-size: 0.85em;
+  padding: 7px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  margin: 3px;
+  max-width: 100%;
+}
+input[type=number] { width: 7em; }
+input[type=checkbox] { width: 1.1em; height: 1.1em; vertical-align: middle; }
+.control-panel {
+  margin-bottom: 12px;
+  padding: 12px 15px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+}
+.control-panel > label:first-child { display: inline-block; min-width: 5em; }
+.hint { font-size: 0.75em; color: #7f8c8d; font-weight: normal; margin-top: 6px; }
+.banner { padding: 10px 14px; border-radius: 8px; margin-bottom: 12px; font-size: 0.85em; }
+.banner.warn { background: #fff3cd; color: #8a6d3b; }
+.banner.error { background: #ffebee; color: #c62828; }
+.banner button { font-size: 0.9em; padding: 4px 10px; }
+.actions { text-align: center; margin: 12px 0; }
+.big-btn {
+  display: block;
+  width: 80%;
+  max-width: 300px;
+  margin: 12px auto;
+  padding: 12px;
+  font-size: 1em;
+}
+
+/* ---------- 測驗畫面 ---------- */
+.status-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  background-color: #f0f7ff;
+  padding: 8px 10px;
+  margin-bottom: 12px;
+  border-radius: 8px;
+  font-size: 0.85em;
+}
+.status-item { padding: 4px 8px; border-radius: 4px; white-space: nowrap; }
+.sheet-name { color: #1565c0; background-color: #e3f2fd; }
+.timer { color: #e53935; background-color: #ffebee; }
+.progress { color: #2e7d32; background-color: #e8f5e9; }
+.status-tools { margin-left: auto; display: flex; gap: 2px; }
+.status-tools button { padding: 4px 10px; margin: 0; font-size: 0.9em; }
+#questionText {
+  font-size: 1.2em;
+  margin: 12px 0;
+  padding: 12px;
+  text-align: center;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+}
+.q-label { color: #0066cc; }
+.option {
+  display: block;
+  width: 80%;
+  max-width: 500px;
+  margin: 10px auto;
+  padding: 10px;
+  font-size: 1.1em;
+  text-align: center;
+  transition: transform 0.15s ease;
+}
+.option:hover:not(:disabled) { transform: translateY(-1px); }
+.option .key { opacity: 0.7; font-size: 0.75em; margin-right: 8px; }
+.option.is-correct { background-color: #2ecc71 !important; }
+.option.is-wrong { background-color: #e74c3c !important; }
+.feedback-box { margin: 10px 0; padding: 12px; border-radius: 8px; text-align: center; }
+.feedback-box.correct { background-color: #fff; color: green; border: 2px solid #c8e6c9; }
+.feedback-box.incorrect { background-color: #ffdc35; color: red; }
+.wb-note { margin-top: 6px; font-size: 0.85em; color: #6a1b9a; }
+
+/* ---------- 結果與回顧 ---------- */
+.summary p { margin: 6px 0; }
+.review-item { padding: 12px 15px; margin: 10px 0; border-radius: 8px; text-align: left; }
+.review-item:nth-child(odd) { background-color: #fff3e0; }
+.review-item:nth-child(even) { background-color: #e3f2fd; }
+.review-item p { margin: 4px 0; }
+.review-question { color: #1a237e; }
+.review-wrong { color: #d32f2f; }
+.review-correct { color: #2e7d32; }
+.review-explanation { color: #1a237e; font-weight: normal; }
+.empty { text-align: center; color: #95a5a6; padding: 20px; font-weight: normal; }
+
+/* ---------- 錯題管理 ---------- */
+.tabs { display: flex; gap: 4px; border-bottom: 2px solid #3498db; margin-bottom: 12px; }
+.tab { background-color: #ecf0f1; color: #2c3e50; border-radius: 6px 6px 0 0; margin: 0; }
+.tab:hover:not(:disabled) { background-color: #d6dbdf; }
+.tab.active, .tab.active:hover:not(:disabled) { background-color: #3498db; color: #fff; }
+.toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 8px; font-size: 0.9em; }
+.wb-list { list-style: none; padding: 0; margin: 0; }
+.wb-row { display: flex; gap: 10px; align-items: flex-start; padding: 10px; border-bottom: 1px solid #eee; }
+.wb-row:nth-child(odd) { background: #fafafa; }
+.wb-row input[type=checkbox] { margin-top: 5px; flex-shrink: 0; }
+.wb-main { flex: 1; min-width: 0; }
+.wb-word { font-size: 1.05em; color: #1a237e; }
+.wb-meaning { font-weight: normal; margin-top: 2px; }
+.wb-meta { font-size: 0.75em; color: #7f8c8d; font-weight: normal; margin-top: 3px; }
+.wb-row > button { padding: 4px 10px; font-size: 0.75em; flex-shrink: 0; }
+.badge { display: inline-block; padding: 1px 7px; border-radius: 10px; background: #ffebee; color: #c62828; font-size: 0.7em; margin-left: 4px; vertical-align: middle; }
+.badge.streak { background: #e8f5e9; color: #2e7d32; }
+#sessionSelect { flex: 1; min-width: 0; }
+.info-lines { font-size: 0.8em; font-weight: normal; line-height: 1.7; word-break: break-all; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ========== 設定頁 ========== -->
+  <section id="screen-setup">
+    <h1 id="titleText"></h1>
+    <div id="setupBanners"></div>
+    <div class="control-panel">
+      <label for="sheetSelect">測驗範圍：</label>
+      <select id="sheetSelect"></select>
+      <div class="hint" id="poolHint"></div>
+    </div>
+    <div class="control-panel">
+      <label for="startRow">起始題號：</label>
+      <input type="number" id="startRow" min="1">
+      <label for="endRow">結束題號：</label>
+      <input type="number" id="endRow" min="1">
+    </div>
+    <div class="control-panel">
+      <label for="randomCount">隨機題數：</label>
+      <input type="number" id="randomCount" min="1" placeholder="留空＝全部">
+      <div class="hint">留空＝依範圍全部出題（順序隨機）</div>
+    </div>
+    <div class="control-panel">
+      <label for="timeSelect">測驗時間：</label>
+      <select id="timeSelect">
+        <option value="5">5 分鐘</option>
+        <option value="10">10 分鐘</option>
+      </select>
+    </div>
+    <div class="control-panel">
+      <label>字體大小：</label>
+      <button type="button" data-font="-2">A-</button>
+      <button type="button" data-font="2">A+</button>
+    </div>
+    <button type="button" class="big-btn success" id="startBtn">開始測驗</button>
+    <button type="button" class="big-btn secondary" id="manageBtn">錯題管理</button>
+  </section>
+
+  <!-- ========== 測驗頁 ========== -->
+  <section id="screen-quiz" class="hidden">
+    <div class="status-bar">
+      <span class="status-item sheet-name" id="sheetTitle"></span>
+      <span class="status-item timer" id="timer"></span>
+      <span class="status-item progress" id="progress"></span>
+      <span class="status-tools">
+        <button type="button" data-font="-2">A-</button>
+        <button type="button" data-font="2">A+</button>
+        <button type="button" class="danger" id="quitBtn">交卷</button>
+      </span>
+    </div>
+    <div id="questionText"></div>
+    <div id="options"></div>
+    <div id="feedback"></div>
+    <button type="button" id="nextBtn" class="big-btn success" disabled>下一題</button>
+    <div class="hint" style="text-align:center">鍵盤：1–4 選答，Enter 下一題</div>
+  </section>
+
+  <!-- ========== 結果頁 ========== -->
+  <section id="screen-result" class="hidden">
+    <div id="resultBody"></div>
+    <div class="actions">
+      <button type="button" class="success" id="retestLastBtn">重測本次錯題</button>
+      <button type="button" id="backHomeBtn">回到首頁</button>
+      <button type="button" class="secondary" id="resultManageBtn">錯題管理</button>
+    </div>
+    <div id="resultReview"></div>
+  </section>
+
+  <!-- ========== 錯題管理頁 ========== -->
+  <section id="screen-manage" class="hidden">
+    <h2>錯題管理</h2>
+    <div class="tabs">
+      <button type="button" class="tab active" data-tab="book">錯題本</button>
+      <button type="button" class="tab" data-tab="sessions">測驗紀錄</button>
+      <button type="button" class="tab" data-tab="backup">備份</button>
+    </div>
+
+    <div id="tab-book">
+      <div class="toolbar">
+        <label>工作表：<select id="bookFilter"></select></label>
+        <label>排序：<select id="bookSort">
+          <option value="count">錯誤次數</option>
+          <option value="recent">最近答錯</option>
+          <option value="alpha">單字 A–Z</option>
+        </select></label>
+      </div>
+      <div class="toolbar">
+        <label><input type="checkbox" id="bookSelectAll"> 全選</label>
+        <button type="button" class="success" id="bookQuiz">測驗這些錯題</button>
+        <button type="button" class="danger" id="bookDeleteSelected">刪除勾選</button>
+        <button type="button" class="danger" id="bookClear">清空全部錯題</button>
+      </div>
+      <div class="hint" id="bookCount"></div>
+      <ul class="wb-list" id="bookList"></ul>
+    </div>
+
+    <div id="tab-sessions" class="hidden">
+      <div class="toolbar"><select id="sessionSelect"></select></div>
+      <div class="actions">
+        <button type="button" class="success" id="sessionRetest">重測此次錯題</button>
+        <button type="button" class="danger" id="sessionDelete">刪除此筆紀錄</button>
+        <button type="button" class="danger" id="sessionClear">清空全部紀錄</button>
+      </div>
+      <div id="sessionDetail"></div>
+    </div>
+
+    <div id="tab-backup" class="hidden">
+      <div class="control-panel">
+        <h3>匯出</h3>
+        <div class="info-lines" id="exportInfo"></div>
+        <button type="button" class="success" id="exportBtn">匯出備份檔（JSON）</button>
+      </div>
+      <div class="control-panel">
+        <h3>匯入</h3>
+        <input type="file" id="importFile" accept=".json,application/json">
+        <div style="margin:8px 0"><label><input type="checkbox" id="importSessions" checked> 一併匯入測驗紀錄</label></div>
+        <button type="button" id="importBtn">匯入並合併</button>
+        <div class="hint">匯入會和目前資料合併，不會覆蓋。同一個單字取較多的錯誤次數、較少的連續答對次數。</div>
+      </div>
+      <div class="control-panel">
+        <h3>儲存狀態</h3>
+        <div class="info-lines" id="storageInfo"></div>
+      </div>
+    </div>
+
+    <div class="actions"><button type="button" id="manageBackBtn">回到首頁</button></div>
+  </section>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  var QUIZ = {"id":"1y_BL3vlr8ttuJTTwOg3P8w-sG0E3Ih2G99u8zEqJqzs","name":"flashcard for idiom(ON) ","title":"成語俗諺測驗","generatedAt":"2026-10-07T08:32:08.605Z","sheetOrder":["A","B","C","D、E","F","G","H、I","J、K、L","M、N、O","P、Q、R","S","T","U-Z","a~z"],"sheets":{"A":[["A bad apple","“害群之馬” 或 “一個有害的個體”。",""],["A baker’s dozen","“十三個”。這個短語用來表示數量時，比通常的一打（十二個）多一個。",""],["A ballpark figure","“大致的數字” 或 “粗略的估算”。",""],["A bird in the hand is worth two in the bush","“手中之鳥勝過林中二鳥” 或 “穩妥之物勝過可能更多但不確定的事物”。",""],["A bit/A little bit","“一點點” 或 “稍微”。",""],["A blessing in disguise","“塞翁失馬，焉知非福” 或 “因禍得福”。",""],["A bone to pick","“有抱怨” 或 “有爭執”。",""],["A breath of fresh air","“一縷新鮮空氣” 或 “耳目一新”。",""],["A bunch of","“一堆” 或 “許多”。",""],["A chip on your shoulder","“心懷怨恨” 或 “積怨”。",""],["A day late and a dollar short","“為時已晚” 或 “錯失良機”。",""],["A dime a dozen","“非常普通” 或 “隨處可見”。這表示某事物極為常見，並沒有特別的價值。",""],["A doozy","“非同尋常的事物” 或 “極具挑戰的事情”。",""],["A doubting Thomas","“多疑的托馬斯” 或 “懷疑一切的人”。",""],["A far cry from (something)","“與（某事物）大不相同” 或 “遠遠不同”。",""],["A fifth wheel","“多餘的人” 或 “不必要的存在”。",""],["A flash in the pan","“曇花一現”，形容某事物或人曾經一度輝煌或成功，然而很快就消失了，並沒有持久的影響力。",""],["A fool and his money are easily parted","“傻瓜和他的錢財很容易分離” 或 “愚人財難留”。",""],["A for effort","“努力加分” 或 “表揚你努力的精神”。",""],["A fork in the road","“人生的十字路口” 或 “關鍵抉擇的時刻”。",""],["A good Samaritan","“樂善好施者” 或 “好撒瑪利亞人”。",""],["A hang-up","“心結” 或 “心理障礙”。",""],["A hard nut to crack","“難題” 或 “棘手的事情”。",""],["A hot potato","“燙手山芋”。",""],["A kickback","“回扣” 或 “非法佣金”。",""],["A little bird told me","“有小道訊息告訴我” 或 “我聽說”。",""],["A little learning is a dangerous thing","“一知半解是危險的。”",""],["A memory like a sieve","“像篩子一樣的記憶” 或 “記性差”。",""],["A penny for your thoughts","“透露一下你的想法” 或 “說說你在想什麼”。",""],["A penny saved is a penny earned","“省一分是一分” 或 “節約即賺錢”。",""],["A perfect storm","“完美風暴” 或 “多事之秋”。",""],["A picture is worth a thousand words","“一圖勝千言” 或 “圖勝於言”。",""],["A piece of cake","“小菜一碟” 或 “非常容易的事情”。",""],["A ray of sunshine","“一縷陽光” 或 “帶來希望的人或事物”。",""],["A rip-off","“敲竹槓” 或 “宰人”。",""],["A screw loose","“有顆螺絲鬆了” 或 “精神有些失常”。",""],["A screwup","“搞砸了” 或 “失誤”。",""],["A sledgehammer to crack a nut","“小題大做” 或 “大材小用”。",""],["A smart cookie","“聰明的人” 或 “機靈的人”。",""],["A snowball effect","“滾雪球效應”。",""],["A snowball’s chance in hell","“毫無機會” 或 “機會微乎其微”。",""],["A stitch in time saves nine","“小洞不補，大洞吃苦” 或 “及時縫一針，省下九針”。",""],["A stone’s throw","“一箭之遙” 或 “非常近的距離”。",""],["A storm in a teacup","“小題大做” 或 “誇張的小事”。",""],["A storm is brewing","“風暴正在醞釀” 或 “即將爆發的危機”。",""],["A surefire way","“萬無一失/必定成功的方法”。",""],["A sweet tooth","“愛吃甜食” 或 “有甜食癖好”。",""],["A toss-up","“一場難分勝負的比賽” 或 “難以預測的局面”。",""],["Absentminded","“心不在焉” 或 “健忘的”。",""],["Ace in the hole","“隱藏的王牌” 或 “秘密武器”。",""],["Ace up the sleeve","“隱藏的王牌” 或 “秘密武器”。",""],["Achilles’ heel","“致命弱點” 或 “薄弱環節”。",""],["Acid test","“嚴格考驗” 或 “最終檢驗”。",""],["Across the board","全面的；普遍的；在所有方面。",""],["Actions Speak Louder Than Words","“行動勝於言辭”。",""],["Add fuel to the fire","“火上澆油” 或 “進一步激化矛盾”。",""],["Add insult to injury","“雪上加霜” 或 “傷口上撒鹽”。",""],["Against the clock","“與時間賽跑” 或 “爭分奪秒”。",""],["Ahead of schedule","“提前” 或 “超前”。",""],["All bark and no bite","“雷聲大，雨點小” 或 “虛張聲勢”。",""],["All bets are off","“所有的打賭都作廢了” 或 “情況不確定了，一切都難以預料”。",""],["All Greek to me","“我完全不懂” 或 “像天書一樣難懂”。",""]],"B":[["Baby boomer","“嬰兒潮一代” 或 “嬰兒潮時期出生的人”。",""],["Back to basics","“返璞歸真” 或 “迴歸基礎”。",""],["Back to square one","“回到起點” 或 “重新開始”。",""],["Back to the drawing board","“回到起點” 或 “重新開始”。",""],["Backhanded compliment","“挖苦” 或 “雙刃劍的恭維”。",""],["Backseat driver","“後座司機” 用來形容那些坐在汽車後座，卻喜歡指揮或者評論司機駕駛的人。此短語通常帶有貶義，表示這些人愛多嘴干預別人的事情。",""],["Bad blood","“仇恨” 或 “嫌隙”。",""],["Bad hair day","“倒霉的一天” 或 “諸事不順的一天”。",""],["Band-Aid on a bullet wound","“治標不治本” 或 “微小的解決方案來掩蓋重大問題”。",""],["Barking up the wrong tree","“找錯目標” 或 “搞錯物件”。",""],["Batting a thousand","“百分百成功” 或 “表現非常出色”。",""],["Be my guest","“請便” 或 “隨意”。",""],["Bear in mind/keep in mind","“記住” 或 “銘記於心”。",""],["Beat a hasty retreat","“匆忙撤退” 或 “倉惶離開”。",""],["Beat around the bush","“拐彎抹角” 或 “不直接了當”。",""],["Beat someone to the draw","“搶在別人前面” 或 “搶先一步”。",""],["Beat someone to the punch","“搶先一步” 或 “先發制人”。",""],["Beat the bushes","“到處搜尋” 或 “努力尋找”。",""],["Beating a dead horse","“徒勞無功”，意為做無效、無意義的事情，白費力氣。",""],["Beating around the bush","“拐彎抹角” 或 “兜圈子”。",""],["Bed head","“床頭髮” 或 “睡亂的頭髮”。",""],["Bed of roses","“輕鬆舒適的境地” 或 “安逸的生活”。",""],["Before you know it","“眨眼之間” 或 “轉瞬之間”。",""],["Behind someone’s back","“揹著某人” 或 “在某人背後做某事”。",""],["Behind the eight ball","“處於困境” 或 “處於不利地位”。",""],["Belt and suspenders","“多重保險” 或 “雙重保障”。",""],["Bend over backward","“竭盡全力” 或 “不遺餘力地幫助某人”。",""],["Bent out of shape","“生氣” 或 “不高興”。",""],["Beside oneself","“極度激動” 或 “失去自制”。",""],["Beside the point","“離題” 或 “不相關”。",""],["Bestie","“死黨” 或 “閨蜜”。",""],["Bet the ranch","“孤注一擲” 或 “押上全部身家”。",""],["Better late than never","“遲做總比不做好” 或 “亡羊補牢，猶未晚也”。",""],["Between a rock and a hard place","“進退兩難” 或 “左右為難”。",""],["Between the devil and the deep blue sea","“進退兩難” 或 “兩難之間”。",""],["Beyond the pale","“超出了常規” 或 “行為不可接受”。",""],["Big cheese","“大人物” 或 “重要人物”。",""],["Big fish in a small pond","“小池塘裡的大魚” 或 “小圈子裡的重要人物”。",""],["Big shot","“大人物” 或 “要人”。",""],["Big wheel","“大人物” 或 “有權勢的人”。",""],["Bigger bang for your buck","“價效比更高” 或 “更划算”。",""],["Bigwig","“大人物” 或 “重要人物”。",""],["Bird’s-eye view","“鳥瞰圖” 或 “總體檢視”。",""],["Birds of a feather flock together","“物以類聚，人以群分”。",""],["Bite off more than you can chew","“貪多嚼不爛” 或 “能力不及慾望”。",""],["Bite the bullet","“咬緊牙關” 或 “硬著頭皮”。",""],["Bite the dust","“咬塵” 或 “倒地” 或 “陣亡”。",""],["Bite your tongue","“咬住你的舌頭” 或 “忍住不說”。",""],["Black and blue","“青一塊紫一塊” 或 “遍體鱗傷”。",""],["Black market","“黑市” 或 “非法市場”。",""],["Black sheep","“害群之馬” 或 “另類”。",""],["Black tie event","“黑領結活動” 或 “正式晚宴”，指的是要求著正式禮服參加的晚會或宴會。",""],["Black-and-white","“非黑即白” 或 “非此即彼”。",""],["Blackball someone","“投票反對某人加入” 或 “排斥某人”。",""],["Blast from the past","“過去的重現” 或 “往事重現”。",""],["Blaze a trail","“開闢道路” 或 “創新、做先鋒”。",""],["Blew me away","“讓我驚呆了” 或 “讓我大吃一驚”。",""],["Blonde bombshell","“金髮性感美女” 或 “引人注目的金髮美人”。",""],["Blow a fuse","“暴怒” 或 “大發脾氣”。",""],["Blow off steam","“發洩情緒” 或 “釋放壓力”。",""],["Blow one’s top","“勃然大怒” 或 “暴跳如雷”。",""],["Blowing smoke","“吹牛” 或 “虛張聲勢”。",""],["Blue blood","“高貴的血統” 或 “貴族血統”。",""],["Blue law","“藍法” 或 “週日法律”。",""],["Boiling point","“沸點” 或 “憤怒的爆發點”。",""],["Bolt from the blue","“突如其來的事” 或 “晴天霹靂”。",""],["Bone of contention","“爭端的根源” 或 “爭議的焦點”。",""],["Bookworm","“書蟲” 或 “書呆子”。",""],["Born with a silver spoon in one’s mouth","“含著銀匙出生” 或 “出生在富貴家庭”。",""],["Bottom of the barrel","“最差勁的” 或 “最後選擇”。",""],["Boxed in","“受限” 或 “被困住”。",""],["Brainstorm","“頭腦風暴” 或 “集思廣益”。",""],["Bread and butter","依靠維生的主要收入來源 或 基本生計的工作。",""],["Break a leg","“祝好運” 或 “加油”。",""],["Break even","“收支平衡” 或 “不虧不賺”。",""],["Break someone’s heart","“傷某人的心” 或 “使某人心碎”。",""],["Break the bank","“傾家蕩產” 或 “花光所有錢”。",""],["Break the ice","“打破僵局” 或 “活躍氣氛”。",""],["Break the news","透露訊息、通報訊息（通常指壞訊息）。",""],["Breeze through","“輕鬆完成” 或 “輕而易舉地做某事”。",""],["Bright and early","“一大早” 或 “非常早”。",""],["Bring down the house","“使全場轟動、博得滿堂彩”。",""],["Bring home the bacon","“養家餬口” 或 “成功賺錢”。",""],["Bring my A game","“拿出我的最佳狀態” 或 “全力以赴”。",""],["Brought up","“被養育” 或 “被提起”。",""],["Brownie points","“討好分” 或 “額外的表揚”。",""],["Bull in a china shop","“如牛闖進了瓷器店”，指的是某人在敏感環境中的魯莽行為，常形容某人在處理精細或敏感的任務時缺乏技巧和優雅。",""],["Burgers and dogs","“漢堡和熱狗” 或 “常見的燒烤食物”。",""],["Burn bridges","這個短語的起源可以追溯到古代軍事行動中的一個策略。當軍隊需要堅定地向前推進時，他們會燒掉身後的橋樑以防止撤退，從而逼迫士兵們只能前進。這種做法能夠極大地增強軍隊的決心和鬥志。在現代語境下，“burn bridges” 通常用來描述人際關係或職業生涯中的某種決定性行為，使得自己失去了返回或恢復關係的機會。",""],["Burn the candle at both ends","“透支自己” 或 “兩頭燒蠟燭”。",""],["Burn the midnight oil","“熬夜” 或 “開夜工”。",""],["Burned out","“累壞了” 或 “精疲力竭”。",""],["Bury the hatchet","“化干戈為玉帛” 或 “和解”。",""],["Bury your head in the sand","“鴕鳥心態” 或 “逃避現實”。指的是人故意忽視或逃避顯而易見的問題或危機，假裝它們不存在，來避免面對或解決這些棘手的事。",""],["Busy bee","“忙碌的人” 或 “工作勤奮的人”。",""],["Butter someone up","“拍馬屁” 或 “奉承”。",""],["Button one’s lip","“閉嘴” 或 “保持沉默”。",""],["Buy a lemon","“買到次品” 或 “買到有缺陷的商品”。",""],["Buy something for a song","“賤價買到” 或 “非常便宜地買到某物”。",""],["By hook or by crook","“不擇手段” 或 “千方百計”。",""],["By the book","“按照規定” 或 “嚴格遵守規則”。",""],["By the skin of my teeth","“勉強” 或 “險些” 。",""],["By word of mouth","“口口相傳” 或 “以口頭傳達的方式”。",""]],"C":[["Call a spade a spade","“實話實說” 或 “直言不諱”。",""],["Call it a day","“收工” 或 “結束一天的工作”。",""],["Call the shots","“掌控局面” 或 “發號施令”。",""],["Call their bluff","“揭穿某人的虛張聲勢” 或 “攤牌”。",""],["Calm before the storm","“暴風雨前的寧靜”。",""],["Calm someone down","“使某人平靜下來” 或 “安撫某人”。",""],["Can’t hold a candle to something or someone","“不能與…相比” 或 “遠不及…”。",""],["Can’t judge a book by its cover","“不能以貌取人” 或 “不要以表面來判斷事物”。",""],["Can’t keep up","“趕不上” 或 “跟不上”。",""],["Can’t put a face to the name","“記不起名字和人對不上號” 或 “不能將名字和臉對上”。",""],["Can’t see the forest for the trees","“只見樹木，不見森林”，意為只看到細節而忽略了整體。",""],["Card sharp or card shark","“老千” 或 “賭術高手”。",""],["Carry the ball","“承擔責任” 或 “扛起重擔”。",""],["Cast pearls before swine","“對牛彈琴” 或 “餵豬珍珠”。",""],["Cast-iron stomach","“鐵胃” 或 “不易生病的胃”。",""],["Castle in the sky","“空中樓閣” 或 “不切實際的幻想”。",""],["Cat got your tongue?","“貓把你的舌頭叼走了嗎？” 或 “怎麼不說話了？”",""],["Cat nap","“小睡” 或 “打盹”。",""],["Catch some rays","“曬太陽”。",""],["Catch some Zs","“睡個覺” 或 “打個盹”。",""],["Catch someone’s eye","“引起某人的注意” 或 “吸引某人的目光”。",""],["Catch the bus","“趕上公交車” 或者 “追趕公交車”。",""],["Catch-22","“進退兩難” 或 “左右為難的局面”。",""],["Catching up/playing catch-up","“趕上” 或 “追趕”。",""],["Caught red-handed","“當場抓住” 或 “現行抓獲”。",""],["Caught someone red-handed","“當場抓獲” 或 “人贓並獲”。",""],["Caught with your hand in the cookie jar","“被抓現行” 或 “當場抓住”。",""],["Change horses in midstream","“在半路換馬” 或 “在進行過程中改變計劃或策略”。",""],["Change of heart","“改變態度” 或 “改變想法”。",""],["Charley horse","“抽筋” 或 “肌肉痙攣”。",""],["Charmed life","“幸運的生活” 或 “受眷顧的生活”。",""],["Chasing rainbows","“追逐彩虹”；比喻追求不現實的目標或幻想。",""],["Checkered past","“有汙點的過去” 或 “不光彩的歷史”。",""],["Cheer up","“振作起來” 或 “高興起來”。",""],["Chew someone out","“嚴厲訓斥某人” 或 “大罵某人”。",""],["Chew something over","“仔細考慮” 或 “深思熟慮”。意指對某個問題進行仔細、深思的考慮，通常在做出重大決定之前。",""],["Chewing the fat","“閒聊” 或 “聊天”。",""],["Chow down","“痛快大吃” 或 “狼吞虎嚥”。",""],["Chuffed to bits","“高興極了” 或 “非常滿足”。",""],["Clean slate","“重新開始” 或 “一筆勾銷”。",""],["Clean someone out","“清空某人的錢財” 或 “傾家蕩產”。",""],["Clear as mud","“模糊不清” 或 “難以理解”。",""],["Clear the air","“消除誤會” 或 “澄清事實”。",""],["Climb the walls","“抓狂” 或 “心煩意亂”，通常是因為無聊或焦慮。",""],["Close but no cigar","“差一點點，差一點兒獲得成功”。",""],["Close shave","“千鈞一髮” 或 “死裡逃生”。",""],["Closed-minded","“心胸狹隘” 或 “固執己見”。",""],["Clown around","“開玩笑” 或 “胡鬧”。",""],["Cock-and-bull story","“無稽之談” 或 “荒誕不經的故事”。",""],["Coin a new term","“創造一個新術語” 或 “發明一個新名詞”。",""],["Coin a phrase","“創造一個短語” 或 “造新詞”。",""],["Cold enough to freeze the ball off a brass monkey","“冷得猴子都要結冰了”，形容極其寒冷的天氣。",""],["Cold feet","“臨陣退縮” 或 “在最後一刻因為害怕或緊張而退縮”。",""],["Cold shoulder","“冷遇” 或 “冷淡對待”。",""],["Collecting dust","“積灰” 或 “被閒置”。",""],["Come a long way","“取得長足進步” 或 “大有長進”。",""],["Come alive","“活躍起來” 或 “變得生機勃勃”。",""],["Come clean","坦白或承認錯誤。",""],["Come down with a cold","“染上感冒” 或 “得了感冒”。",""],["Come hell or high water","“不管發生什麼事” 或 “無論如何”。",""],["Come in handy","“派上用場” 或 “有用”。",""],["Come out of your shell","“走出你的殼” 或 “開啟心扉”。",""],["Come out smelling like roses/a rose","“完美地脫身” 或 “完美無缺地擺脫困境”。",""],["Come rain or shine","“不論晴雨” 或 “無論如何都”。",""],["Comfort food","“安慰食品” 或 “慰藉食品”。",""],["Comparing apples to oranges","“將蘋果和橙子作比較” 或 “風馬牛不相及的比較”。",""],["Computer crashed","“電腦宕機” 或 “電腦崩潰”。",""],["Cook someone’s goose","“毀了某人的計劃” 或 “搞砸某人的事情”。",""],["Cook up","“虛構” 或 “捏造”。",""],["Cooked the books","“篡改賬目” 或 “做假賬”。",""],["Cool as a cucumber","“非常冷靜” 或 “泰然自若”。",""],["Cool your jets","“冷靜一下” 或 “放慢腳步”。",""],["Copycat","“抄襲者” 或 “模仿者”。",""],["Cost me a mint","“花了我一大筆錢” 或 “非常昂貴”。",""],["Costs an arm and a leg","“昂貴得離譜” 或 “花費巨大”。",""],["Couch potato","“電視迷” 或 “懶惰的人”。",""],["Couldn’t care less","“不在乎” 或 “毫不關心”。",""],["Country mile","“鄉村英里” 或 “很長的距離”。",""],["Cover a lot of ground","“涉及很多內容” 或 “覆蓋廣泛”。",""],["Crack a book","“翻開一本書” 或 “開始用功讀書”。",""],["Crack open a cold one","“開啟一瓶冰鎮的啤酒”。",""],["Crack someone up","“使某人大笑” 或 “逗樂某人”。",""],["Crank out a paper","“迅速完成論文” 或 “草草寫完一篇論文”。",""],["Cream of the crop","“精英” 或 “最好的部分”。",""],["Crickets","“寂靜無聲” 或 “無人回應”。",""],["Crocodile tears","“鱷魚的眼淚”，意思是假慈悲，偽裝的悲傷或假裝的同情。",""],["Cross that bridge when you come to it","“車到山前必有路” 或 “事到臨頭再說”。",""],["Cross your fingers","“交叉手指” 或 “祈求好運”。",""],["Crunch time","“緊要關頭” 或 “關鍵時刻”。",""],["Cup of Joe","“一杯咖啡”。",""],["Curiosity killed the cat","“好奇害死貓”。意思是過度的好奇可能會導致麻煩或危險。",""],["Curve ball","“曲線球” 或 “出其不意的情況”。",""],["Cut and dried","“固定的” 或 “已成定局的”。",""],["Cut someone off at the knees","“使某人失去能力” 或 “打擊某人信心”。",""],["Cut the mustard","“達到標準” 或 “符合要求”。",""],["Cut them some slack","“對他們寬容一些” 或 “放他們一馬”。",""],["Cut to the chase","“直奔主題” 或 “切入正題”。",""],["Cut to the quick","“傷害到痛處” 或 “深深地傷害”。",""],["Cute as a bug","“像蟲子一樣可愛” 或 “非常可愛”。",""],["Cutting corners","“走捷徑” 或 “偷工減料”。",""]],"D、E":[["Damn someone with faint praise","“用輕微的讚美來貶低某人” 或 “明褒實貶”。",""],["Dawned on me","“突然意識到” 或 “恍然大悟”。",""],["Dead from the neck up","“頭腦簡單” 或 “愚蠢”。",""],["Dead in the water","《中國成語使用頻率較少的表達》 “陷入困境” 或 “已經不再有任何進展可能”。該成語通常用來描述計劃、專案或人處於停滯狀態，無法繼續前進或改善。",""],["Dead quiet","“鴉雀無聲” 或 “非常安靜”。",""],["Dead ringer","“極為相似的人或物” 或 “替身”。",""],["Dead tired","“累得像死了一樣” 或 “筋疲力盡”。",""],["Dead to the world","“睡得很沉” 或 “完全不省人事”。",""],["Dead-end job","“沒有前途的工作” 或 “毫無發展前景的工作”。",""],["Deep down","“內心深處”，指的是某人真實的感受或想法，通常是在表面上無法察覺的情緒或態度。",""],["Diamond in the rough","“未經雕琢的鑽石” 或 “有待磨練的人或事物”。",""],["Different strokes for different folks","“各有所好” 或 “人各有志”。",""],["Dig in your heels","“頑固堅持” 或 “固執己見”。",""],["Dirt cheap","“便宜得像泥土一樣” 或 “非常便宜”。",""],["Dish the dirt","“揭別人的短” 或 “說別人的閒話”。",""],["Divide the spoils","“瓜分戰利品” 或 “分贓”。",""],["Do or die","“背水一戰” 或 “不成功便成仁”。",""],["Do someone a good turn","“幫某人一個忙” 或 “對某人行個方便”。",""],["Do something at the drop of a hat","“毫不猶豫；馬上行動；立刻做某事。”",""],["Do something by the seat of your pants","“憑直覺做事” 或 “隨意行事”。",""],["Doesn’t hold water","“站不住腳” 或 “不可信”。 這個短語用來形容某個論點、解釋或說法缺乏邏輯或證據，從而無法成立。",""],["Doesn’t know beans about it","“對某事一無所知” 或 “完全不瞭解某事”。",""],["Dog and pony show","“狗馬秀” 或 “華而不實的展示”。",""],["Dog days of summer","“夏日炎炎” 或 “三伏天”。",""],["Dog-eat-dog","“狗咬狗” 或 “你死我活” 的競爭。",""],["Dollars for doughnuts","“機率很高” 或 “幾乎肯定”。",""],["Don’t beat a dead horse","“不做無用功” 或 “不要再糾纏無效的事情”。",""],["Don’t count your chickens before they hatch","“不要高興得太早” 或 “不要打如意算盤”。",""],["Don’t cry over spilt milk","“不必為已成定局的事而懊悔” 或 “覆水難收”。",""],["Don’t do anything I wouldn’t do","“別做我不會做的事情” 或 “別做出格的事情”。",""],["Don’t give up your day job","“不要放棄你的日常工作” 或 “別辭掉你的本職工作”。",""],["Don’t hold your breath","“不要屏住呼吸” 或 “不要期待。”",""],["Don’t know him from Adam","“完全不認識他” 或 “對他一無所知”。",""],["Don’t know if I’m coming or going","“暈頭轉向” 或 “不知所措”。",""],["Don’t look a gift horse in the mouth","“不要挑剔別人送的禮物” 或 “不要對別人送的禮物吹毛求疵”。",""],["Don’t put all your eggs in one basket","“不要把所有雞蛋都放在一個籃子裡”，意思是不要把所有的資源或希望都集中在一個地方或一個專案上，以避免風險集中而導致全部損失。",""],["Don’t quote me on that","“這話不要引用我說的” 或 “這只是我的個人看法，可能不完全準確”。",""],["Don’t throw the baby out with the bath water","“不要因噎廢食” 或 “不要把好壞一起丟掉”。",""],["Don’t want to hear that","“不想聽那個” 或 “不願意聽那個”。",""],["Done to a turn","“恰到好處” 或 “剛剛好”。",""],["Don’t sweat the small stuff","“不必為小事操心” 或 “別為瑣事煩惱”。",""],["Doom and gloom","“悲觀失望” 或 “前景黯淡”。",""],["Double whammy","“雙重打擊” 或 “雙重不幸”。",""],["Down in the dumps","“情緒低落” 或 “心情不好”。",""],["Down in the mouth","“垂頭喪氣” 或 “情緒低落”。",""],["Down the tube","“付諸東流” 或 “一敗塗地”。",""],["Down to the wire","“到最後一刻” 或 “直到最後一秒”。",""],["Down-to-earth","“腳踏實地” 或 “實際” 的。",""],["Dragging your feet","“拖拖拉拉” 或 “行動遲緩”。",""],["Drastic times call for drastic measures","“非常時期需要非常手段”。",""],["Draw a blank","“想不起來” 或 “毫無頭緒”。",""],["Drawing card","“王牌” 或 “吸引力”。",""],["Dressed to kill","“衣著光鮮” 或 “盛裝打扮”。",""],["Drive someone up the wall","“讓某人抓狂” 或 “使某人非常生氣”。",""],["Driving me nuts","“讓我抓狂” 或 “讓我發瘋”。",""],["Drop by","“順便拜訪” 或 “短暫拜訪”。",""],["Drop in the bucket","“九牛一毛” 或 “滄海一粟”。",""],["Drop someone a line","“給某人寫信” 或 “給某人發訊息”。",""],["Drop-dead gorgeous","“美到令人驚歎” 或 “美得驚人”。",""],["Dry run","“彩排” 或 “預演”。",""],["Ducks in a row","“整齊有序” 或 “準備就緒”。",""],["Dyed-in-the-wool","“根深蒂固的” 或 “堅定不移的”。",""],["Eager beaver","“拼命努力的人” 或 “工作狂”。",""],["Easy come, easy go","“來也匆匆，去也匆匆” 或 “得之容易，失之亦易”。",""],["Easy does it","“慢慢來” 或 “別急”。",""],["Eat crow","“忍辱吞聲” 或 “被迫承認錯誤後感到羞愧”。",""],["Eat like a bird","“吃得很少” 或 “吃得像鳥一樣少”。",""],["Eat like a horse","“吃得像馬一樣多” 或 “食量很大”。",""],["Eat my hat","“我這頂帽子吃了！” 或 “打賭” 及表示自信。",""],["Eat your heart out","“妒忌去吧” 或 “羨慕去吧”。",""],["Egg on your face","“顏面盡失” 或 “出醜”。",""],["Elevator Pitch","“電梯遊說” 或 “電梯推介”。",""],["Elvis has left the building","“埃爾維斯已經離開了大樓” 或 “表演結束了”。",""],["Every cloud has a silver lining","“每朵烏雲都有銀邊” 或 “黑暗中總有一線光明”。",""],["Every dog has his day","“凡人皆有得意日” 或 “風水輪流轉”。",""],["Every now and then","“時不時” 或 “偶爾”。",""],["Everything but the kitchen sink","“什麼都有了，除了廚房水槽” 或 “應有盡有”。",""],["Exact change","“正好” 或 “正好找零”。",""],["Excuse my French/Pardon my French","“原諒我說髒話” 或 “請原諒我的不雅語言”。",""]],"F":[["Face the music","“面對現實” 或 “接受後果”。",""],["Fair and square","“光明正大” 或 “公平公正”。",""],["Fair to middling","“還過得去” 或 “普普通通”。",""],["Fair-weather friend","“酒肉朋友” 或 “只能同享樂不能共患難的朋友”。",""],["Fall by the wayside","“半途而廢” 或 “被忽視”。",""],["Fall off the wagon","“重蹈覆轍” 或 “舊習復發”。",""],["Fall on deaf ears","“充耳不聞” 或 “未受理會”。",""],["Familiarity breeds contempt","“熟悉生厭” 或 “親近變疏”。",""],["Fancy pants","“愛炫耀的人” 或 “打扮得花裡胡哨的人”。",""],["Fashion victim","“時尚受害者”",""],["Fat cat","“肥貓” 或 “大亨”。這個短語用來描述那些擁有高社會地位和巨大財富的人，特別是那些企業高管或政界人物。中文中也常用類似的短語，如 “大老闆” 或 “權貴”。",""],["Feather in one’s cap","“值得驕傲的成就” 或 “榮耀”。",""],["Feather one’s nest","“為自己謀私利”，意指通過各種手段為自己積累財富或利益，不太關心他人的利益或潛在的負面影響。",""],["Feeding frenzy","“瘋搶” 或 “飢餓搶食”。",""],["Feel like a million dollars","“感覺自己好極了” 或 “精神煥發”。",""],["Feel the pinch","“感覺到手頭緊” 或 “感受到經濟壓力”。",""],["Feel/look like death warmed over","“感覺/看起來像被加熱的死亡” 或 “打扮得像個鬼”。",""],["Feeling blue","“感到憂鬱” 或 “感到沮喪”。",""],["Fender bender","“小刮擦” 或 “小車禍”。",""],["Field day","“盡情享受” 或 “大顯身手”。",""],["Fifteen minutes of fame","“曇花一現” 或 “短暫的名聲”。",""],["Fight an uphill battle","“艱難地奮鬥” 或 “面臨艱鉅的挑戰”。",""],["Fight tooth and nail","“不惜一切代價拼搏” 或 “拼命爭鬥”。",""],["Fill in the blanks","“填空”。",""],["Filthy rich","“富得流油” 或 “極其富有”。",""],["Find your feet","找到立足點，適應新環境。",""],["Finger lickin’ good","“吮指回味” 或 “非常美味”。",""],["Fish out of water","“如魚離水” 或 “感到格格不入”。",""],["Fishy","“可疑的” 或 “有蹊蹺的”。",""],["Fit as a fiddle","“健康如牛” 或 “非常健康”。",""],["Fit to be tied","“非常生氣” 或 “氣得抓狂”。",""],["Fits and starts","“間歇性地” 或 “斷斷續續地”。",""],["Five o’clock shadow","“五點鐘的陰影” 或 “傍晚鬍渣”。",""],["Fix someone’s wagon","“讓某人吃苦頭” 或 “讓某人受到懲罰”。",""],["Fixed in your ways","“固執己見” 或 “堅持己見”。",""],["Flavor of the month","“當月的風潮” 或 “短暫的流行事物”。",""],["Flea market","“跳蚤市場” 或 “二手市場”。",""],["Flesh and blood","“血肉之軀” 或 “親骨肉”。",""],["Fly in the face of something","“公然反對” 或 “抗衡”。",""],["Fly in the ointment","“美中不足” 或 “小缺點”。",""],["Fly off the handle","“大發雷霆” 或 “情緒失控”。",""],["Fly the coop","“溜之大吉” 或 “逃跑”。",""],["Fly-by-night","“見不得人” 或 “不可靠的，騙人錢財的”。",""],["Foam at the mouth","“氣得口吐白沫” 或 “非常憤怒”。",""],["Follow in someone’s footsteps","“追隨某人的腳步” 或 “繼承某人的事業”。",""],["Follow the money","“順藤摸瓜” 或 “追蹤資金流向”。",""],["Food for thought","“值得深思的事” 或 “發人深省的事情”。",""],["Fool around","“閒逛” 或 “胡鬧”。",""],["Fool’s Gold","“愚人金” 或 “騙人的東西”。",""],["Foot in the door","“敲開門” 或 “邁出第一步”。",""],["Footloose and fancy-free","“無拘無束，無牽無掛”。",""],["For crying out loud","“天哪！” 或 “哎呀！” 或 表達強烈情感的語氣詞，通常用來表示驚訝或惱怒。",""],["For goodness’ sake","“看在老天的份上” 或 “為了上帝的緣故”。",""],["For heaven’s sake","“天哪” 或 “看在老天的份上”。",""],["For the birds","“毫無價值” 或 “沒意義的”。",""],["Fork over/shell out money","“掏錢” 或 “付款”。這兩個短語都有一種不情願地付錢的意味。",""],["Fortune favors the bold","“命運垂青勇者” 或 “勇敢者得以成功”。",""],["Forty winks","“小睡一會兒” 或 “打個盹兒”。",""],["Freak out","“嚇壞了” 或 “抓狂”。",""],["From day one","“一開始” 或 “一開始就……”。",""],["From rags to riches","“從貧窮到富有” 或 “白手起家”。",""],["From the get-go","“一開始” 或 “從一開始”。",""],["From the word go","“一開始” 或 “一開始就”。",""],["From time to time","“時不時” 或 “偶爾”。",""],["Fuddy-duddy","“老古板” 或 “守舊的人”。",""],["Full of crap","“滿口胡說” 或 “胡說八道”。",""],["Full of hot air","“誇誇其談” 或 “滿嘴跑火車”，表示某人在說大話、不切實際或言辭誇張。",""],["Full steam ahead","“全速前進” 或 “全力以赴”。",""]],"G":[["Gain ground","“取得進展” 或 “逐漸佔據優勢”。",""],["Gave someone the thumbs-up","“豎起大拇指” 或 “表示贊成”。",""],["Get a handle on something","“掌握某事” 或 “弄清某事”。",""],["Get a hold of something","“抓住某物” 或 “掌握某事”。",""],["Get a hold of yourself","“控制自己” 或 “冷靜下來”。",""],["Get a move on","“趕緊” 或 “加快速度”。",""],["Get a second wind","“重新煥發活力” 或 “恢復精力”。",""],["Get a taste of your own medicine","“自嘗其果”，或者說 “自食其果”。",""],["Get a word in edgewise","“插嘴” 或 “插話”。",""],["Get along with each other","彼此相處融洽，和睦相處。",""],["Get back to someone","“回覆某人” 或 “給某人回信”。",""],["Get down to brass tacks","“切入正題” 或 “談到具體細節”。",""],["Get down to business","“開始正事” 或 “進入正題”。",""],["Get down to the nuts and bolts","“深入細節” 或 “開始處理基本細節”。",""],["Get from A to B","“從 A 點到達 B 點” 或 “到達某個目的地”。",""],["Get hold of someone","“聯絡某人” 或 “找到某人”。",""],["Get in someone’s hair","“惹某人生氣” 或 “煩擾某人”。",""],["Get into deep water","“陷入困境” 或 “遇到麻煩”。",""],["Get it off my chest","“吐露心聲” 或 “傾吐心事”。",""],["Get it through your head","“要記住” 或 “弄明白”。",""],["Get off on the wrong foot","“開始不順” 或 “一開始就出錯”。",""],["Get off your high horse","“別再擺架子” 或 “放下你的傲慢”。",""],["Get one’s feet wet","“試水” 或 “初步嘗試”。",""],["Get out of hand","“失控” 或 “無法掌控”。",""],["Get over it","“克服它” 或 “忘掉它”。",""],["Get something for peanuts","“以極低的價格獲得某物” 或 “賤價買到某物”。",""],["Get something out of your system","“把某事發洩出來” 或 “把某事做夠”。",""],["Get the go-ahead","“得到批准” 或 “獲得許可”。",""],["Get the green light","“獲得許可” 或 “得到批准”。",""],["Get the hang of it","“掌握竅門” 或 “開始熟悉或擅長某事”。",""],["Get the message","“收到資訊” 或 “領會意思”。",""],["Get the sack","“被解僱” 或 “被炒魷魚”。",""],["Get this show on the road","“開始行動” 或 “開始進行事情”。",""],["Get to the bottom of something","“徹底查清某事” 或 “弄清事情的真相”。",""],["Get to the point","“直奔主題” 或 “切入正題”。",""],["Get up on the wrong side of bed","“起床氣” 或 “一大早就情緒不好”。",""],["Get wind of something","“得知或聽到某事” 或 “風聞”。通常指秘密或非公開的資訊被無意中聽到或發現。",""],["Get with it","“跟上潮流” 或 “與時俱進”。",""],["Get your act together","“振作起來” 或 “好好幹活”。",""],["Get your dander up","“讓你生氣” 或 “激怒你”。",""],["Get your goat","“惹惱你” 或 “使你生氣”。",""],["Get your head around it","“理解某事” 或 “弄明白某事”。",""],["Get-up-and-go","“幹勁” 或 “精力”。",""],["Getting by","“勉強度日” 或 “勉強應付”。",""],["Getting on my last nerve","“令我極度惱火” 或 “讓我忍無可忍”。",""],["Getting on my nerves","“惹我心煩” 或 “讓我心煩意亂”。",""],["Give a run for one’s money","“給……以有力的競爭” 或 “使……充分享受（樂趣）”。",""],["Give props to","“給某人點贊” 或 “承認某人的功勞”。",""],["Give someone a hard time","“給某人找麻煩” 或 “讓某人不好過”。",""],["Give someone a piece of my mind","“嚴厲斥責某人” 或 “直言不諱地批評某人”。",""],["Give someone a song and dance","“編瞎話” 或 “找藉口”。",""],["Give someone short shrift","“草草了事” 或 “敷衍了事”。",""],["Give someone the benefit of the doubt","“把好處歸於未知的一方” 或 “姑且相信某人”。",""],["Give someone the cold shoulder","“冷落某人” 或 “對某人愛理不理”。",""],["Give them the slip","“擺脫他們” 或 “甩開他們”。",""],["Go against the grain","“逆勢而為” 或 “違反常理”。",""],["Go around in circles","“原地打轉” 或 “徒勞無功”。",""],["Go back to the drawing board","“重新開始” 或 “從頭再來”。",""],["Go bananas","“發瘋” 或 “變得狂熱”。",""],["Go belly up","“倒閉” 或 “失敗”。",""],["Go bonkers","“發瘋” 或 “變得非常瘋狂”。",""],["Go cold turkey","“突然完全戒掉” 或 “立即戒斷”。",""],["Go down in flames","“徹底失敗” 或 “徹底崩潰”。",""],["Go fly a kite","“去放風箏”，意為 “走開，別煩我”。",""],["Go fry an egg","“去炸個蛋吧”，意指 “別煩我” 或 “去忙你自己的事”。",""],["Go haywire","“失控” 或 “亂套”。",""],["Go it alone","“單獨行動” 或 “獨自做某事”。",""],["Go off half-cocked","“未做好準備就行動” 或 “魯莽行事”。",""],["Go off the deep end","“失去冷靜” 或 “失去理智”。這個短語指一個人在情緒上突然崩潰或變得非常生氣，通常表現出非理性的行為。",""],["Go on a wild goose chase","“徒勞無功的追尋” 或 “白費功夫的尋找”。",""],["Go out of one’s way","“不遺餘力” 或 “竭盡全力”。",""],["Go out on a limb","“冒險做某事” 或 “承擔風險”。",""],["Go overboard","“做得過火” 或 “過度熱情”。",""],["Go postal","“發瘋” 或 “暴怒”。",""],["Go south","“情況變糟” 或 “事態惡化”。",""],["Go the extra mile","“多做一點” 或 “加倍努力”。",""],["Go the whole hog","“全力以赴” 或 “一鼓作氣”。",""],["Go through it with a fine-tooth comb","“仔細檢查” 或 “一絲不苟地檢查”。",""],["Go to hell in a handbasket","“迅速惡化” 或 “走向毀滅”。",""],["Go to pieces/Fall to pieces","“崩潰” 或 “失控”。",""],["Go to the dogs","“走下坡路” 或 “變得很糟糕”。",""],["Go to town","“全力以赴” 或 “大幹一場”。",""],["Go up in smoke","“化為烏有” 或 “化為煙霧”。這個短語用來形容計劃、希望、努力等突然間失敗，或者一切都白費，一切變得徒勞無功。",""],["Go with the flow","“順其自然” 或 “隨遇而安”。",""],["Go-to-guy","“關鍵人物” 或 “專門負責某事的人”。",""],["Goes without saying","“不言而喻” 或 “顯而易見”。",""],["Golden age","“黃金時代” 或 “鼎盛時期”。",""],["Golden opportunity","“黃金機會” 或 “千載難逢的機會”。",""],["Good egg","“好人”、“善良的人”。",""],["Good for you!","“對你有好處” 或 “真替你高興”。",""],["Good riddance","“總算擺脫了” 或 “幸好走了”。",""],["Good things come to those who wait","“好事多磨” 或 “耐心等待終有好結果”。",""],["Good to know","“知道了” 或 “好知道”。",""],["Goody, goody gumdrops","“哇哦，太棒了！” 或 “真是令人興奮！”",""],["Goof off","“偷懶” 或 “磨蹭”。",""],["Got off scot-free","“未受任何懲罰” 或 “逃脫懲罰”。",""],["Got the third degree","“被嚴厲盤問” 或 “受到嚴格的審問”。",""],["Got their hackles up","“豎起脊毛” 或 “激怒” 。",""],["Grasping at straws","“抓住救命稻草” 或 “孤注一擲”。",""],["Graveyard shift","“夜班” 或 “凌晨班”。",""],["Gravy train","“肥差” 或 “輕鬆賺錢的工作”。",""],["Gray area","“灰色地帶” 或 “模稜兩可的區域”。",""],["Grease monkey","“維修技工” 或 “修車工”。",""],["Greased lightning","“快如閃電” 或 “非常快速”。",""],["Great minds think alike","“英雄所見略同”。",""],["Green around the gills","“臉色蒼白” 或 “看起來病懨懨的”。",""],["Green room","“綠色房間” 或 “演員休息室”。",""],["Green thumb","“園藝高手” 或 “非常擅長種植植物的人”。",""],["Grin and bear it","“咬牙堅持” 或 “強顏歡笑面對困境”。",""],["Guinea pig","“小白鼠” 或 “試驗物件”。",""],["Gung ho","“幹勁十足” 或 “充滿熱情”。",""],["Gut feeling","“直覺” 或 “本能的感覺”。",""]],"H、I":[["Hair of the dog","“以毒攻毒” 或 “用少量酒解宿醉”。",""],["Hair’s breadth","“毫釐之差” 或者 “極窄的距離”。",""],["Half a mind to do something","“有點想做某事”。",""],["Half the battle","“事半功倍” 或 “成功的一半”。",""],["Half-baked","“未經深思熟慮的” 或 “不成熟的”。",""],["Hammering out a deal","“敲定一個交易” 或 “達成協議”。",""],["Hand in glove","“密切合作” 或 “關係密切”。",""],["Hand over fist","“迅速且大量地” 或 “快速獲利”。",""],["Hang in there","“堅持住” 或 “忍耐一下”。",""],["Hang tight","“稍安勿躁” 或 “耐心等待”。",""],["Happy-go-lucky","“樂天派” 或 “無憂無慮”。",""],["Hard sell","“強行推銷” 或 “極力推薦”。",""],["Hard/bitter pill to swallow","“難以接受的事實” 或 “痛苦的現實”。",""],["Haste makes waste","“欲速則不達”。",""],["Have an axe to grind","“別有用心” 或 “懷有私心”。",""],["Have bats in one’s belfry","“頭腦不清楚” 或 “行為古怪”。",""],["Have hell to pay","“要付出慘痛代價” 或 “要受到嚴厲的懲罰”。",""],["Have something down pat","“徹底掌握某事” 或 “對某事駕輕就熟”。",""],["Have the world by the tail","“擁有全世界” 或 “掌控一切”。",""],["Have time off","“休假” 或 “有空閒時間”。",""],["Have two left feet","“笨手笨腳” 或 “不善舞蹈”。",""],["Have your head in the clouds","“心不在焉” 或 “不切實際”。",""],["He has bigger fish to fry","“他有更重要的事情要做” 或 “他有更大的事要忙”。",""],["He who laughs last laughs loudest","“笑到最後的人笑得最好” 或 “最後得勝者才是最終贏家”。",""],["He’s a chip off the old block","“他是有其父必有其子” 或 “他特別像他父親”。",""],["He’s not playing with a full deck","“他不太正常” 或 “他精神有問題”。",""],["He’s off his rocker","“他瘋了” 或 “他不正常”。",""],["Head and shoulders above","“遙遙領先” 或 “大大優於”。",""],["Head honcho","“頭頭” 或 “大佬”。",""],["Head in the clouds","“心不在焉” 或 “不切實際”。",""],["Head over heels","“神魂顛倒” 或 “徹底迷戀”。",""],["Heads-up","“提醒” 或 “事先通知”。",""],["Hear it on the grapevine","“通過小道訊息聽說” 或 “聽到傳聞”。",""],["Hear something straight from the horse’s mouth","“直接從權威或第一手來源獲得資訊”。",""],["Heebie-jeebies","“毛骨悚然” 或 “不安，緊張”。",""],["Here and there","“到處” 或 “各處”。",""],["High on the hog","“生活優越” 或 “過著奢侈的生活”。",""],["High, wide, and handsome","“高大帥氣”；“帶著優越感的”。",""],["Hissy fit","“小題大做” 或 “大發脾氣”。",""],["Hit it on the nose","“正中要害” 或 “完全正確”。",""],["Hit me up","“聯絡我” 或 “找我”。",""],["Hit pay dirt","“發財” 或 “獲得重大收益”。",""],["Hit someone below the belt","“打人不打臉” 或 “用卑鄙手段攻擊某人”。",""],["Hit the books","“用功讀書” 或 “刻苦學習”。",""],["Hit the ceiling","“勃然大怒” 或 “暴跳如雷”。",""],["Hit the hay","“準備睡覺” 或 “上床睡覺”。",""],["Hit the jackpot","“中了大獎” 或 “取得巨大成功”。",""],["Hit the nail on the head","“一語中的” 或 “切中要害”。",""],["Hit the road","“上路” 或 “出發”。",""],["Hit the sack","“上床睡覺” 或 “就寢”。",""],["Hocus-pocus","“戲法” 或 “魔術般的伎倆”。",""],["Hold the fort","“守住陣地” 或 “暫時負責”。",""],["Hold your horses","“稍安勿躁” 或 “耐心等待”。",""],["Hold your tongue","“閉嘴” 或 “保持沉默”。",""],["Holding the bag","“背黑鍋” 或 “承擔責任”。",""],["Hopping mad","“怒火中燒” 或 “非常生氣”。",""],["Horse around","“瞎胡鬧” 或 “玩鬧”。",""],["Horse of a different color","“完全不同的事物” 或 “另一種情況”。",""],["Hot under the collar","“熱鍋上的螞蟻” 或 “感到憤怒或非常惱火”。",""],["Hot-button issue","“敏感問題” 或 “熱議話題”。",""],["Hotshot","“能人” 或 “自命不凡的人”。",""],["How do you like them apples","“你怎麼看這個？” 或 “你對此有何感想？” 帶有挑釁和炫耀意味。",""],["Hunky-dory","“一切順利” 或 “非常好”。",""],["I can’t imagine","“我無法想像” 或 “我很難想像”。",""],["I don’t have two nickels to rub together","“我連兩個五分硬幣都湊不齊”，意指 “我非常貧窮” 或 “我一文不名”。",""],["I suck at something","“我很不擅長做某事”。",""],["I wasn’t born yesterday","“我又不是三歲小孩” 或 “別把我當傻瓜”。",""],["I’d give my right hand to","“我願意付出一切” 或 “我願意不惜任何代價”。",""],["I’m losing it","“我要崩潰了” 或 “我快要失控了”。",""],["Icing on the cake","“錦上添花” 或 “好上加好”。",""],["Idle hands are the devil’s tools","“懶惰生事端” 或 “無所事事易生惡念”。",""],["If I had a nickel for every time something happened","“如果每次某事發生我都能得到一分錢”。這個短語通常用來強調某事情發生的頻率很高，有時也帶有誇張的成分。",""],["If worst comes to worst","“如果情況變得最糟” 或 “在最壞的情況下”。",""],["If you can’t stand the heat, get out of the kitchen","“如果你不能忍受熱度，那就離開廚房” 或 “如果你不能承受壓力，那就退出”。",""],["If you play your cards right","“如果你做得對” 或 “如果你能妥善處理”。",""],["Ignorance is bliss","“不知者無憂” 或 “無知是福”。",""],["In a bind","“陷入困境” 或 “進退兩難”。",""],["In a jam","“陷入困境” 或 “遇到麻煩”。",""],["In a nutshell","“簡而言之” 或 “用簡短的話說”。",""],["In a pinch","“在緊要關頭” 或 “在必要時”。",""],["In a rut","“陷入一成不變的生活” 或 “生活停滯不前”。",""],["In charge of","“負責” 或 “掌管”。",""],["In full swing","“如火如荼” 或 “全力進行中”。",""],["In high gear","“全速進行中” 或 “高效執行”。",""],["In hot water","“處於困境” 或 “麻煩纏身”。",""],["In my book","“依我來看” 或 “在我看來”。",""],["In my element","“如魚得水” 或 “得心應手”。",""],["In seventh heaven","“極度幸福” 或 “欣喜若狂”。",""],["In spades","“非常多” 或 “大量地”。",""],["In stitches","笑得肚子疼 或 笑得前俯後仰。",""],["In the bag","“十拿九穩” 或 “勝券在握”。",""],["In the black","“盈利” 或 “有盈餘”。",""],["In the boondocks","在 “偏遠地區”； “偏僻的地方”。",""],["In the chips/money","“腰纏萬貫” 或 “很有錢”。",""],["In the doghouse","“受冷落” 或 “陷入麻煩”。",""],["In the heat of the moment","“一時激動” 或 “一時衝動”。",""],["In the least","“一點也不” 和 “根本不”。",""],["In the long run","“從長遠來看” 或 “長期而言”。",""],["In the loop","“在圈內” 或 “知情”。",""],["In the nick of time","“千鈞一髮” 或 “在緊要關頭”。",""],["In the pink","“身體健康” 或 “身心俱佳”。",""],["In the red","“赤字” 或 “虧損”。",""],["In the sticks","“鄉下” 或 “偏遠的地方”。",""],["In the way","“擋道” 或 “妨礙”。",""],["It ain’t over till the fat lady sings","“事情還沒到最後一刻，還未見分曉” 或 “在最後結果出來之前，事情都有變數”。",""],["It is a poor workman who blames his tools","“拙匠常怨工具差”。這句諺語意思是說，一個技術差的人總是把原因歸咎於工具或外部條件，而不是反省自己的能力問題。正如一個高明的工匠即使工具不好，也能做出好的作品，真正有能力的人不會找藉口。",""],["It is always darkest before the dawn","“黎明前的黑暗” 或者 “最黑暗的時刻往往在黎明到來之前”。",""],["It takes one to know one","“半斤八兩” 或 “彼此彼此”。",""],["It takes two to tango","“一個巴掌拍不響” 或 “兩人才能跳探戈”。",""],["It’s a piece of cake","“輕而易舉的事” 或 “非常簡單的事情”。",""],["It’s a scorcher","“這是個大熱天” 或 “今天真是特別熱”。",""],["It’s crunch time","“關鍵時刻” 或 “緊要關頭”。",""],["It’s in the bag","“十拿九穩” 或 “勝券在握”。",""],["It’s no skin off my nose","“與我無關” 或 “對我沒有影響”。",""],["It’s not rocket science","“這並不複雜” 或 “這並不是難事”。",""],["It’s raining cats and dogs","“傾盆大雨” 或 “大雨滂沱”。",""],["Itchy feet","“渴望旅行” 或 “不安分”。",""],["Ivory tower","“象牙塔”。這個短語常用來形容與世隔絕、不接地氣或者過於理想化的學術或知識分子的世界。",""]],"J、K、L":[["Jaywalking","“亂過馬路” 或 “不遵守交通規則橫穿馬路”。",""],["Johnny-come-lately","“新來的人” 或 “後來者”。",""],["Joined at the hip","“形影不離” 或 “非常親密”。",""],["Joshing me","“拿我開玩笑” 或 “戲弄我”。",""],["Jump down someone’s throat","“猛烈地責罵某人” 或 “嚴厲批評某人”。",""],["Jump on the bandwagon","“趕時髦” 或 “跟風”。",""],["Jump the gun","“搶跑” 或 “操之過急”。",""],["Jump through hoops","“跳過重重圈套” 或 “經歷繁瑣的過程”。",""],["Junk food","“垃圾食品”。",""],["Jury is still out","“尚無定論” 或 “懸而未決”。",""],["Just a moment","“稍等片刻” 或 “請稍等一下”。",""],["Just around the corner","“即將來臨” 或 “就在不遠處”。",""],["Just now","“剛剛” 或 “剛才”。",""],["Keep body and soul together","“勉強維持生計” 或 “維持基本生活”。",""],["Keep it under control","“掌控局面” 或 “控制住”。",""],["Keep it under wraps","“保密” 或 “保守秘密”。",""],["Keep me posted/Keep me in the loop","“隨時告知我最新情況” 或 “讓我參與進來”。",""],["Keep my cool","“保持冷靜” 或 “沉住氣”。",""],["Keep my head above water","“勉強維持生計” 或 “勉強應付困境”。",""],["Keep my nose to the grindstone","“埋頭苦幹” 或 “辛苦工作”。",""],["Keep someone at arm’s length","“與某人保持距離” 或 “刻意疏遠某人”。",""],["Keep something at bay","“防止某事發生” 或 “遏制某事”。",""],["Keep something under one’s hat","“保密” 或 “將某事保密”。",""],["Keep the ball rolling","“保持進展”、“繼續進行”。",""],["Keep up with","“跟上” 或 “趕上”，意指追趕或保持與某事物同步。",""],["Keep you posted","“隨時向你通報” 或 “保持你更新”。",""],["Keep your chin up","“保持積極心態” 或 “不要氣餒”。",""],["Keep your head","保持冷靜，處變不驚。",""],["Keep your mouth shut","“閉嘴” 或 “保持沉默”。",""],["Keep your nose clean","“保持本分” 或 “避免惹事”。",""],["Keep your wits about you","“保持頭腦清醒” 或 “保持警惕”。",""],["Keeping up with the Joneses","“與鄰居攀比” 或 “與人鬥富”。",""],["Kept in the dark","“不知情” 或 “被矇在鼓裡”。",""],["Keyed up","“激動” 或 “緊張”。",""],["Kick up your heels","“放鬆享受” 或 “盡情歡樂”。",""],["Kill the mood","“掃興” 或 “破壞氣氛”。",""],["Kill two birds with one stone","“一箭雙鵰” 或 “一舉兩得”。",""],["Kit and caboodle","“全套東西” 或 “所有的一切”。",""],["Knee-high to a grasshopper","“像蚱蜢一樣高” 或 “非常小，非常年輕”。",""],["Knee-jerk reaction","“膝跳反應” 或 “條件反射”。",""],["Knock into a cocked hat","“徹底擊敗” 或 “徹底粉碎”。",""],["Knock it off","“別鬧了” 或 “停止做某事”。",""],["Knock on wood","“敲木頭” 或 “祈求好運”。",""],["Knock someone’s socks off","“讓某人大吃一驚” 或 “讓某人非常興奮”。",""],["Know the ins and outs","“瞭解內情” 或 “熟悉詳情”。",""],["Know the ropes","“熟悉門道” 或 “瞭解內情”。",""],["Know which way the wind is blowing","“瞭解情勢” 或 “看清局勢”。",""],["Know your onions","“非常精通某事” 或 “非常瞭解自己的領域”。",""],["Know zip","“知道零” 或 “一無所知”。",""],["Knuckle under","“屈服” 或 “讓步”。",""],["Labor of love","“出於愛好或熱情的工作” 或 “心甘情願的付出”。",""],["Laid off","“被裁員” 或 “被解僱”。",""],["Lap of luxury","“極度奢華” 或 “豪華享受”。",""],["Last but not least","“最後但同樣重要” 或 “最後但並非最不重要”。",""],["Last straw","“最後一根稻草” 或 “壓垮駱駝的最後一根稻草”。",""],["Last-ditch effort","“最後一搏” 或 “孤注一擲”。",""],["Laugh all the way to the bank","“賺得盆滿缽滿” 或 “輕鬆賺大錢”。",""],["Lay an egg","“失敗” 或 “表演、專案等遭遇滑鐵盧”。",""],["Lay down the law","“釋出命令” 或 “嚴格規定”。這個表達用來描述某人以強硬和嚴格的方式來規定規則或要求人們遵守。",""],["Lead someone around by the nose","“牽著某人的鼻子走” 或 “被人牽著走”。",""],["Learn by rote","“死記硬背” 或 “機械記憶”。",""],["Learn the ropes","“摸清門道” 或 “熟悉基本情況”。",""],["Learned my lesson","“記住教訓” 或 “吸取教訓”。",""],["Leave me alone","“別煩我” 或 “讓我一個人待著”。",""],["Leave no stone unturned","“竭盡全力”，或 “不遺餘力”。",""],["Leave someone high and dry","“拋棄某人” 或 “讓某人陷入困境”。",""],["Leave well enough alone","“維持現狀” 或 “不要多此一舉”。",""],["Left me in the lurch","“把我扔在困境中” 或 “把我孤零零地留下，不管不顧”。",""],["Left out in the cold","“被冷落” 或 “被排除在外”。",""],["Left someone behind","“落下某人” 或 “把某人拋在後面”。",""],["Lend me your ear","“請聽我說” 或 “借我片刻傾聽”。",""],["Lend someone a hand","“幫某人一個忙” 或 “幫助某人”。",""],["Let bygones be bygones","“既往不咎” 或 “過去的事就讓它過去吧”。",""],["Let sleeping dogs lie","“不要惹事生非” 或 “不要打擾沉睡的狗”。",""],["Let someone off the hook","“讓某人擺脫困境” 或 “讓某人脫身責罰”。",""],["Let the cat out of the bag","“露陷兒” 或 “洩密”。",""],["Let the dust settle","“讓塵埃落定” 或 “讓情況穩定下來”。",""],["Let your hair down","“放鬆一下” 或 “不拘束”。",""],["Letter perfect","“完美無缺”，通常用來描述某人的表現或作品沒有錯誤，非常出色。",""],["Level playing field","“公平的競爭環境” 或 “公平的起跑線”。",""],["Life of Riley","“悠哉悠哉，舒適的生活” 或者 “無憂無慮的生活”。",""],["Light of my life","“我生命中的光” 或 “我生命中的摯愛”。",""],["Like a chicken with its head cut off","“像一隻沒頭的雞” 或 “驚慌失措”。",""],["Like a deer in headlights","“像驚呆了的鹿”。意思是形容人在某種情境下被嚇呆或驚慌失措，不知所措的樣子。",""],["Like clockwork","“像機械時鐘一樣準時”，或是描述某事進行的非常順利、毫不費力。",""],["Like nailing jello to the wall","“像把果凍釘在牆上”，指的是做一件幾乎不可能完成的任務，或是非常難以實現的事情。通常用來形容某件事情非常難處理、幾乎不可能成功。",""],["Like pulling teeth","“像拔牙一樣痛苦” 或 “非常艱難的事情”。",""],["Like riding a bicycle","“就像騎腳踏車一樣”，意思是某個技能即使長時間不使用，也不會忘記。",""],["Like taking candy from a baby","“像從嬰兒手中拿糖一樣簡單”，表示一件事情非常容易完成。",""],["Like there is no tomorrow","“像沒有明天一樣” 或 “不顧明天”。",""],["Like water off a duck’s back","“毫無影響” 或 “無動於衷”。",""],["Live and learn","“活到老學到老” 或 “在生活中不斷學習”。",""],["Live and let live","“別人的事情讓別人去過” 或 “和而不同”。",""],["Live it up","“盡情享受生活” 或 “縱情享樂”。",""],["Living the dream","“過著夢寐以求的生活” 或 “實現了夢想的生活”。",""],["Lock, stock, and barrel","“一應俱全” 或 “不留餘地、徹底地”。這個成語表示完全或徹底，包括所有部分，不留任何遺漏。",""],["Long face","“苦瓜臉” 或 “面帶愁容”。",""],["Long in the tooth","“年紀大了” 或 “上了年紀”。",""],["Long time no see!","“好久不見！”",""],["Look before you leap","“三思而後行”。",""],["Look like a million bucks/dollars","“看起來神采奕奕” 或 “看起來非常出色”。",""],["Look like the cat that swallowed the canary/got the cream","“像吃了金絲雀的貓” 或 “像吃了奶油的貓”。",""],["Loose cannon","“不可控的人” 或 “危險分子”。",""],["Lose one’s shirt","“賠光所有財產” 或 “損失慘重”。",""],["Lose touch","“失去聯絡” 或 “脫離聯絡”。",""],["Lose your marbles","“失去理智” 或 “發瘋”。",""],["Lose your touch","失去能力、不再擅長某方面的工作。",""],["Lost at sea","“迷失在海上” 或 “茫然不知所措”。",""],["Lost my head","失去理智、發怒或慌亂。",""],["Low-hanging fruit","“唾手可得的東西” 或 “容易實現的目標”。",""],["Luck out","“運氣好” 或 “碰巧走運”。",""],["Lucky break","“幸運的機會” 或 “好運”。指的是不期而遇的好事或機會，使人事態好轉或取得成功。",""],["Lucky dog","“幸運兒” 或 “走運的人”。",""]],"M、N、O":[["Mad as a hornet","“非常生氣” 或 “怒不可遏”。",""],["Made for each other","“天作之合” 或 “天生一對”。",""],["Made my hair stand on end","“令人毛骨悚然” 或 “讓人毛髮直立”。",""],["Make a beeline for","“直奔” 或 “徑直走向”。",""],["Make a big stink","“大張旗鼓地抱怨” 或 “過分嚷嚷”。",""],["Make a long story short","“長話短說” 或 “簡而言之”。",""],["Make a mountain out of a molehill","“小題大做” 或 “誇大問題”。",""],["Make a pit stop","“短暫停留” 或 “中途停留”。",""],["Make a scene","“當眾大吵大鬧” 或 “引人注目的場面”。",""],["Make ends meet","“勉強維持生計” 或 “收支平衡”。",""],["Make eyes at someone","“向某人拋媚眼” 或 “暗送秋波”。",""],["Make hay while the sun shines","“打鐵趁熱” 或 “抓緊時機”。",""],["Make no bones about","“直言不諱” 或 “毫不猶豫”。",""],["Make out like a bandit","“一夜暴富” 或 “賺大錢”；出乎意料地獲得很大的成功或好處。",""],["Make out what someone said","“聽清楚某人說的話” 或 “弄明白某人說的內容”。",""],["Make the grade","“達到標準” 或 “符合要求”。",""],["Make tracks","“趕緊離開” 或 “迅速回避”。",""],["Make waves","“興風作浪” 或 “引起軒然大波”。",""],["Make yourself at home","“隨便一點” 或 “把這裡當自己家”。",""],["Man’s best friend","“人類最好的朋友”。通常用來指狗，因為狗以其忠誠和友好被認為是人類最親密的動物夥伴。",""],["Mark time","“原地踏步” 或 “虛度光陰(等待某事發生)”。",""],["Meat and potatoes","“最基本的” 或 “核心的部分”。",""],["Meet halfway","“妥協” 或 “各退一步”。",""],["Mickey mouse job","“沒什麼實際意義的工作” 或 “不重要的工作”。",""],["Midas touch","金手指（指的是一個人不管碰到什麼事物都會成功或變得有價值）。",""],["Middle of the road","“中庸的” 或 “平庸的” 。",""],["Mind your own beeswax","“管好你自己的事” 或 “少管閒事”。",""],["Miss the boat","“錯過機會” 或 “比喻因猶豫或遲疑而錯過做重要事情的時機”。",""],["Mom-and-pop","“夫妻店” 或 “家庭經營的小店”。",""],["Money burns a hole in someone’s pocket","“錢在口袋裡燒了個洞” 或 “留不住錢”（形容某人很難存住錢，總是迫不及待地花掉）。",""],["Money talks","“金錢至上” 或 “金錢萬能”。",""],["Money to burn","“有的是錢” 或 “錢多得花不完”。",""],["More bang for your buck","“物有所值” 或 “價效比更高”。",""],["More than I bargained for","“超出預期” 或 “比我預想的更多”。",""],["More than meets the eye","“表面不單如此” 或 “有深層意義”。",""],["Move some things around","“調整安排” 或 “騰出時間”。",""],["Mum’s the word","“嘴嚴” 或 “保持沉默”。",""],["Mumbo jumbo","“胡言亂語” 或 “莫名其妙的話”。",""],["My bad","“我的錯” 或 “是我的責任”。",""],["My eyes are bigger than my stomach","“眼睛比胃大”，即 “貪多嚼不爛”。",""],["My hands are tied","“我束手無策” 或 “我的手被綁住了（無法作為）”。",""],["My heart is set on","“我心意已決” 或 “我的心已定”。",""],["My neck of the woods","“我這片地方” 或 “我這裡” 或 “我住的這塊地方。”",""],["9-to-5","“朝九晚五” 或 “平常的上班時間”。",""],["Nest egg","“儲備金” 或 “養老金”。",""],["Never bite the hand that feeds you","“不要咬餵你的人” 或 “不要恩將仇報”。",""],["New kid on the block","“新來的” 或 “新人”。",""],["New York minute","“紐約分鐘”，表示時間非常短暫的意思。在快節奏的環境中，事情發生得極快，幾乎沒有任何拖延。用來形容某些在瞬間完成或者發生的事情，非常迅速。",""],["Night owl","“夜貓子”，指那些習慣於深夜活動或遲睡晚起的人。",""],["Nip something in the bud","“防患於未然” 或 “及時制止萌芽的事情”。",""],["Nitty-gritty","“本質” 或 “重要細節”。",""],["No big deal","“小事一樁”、“沒什麼大不了”。",""],["No dice","“不行” 或 “不符合要求”。",""],["No pain, no gain","“沒有付出就沒有收穫” 或 “不經歷風雨，怎麼見彩虹”。",""],["No rhyme or reason","“毫無道理” 或 “沒有任何邏輯”。",""],["No-brainer","不需要動腦筋的簡單決定，顯而易見的事情。",""],["Not a spark of decency","“一點禮貌也沒有” 或 “毫無禮貌”。",""],["Not have a leg to stand on","“沒有立場” 或 “沒有依據”。",""],["Not one’s cup of tea","“不是某人的菜” 或 “不是某人喜歡的東西”。",""],["Not playing with a full deck","“腦袋不靈光” 或 “思維有問題”。",""],["Not what it’s cracked up to be","“並不像所說的那麼好” 或 “名不副實”。",""],["Not worth a red cent","“一文不值” 或 “完全沒有價值”。",""],["Nothing to write home about","“不值一提” 或 “沒什麼特別的”。",""],["Number cruncher","“數字粉碎機” 或 “擅長處理和分析大量數字和資料的人”。",""],["Odd man out","“局外人” 或 “與眾不同的人”。",""],["Off on the wrong foot","“開局不順” 或 “一開始就出錯”。",""],["Off the cuff","“即興的” 或 “未經準備的”。",""],["Off the hook","“脫身” 或 “擺脫困境”。",""],["Off the record","“非正式談話” 或 “不公開發表”。",""],["Off the top of my head","“憑記憶” 或 “憑直覺”。",""],["Off the wall","“異想天開” 或 “出乎意料”。",""],["Off-color","“有傷風化” 或 “不雅的”。",""],["Old school","“老派的” 或 “老式的”。",""],["On a shoestring","“靠微薄的預算” 或 “資金很緊”。",""],["On a tear","“表現突出” 或 “狀態極佳”。",""],["On a treadmill","“像在跑步機上” 或 “重複且無效的努力”。",""],["On cloud nine","“非常高興” 或 “飄飄然”。",""],["On pins and needles","“如坐針氈” 或 “極度緊張”。",""],["On the ball","“機靈的” 或 “反應迅速的”。",""],["On the blink","“出故障” 或 “運轉不正常”。",""],["On the cheap","“廉價” 或 “節省開支地”。",""],["On the dot","“準時” 或 “正好在某個時間點”。",""],["On the fence","“保持中立” 或 “猶豫不決”。",""],["On the fly","“臨時” 或 “即興”。",""],["On the fritz","“出故障” 或 “壞了”。",""],["On the house","“由店家請客” 或 “免費提供”。",""],["On the level","“靠譜” 或 “可信的”。",""],["On the line","“處於危險中” 或 “處在風險之中”。",""],["On the same page","“意見一致” 或 “觀點一致”。",""],["On the spot","“當場” 或 “立即”。",""],["On the spur of the moment","“心血來潮” 或 “一時衝動”。",""],["On top of the world","“心情非常好” 或 “非常開心”。",""],["On the up and up","“越來越好” 或 “誠實可信”。",""],["On the warpath","“怒氣衝衝” 或 “準備開戰”。",""],["On thin ice","“如履薄冰” 或 “處於危險境地”。",""],["Once and for all","“一勞永逸” 或 “徹底地、最終地解決問題”。",""],["Once bitten, twice shy","“一朝被蛇咬，十年怕井繩” 或 “吃一塹，長一智”。",""],["Once in a blue moon","“千載難逢” 或 “難得一見”。",""],["One fell swoop","“一下子”，“一舉”，“突然”。",""],["One-trick pony","“單一技能的人” 或 “單打獨鬥的人”。",""],["Open a can of worms","“開啟一罐蚯蚓” 或 “引發一連串麻煩”。",""],["Out of date","“過時” 或 “不再流行”。",""],["Out of left field","“出乎意料” 或 “突然”。這個短語用來形容某個想法、評論或事件完全出人意料，通常是毫無預警的。",""],["Out of my hands","“我無能為力” 或 “這不由我掌控”。",""],["Out of order","“損壞” 或 “故障”。",""],["Out of the blue","“突如其來” 或 “出乎意料”。",""],["Out of the frying pan and into the fire","“跳出油鍋，又入火坑”，表示從一個困境又掉入另一個更糟糕的困境。",""],["Out of the question","“毫無可能” 或 “完全不可能”。",""],["Out of the woods","“脫離困境” 或 “擺脫危險”。",""],["Out of this world","“特別好” 或 “令人讚歎的”。",""],["Out on the town","“去城裡玩” 或 “外出娛樂”。",""],["Out to lunch","“走神” 或 “心不在焉”。",""],["Over my dead body","“除非我死了” 或 “絕不允許”。",""]],"P、Q、R":[["Packed like sardines","“像沙丁魚一樣被擠滿” 或 “擠得像沙丁魚罐頭一樣”。",""],["Pain in the neck","“眼中釘” 或 “讓人煩心的人或事”。",""],["Paint the town red","“狂歡” 或 “盡情歡樂”。",""],["Paint you a picture","“描繪一個畫面” 或 “描述詳細”。",""],["Pandora’s box","“潘多拉的盒子” 或 “災難的根源”。",""],["Par for the course","“情理之中” 或 “習以為常”。",""],["Party animal","“歡慶動物” 或 “派對動物”。",""],["Pass the buck","“推卸責任” 或 “轉嫁責任”。",""],["Passed the course","“Passed the course” 表示 “通過了課程” 或 “通過了課程的考試”。",""],["Pay a pretty penny","“花大價錢” 或 “花很多錢”。",""],["Pay an arm and a leg","“付出高昂的代價” 或 “花了大價錢”。",""],["Pay the piper","“為自己的行為承擔後果” 或 “付出代價”。",""],["Pay through the nose","“被敲竹槓” 或 “支付高得離譜的價格”。",""],["Pedal to the metal","“全力以赴” 或 “全速前進”。",""],["Peg out","“去世” 或 “死亡”。",""],["Pencil/paper pusher","“文書工作者” 或 “做文書工作的人”。",""],["Peter out","“逐漸消失” 或 “逐漸減少”。",""],["Pick up the tab","“買單” 或 “付賬”。",""],["Pick up your ears","“豎起耳朵” 或 “留心聽” 。",""],["Pie in the sky","“空中樓閣” 或 “不切實際的幻想”。",""],["Pig out","“暴飲暴食” 或 “大吃特吃”。",""],["Pigheaded","“固執的” 或 “頑固的”，形容一個人非常固執，不輕易改變自己的看法或計劃。",""],["Pipe down","“安靜下來” 或 “住嘴”。",""],["Pipe dream","“白日夢” 或 “空想”。",""],["Pitch dark","“漆黑一片” 或 “伸手不見五指”。",""],["Pitch in","“幫忙” 或 “共同出力”。",""],["Play by ear","隨機應變；見機行事。",""],["Play devil’s advocate","“扮演魔鬼的代言人” 或 “唱反調”。",""],["Play hardball","“強硬手段” 或 “採取強硬立場”。",""],["Play second fiddle","“甘居其次” 或 “當副手”。",""],["Playing dumb","裝傻，裝作不知道。",""],["Playing with fire","“玩火自焚” 或 “冒險”。",""],["Poker face","“撲克臉” 或 “面無表情”。",""],["Pound the pavement","“尋找工作” 或 “徒步四處奔走”。",""],["Power dressing","“權力穿著”、“強勢著裝” 或 “權利打扮”。",""],["Pride comes before a fall","“驕兵必敗” 或 “驕傲使人落後”。",""],["Pull his/her own weight","“儘自己的本分” 或 “承擔自己應有的任務”。",""],["Pull it off","“成功做到” 或 “完成某件困難的事情”。",""],["Pull out all the stops","“竭盡全力” 或 “不遺餘力”。",""],["Pull rank","“倚老賣老” 或 “仗勢欺人”。",""],["Pull someone’s leg","“開某人的玩笑” 或 “捉弄某人”。",""],["Pull strings","“利用關係” 或 “走後門”。",""],["Pull the plug","“拔掉插頭” 或 “終止、結束某事”。",""],["Pull the wool over your eyes","“矇蔽某人” 或 “欺騙某人”。",""],["Pull up stakes","“拔營” 或 “遷居”。",""],["Pull your chain","“開你的玩笑” 或 “耍你”。",""],["Pull yourself together","“冷靜下來” 或 “振作起來”。",""],["Pulled a rabbit out of one’s hat","“讓人大吃一驚” 或 “出奇制勝”。",""],["Pulled the rug out from under me","“突然讓人失去依靠” 或 “突然讓人陷入困境”。",""],["Pulling my leg","“開玩笑” 或 “捉弄某人”。",""],["Puppy love","“初戀” 或 “少男少女的戀愛”。",""],["Pushing your luck","“得寸進尺” 或 “把好運氣用到極限”。",""],["Put a sock in it","“閉嘴” 或 “安靜”。",""],["Put in their place","“把某人放在應有的位置” 或 “讓某人清楚自己的位置”。",""],["Put it on the back burner","“將它放在次要位置” 或 “暫時擱置”。",""],["Put my foot down","“堅持立場” 或 “斷然拒絕”。",""],["Put on my thinking cap","“仔細思考” 或 “認真思考”。",""],["Put our heads together","“共同商議” 或 “一起商量”。",""],["Put someone on the spot","“讓某人當場回答問題” 或 “讓某人難堪”。",""],["Put something down in black and white","“用書面形式記錄下來” 或 “白紙黑字寫下來”。",""],["Put something into practice","“將某事付諸實踐” 或 “實踐某事”。",""],["Put something on ice","“擱置某事” 或 “暫緩處理某事”。",""],["Put the squeeze/screws on someone","“施壓於某人” 或 “對某人施加壓力”。",""],["Put your finger on it","“準確指出” 或 “恰恰找出問題的根源”。",""],["Put your money where your mouth is","“言行一致” 或 “用實際行動證明”。這個短語用來敦促一個人去支援他所說過的話，用財務或實際行動來證明他們確實相信這些話。",""],["Quality time","“優質時間” 或 “高質量的陪伴時間”。",""],["Racking my brain","“絞盡腦汁” 或 “費力思考”。",""],["Rain on someone’s parade","“煞某人的風景” 或 “潑某人冷水”。",""],["Rain or shine","“風雨無阻”。",""],["Raise Cain","“惹是生非” 或 “生事”。",""],["Read someone the riot act","“嚴厲訓斥某人” 或 “警告某人”。",""],["Real McCoy","“正牌貨” 或 “真品”。",""],["Red flag","“紅旗” 或 “危險訊號”。",""],["Red herring","“紅鯡魚” 或 “誘餌”。",""],["Red in the face","“臉紅” 或 “感到尷尬”。",""],["Red letter day","“紅字日” 或 “特別重要的日子”。",""],["Rest on one’s laurels","“躺在功勞簿上” 或 “吃老本”。",""],["Right this way","“這邊請” 或 “請這邊走”。",""],["Ring a bell","“聽起來很熟” 或 “想起某事”。",""],["Rinky-dink","“簡陋的” 或 “不重要的”。",""],["Roll out the red carpet","“鋪開紅地毯” 或 “隆重歡迎”。",""],["Rolling in it","“財源滾滾” 或 “非常富有”。",""],["Rome wasn’t built in a day","“羅馬不是一天建成的”。表示偉大的成就或事情需要時間和耐心，無法一蹴而就。",""],["Rub elbows with someone","“與某人密切接觸” 或 “與某人交往”。",""],["Ruffle feathers","“惹惱，激怒某人。” 從字面上翻譯就是 “弄亂羽毛”，意指在某種情形下冒犯或激怒他人，像是撥弄了舒展的羽毛使其感到不適。",""],["Rule of thumb","“經驗法則” 或 “通常通則”。",""],["Run amok","“失控” 或 “狂亂”。",""],["Run circles around someone","輕鬆超過某人；在某方面表現得比某人好很多。",""],["Run errands","“跑腿” 或 “辦雜事”。",""],["Run its course","“順其自然” 或 “自然而然地結束”。",""],["Run like the wind","“跑得像風一樣快” 或 “飛快地跑”。",""],["Run one’s mouth off","“口無遮攔” 或 “信口開河”。",""],["Run out of steam","“筋疲力盡” 或 “失去動力”。",""],["Run the show","“掌控全域性” 或 “負責一切”。",""],["Run-of-the-mill","“普通的” 或 “平凡的”。",""],["Running on fumes","“繼續執行但已幾乎沒有能量”；常用於形容人已經疲憊不堪但仍在勉強堅持。",""]],"S":[["Sail close to the wind","“冒險行事” 或 “接近危險”。",""],["Sales pitch","“推銷話術” 或 “銷售演示”。",""],["Salt of the earth","“社會中最有價值的人” 或 “忠實和誠實的人”。",""],["Saved by the bell","“千鈞一髮時刻得救” 或 “險險脫身”。",""],["Saved someone’s skin","“救了某人的命” 或 “讓某人免於困境”。",""],["Saving for a rainy day","“未雨綢繆” 或 “儲蓄以備不時之需”。",""],["Say uncle","“認輸” 或 “投降”。",""],["Say your piece","“發表意見” 或 “說出自己的觀點”。",""],["Scapegoat","“替罪羊”。",""],["Scare the pants off someone","“把某人嚇得魂不附體” 或 “把某人嚇得屁滾尿流”。",""],["School of thought","“學派” 或者 “思想流派”。",""],["School someone in something","“在某事上教某人” 或 “在某事上訓練某人”。",""],["Scot-free","“毫無損傷地” 或 “毫髮無損地”。",""],["Screw up","“搞砸” 或 “弄糟”。",""],["Sea legs","“適應海上生活” 或 “海船上站穩的本領”。",""],["Second-rate (or third- or fourth-rate)","“二流的”（或者 “三流的” 或 “四流的”），意指某物或某人不夠優質或處於下層次的水平。",""],["Security blanket","“安全毯” 或 “給予心理安慰的物品或慣例”。",""],["See eye to eye","“意見一致” 或 “看法相同”。",""],["See someone’s true colors","“看清某人的真面目” 或 “看透某人的真實本性”。",""],["See the big picture/look at the big picture","“看到大局” 或 “考慮整體”。",""],["See the light","“看見光明” 或 “頓悟”。",""],["See through someone/something","“看穿某人/某事”。",""],["Sell like hotcakes","“暢銷” 或 “像熱蛋糕一樣賣得快”。",""],["Sell someone short","“小看某人” 或 “低估某人”。",""],["Set my teeth on edge","使人煩躁不安，令人極度反感。",""],["Shake a leg","“快點” 或 “趕緊行動”。",""],["Shape up or ship out","“改變表現或者被解僱” 或 “要麼改進，要麼走人”。",""],["Sharp as a tack","“腦袋非常靈光” 或 “聰明伶俐”。",""],["Ships passing in the night","“夜晚交錯而過的船隻” 或 “擦肩而過的陌生人”。",""],["Shoestring budget","“極其有限的預算” 或 “微薄的預算”。",""],["Shoot from the hip","“直接了當” 或 “不加思索地行動或發言”。",""],["Shoot hoops","“投籃” 或 “打籃球”。",""],["Shoot off one’s mouth","“口無遮攔”，或 “胡說八道”。",""],["Shoot the breeze","閒聊，閒談。",""],["Shot in the arm","“強心針” 或 “有力的鼓勵”。",""],["Shot in the dark","“瞎猜” 或 “盲目嘗試”。",""],["Show of hands","“舉手表決” 或 “舉手投票”。",""],["Sick as a dog","“病得很嚴重”，“病得很厲害”。",""],["Sit tight","“耐心等待” 或 “堅持住”。",""],["Sitting like a bump on a log","形容某人什麼也不做，呆若木雞，無所事事地坐著。",""],["Sitting pretty","“處境優越” 或 “安然處之”。",""],["Sixth sense","“第六感” 或 “直覺”。",""],["Skeleton in the closet","“有不可告人的秘密” 或 “家醜”。",""],["Skeleton crew","“基礎工作人員” 或 “最低限度的人員配置”。",""],["Skip class/cut class","“逃課” 或 “曠課”。",""],["Slap on the wrist","“小懲大誡” 或 “輕微的處罰”。",""],["Sleep like a log","“睡得像根木頭” 意即 “睡得很香” 或 “睡得很沉”。",""],["Slim chance","“機會渺茫” 或 “幾乎沒有可能”。",""],["Slip of the tongue","“口誤” 或 “說漏嘴”。",""],["Slow and steady wins the race","“穩紮穩打才能贏得比賽” 或 “穩步前進勝過急於求成”。",""],["Small world","“世界真小”。",""],["Smell a rat","感覺有貓膩，覺得事情有蹊蹺。",""],["Smoke and mirrors","“煙霧和鏡子” 或 “障眼法”。",""],["Smoke like a chimney","“抽菸像煙囪一樣” 或 “抽菸成癮”。",""],["Snowed under","“被壓得喘不過氣” 或 “工作堆積如山”。",""],["So far so good","“到目前為止一切順利”。",""],["Sold me out","“出賣我” 或 “背叛我”。",""],["Something is killing me","“某事正在折磨我” 或 “某事令我非常痛苦”。",""],["Something sucks","“某事很糟糕” 或 “某事很差勁”。",""],["Something to crow about","“值得炫耀的事情” 或 “引以為豪的事情”。",""],["Sour grapes","“酸葡萄” 或 “假裝不在乎其實得不到的東西”。",""],["Speak of the devil","“說曹操，曹操到” 或 “說到某人，某人就出現”。",""],["Spice things up","“給事情增添趣味” 或 “讓生活更有趣”。",""],["Spill the beans","“洩漏秘密” 或 “透露真相”。",""],["Spin doctor","“政治公關” 或 “新聞發言人”。",""],["Spineless","“懦弱的” 或 “沒有骨氣的”。",""],["Spitting image","“酷似” 或 “一模一樣”。",""],["Splitting hairs","“斤斤計較” 或 “過分在意細節”。",""],["Spread too thin","“攤得太薄” 或 “分散精力太多”。",""],["Square meal","“一頓豐盛的飯” 或 “營養均衡的一餐”。",""],["Squeaky clean","“非常乾淨” 或 “一塵不染”。",""],["Stab someone in the back","“在背後捅刀子” 或 “背叛某人”。",""],["Stand my ground","“堅持立場” 或 “堅守立場”。",""],["Stay in touch","“保持聯絡”。",""],["Stay on budget","“控制預算” 或 “按預算行事”。",""],["Steal someone’s thunder","“搶某人的風頭”。",""],["Step up your game","“提升你的表現” 或 “加把勁兒”。",""],["Stew in your own juices","“自食其果” 或 “自作自受”。",""],["Stick out like a sore thumb","“顯得非常突兀” 或 “格格不入”。",""],["Stick to your guns","“堅持己見” 或 “堅持立場”。",""],["Stick-in-the-mud","“守舊的人” 或 “固執的人”。",""],["Sticking points","“僵持點” 或 “癥結點”。",""],["Sticky fingers","“順手牽羊” 或 “小偷小摸”。",""],["Stop on a dime","“剎車迅速” 或 “說停就停”。",""],["Street-smart","“街頭智慧” 或 “見多識廣”。",""],["Stretch the truth","“誇大其詞” 或 “言過其實”。",""],["Strike it rich","“暴富” 或 “突然致富”。",""],["String someone along","“吊某人胃口” 或 “一直讓某人抱有希望”。",""],["Stuffed shirt","“裝腔作勢的人” 或 “自以為是、古板的人”。",""],["Swallow your pride","“嚥下你的自尊” 或 “放下自尊”。",""],["Sweat blood","“汗流浹背” 或 “費盡心血”。",""],["Sweating bullets","“汗如雨下” 或 “非常緊張、焦慮”。",""]],"T":[["Take a rain check","“改天再約” 或 “下次再說”。",""],["Take a shine to something/someone","“對某物/某人產生好感” 或 “對某物/某人喜愛”。",""],["Take it easy","“放輕鬆” 或 “別緊張”。",""],["Take it with a grain of salt/a pinch of salt","“持保留態度” 或 “有所懷疑地看待”。",""],["Take someone at their word","“信以為真” 或 “按某人說的去做”。",""],["Take something by storm","“橫掃” 或 “迅速成功”。",""],["Take something in stride","泰然處之，從容應對。",""],["Take the cake","“出乎意料” 或 “最了不起” 或 “糟糕透頂”。",""],["Take the floor","“發言” 或 “開始講話”。",""],["Take the plunge","“冒險一試” 或 “果斷行動”。",""],["Take the wind out of your sails","“讓你洩氣” 或 “使你氣餒”。",""],["Taken for a ride","“被欺騙” 或 “受騙上當”。",""],["Talk a blue streak","“滔滔不絕” 或 “說話特別快”。",""],["Talk of the town","“談論的熱點” 或 “城中話題”。",""],["Talk someone’s ear off","“說得某人耳朵都快掉了” 或 “喋喋不休地說話”。",""],["Talk through one’s hat","“胡說八道” 或 “不懂裝懂”。",""],["Talk to someone like a Dutch uncle","“像荷蘭叔叔一樣對某人談話” 或 “嚴厲地批評或勸導”。",""],["Talk to the hand","“別跟我說” 或 “我不想聽”。",""],["Talk turkey","“直截了當” 或 “開門見山”。",""],["Talking shop","“談論工作” 或 “談論行業內的事情”。",""],["Tall order","“艱難的任務” 或 “難以實現的請求”。",""],["Tall story","“誇張的故事” 或 “荒誕的故事”。",""],["Tar someone with the same brush","“同一枚刷子刷所有人” 或 “一概而論”。",""],["Tell me about it","“就是啊” 或 “可不是嘛”。",""],["Test the waters","“試探” 或 “摸底”。",""],["That hit the spot","“正合我意” 或 “正是我想要的”。",""],["That is to say","“也就是說”。",""],["That ship has sailed","“船已經開了” 或 “機不可失時不再來”。",""],["That’s all she wrote","“事情就到這裡”，或 “事情結束了”。用來表達某件事情已經完全結束或達到了最終結果，沒有更多的內容可供補充。",""],["That’s the last straw","“這是最後一根稻草” 或 “壓垮駱駝的最後一根稻草”。",""],["That’s wicked","“這真是太棒了” 或 “太厲害了”。",""],["The apple of my eye","“掌上明珠” 或 “珍愛之人”。",""],["The ball is in your court","“輪到你做決定” 或 “現在由你負責”。",""],["The bee’s knees","“最頂尖的” 或 “最好的”。",""],["The best of both worlds","“兩全其美”。",""],["The best thing since sliced bread","自切片面包以來最好的發明，用來形容某物非常棒或極其優秀。",""],["The Big Apple","“紐約市”。",""],["The Big Easy","“新奧爾良” 的暱稱。這個短語用來描述美國路易斯安那州的新奧爾良市，因為該城市的生活節奏輕鬆悠閒，相比其他大城市，這裡的壓力較小。",""],["The bottom line","“底線” 或 “最終結果”。",""],["The boys in blue","“男孩穿著藍色制服”，意為 “警察”。",""],["The brush-off / brushed me off","“被冷落” 或 “被敷衍”。",""],["The burning question","“迫切的問題” 或 “備受關注的問題”。",""],["The cat’s meow","“最好的” 或者 “非常棒的”。",""],["The devil is in the details","“細節決定成敗” 或 “問題出在細節上”。",""],["The early bird gets the worm","“早起的鳥兒有蟲吃”。",""],["The elephant in the room","“顯而易見卻被人忽視的問題”。",""],["The eleventh hour","“在最後一刻” 或 “在最後關頭”。",""],["The gift of the gab","“伶牙俐齒” 或 “口才好”。",""],["The last minute","“最後一刻” 或 “緊要關頭”。",""],["The lion’s share","“最大份額” 或 “最好的一部分”。",""],["The long and short of it","“總之” 或 “長話短說”。",""],["The munchies","“嘴饞” 或 “突然之間很想吃零食”。",""],["The other day","“前幾天” 或 “不久前”。",""],["The patience of Job","“忍受極大的痛苦和麻煩的耐心”，或直譯為 “約伯的耐心”。",""],["The pits","“最糟糕的情況” 或 “絕望的境地”。",""],["The pot calling the kettle black","“鍋嫌壺黑” 或 “五十步笑百步”。",""],["The road less travelled","“不尋常的選擇” 或 “不同尋常的道路”。",""],["The same wavelength","“在同一頻率上” 或 “有相同的想法或觀點”。",""],["The school of hard knocks","“人生的挫折教育” 或 “社會大學”。",""],["The shoe is on the other foot","“換位思考” 或 “角色互換”。",""],["The short end of the stick","“吃虧” 或 “受到不平等對待”。",""],["The squeaky wheel gets the grease","“叫得響的輪子獲得潤滑” 或者 “會哭的孩子有奶吃”。",""],["The straight and narrow","“正道” 或 “正軌”。",""],["The tide has turned","“形勢已經逆轉” 或 “局勢發生了變化”。",""],["The tip of the iceberg","“冰山一角”。",""],["The whole nine yards","“全力以赴” 或 “全部的”。",""],["There are clouds on the horizon","“烏雲壓境” 或 “前景不妙”。",""],["There are other fish in the sea","“天涯何處無芳草” 或 “海里還有別的魚”。",""],["There’s a method to his madness","“他看似瘋狂，實際上有其道理” 或 “外表瘋狂，實則有理”。",""],["There’s no such thing as a free lunch","“天下沒有免費的午餐” 。",""],["They were thrown together","“他們被匆忙地湊到一起” 或 “他們被倉促地安排在一起”。",""],["Think outside the box","跳出框框思考；打破常規思考。",""],["Third time’s a charm","“三次定律” 或 “第三次會有好運”。",""],["This is the life","“這才是生活” 或 “這就是享受人生”。",""],["Those who live in glass houses shouldn’t throw stones","“住在玻璃房子裡的人不應該扔石頭”，意思是人不要對別人進行批評，特別是當自己也有類似缺點或問題時。",""],["Three sheets to the wind","“喝得酩酊大醉” 或 “爛醉如泥”。",""],["Threw me for a loop","“讓我大吃一驚” 或 “讓我措手不及”。",""],["Through thick and thin","“同甘共苦” 或 “風雨無阻”。",""],["Throw a curveball/Throw a curve","“出其不意” 或 “製造意外”。",""],["Throw a monkey wrench into the works","“攪局” 或 “破壞計劃”。",""],["Throw caution to the wind","“不顧後果” 或 “拋開謹慎”。",""],["Thrown to the wolves","“被拋給狼群” 或 “被推入險境”。",""],["Tickled pink","“非常高興” 或 “樂得合不攏嘴”。",""],["Tighten your belt (or belt-tightening)","“勒緊褲腰帶” 或 “緊縮生活”。",""],["Tilt at windmills","“與風車作鬥爭” 或 “庸人自擾”。",""],["Time flies when you’re having fun","“快樂時光總是過得特別快” 或 “快樂的時光總是稍縱即逝”。",""],["Time is money","“時間就是金錢”。",""],["To be a chicken / to chicken out","“膽小鬼” 或 “臨陣退縮”。",""],["To be beside yourself","“極度激動” 或 “極度憤怒、悲傷”。",""],["To be closefisted","“吝嗇” 或 “小氣”。",""],["To be loaded","“很有錢” 或 “財大氣粗”。",""],["To be named after","“以…命名”。",""],["To be out of the question","“不可能的” 或 “不在考慮範圍之內”。",""],["To be tied up with something or someone","“與某事或某人有緊密聯絡” 或 “忙於某事或某人”。",""],["To be up to something","“正在忙某事” 或 “在策劃什麼事情（通常指不太好的事情）”。",""],["To beat the band","“非常響亮” 或 “非常強調地”。",""],["To bend someone’s ear","“借他人的耳朵” 或 “向某人嘮叨”。",""],["To black out","“失去知覺” 或 “臨時斷電”。",""],["To blow your own horn","“自吹自擂” 或 “自我吹噓”。",""],["To bomb","“失敗” 或 “慘遭失敗”。該用語通常用於描述電影、戲劇、演出或其他類似專案在票房或評價上的失敗。",""],["To box someone in","“使某人走投無路” 或 “困住某人”。",""],["To bug someone","“煩擾某人” 或 “使某人心煩”。",""],["To butt in","“插嘴” 或 “插手”。",""],["To call it a day","“收工” 或 “今天到此為止”。",""],["To call someone on the carpet","“訓斥某人” 或 “責怪某人”。",""],["To carry a torch for someone","“暗戀某人” 或 “對某人單相思”。",""],["To come out flat-footed","“措手不及” 或 “毫無準備地應對”。",""],["To come out swinging","“擺出一副迎戰的架勢” 或 “全力以赴地回應”。",""],["To corner the market","“壟斷市場” 或 “壟斷某行業”。",""],["To cry wolf","“狼來了” 或 “虛張聲勢”。",""],["To do a number on something","“對某事造成嚴重損害” 或 “嚴重影響”。",""],["To draw a blank","“一無所獲” 或 “搜尋記憶時想到腦袋空白”。",""],["To drink like a fish","“像魚一樣喝” 或 “牛飲”。",""],["To drop by","“順道拜訪” 或 “順便造訪”。",""],["To find fault with","“吹毛求疵”，或 “挑剔”。",""],["To follow up on something","“跟進某事” 或 “追查某事”。",""],["To get bent out of shape","“生氣” 或 “不高興”。",""],["To get in touch with","“聯絡” 或 “取得聯絡”。",""],["To get rid of","“擺脫” 或 “去除”。",""],["To get your walking papers","“被解僱” 或 “被開除”。",""],["To give in","“妥協” 或 “讓步”。",""],["To give someone the heads-up","“事先提醒某人” 或 “讓某人提前知道”。",""],["To go down like a lead balloon","“像鉛氣球一樣沉下去” 或 “徹底失敗”。",""],["To go Dutch","“各自付賬” 或 “AA 制”。",""],["To go off the deep end","“發瘋” 或 “失去理智”。",""],["To have another thing coming","“另有期待 “或” 大錯特錯 “。",""],["To have one’s back to the wall","“背靠牆” 或 “走投無路”。",""],["To hold out an olive branch","“伸出橄欖枝”，表示意欲和平或示好。",""],["To hold your own","“堅守立場” 或 “自立自強”。",""],["To keep an eye on","“留意” 或 “密切關注”。",""],["To know by sight","“面熟” 或 “見過面但不熟悉”。",""],["To live beyond your means","“入不敷出” 或 “寅吃卯糧”。",""],["To live hand-to-mouth","“勉強餬口” 或 “靠天吃飯”。",""],["To look down one’s nose","“瞧不起” 或 “輕視”。",""],["To make a long story short","“長話短說” 或 “簡而言之”。",""],["To make a mountain out of a molehill","“小題大做” 或 “誇大其詞”。",""],["To make matters worse","“更糟的是” 或 “更進一步的是”。",""],["To nix something","“取消某事” 或 “否決某事”。",""],["To outdo oneself","“超越自我” 或 “超越之前的水平”。",""],["To paddle your own canoe","“獨自划槳” 或 “自力更生”。",""],["To pony up","“掏腰包” 或 “支付”。",""],["To run/blow hot and cold","“翻臉無常” 或 “變化無常”。這個短語通常用來形容一個人的情緒或態度不斷變化，有時候表現得很熱情友好，有時候卻又變得冷淡疏遠。",""],["To see the light","“看到了光明” 或 “恍然大悟”。",""],["To serve one right","“罪有應得” 或 “活該”。",""],["To smooth things over","“平息事態” 或 “緩和情況”。",""],["To stand up for","“為……挺身而出” 或 “支援”。",""],["To start over from scratch","“從頭開始” 或 “從零開始”。",""],["To stonewall","“阻撓” 或 “故意拖延”。",""],["To take a load off someone’s back","“為某人減輕負擔” 或 “替某人分擔壓力”。",""],["To take it easy","“放鬆一下” 或 “不那麼辛苦”。",""],["To take something for granted","“認為…理所當然” 或 “不珍惜、忽視”。",""],["To the hilt","“全力以赴” 或 “徹底地”。",""],["Tongue-in-cheek","“俏皮話” 或 “無傷大雅的玩笑”。",""],["Too big for one’s boots","“自負” 或 “目中無人”。",""],["Too many irons in the fire","“同時做太多事情” 或 “攤子鋪得太大”。",""],["Top dog","“領頭地位” 或 “領導者”。",""],["Top-notch","“頂尖的” 或 “一流的”。",""],["Touch and go","“危險的” 或 “情況不確定的”。",""],["Touch base","“聯絡” 或 “聯絡”。",""],["Track record","“記錄” 或 “業績”。",""],["Train of thought","“思路” 或 “思維的軌跡”。",""],["Train wreck","“車禍現場” 或 “災難性的局面”。",""],["Travel light","“輕裝旅行” 或 “儘量減少行李”。",""],["Treat someone to something","“請某人某物” 或 “款待某人”。",""],["Treat/handle someone with kid gloves","“溫柔地對待某人” 或 “小心翼翼地處理某人的問題”。",""],["Troubled waters","“混亂的局面” 或 “險境”。",""],["True blue","“忠誠的” 或 “堅定不移的”。",""],["Tuckered out","“筋疲力盡” 或 “累壞了”。",""],["Turn a blind eye","“視而不見” 或 “裝作沒看見”。",""],["Turn a place upside down","“翻箱倒櫃” 或 “把某個地方弄得一團糟”。",""],["Turn over a new leaf","“改過自新” 或 “翻開新的一頁”。",""],["Turn the other cheek","“以德報怨” 或 “不計較，不報復”。",""],["Turn the tables","“扭轉局面” 或 “反敗為勝”。",""],["Turn up the heat","“加大壓力” 或 “加緊力度”。",""],["Twist someone’s arm","“扭某人的胳膊” 或 “強迫某人做某事”。",""],["Two peas in a pod","“一模一樣” 或 “形影不離”。",""]],"U-Z":[["Under a cloud","“處於困境” 或 “被懷疑”。",""],["Under someone’s thumb","“在某人的掌控之下” 或 “受某人控制”。",""],["Under the table/counter","“桌下交易” 或 “暗地裡進行”。",""],["Under the wire","趕在最後時刻，剛好及時。",""],["Until the cows come home","“到了很晚” 或 “很久很久”。",""],["Up a blind alley","“走入死衚衕” 或 “陷入困境”。",""],["Up a gum tree","“陷入困境” 或 “束手無策”。",""],["Up for grabs","“人人可得” 或 “人人都有機會”。",""],["Up in arms","非常憤怒或強烈抗議。",""],["Up in the air","“懸而未決” 或 “不確定”。",""],["Up the Creek Without a Paddle","“陷入困境” 或 “身處困境中無法自拔”。",""],["Up to snuff","“達到標準” 或 “合格”。",""],["Upset the apple cart","“打亂現局” 或 “破壞現有秩序”。",""],["Use your loaf","“動腦筋” 或 “用心想想”。",""],["Veg out","“葛優癱” 或 “無所事事”。",""],["Walk in someone’s shoes","“設身處地” 或 “換位思考”。",""],["Walk in the park","“輕鬆的事情”，或者表示一件非常容易完成的事情。",""],["Walking on air","“飄飄然” 或 “感到無比快樂”。",""],["Wallflower","“牆花” 或 “在社交場合中不引人注意的人”。",""],["Washing my hands of something/someone","“與某事／某人撇清關係” 或 “不再插手某事／某人”。",""],["Waste not, want not","“儉以防匱” 或 “不浪費就不會缺乏”。",""],["Watch out for","“小心” 或 “留意”。",""],["Water under the bridge","“過眼雲煙” 或 “既往不咎”。",""],["Watering hole","“水坑” 或 “飲水地”，在現代英語中，通常指代一個社交場所，比如酒吧、咖啡館等，人們在這裡聚集社交、放鬆。",""],["Wave of the future","“未來的趨勢” 或 “未來的發展方向”。",""],["We see eye to eye","“我們意見一致” 或 “我們看法相同”。",""],["We’ll cross that bridge when we come to it","“船到橋頭自然直”。",""],["Wear many different hats","“身兼多職” 或 “扮演多重角色”。",""],["Wear your heart on your sleeve","“感情外露” 或 “喜怒形於色”。",""],["Weasel out of something","“逃避做某事” 或 “推卸責任”。",""],["Weather the storm","“經受住風暴” 或 “渡過難關”。",""],["Well begun is half done","“好的開端是成功的一半”。",""],["Well-heeled","“富有的” 或 “有錢的”。",""],["Went the extra mile","“付出額外的努力” 或 “全力以赴”。",""],["Wet behind the ears","“還很年輕”，或者 “還很不成熟，缺乏經驗”。",""],["Wet blanket","“掃興的人” 或 “煞風景的人”。",""],["Wet my whistle","“潤潤喉” 或 “喝點酒”。 這個短語常常用來表示通過喝點東西（特別是酒精飲料）來解渴或享受。",""],["What are you up to?","“你在做什麼？” 或 “你最近在忙什麼？”",""],["When it rains, it pours","“禍不單行” 或 “一旦下雨就會傾盆”。",""],["When pigs fly","“除非太陽打西邊出來” 或 “根本不可能發生的事”。",""],["When push comes to shove","“當情況緊急（關鍵時刻）” 或 “不得不面對現實的時候”。",""],["When the chips are down","“在關鍵時刻” 或 “在危急時刻”。",""],["Where the rubber meets the road","“實踐出真知” 或 “關鍵時刻檢驗效果”。",""],["Where were we?","“我們剛剛說到哪裡了？” 或 “我們之前講到哪了？”",""],["White elephant","“無用但昂貴的東西” 或 “華而不實的禮物”。",""],["White lie","“善意的謊言” 或 “無傷大雅的謊言”。",""],["Whitewash","“掩飾” 或 “粉飾太平”。",""],["Who asked you?","“誰問你了？” 或 “輪得著你嗎？”",""],["Who do you think you are?","“你以為你是誰？” 或 “你覺得你算老幾？”",""],["Whole ball of wax","“整件事情” 或 “全部”。",""],["Wild and woolly","“狂野而毛茸茸” 或 “未開化的、粗獷的”。",""],["Will take place","“將會發生” 或 “將會進行”。",""],["Wine and dine","“款待” 或 “盛情款待”。",""],["Winging it","“即興發揮” 或 “臨時應付”。",""],["With bated breath","“屏息以待” 或 “焦急地等待”。",""],["With bells on","“全副武裝” 或 “興高采烈地”。",""],["With flying colors","“取得優異成績”、“出色完成任務” 或 “凱旋而歸”。",""],["Wolf in sheep’s clothing","“披著羊皮的狼”。用來形容那些表面和善，內心險惡的人。",""],["Work against the clock","“爭分奪秒” 或 “爭取時間”。",""],["Worth one’s salt","“值得某人的鹽” 或 “某人稱職”。",""],["Wouldn’t be caught dead","“打死也不願做某事” 或 “絕不願意被看見做某事”。",""],["Wouldn’t hurt a fly","“連只蒼蠅都不願傷害” 或 “特別溫和仁慈”。",""],["Wouldn’t touch it with a ten-foot pole","“避之不及” 或 “完全不想碰”。比喻對於某事或某物的強烈迴避或拒絕。",""],["Wrap your head around something","“理解某事” 或 “弄清楚某事”。",""],["X marks the spot","“X 標記了地點” ，表示某個確切的位置或目標。這一短語通常用於尋寶或解決謎題時，表示地圖上的 X 符號揭示了藏寶或關鍵點。",""],["You bet","“當然” 或 “你說得對”。",""],["You can bet your boots","“你可以肯定” 或 “你可以賭上你的全部”（表示對某事有完全的信心）。",""],["You can bet your bottom dollar","“你可以打包票” 或 “你完全可以相信”。",""],["You can lead a horse to water, but you can’t make him drink","“你可以帶馬到水邊，但不能強迫它喝水。” 這個成語比喻你可以為某人提供機會或資源，但不能強迫他們接受或利用。最終決定權還是在他們自己手中。",""],["You can say that again","“你說得很對” 或 “我完全同意”。",""],["You can’t have your cake and eat it too","魚與熊掌不可得兼。",""],["You can’t judge a book by its cover","“人不可貌相，海水不可斗量”，即不要以表面來評價某事物或某人。",""],["You can’t make an omelet without breaking some eggs","“做大事必有犧牲” 或 “想要有所成，就必須付出代價”。",""],["You can’t squeeze blood out of a turnip","“榨不出蘿蔔血” 或 “沒有辦法從石頭裡榨出水來”。",""],["You can’t take it with you","“身外之物，生不帶來，死不帶去。” 或 “錢財乃身外之物，帶不走。”",""],["You can’t teach an old dog new tricks","“你無法教年老的狗新把戲” 或 “本性難移”。",""],["You get what you pay for","“一分錢一分貨” 或 “便宜沒好貨”。",""],["You’ll catch more flies with honey than with vinegar","“溫言軟語比武力威逼更能說服人” 或 “好話比惡語更能感動人”。",""],["You’re telling me","“你這不是廢話嗎” 或 “這點我還不知道啊”。",""],["You’ve sold me","“你說服我了” 或 “我被你打動了”。",""],["Your guess is as good as mine","“我也不知道” 或 “我和你一樣猜不透”。",""],["Zero tolerance","“零容忍”。",""],["Zip it","“閉嘴” 或 “安靜”。",""]],"a~z":[["A bad apple","“害群之馬” 或 “一個有害的個體”。",""],["A baker’s dozen","“十三個”。這個短語用來表示數量時，比通常的一打（十二個）多一個。",""],["A ballpark figure","“大致的數字” 或 “粗略的估算”。",""],["A bird in the hand is worth two in the bush","“手中之鳥勝過林中二鳥” 或 “穩妥之物勝過可能更多但不確定的事物”。",""],["A bit/A little bit","“一點點” 或 “稍微”。",""],["A blessing in disguise","“塞翁失馬，焉知非福” 或 “因禍得福”。",""],["A bone to pick","“有抱怨” 或 “有爭執”。",""],["A breath of fresh air","“一縷新鮮空氣” 或 “耳目一新”。",""],["A bunch of","“一堆” 或 “許多”。",""],["A chip on your shoulder","“心懷怨恨” 或 “積怨”。",""],["A day late and a dollar short","“為時已晚” 或 “錯失良機”。",""],["A dime a dozen","“非常普通” 或 “隨處可見”。這表示某事物極為常見，並沒有特別的價值。",""],["A doozy","“非同尋常的事物” 或 “極具挑戰的事情”。",""],["A doubting Thomas","“多疑的托馬斯” 或 “懷疑一切的人”。",""],["A far cry from (something)","“與（某事物）大不相同” 或 “遠遠不同”。",""],["A fifth wheel","“多餘的人” 或 “不必要的存在”。",""],["A flash in the pan","“曇花一現”，形容某事物或人曾經一度輝煌或成功，然而很快就消失了，並沒有持久的影響力。",""],["A fool and his money are easily parted","“傻瓜和他的錢財很容易分離” 或 “愚人財難留”。",""],["A for effort","“努力加分” 或 “表揚你努力的精神”。",""],["A fork in the road","“人生的十字路口” 或 “關鍵抉擇的時刻”。",""],["A good Samaritan","“樂善好施者” 或 “好撒瑪利亞人”。",""],["A hang-up","“心結” 或 “心理障礙”。",""],["A hard nut to crack","“難題” 或 “棘手的事情”。",""],["A hot potato","“燙手山芋”。",""],["A kickback","“回扣” 或 “非法佣金”。",""],["A little bird told me","“有小道訊息告訴我” 或 “我聽說”。",""],["A little learning is a dangerous thing","“一知半解是危險的。”",""],["A memory like a sieve","“像篩子一樣的記憶” 或 “記性差”。",""],["A penny for your thoughts","“透露一下你的想法” 或 “說說你在想什麼”。",""],["A penny saved is a penny earned","“省一分是一分” 或 “節約即賺錢”。",""],["A perfect storm","“完美風暴” 或 “多事之秋”。",""],["A picture is worth a thousand words","“一圖勝千言” 或 “圖勝於言”。",""],["A piece of cake","“小菜一碟” 或 “非常容易的事情”。",""],["A ray of sunshine","“一縷陽光” 或 “帶來希望的人或事物”。",""],["A rip-off","“敲竹槓” 或 “宰人”。",""],["A screw loose","“有顆螺絲鬆了” 或 “精神有些失常”。",""],["A screwup","“搞砸了” 或 “失誤”。",""],["A sledgehammer to crack a nut","“小題大做” 或 “大材小用”。",""],["A smart cookie","“聰明的人” 或 “機靈的人”。",""],["A snowball effect","“滾雪球效應”。",""],["A snowball’s chance in hell","“毫無機會” 或 “機會微乎其微”。",""],["A stitch in time saves nine","“小洞不補，大洞吃苦” 或 “及時縫一針，省下九針”。",""],["A stone’s throw","“一箭之遙” 或 “非常近的距離”。",""],["A storm in a teacup","“小題大做” 或 “誇張的小事”。",""],["A storm is brewing","“風暴正在醞釀” 或 “即將爆發的危機”。",""],["A surefire way","“萬無一失/必定成功的方法”。",""],["A sweet tooth","“愛吃甜食” 或 “有甜食癖好”。",""],["A toss-up","“一場難分勝負的比賽” 或 “難以預測的局面”。",""],["Absentminded","“心不在焉” 或 “健忘的”。",""],["Ace in the hole","“隱藏的王牌” 或 “秘密武器”。",""],["Ace up the sleeve","“隱藏的王牌” 或 “秘密武器”。",""],["Achilles’ heel","“致命弱點” 或 “薄弱環節”。",""],["Acid test","“嚴格考驗” 或 “最終檢驗”。",""],["Across the board","全面的；普遍的；在所有方面。",""],["Actions Speak Louder Than Words","“行動勝於言辭”。",""],["Add fuel to the fire","“火上澆油” 或 “進一步激化矛盾”。",""],["Add insult to injury","“雪上加霜” 或 “傷口上撒鹽”。",""],["Against the clock","“與時間賽跑” 或 “爭分奪秒”。",""],["Ahead of schedule","“提前” 或 “超前”。",""],["All bark and no bite","“雷聲大，雨點小” 或 “虛張聲勢”。",""],["All bets are off","“所有的打賭都作廢了” 或 “情況不確定了，一切都難以預料”。",""],["All Greek to me","“我完全不懂” 或 “像天書一樣難懂”。",""],["All heart","“非常善良” 或 “心地很好”。",""],["All in the same boat","“同舟共濟” 或 “處境相同”。",""],["All kidding aside","“不開玩笑/言歸正傳”。",""],["All over the map","“到處都是” 或 “雜亂無章”。",""],["All set","“一切準備就緒” 或 “萬事俱備”。",""],["All thumbs","笨手笨腳，手指不靈活。",""],["All wet","“全錯的” 或 “大錯特錯”。",""],["Along for the ride","“隨波逐流” 或 “被帶著走”。",""],["An about-face","“大轉變” 或 “完全改變主意”。",""],["An albatross around my neck","“肩上的負擔” 或 “沉重的負擔”。",""],["An apple a day keeps the doctor away","“一天一個蘋果，醫生遠離我” 或者 “每日一蘋果，醫生遠離我”。",""],["An old head on young shoulders","“年少老成” 或 “年紀輕輕卻很有智慧”。",""],["An old soul","“老靈魂” 或 “心智成熟的人”。",""],["An open book","“坦誠直率的人” 或 “毫無遮掩的人”。這個短語用於描述一個人對他自己的生活和情感非常坦率，毫無保留，如同展開一本書一般，可以讓人輕易 “讀取”。",""],["An ounce of prevention is worth a pound of cure","“一分預防勝過十分治療” 或 “預防勝於治療”。",""],["Are you kidding me?","“你在開玩笑吧？” 或 “你在逗我嗎？”。",""],["Armchair quarterback","“事後諸葛” 或 “舒適沙發上的指揮官”。",""],["Armed to the teeth","“全副武裝” 或 “武裝到牙齒”。",""],["Around-the-clock","“全天候” 或 “24 小時不停”。",""],["As busy as a bee","“忙得像蜜蜂” 或 “非常忙碌”。",""],["As easy as ABC","“像 ABC 一樣簡單”，表示某事非常簡單、易於理解或完成。",""],["As easy as pie","“輕而易舉” 或 “無比簡單”。",""],["As genuine as a three-dollar bill","“假到不行” 或 “完全不是真的”。",""],["As happy as a clam","“心滿意足” 或 “非常高興”。",""],["As quiet as a mouse","“像老鼠一樣安靜” 或 “非常安靜”。",""],["As rare as hen’s teeth","“稀有罕見” 或 “非常稀有”。",""],["As right as rain","“完好無損” 或 “非常健康”。",""],["As the crow flies","“直線距離” 或 “兩點之間的最短距離”。",""],["As white as a sheet/as white as a ghost","“臉色蒼白” 或 “面無血色”。",""],["At best","“頂多” 或” 最好也不過是”。",""],["At least","“至少”。",""],["At loggerheads","“意見不合” 或 “嚴重爭執”。",""],["At my wits’ end","“束手無策” 或 “智窮技盡”。",""],["At the bottom of the totem pole","“在圖騰柱的底部” 或 “處於最低層級”。",""],["At the crack of dawn","“一大清早” 或 “破曉時分”。",""],["At the drop of a hat","“立刻” 或 “毫不猶豫”。",""],["At the end of your rope","“走投無路” 或 “忍無可忍”。",""],["At-large","” 廣泛地” 或 ” 普遍地”，也可以表示 ” 不受限制地”。",""],["Baby boomer","“嬰兒潮一代” 或 “嬰兒潮時期出生的人”。",""],["Back to basics","“返璞歸真” 或 “迴歸基礎”。",""],["Back to square one","“回到起點” 或 “重新開始”。",""],["Back to the drawing board","“回到起點” 或 “重新開始”。",""],["Backhanded compliment","“挖苦” 或 “雙刃劍的恭維”。",""],["Backseat driver","“後座司機” 用來形容那些坐在汽車後座，卻喜歡指揮或者評論司機駕駛的人。此短語通常帶有貶義，表示這些人愛多嘴干預別人的事情。",""],["Bad blood","“仇恨” 或 “嫌隙”。",""],["Bad hair day","“倒霉的一天” 或 “諸事不順的一天”。",""],["Band-Aid on a bullet wound","“治標不治本” 或 “微小的解決方案來掩蓋重大問題”。",""],["Barking up the wrong tree","“找錯目標” 或 “搞錯物件”。",""],["Batting a thousand","“百分百成功” 或 “表現非常出色”。",""],["Be my guest","“請便” 或 “隨意”。",""],["Bear in mind/keep in mind","“記住” 或 “銘記於心”。",""],["Beat a hasty retreat","“匆忙撤退” 或 “倉惶離開”。",""],["Beat around the bush","“拐彎抹角” 或 “不直接了當”。",""],["Beat someone to the draw","“搶在別人前面” 或 “搶先一步”。",""],["Beat someone to the punch","“搶先一步” 或 “先發制人”。",""],["Beat the bushes","“到處搜尋” 或 “努力尋找”。",""],["Beating a dead horse","“徒勞無功”，意為做無效、無意義的事情，白費力氣。",""],["Beating around the bush","“拐彎抹角” 或 “兜圈子”。",""],["Bed head","“床頭髮” 或 “睡亂的頭髮”。",""],["Bed of roses","“輕鬆舒適的境地” 或 “安逸的生活”。",""],["Before you know it","“眨眼之間” 或 “轉瞬之間”。",""],["Behind someone’s back","“揹著某人” 或 “在某人背後做某事”。",""],["Behind the eight ball","“處於困境” 或 “處於不利地位”。",""],["Belt and suspenders","“多重保險” 或 “雙重保障”。",""],["Bend over backward","“竭盡全力” 或 “不遺餘力地幫助某人”。",""],["Bent out of shape","“生氣” 或 “不高興”。",""],["Beside oneself","“極度激動” 或 “失去自制”。",""],["Beside the point","“離題” 或 “不相關”。",""],["Bestie","“死黨” 或 “閨蜜”。",""],["Bet the ranch","“孤注一擲” 或 “押上全部身家”。",""],["Better late than never","“遲做總比不做好” 或 “亡羊補牢，猶未晚也”。",""],["Between a rock and a hard place","“進退兩難” 或 “左右為難”。",""],["Between the devil and the deep blue sea","“進退兩難” 或 “兩難之間”。",""],["Beyond the pale","“超出了常規” 或 “行為不可接受”。",""],["Big cheese","“大人物” 或 “重要人物”。",""],["Big fish in a small pond","“小池塘裡的大魚” 或 “小圈子裡的重要人物”。",""],["Big shot","“大人物” 或 “要人”。",""],["Big wheel","“大人物” 或 “有權勢的人”。",""],["Bigger bang for your buck","“價效比更高” 或 “更划算”。",""],["Bigwig","“大人物” 或 “重要人物”。",""],["Bird’s-eye view","“鳥瞰圖” 或 “總體檢視”。",""],["Birds of a feather flock together","“物以類聚，人以群分”。",""],["Bite off more than you can chew","“貪多嚼不爛” 或 “能力不及慾望”。",""],["Bite the bullet","“咬緊牙關” 或 “硬著頭皮”。",""],["Bite the dust","“咬塵” 或 “倒地” 或 “陣亡”。",""],["Bite your tongue","“咬住你的舌頭” 或 “忍住不說”。",""],["Black and blue","“青一塊紫一塊” 或 “遍體鱗傷”。",""],["Black market","“黑市” 或 “非法市場”。",""],["Black sheep","“害群之馬” 或 “另類”。",""],["Black tie event","“黑領結活動” 或 “正式晚宴”，指的是要求著正式禮服參加的晚會或宴會。",""],["Black-and-white","“非黑即白” 或 “非此即彼”。",""],["Blackball someone","“投票反對某人加入” 或 “排斥某人”。",""],["Blast from the past","“過去的重現” 或 “往事重現”。",""],["Blaze a trail","“開闢道路” 或 “創新、做先鋒”。",""],["Blew me away","“讓我驚呆了” 或 “讓我大吃一驚”。",""],["Blonde bombshell","“金髮性感美女” 或 “引人注目的金髮美人”。",""],["Blow a fuse","“暴怒” 或 “大發脾氣”。",""],["Blow off steam","“發洩情緒” 或 “釋放壓力”。",""],["Blow one’s top","“勃然大怒” 或 “暴跳如雷”。",""],["Blowing smoke","“吹牛” 或 “虛張聲勢”。",""],["Blue blood","“高貴的血統” 或 “貴族血統”。",""],["Blue law","“藍法” 或 “週日法律”。",""],["Boiling point","“沸點” 或 “憤怒的爆發點”。",""],["Bolt from the blue","“突如其來的事” 或 “晴天霹靂”。",""],["Bone of contention","“爭端的根源” 或 “爭議的焦點”。",""],["Bookworm","“書蟲” 或 “書呆子”。",""],["Born with a silver spoon in one’s mouth","“含著銀匙出生” 或 “出生在富貴家庭”。",""],["Bottom of the barrel","“最差勁的” 或 “最後選擇”。",""],["Boxed in","“受限” 或 “被困住”。",""],["Brainstorm","“頭腦風暴” 或 “集思廣益”。",""],["Bread and butter","依靠維生的主要收入來源 或 基本生計的工作。",""],["Break a leg","“祝好運” 或 “加油”。",""],["Break even","“收支平衡” 或 “不虧不賺”。",""],["Break someone’s heart","“傷某人的心” 或 “使某人心碎”。",""],["Break the bank","“傾家蕩產” 或 “花光所有錢”。",""],["Break the ice","“打破僵局” 或 “活躍氣氛”。",""],["Break the news","透露訊息、通報訊息（通常指壞訊息）。",""],["Breeze through","“輕鬆完成” 或 “輕而易舉地做某事”。",""],["Bright and early","“一大早” 或 “非常早”。",""],["Bring down the house","“使全場轟動、博得滿堂彩”。",""],["Bring home the bacon","“養家餬口” 或 “成功賺錢”。",""],["Bring my A game","“拿出我的最佳狀態” 或 “全力以赴”。",""],["Brought up","“被養育” 或 “被提起”。",""],["Brownie points","“討好分” 或 “額外的表揚”。",""],["Bull in a china shop","“如牛闖進了瓷器店”，指的是某人在敏感環境中的魯莽行為，常形容某人在處理精細或敏感的任務時缺乏技巧和優雅。",""],["Burgers and dogs","“漢堡和熱狗” 或 “常見的燒烤食物”。",""],["Burn bridges","這個短語的起源可以追溯到古代軍事行動中的一個策略。當軍隊需要堅定地向前推進時，他們會燒掉身後的橋樑以防止撤退，從而逼迫士兵們只能前進。這種做法能夠極大地增強軍隊的決心和鬥志。在現代語境下，“burn bridges” 通常用來描述人際關係或職業生涯中的某種決定性行為，使得自己失去了返回或恢復關係的機會。",""],["Burn the candle at both ends","“透支自己” 或 “兩頭燒蠟燭”。",""],["Burn the midnight oil","“熬夜” 或 “開夜工”。",""],["Burned out","“累壞了” 或 “精疲力竭”。",""],["Bury the hatchet","“化干戈為玉帛” 或 “和解”。",""],["Bury your head in the sand","“鴕鳥心態” 或 “逃避現實”。指的是人故意忽視或逃避顯而易見的問題或危機，假裝它們不存在，來避免面對或解決這些棘手的事。",""],["Busy bee","“忙碌的人” 或 “工作勤奮的人”。",""],["Butter someone up","“拍馬屁” 或 “奉承”。",""],["Button one’s lip","“閉嘴” 或 “保持沉默”。",""],["Buy a lemon","“買到次品” 或 “買到有缺陷的商品”。",""],["Buy something for a song","“賤價買到” 或 “非常便宜地買到某物”。",""],["By hook or by crook","“不擇手段” 或 “千方百計”。",""],["By the book","“按照規定” 或 “嚴格遵守規則”。",""],["By the skin of my teeth","“勉強” 或 “險些” 。",""],["By word of mouth","“口口相傳” 或 “以口頭傳達的方式”。",""],["Call a spade a spade","“實話實說” 或 “直言不諱”。",""],["Call it a day","“收工” 或 “結束一天的工作”。",""],["Call the shots","“掌控局面” 或 “發號施令”。",""],["Call their bluff","“揭穿某人的虛張聲勢” 或 “攤牌”。",""],["Calm before the storm","“暴風雨前的寧靜”。",""],["Calm someone down","“使某人平靜下來” 或 “安撫某人”。",""],["Can’t hold a candle to something or someone","“不能與…相比” 或 “遠不及…”。",""],["Can’t judge a book by its cover","“不能以貌取人” 或 “不要以表面來判斷事物”。",""],["Can’t keep up","“趕不上” 或 “跟不上”。",""],["Can’t put a face to the name","“記不起名字和人對不上號” 或 “不能將名字和臉對上”。",""],["Can’t see the forest for the trees","“只見樹木，不見森林”，意為只看到細節而忽略了整體。",""],["Card sharp or card shark","“老千” 或 “賭術高手”。",""],["Carry the ball","“承擔責任” 或 “扛起重擔”。",""],["Cast pearls before swine","“對牛彈琴” 或 “餵豬珍珠”。",""],["Cast-iron stomach","“鐵胃” 或 “不易生病的胃”。",""],["Castle in the sky","“空中樓閣” 或 “不切實際的幻想”。",""],["Cat got your tongue?","“貓把你的舌頭叼走了嗎？” 或 “怎麼不說話了？”",""],["Cat nap","“小睡” 或 “打盹”。",""],["Catch some rays","“曬太陽”。",""],["Catch some Zs","“睡個覺” 或 “打個盹”。",""],["Catch someone’s eye","“引起某人的注意” 或 “吸引某人的目光”。",""],["Catch the bus","“趕上公交車” 或者 “追趕公交車”。",""],["Catch-22","“進退兩難” 或 “左右為難的局面”。",""],["Catching up/playing catch-up","“趕上” 或 “追趕”。",""],["Caught red-handed","“當場抓住” 或 “現行抓獲”。",""],["Caught someone red-handed","“當場抓獲” 或 “人贓並獲”。",""],["Caught with your hand in the cookie jar","“被抓現行” 或 “當場抓住”。",""],["Change horses in midstream","“在半路換馬” 或 “在進行過程中改變計劃或策略”。",""],["Change of heart","“改變態度” 或 “改變想法”。",""],["Charley horse","“抽筋” 或 “肌肉痙攣”。",""],["Charmed life","“幸運的生活” 或 “受眷顧的生活”。",""],["Chasing rainbows","“追逐彩虹”；比喻追求不現實的目標或幻想。",""],["Checkered past","“有汙點的過去” 或 “不光彩的歷史”。",""],["Cheer up","“振作起來” 或 “高興起來”。",""],["Chew someone out","“嚴厲訓斥某人” 或 “大罵某人”。",""],["Chew something over","“仔細考慮” 或 “深思熟慮”。意指對某個問題進行仔細、深思的考慮，通常在做出重大決定之前。",""],["Chewing the fat","“閒聊” 或 “聊天”。",""],["Chow down","“痛快大吃” 或 “狼吞虎嚥”。",""],["Chuffed to bits","“高興極了” 或 “非常滿足”。",""],["Clean slate","“重新開始” 或 “一筆勾銷”。",""],["Clean someone out","“清空某人的錢財” 或 “傾家蕩產”。",""],["Clear as mud","“模糊不清” 或 “難以理解”。",""],["Clear the air","“消除誤會” 或 “澄清事實”。",""],["Climb the walls","“抓狂” 或 “心煩意亂”，通常是因為無聊或焦慮。",""],["Close but no cigar","“差一點點，差一點兒獲得成功”。",""],["Close shave","“千鈞一髮” 或 “死裡逃生”。",""],["Closed-minded","“心胸狹隘” 或 “固執己見”。",""],["Clown around","“開玩笑” 或 “胡鬧”。",""],["Cock-and-bull story","“無稽之談” 或 “荒誕不經的故事”。",""],["Coin a new term","“創造一個新術語” 或 “發明一個新名詞”。",""],["Coin a phrase","“創造一個短語” 或 “造新詞”。",""],["Cold enough to freeze the ball off a brass monkey","“冷得猴子都要結冰了”，形容極其寒冷的天氣。",""],["Cold feet","“臨陣退縮” 或 “在最後一刻因為害怕或緊張而退縮”。",""],["Cold shoulder","“冷遇” 或 “冷淡對待”。",""],["Collecting dust","“積灰” 或 “被閒置”。",""],["Come a long way","“取得長足進步” 或 “大有長進”。",""],["Come alive","“活躍起來” 或 “變得生機勃勃”。",""],["Come clean","坦白或承認錯誤。",""],["Come down with a cold","“染上感冒” 或 “得了感冒”。",""],["Come hell or high water","“不管發生什麼事” 或 “無論如何”。",""],["Come in handy","“派上用場” 或 “有用”。",""],["Come out of your shell","“走出你的殼” 或 “開啟心扉”。",""],["Come out smelling like roses/a rose","“完美地脫身” 或 “完美無缺地擺脫困境”。",""],["Come rain or shine","“不論晴雨” 或 “無論如何都”。",""],["Comfort food","“安慰食品” 或 “慰藉食品”。",""],["Comparing apples to oranges","“將蘋果和橙子作比較” 或 “風馬牛不相及的比較”。",""],["Computer crashed","“電腦宕機” 或 “電腦崩潰”。",""],["Cook someone’s goose","“毀了某人的計劃” 或 “搞砸某人的事情”。",""],["Cook up","“虛構” 或 “捏造”。",""],["Cooked the books","“篡改賬目” 或 “做假賬”。",""],["Cool as a cucumber","“非常冷靜” 或 “泰然自若”。",""],["Cool your jets","“冷靜一下” 或 “放慢腳步”。",""],["Copycat","“抄襲者” 或 “模仿者”。",""],["Cost me a mint","“花了我一大筆錢” 或 “非常昂貴”。",""],["Costs an arm and a leg","“昂貴得離譜” 或 “花費巨大”。",""],["Couch potato","“電視迷” 或 “懶惰的人”。",""],["Couldn’t care less","“不在乎” 或 “毫不關心”。",""],["Country mile","“鄉村英里” 或 “很長的距離”。",""],["Cover a lot of ground","“涉及很多內容” 或 “覆蓋廣泛”。",""],["Crack a book","“翻開一本書” 或 “開始用功讀書”。",""],["Crack open a cold one","“開啟一瓶冰鎮的啤酒”。",""],["Crack someone up","“使某人大笑” 或 “逗樂某人”。",""],["Crank out a paper","“迅速完成論文” 或 “草草寫完一篇論文”。",""],["Cream of the crop","“精英” 或 “最好的部分”。",""],["Crickets","“寂靜無聲” 或 “無人回應”。",""],["Crocodile tears","“鱷魚的眼淚”，意思是假慈悲，偽裝的悲傷或假裝的同情。",""],["Cross that bridge when you come to it","“車到山前必有路” 或 “事到臨頭再說”。",""],["Cross your fingers","“交叉手指” 或 “祈求好運”。",""],["Crunch time","“緊要關頭” 或 “關鍵時刻”。",""],["Cup of Joe","“一杯咖啡”。",""],["Curiosity killed the cat","“好奇害死貓”。意思是過度的好奇可能會導致麻煩或危險。",""],["Curve ball","“曲線球” 或 “出其不意的情況”。",""],["Cut and dried","“固定的” 或 “已成定局的”。",""],["Cut someone off at the knees","“使某人失去能力” 或 “打擊某人信心”。",""],["Cut the mustard","“達到標準” 或 “符合要求”。",""],["Cut them some slack","“對他們寬容一些” 或 “放他們一馬”。",""],["Cut to the chase","“直奔主題” 或 “切入正題”。",""],["Cut to the quick","“傷害到痛處” 或 “深深地傷害”。",""],["Cute as a bug","“像蟲子一樣可愛” 或 “非常可愛”。",""],["Cutting corners","“走捷徑” 或 “偷工減料”。",""],["Damn someone with faint praise","“用輕微的讚美來貶低某人” 或 “明褒實貶”。",""],["Dawned on me","“突然意識到” 或 “恍然大悟”。",""],["Dead from the neck up","“頭腦簡單” 或 “愚蠢”。",""],["Dead in the water","《中國成語使用頻率較少的表達》 “陷入困境” 或 “已經不再有任何進展可能”。該成語通常用來描述計劃、專案或人處於停滯狀態，無法繼續前進或改善。",""],["Dead quiet","“鴉雀無聲” 或 “非常安靜”。",""],["Dead ringer","“極為相似的人或物” 或 “替身”。",""],["Dead tired","“累得像死了一樣” 或 “筋疲力盡”。",""],["Dead to the world","“睡得很沉” 或 “完全不省人事”。",""],["Dead-end job","“沒有前途的工作” 或 “毫無發展前景的工作”。",""],["Deep down","“內心深處”，指的是某人真實的感受或想法，通常是在表面上無法察覺的情緒或態度。",""],["Diamond in the rough","“未經雕琢的鑽石” 或 “有待磨練的人或事物”。",""],["Different strokes for different folks","“各有所好” 或 “人各有志”。",""],["Dig in your heels","“頑固堅持” 或 “固執己見”。",""],["Dirt cheap","“便宜得像泥土一樣” 或 “非常便宜”。",""],["Dish the dirt","“揭別人的短” 或 “說別人的閒話”。",""],["Divide the spoils","“瓜分戰利品” 或 “分贓”。",""],["Do or die","“背水一戰” 或 “不成功便成仁”。",""],["Do someone a good turn","“幫某人一個忙” 或 “對某人行個方便”。",""],["Do something at the drop of a hat","“毫不猶豫；馬上行動；立刻做某事。”",""],["Do something by the seat of your pants","“憑直覺做事” 或 “隨意行事”。",""],["Doesn’t hold water","“站不住腳” 或 “不可信”。 這個短語用來形容某個論點、解釋或說法缺乏邏輯或證據，從而無法成立。",""],["Doesn’t know beans about it","“對某事一無所知” 或 “完全不瞭解某事”。",""],["Dog and pony show","“狗馬秀” 或 “華而不實的展示”。",""],["Dog days of summer","“夏日炎炎” 或 “三伏天”。",""],["Dog-eat-dog","“狗咬狗” 或 “你死我活” 的競爭。",""],["Dollars for doughnuts","“機率很高” 或 “幾乎肯定”。",""],["Don’t beat a dead horse","“不做無用功” 或 “不要再糾纏無效的事情”。",""],["Don’t count your chickens before they hatch","“不要高興得太早” 或 “不要打如意算盤”。",""],["Don’t cry over spilt milk","“不必為已成定局的事而懊悔” 或 “覆水難收”。",""],["Don’t do anything I wouldn’t do","“別做我不會做的事情” 或 “別做出格的事情”。",""],["Don’t give up your day job","“不要放棄你的日常工作” 或 “別辭掉你的本職工作”。",""],["Don’t hold your breath","“不要屏住呼吸” 或 “不要期待。”",""],["Don’t know him from Adam","“完全不認識他” 或 “對他一無所知”。",""],["Don’t know if I’m coming or going","“暈頭轉向” 或 “不知所措”。",""],["Don’t look a gift horse in the mouth","“不要挑剔別人送的禮物” 或 “不要對別人送的禮物吹毛求疵”。",""],["Don’t put all your eggs in one basket","“不要把所有雞蛋都放在一個籃子裡”，意思是不要把所有的資源或希望都集中在一個地方或一個專案上，以避免風險集中而導致全部損失。",""],["Don’t quote me on that","“這話不要引用我說的” 或 “這只是我的個人看法，可能不完全準確”。",""],["Don’t throw the baby out with the bath water","“不要因噎廢食” 或 “不要把好壞一起丟掉”。",""],["Don’t want to hear that","“不想聽那個” 或 “不願意聽那個”。",""],["Done to a turn","“恰到好處” 或 “剛剛好”。",""],["Don’t sweat the small stuff","“不必為小事操心” 或 “別為瑣事煩惱”。",""],["Doom and gloom","“悲觀失望” 或 “前景黯淡”。",""],["Double whammy","“雙重打擊” 或 “雙重不幸”。",""],["Down in the dumps","“情緒低落” 或 “心情不好”。",""],["Down in the mouth","“垂頭喪氣” 或 “情緒低落”。",""],["Down the tube","“付諸東流” 或 “一敗塗地”。",""],["Down to the wire","“到最後一刻” 或 “直到最後一秒”。",""],["Down-to-earth","“腳踏實地” 或 “實際” 的。",""],["Dragging your feet","“拖拖拉拉” 或 “行動遲緩”。",""],["Drastic times call for drastic measures","“非常時期需要非常手段”。",""],["Draw a blank","“想不起來” 或 “毫無頭緒”。",""],["Drawing card","“王牌” 或 “吸引力”。",""],["Dressed to kill","“衣著光鮮” 或 “盛裝打扮”。",""],["Drive someone up the wall","“讓某人抓狂” 或 “使某人非常生氣”。",""],["Driving me nuts","“讓我抓狂” 或 “讓我發瘋”。",""],["Drop by","“順便拜訪” 或 “短暫拜訪”。",""],["Drop in the bucket","“九牛一毛” 或 “滄海一粟”。",""],["Drop someone a line","“給某人寫信” 或 “給某人發訊息”。",""],["Drop-dead gorgeous","“美到令人驚歎” 或 “美得驚人”。",""],["Dry run","“彩排” 或 “預演”。",""],["Ducks in a row","“整齊有序” 或 “準備就緒”。",""],["Dyed-in-the-wool","“根深蒂固的” 或 “堅定不移的”。",""],["Eager beaver","“拼命努力的人” 或 “工作狂”。",""],["Easy come, easy go","“來也匆匆，去也匆匆” 或 “得之容易，失之亦易”。",""],["Easy does it","“慢慢來” 或 “別急”。",""],["Eat crow","“忍辱吞聲” 或 “被迫承認錯誤後感到羞愧”。",""],["Eat like a bird","“吃得很少” 或 “吃得像鳥一樣少”。",""],["Eat like a horse","“吃得像馬一樣多” 或 “食量很大”。",""],["Eat my hat","“我這頂帽子吃了！” 或 “打賭” 及表示自信。",""],["Eat your heart out","“妒忌去吧” 或 “羨慕去吧”。",""],["Egg on your face","“顏面盡失” 或 “出醜”。",""],["Elevator Pitch","“電梯遊說” 或 “電梯推介”。",""],["Elvis has left the building","“埃爾維斯已經離開了大樓” 或 “表演結束了”。",""],["Every cloud has a silver lining","“每朵烏雲都有銀邊” 或 “黑暗中總有一線光明”。",""],["Every dog has his day","“凡人皆有得意日” 或 “風水輪流轉”。",""],["Every now and then","“時不時” 或 “偶爾”。",""],["Everything but the kitchen sink","“什麼都有了，除了廚房水槽” 或 “應有盡有”。",""],["Exact change","“正好” 或 “正好找零”。",""],["Excuse my French/Pardon my French","“原諒我說髒話” 或 “請原諒我的不雅語言”。",""],["Face the music","“面對現實” 或 “接受後果”。",""],["Fair and square","“光明正大” 或 “公平公正”。",""],["Fair to middling","“還過得去” 或 “普普通通”。",""],["Fair-weather friend","“酒肉朋友” 或 “只能同享樂不能共患難的朋友”。",""],["Fall by the wayside","“半途而廢” 或 “被忽視”。",""],["Fall off the wagon","“重蹈覆轍” 或 “舊習復發”。",""],["Fall on deaf ears","“充耳不聞” 或 “未受理會”。",""],["Familiarity breeds contempt","“熟悉生厭” 或 “親近變疏”。",""],["Fancy pants","“愛炫耀的人” 或 “打扮得花裡胡哨的人”。",""],["Fashion victim","“時尚受害者”",""],["Fat cat","“肥貓” 或 “大亨”。這個短語用來描述那些擁有高社會地位和巨大財富的人，特別是那些企業高管或政界人物。中文中也常用類似的短語，如 “大老闆” 或 “權貴”。",""],["Feather in one’s cap","“值得驕傲的成就” 或 “榮耀”。",""],["Feather one’s nest","“為自己謀私利”，意指通過各種手段為自己積累財富或利益，不太關心他人的利益或潛在的負面影響。",""],["Feeding frenzy","“瘋搶” 或 “飢餓搶食”。",""],["Feel like a million dollars","“感覺自己好極了” 或 “精神煥發”。",""],["Feel the pinch","“感覺到手頭緊” 或 “感受到經濟壓力”。",""],["Feel/look like death warmed over","“感覺/看起來像被加熱的死亡” 或 “打扮得像個鬼”。",""],["Feeling blue","“感到憂鬱” 或 “感到沮喪”。",""],["Fender bender","“小刮擦” 或 “小車禍”。",""],["Field day","“盡情享受” 或 “大顯身手”。",""],["Fifteen minutes of fame","“曇花一現” 或 “短暫的名聲”。",""],["Fight an uphill battle","“艱難地奮鬥” 或 “面臨艱鉅的挑戰”。",""],["Fight tooth and nail","“不惜一切代價拼搏” 或 “拼命爭鬥”。",""],["Fill in the blanks","“填空”。",""],["Filthy rich","“富得流油” 或 “極其富有”。",""],["Find your feet","找到立足點，適應新環境。",""],["Finger lickin’ good","“吮指回味” 或 “非常美味”。",""],["Fish out of water","“如魚離水” 或 “感到格格不入”。",""],["Fishy","“可疑的” 或 “有蹊蹺的”。",""],["Fit as a fiddle","“健康如牛” 或 “非常健康”。",""],["Fit to be tied","“非常生氣” 或 “氣得抓狂”。",""],["Fits and starts","“間歇性地” 或 “斷斷續續地”。",""],["Five o’clock shadow","“五點鐘的陰影” 或 “傍晚鬍渣”。",""],["Fix someone’s wagon","“讓某人吃苦頭” 或 “讓某人受到懲罰”。",""],["Fixed in your ways","“固執己見” 或 “堅持己見”。",""],["Flavor of the month","“當月的風潮” 或 “短暫的流行事物”。",""],["Flea market","“跳蚤市場” 或 “二手市場”。",""],["Flesh and blood","“血肉之軀” 或 “親骨肉”。",""],["Fly in the face of something","“公然反對” 或 “抗衡”。",""],["Fly in the ointment","“美中不足” 或 “小缺點”。",""],["Fly off the handle","“大發雷霆” 或 “情緒失控”。",""],["Fly the coop","“溜之大吉” 或 “逃跑”。",""],["Fly-by-night","“見不得人” 或 “不可靠的，騙人錢財的”。",""],["Foam at the mouth","“氣得口吐白沫” 或 “非常憤怒”。",""],["Follow in someone’s footsteps","“追隨某人的腳步” 或 “繼承某人的事業”。",""],["Follow the money","“順藤摸瓜” 或 “追蹤資金流向”。",""],["Food for thought","“值得深思的事” 或 “發人深省的事情”。",""],["Fool around","“閒逛” 或 “胡鬧”。",""],["Fool’s Gold","“愚人金” 或 “騙人的東西”。",""],["Foot in the door","“敲開門” 或 “邁出第一步”。",""],["Footloose and fancy-free","“無拘無束，無牽無掛”。",""],["For crying out loud","“天哪！” 或 “哎呀！” 或 表達強烈情感的語氣詞，通常用來表示驚訝或惱怒。",""],["For goodness’ sake","“看在老天的份上” 或 “為了上帝的緣故”。",""],["For heaven’s sake","“天哪” 或 “看在老天的份上”。",""],["For the birds","“毫無價值” 或 “沒意義的”。",""],["Fork over/shell out money","“掏錢” 或 “付款”。這兩個短語都有一種不情願地付錢的意味。",""],["Fortune favors the bold","“命運垂青勇者” 或 “勇敢者得以成功”。",""],["Forty winks","“小睡一會兒” 或 “打個盹兒”。",""],["Freak out","“嚇壞了” 或 “抓狂”。",""],["From day one","“一開始” 或 “一開始就……”。",""],["From rags to riches","“從貧窮到富有” 或 “白手起家”。",""],["From the get-go","“一開始” 或 “從一開始”。",""],["From the word go","“一開始” 或 “一開始就”。",""],["From time to time","“時不時” 或 “偶爾”。",""],["Fuddy-duddy","“老古板” 或 “守舊的人”。",""],["Full of crap","“滿口胡說” 或 “胡說八道”。",""],["Full of hot air","“誇誇其談” 或 “滿嘴跑火車”，表示某人在說大話、不切實際或言辭誇張。",""],["Full steam ahead","“全速前進” 或 “全力以赴”。",""],["Gain ground","“取得進展” 或 “逐漸佔據優勢”。",""],["Gave someone the thumbs-up","“豎起大拇指” 或 “表示贊成”。",""],["Get a handle on something","“掌握某事” 或 “弄清某事”。",""],["Get a hold of something","“抓住某物” 或 “掌握某事”。",""],["Get a hold of yourself","“控制自己” 或 “冷靜下來”。",""],["Get a move on","“趕緊” 或 “加快速度”。",""],["Get a second wind","“重新煥發活力” 或 “恢復精力”。",""],["Get a taste of your own medicine","“自嘗其果”，或者說 “自食其果”。",""],["Get a word in edgewise","“插嘴” 或 “插話”。",""],["Get along with each other","彼此相處融洽，和睦相處。",""],["Get back to someone","“回覆某人” 或 “給某人回信”。",""],["Get down to brass tacks","“切入正題” 或 “談到具體細節”。",""],["Get down to business","“開始正事” 或 “進入正題”。",""],["Get down to the nuts and bolts","“深入細節” 或 “開始處理基本細節”。",""],["Get from A to B","“從 A 點到達 B 點” 或 “到達某個目的地”。",""],["Get hold of someone","“聯絡某人” 或 “找到某人”。",""],["Get in someone’s hair","“惹某人生氣” 或 “煩擾某人”。",""],["Get into deep water","“陷入困境” 或 “遇到麻煩”。",""],["Get it off my chest","“吐露心聲” 或 “傾吐心事”。",""],["Get it through your head","“要記住” 或 “弄明白”。",""],["Get off on the wrong foot","“開始不順” 或 “一開始就出錯”。",""],["Get off your high horse","“別再擺架子” 或 “放下你的傲慢”。",""],["Get one’s feet wet","“試水” 或 “初步嘗試”。",""],["Get out of hand","“失控” 或 “無法掌控”。",""],["Get over it","“克服它” 或 “忘掉它”。",""],["Get something for peanuts","“以極低的價格獲得某物” 或 “賤價買到某物”。",""],["Get something out of your system","“把某事發洩出來” 或 “把某事做夠”。",""],["Get the go-ahead","“得到批准” 或 “獲得許可”。",""],["Get the green light","“獲得許可” 或 “得到批准”。",""],["Get the hang of it","“掌握竅門” 或 “開始熟悉或擅長某事”。",""],["Get the message","“收到資訊” 或 “領會意思”。",""],["Get the sack","“被解僱” 或 “被炒魷魚”。",""],["Get this show on the road","“開始行動” 或 “開始進行事情”。",""],["Get to the bottom of something","“徹底查清某事” 或 “弄清事情的真相”。",""],["Get to the point","“直奔主題” 或 “切入正題”。",""],["Get up on the wrong side of bed","“起床氣” 或 “一大早就情緒不好”。",""],["Get wind of something","“得知或聽到某事” 或 “風聞”。通常指秘密或非公開的資訊被無意中聽到或發現。",""],["Get with it","“跟上潮流” 或 “與時俱進”。",""],["Get your act together","“振作起來” 或 “好好幹活”。",""],["Get your dander up","“讓你生氣” 或 “激怒你”。",""],["Get your goat","“惹惱你” 或 “使你生氣”。",""],["Get your head around it","“理解某事” 或 “弄明白某事”。",""],["Get-up-and-go","“幹勁” 或 “精力”。",""],["Getting by","“勉強度日” 或 “勉強應付”。",""],["Getting on my last nerve","“令我極度惱火” 或 “讓我忍無可忍”。",""],["Getting on my nerves","“惹我心煩” 或 “讓我心煩意亂”。",""],["Give a run for one’s money","“給……以有力的競爭” 或 “使……充分享受（樂趣）”。",""],["Give props to","“給某人點贊” 或 “承認某人的功勞”。",""],["Give someone a hard time","“給某人找麻煩” 或 “讓某人不好過”。",""],["Give someone a piece of my mind","“嚴厲斥責某人” 或 “直言不諱地批評某人”。",""],["Give someone a song and dance","“編瞎話” 或 “找藉口”。",""],["Give someone short shrift","“草草了事” 或 “敷衍了事”。",""],["Give someone the benefit of the doubt","“把好處歸於未知的一方” 或 “姑且相信某人”。",""],["Give someone the cold shoulder","“冷落某人” 或 “對某人愛理不理”。",""],["Give them the slip","“擺脫他們” 或 “甩開他們”。",""],["Go against the grain","“逆勢而為” 或 “違反常理”。",""],["Go around in circles","“原地打轉” 或 “徒勞無功”。",""],["Go back to the drawing board","“重新開始” 或 “從頭再來”。",""],["Go bananas","“發瘋” 或 “變得狂熱”。",""],["Go belly up","“倒閉” 或 “失敗”。",""],["Go bonkers","“發瘋” 或 “變得非常瘋狂”。",""],["Go cold turkey","“突然完全戒掉” 或 “立即戒斷”。",""],["Go down in flames","“徹底失敗” 或 “徹底崩潰”。",""],["Go fly a kite","“去放風箏”，意為 “走開，別煩我”。",""],["Go fry an egg","“去炸個蛋吧”，意指 “別煩我” 或 “去忙你自己的事”。",""],["Go haywire","“失控” 或 “亂套”。",""],["Go it alone","“單獨行動” 或 “獨自做某事”。",""],["Go off half-cocked","“未做好準備就行動” 或 “魯莽行事”。",""],["Go off the deep end","“失去冷靜” 或 “失去理智”。這個短語指一個人在情緒上突然崩潰或變得非常生氣，通常表現出非理性的行為。",""],["Go on a wild goose chase","“徒勞無功的追尋” 或 “白費功夫的尋找”。",""],["Go out of one’s way","“不遺餘力” 或 “竭盡全力”。",""],["Go out on a limb","“冒險做某事” 或 “承擔風險”。",""],["Go overboard","“做得過火” 或 “過度熱情”。",""],["Go postal","“發瘋” 或 “暴怒”。",""],["Go south","“情況變糟” 或 “事態惡化”。",""],["Go the extra mile","“多做一點” 或 “加倍努力”。",""],["Go the whole hog","“全力以赴” 或 “一鼓作氣”。",""],["Go through it with a fine-tooth comb","“仔細檢查” 或 “一絲不苟地檢查”。",""],["Go to hell in a handbasket","“迅速惡化” 或 “走向毀滅”。",""],["Go to pieces/Fall to pieces","“崩潰” 或 “失控”。",""],["Go to the dogs","“走下坡路” 或 “變得很糟糕”。",""],["Go to town","“全力以赴” 或 “大幹一場”。",""],["Go up in smoke","“化為烏有” 或 “化為煙霧”。這個短語用來形容計劃、希望、努力等突然間失敗，或者一切都白費，一切變得徒勞無功。",""],["Go with the flow","“順其自然” 或 “隨遇而安”。",""],["Go-to-guy","“關鍵人物” 或 “專門負責某事的人”。",""],["Goes without saying","“不言而喻” 或 “顯而易見”。",""],["Golden age","“黃金時代” 或 “鼎盛時期”。",""],["Golden opportunity","“黃金機會” 或 “千載難逢的機會”。",""],["Good egg","“好人”、“善良的人”。",""],["Good for you!","“對你有好處” 或 “真替你高興”。",""],["Good riddance","“總算擺脫了” 或 “幸好走了”。",""],["Good things come to those who wait","“好事多磨” 或 “耐心等待終有好結果”。",""],["Good to know","“知道了” 或 “好知道”。",""],["Goody, goody gumdrops","“哇哦，太棒了！” 或 “真是令人興奮！”",""],["Goof off","“偷懶” 或 “磨蹭”。",""],["Got off scot-free","“未受任何懲罰” 或 “逃脫懲罰”。",""],["Got the third degree","“被嚴厲盤問” 或 “受到嚴格的審問”。",""],["Got their hackles up","“豎起脊毛” 或 “激怒” 。",""],["Grasping at straws","“抓住救命稻草” 或 “孤注一擲”。",""],["Graveyard shift","“夜班” 或 “凌晨班”。",""],["Gravy train","“肥差” 或 “輕鬆賺錢的工作”。",""],["Gray area","“灰色地帶” 或 “模稜兩可的區域”。",""],["Grease monkey","“維修技工” 或 “修車工”。",""],["Greased lightning","“快如閃電” 或 “非常快速”。",""],["Great minds think alike","“英雄所見略同”。",""],["Green around the gills","“臉色蒼白” 或 “看起來病懨懨的”。",""],["Green room","“綠色房間” 或 “演員休息室”。",""],["Green thumb","“園藝高手” 或 “非常擅長種植植物的人”。",""],["Grin and bear it","“咬牙堅持” 或 “強顏歡笑面對困境”。",""],["Guinea pig","“小白鼠” 或 “試驗物件”。",""],["Gung ho","“幹勁十足” 或 “充滿熱情”。",""],["Gut feeling","“直覺” 或 “本能的感覺”。",""],["Hair of the dog","“以毒攻毒” 或 “用少量酒解宿醉”。",""],["Hair’s breadth","“毫釐之差” 或者 “極窄的距離”。",""],["Half a mind to do something","“有點想做某事”。",""],["Half the battle","“事半功倍” 或 “成功的一半”。",""],["Half-baked","“未經深思熟慮的” 或 “不成熟的”。",""],["Hammering out a deal","“敲定一個交易” 或 “達成協議”。",""],["Hand in glove","“密切合作” 或 “關係密切”。",""],["Hand over fist","“迅速且大量地” 或 “快速獲利”。",""],["Hang in there","“堅持住” 或 “忍耐一下”。",""],["Hang tight","“稍安勿躁” 或 “耐心等待”。",""],["Happy-go-lucky","“樂天派” 或 “無憂無慮”。",""],["Hard sell","“強行推銷” 或 “極力推薦”。",""],["Hard/bitter pill to swallow","“難以接受的事實” 或 “痛苦的現實”。",""],["Haste makes waste","“欲速則不達”。",""],["Have an axe to grind","“別有用心” 或 “懷有私心”。",""],["Have bats in one’s belfry","“頭腦不清楚” 或 “行為古怪”。",""],["Have hell to pay","“要付出慘痛代價” 或 “要受到嚴厲的懲罰”。",""],["Have something down pat","“徹底掌握某事” 或 “對某事駕輕就熟”。",""],["Have the world by the tail","“擁有全世界” 或 “掌控一切”。",""],["Have time off","“休假” 或 “有空閒時間”。",""],["Have two left feet","“笨手笨腳” 或 “不善舞蹈”。",""],["Have your head in the clouds","“心不在焉” 或 “不切實際”。",""],["He has bigger fish to fry","“他有更重要的事情要做” 或 “他有更大的事要忙”。",""],["He who laughs last laughs loudest","“笑到最後的人笑得最好” 或 “最後得勝者才是最終贏家”。",""],["He’s a chip off the old block","“他是有其父必有其子” 或 “他特別像他父親”。",""],["He’s not playing with a full deck","“他不太正常” 或 “他精神有問題”。",""],["He’s off his rocker","“他瘋了” 或 “他不正常”。",""],["Head and shoulders above","“遙遙領先” 或 “大大優於”。",""],["Head honcho","“頭頭” 或 “大佬”。",""],["Head in the clouds","“心不在焉” 或 “不切實際”。",""],["Head over heels","“神魂顛倒” 或 “徹底迷戀”。",""],["Heads-up","“提醒” 或 “事先通知”。",""],["Hear it on the grapevine","“通過小道訊息聽說” 或 “聽到傳聞”。",""],["Hear something straight from the horse’s mouth","“直接從權威或第一手來源獲得資訊”。",""],["Heebie-jeebies","“毛骨悚然” 或 “不安，緊張”。",""],["Here and there","“到處” 或 “各處”。",""],["High on the hog","“生活優越” 或 “過著奢侈的生活”。",""],["High, wide, and handsome","“高大帥氣”；“帶著優越感的”。",""],["Hissy fit","“小題大做” 或 “大發脾氣”。",""],["Hit it on the nose","“正中要害” 或 “完全正確”。",""],["Hit me up","“聯絡我” 或 “找我”。",""],["Hit pay dirt","“發財” 或 “獲得重大收益”。",""],["Hit someone below the belt","“打人不打臉” 或 “用卑鄙手段攻擊某人”。",""],["Hit the books","“用功讀書” 或 “刻苦學習”。",""],["Hit the ceiling","“勃然大怒” 或 “暴跳如雷”。",""],["Hit the hay","“準備睡覺” 或 “上床睡覺”。",""],["Hit the jackpot","“中了大獎” 或 “取得巨大成功”。",""],["Hit the nail on the head","“一語中的” 或 “切中要害”。",""],["Hit the road","“上路” 或 “出發”。",""],["Hit the sack","“上床睡覺” 或 “就寢”。",""],["Hocus-pocus","“戲法” 或 “魔術般的伎倆”。",""],["Hold the fort","“守住陣地” 或 “暫時負責”。",""],["Hold your horses","“稍安勿躁” 或 “耐心等待”。",""],["Hold your tongue","“閉嘴” 或 “保持沉默”。",""],["Holding the bag","“背黑鍋” 或 “承擔責任”。",""],["Hopping mad","“怒火中燒” 或 “非常生氣”。",""],["Horse around","“瞎胡鬧” 或 “玩鬧”。",""],["Horse of a different color","“完全不同的事物” 或 “另一種情況”。",""],["Hot under the collar","“熱鍋上的螞蟻” 或 “感到憤怒或非常惱火”。",""],["Hot-button issue","“敏感問題” 或 “熱議話題”。",""],["Hotshot","“能人” 或 “自命不凡的人”。",""],["How do you like them apples","“你怎麼看這個？” 或 “你對此有何感想？” 帶有挑釁和炫耀意味。",""],["Hunky-dory","“一切順利” 或 “非常好”。",""],["I can’t imagine","“我無法想像” 或 “我很難想像”。",""],["I don’t have two nickels to rub together","“我連兩個五分硬幣都湊不齊”，意指 “我非常貧窮” 或 “我一文不名”。",""],["I suck at something","“我很不擅長做某事”。",""],["I wasn’t born yesterday","“我又不是三歲小孩” 或 “別把我當傻瓜”。",""],["I’d give my right hand to","“我願意付出一切” 或 “我願意不惜任何代價”。",""],["I’m losing it","“我要崩潰了” 或 “我快要失控了”。",""],["Icing on the cake","“錦上添花” 或 “好上加好”。",""],["Idle hands are the devil’s tools","“懶惰生事端” 或 “無所事事易生惡念”。",""],["If I had a nickel for every time something happened","“如果每次某事發生我都能得到一分錢”。這個短語通常用來強調某事情發生的頻率很高，有時也帶有誇張的成分。",""],["If worst comes to worst","“如果情況變得最糟” 或 “在最壞的情況下”。",""],["If you can’t stand the heat, get out of the kitchen","“如果你不能忍受熱度，那就離開廚房” 或 “如果你不能承受壓力，那就退出”。",""],["If you play your cards right","“如果你做得對” 或 “如果你能妥善處理”。",""],["Ignorance is bliss","“不知者無憂” 或 “無知是福”。",""],["In a bind","“陷入困境” 或 “進退兩難”。",""],["In a jam","“陷入困境” 或 “遇到麻煩”。",""],["In a nutshell","“簡而言之” 或 “用簡短的話說”。",""],["In a pinch","“在緊要關頭” 或 “在必要時”。",""],["In a rut","“陷入一成不變的生活” 或 “生活停滯不前”。",""],["In charge of","“負責” 或 “掌管”。",""],["In full swing","“如火如荼” 或 “全力進行中”。",""],["In high gear","“全速進行中” 或 “高效執行”。",""],["In hot water","“處於困境” 或 “麻煩纏身”。",""],["In my book","“依我來看” 或 “在我看來”。",""],["In my element","“如魚得水” 或 “得心應手”。",""],["In seventh heaven","“極度幸福” 或 “欣喜若狂”。",""],["In spades","“非常多” 或 “大量地”。",""],["In stitches","笑得肚子疼 或 笑得前俯後仰。",""],["In the bag","“十拿九穩” 或 “勝券在握”。",""],["In the black","“盈利” 或 “有盈餘”。",""],["In the boondocks","在 “偏遠地區”； “偏僻的地方”。",""],["In the chips/money","“腰纏萬貫” 或 “很有錢”。",""],["In the doghouse","“受冷落” 或 “陷入麻煩”。",""],["In the heat of the moment","“一時激動” 或 “一時衝動”。",""],["In the least","“一點也不” 和 “根本不”。",""],["In the long run","“從長遠來看” 或 “長期而言”。",""],["In the loop","“在圈內” 或 “知情”。",""],["In the nick of time","“千鈞一髮” 或 “在緊要關頭”。",""],["In the pink","“身體健康” 或 “身心俱佳”。",""],["In the red","“赤字” 或 “虧損”。",""],["In the sticks","“鄉下” 或 “偏遠的地方”。",""],["In the way","“擋道” 或 “妨礙”。",""],["It ain’t over till the fat lady sings","“事情還沒到最後一刻，還未見分曉” 或 “在最後結果出來之前，事情都有變數”。",""],["It is a poor workman who blames his tools","“拙匠常怨工具差”。這句諺語意思是說，一個技術差的人總是把原因歸咎於工具或外部條件，而不是反省自己的能力問題。正如一個高明的工匠即使工具不好，也能做出好的作品，真正有能力的人不會找藉口。",""],["It is always darkest before the dawn","“黎明前的黑暗” 或者 “最黑暗的時刻往往在黎明到來之前”。",""],["It takes one to know one","“半斤八兩” 或 “彼此彼此”。",""],["It takes two to tango","“一個巴掌拍不響” 或 “兩人才能跳探戈”。",""],["It’s a piece of cake","“輕而易舉的事” 或 “非常簡單的事情”。",""],["It’s a scorcher","“這是個大熱天” 或 “今天真是特別熱”。",""],["It’s crunch time","“關鍵時刻” 或 “緊要關頭”。",""],["It’s in the bag","“十拿九穩” 或 “勝券在握”。",""],["It’s no skin off my nose","“與我無關” 或 “對我沒有影響”。",""],["It’s not rocket science","“這並不複雜” 或 “這並不是難事”。",""],["It’s raining cats and dogs","“傾盆大雨” 或 “大雨滂沱”。",""],["Itchy feet","“渴望旅行” 或 “不安分”。",""],["Ivory tower","“象牙塔”。這個短語常用來形容與世隔絕、不接地氣或者過於理想化的學術或知識分子的世界。",""],["Jaywalking","“亂過馬路” 或 “不遵守交通規則橫穿馬路”。",""],["Johnny-come-lately","“新來的人” 或 “後來者”。",""],["Joined at the hip","“形影不離” 或 “非常親密”。",""],["Joshing me","“拿我開玩笑” 或 “戲弄我”。",""],["Jump down someone’s throat","“猛烈地責罵某人” 或 “嚴厲批評某人”。",""],["Jump on the bandwagon","“趕時髦” 或 “跟風”。",""],["Jump the gun","“搶跑” 或 “操之過急”。",""],["Jump through hoops","“跳過重重圈套” 或 “經歷繁瑣的過程”。",""],["Junk food","“垃圾食品”。",""],["Jury is still out","“尚無定論” 或 “懸而未決”。",""],["Just a moment","“稍等片刻” 或 “請稍等一下”。",""],["Just around the corner","“即將來臨” 或 “就在不遠處”。",""],["Just now","“剛剛” 或 “剛才”。",""],["Keep body and soul together","“勉強維持生計” 或 “維持基本生活”。",""],["Keep it under control","“掌控局面” 或 “控制住”。",""],["Keep it under wraps","“保密” 或 “保守秘密”。",""],["Keep me posted/Keep me in the loop","“隨時告知我最新情況” 或 “讓我參與進來”。",""],["Keep my cool","“保持冷靜” 或 “沉住氣”。",""],["Keep my head above water","“勉強維持生計” 或 “勉強應付困境”。",""],["Keep my nose to the grindstone","“埋頭苦幹” 或 “辛苦工作”。",""],["Keep someone at arm’s length","“與某人保持距離” 或 “刻意疏遠某人”。",""],["Keep something at bay","“防止某事發生” 或 “遏制某事”。",""],["Keep something under one’s hat","“保密” 或 “將某事保密”。",""],["Keep the ball rolling","“保持進展”、“繼續進行”。",""],["Keep up with","“跟上” 或 “趕上”，意指追趕或保持與某事物同步。",""],["Keep you posted","“隨時向你通報” 或 “保持你更新”。",""],["Keep your chin up","“保持積極心態” 或 “不要氣餒”。",""],["Keep your head","保持冷靜，處變不驚。",""],["Keep your mouth shut","“閉嘴” 或 “保持沉默”。",""],["Keep your nose clean","“保持本分” 或 “避免惹事”。",""],["Keep your wits about you","“保持頭腦清醒” 或 “保持警惕”。",""],["Keeping up with the Joneses","“與鄰居攀比” 或 “與人鬥富”。",""],["Kept in the dark","“不知情” 或 “被矇在鼓裡”。",""],["Keyed up","“激動” 或 “緊張”。",""],["Kick up your heels","“放鬆享受” 或 “盡情歡樂”。",""],["Kill the mood","“掃興” 或 “破壞氣氛”。",""],["Kill two birds with one stone","“一箭雙鵰” 或 “一舉兩得”。",""],["Kit and caboodle","“全套東西” 或 “所有的一切”。",""],["Knee-high to a grasshopper","“像蚱蜢一樣高” 或 “非常小，非常年輕”。",""],["Knee-jerk reaction","“膝跳反應” 或 “條件反射”。",""],["Knock into a cocked hat","“徹底擊敗” 或 “徹底粉碎”。",""],["Knock it off","“別鬧了” 或 “停止做某事”。",""],["Knock on wood","“敲木頭” 或 “祈求好運”。",""],["Knock someone’s socks off","“讓某人大吃一驚” 或 “讓某人非常興奮”。",""],["Know the ins and outs","“瞭解內情” 或 “熟悉詳情”。",""],["Know the ropes","“熟悉門道” 或 “瞭解內情”。",""],["Know which way the wind is blowing","“瞭解情勢” 或 “看清局勢”。",""],["Know your onions","“非常精通某事” 或 “非常瞭解自己的領域”。",""],["Know zip","“知道零” 或 “一無所知”。",""],["Knuckle under","“屈服” 或 “讓步”。",""],["Labor of love","“出於愛好或熱情的工作” 或 “心甘情願的付出”。",""],["Laid off","“被裁員” 或 “被解僱”。",""],["Lap of luxury","“極度奢華” 或 “豪華享受”。",""],["Last but not least","“最後但同樣重要” 或 “最後但並非最不重要”。",""],["Last straw","“最後一根稻草” 或 “壓垮駱駝的最後一根稻草”。",""],["Last-ditch effort","“最後一搏” 或 “孤注一擲”。",""],["Laugh all the way to the bank","“賺得盆滿缽滿” 或 “輕鬆賺大錢”。",""],["Lay an egg","“失敗” 或 “表演、專案等遭遇滑鐵盧”。",""],["Lay down the law","“釋出命令” 或 “嚴格規定”。這個表達用來描述某人以強硬和嚴格的方式來規定規則或要求人們遵守。",""],["Lead someone around by the nose","“牽著某人的鼻子走” 或 “被人牽著走”。",""],["Learn by rote","“死記硬背” 或 “機械記憶”。",""],["Learn the ropes","“摸清門道” 或 “熟悉基本情況”。",""],["Learned my lesson","“記住教訓” 或 “吸取教訓”。",""],["Leave me alone","“別煩我” 或 “讓我一個人待著”。",""],["Leave no stone unturned","“竭盡全力”，或 “不遺餘力”。",""],["Leave someone high and dry","“拋棄某人” 或 “讓某人陷入困境”。",""],["Leave well enough alone","“維持現狀” 或 “不要多此一舉”。",""],["Left me in the lurch","“把我扔在困境中” 或 “把我孤零零地留下，不管不顧”。",""],["Left out in the cold","“被冷落” 或 “被排除在外”。",""],["Left someone behind","“落下某人” 或 “把某人拋在後面”。",""],["Lend me your ear","“請聽我說” 或 “借我片刻傾聽”。",""],["Lend someone a hand","“幫某人一個忙” 或 “幫助某人”。",""],["Let bygones be bygones","“既往不咎” 或 “過去的事就讓它過去吧”。",""],["Let sleeping dogs lie","“不要惹事生非” 或 “不要打擾沉睡的狗”。",""],["Let someone off the hook","“讓某人擺脫困境” 或 “讓某人脫身責罰”。",""],["Let the cat out of the bag","“露陷兒” 或 “洩密”。",""],["Let the dust settle","“讓塵埃落定” 或 “讓情況穩定下來”。",""],["Let your hair down","“放鬆一下” 或 “不拘束”。",""],["Letter perfect","“完美無缺”，通常用來描述某人的表現或作品沒有錯誤，非常出色。",""],["Level playing field","“公平的競爭環境” 或 “公平的起跑線”。",""],["Life of Riley","“悠哉悠哉，舒適的生活” 或者 “無憂無慮的生活”。",""],["Light of my life","“我生命中的光” 或 “我生命中的摯愛”。",""],["Like a chicken with its head cut off","“像一隻沒頭的雞” 或 “驚慌失措”。",""],["Like a deer in headlights","“像驚呆了的鹿”。意思是形容人在某種情境下被嚇呆或驚慌失措，不知所措的樣子。",""],["Like clockwork","“像機械時鐘一樣準時”，或是描述某事進行的非常順利、毫不費力。",""],["Like nailing jello to the wall","“像把果凍釘在牆上”，指的是做一件幾乎不可能完成的任務，或是非常難以實現的事情。通常用來形容某件事情非常難處理、幾乎不可能成功。",""],["Like pulling teeth","“像拔牙一樣痛苦” 或 “非常艱難的事情”。",""],["Like riding a bicycle","“就像騎腳踏車一樣”，意思是某個技能即使長時間不使用，也不會忘記。",""],["Like taking candy from a baby","“像從嬰兒手中拿糖一樣簡單”，表示一件事情非常容易完成。",""],["Like there is no tomorrow","“像沒有明天一樣” 或 “不顧明天”。",""],["Like water off a duck’s back","“毫無影響” 或 “無動於衷”。",""],["Live and learn","“活到老學到老” 或 “在生活中不斷學習”。",""],["Live and let live","“別人的事情讓別人去過” 或 “和而不同”。",""],["Live it up","“盡情享受生活” 或 “縱情享樂”。",""],["Living the dream","“過著夢寐以求的生活” 或 “實現了夢想的生活”。",""],["Lock, stock, and barrel","“一應俱全” 或 “不留餘地、徹底地”。這個成語表示完全或徹底，包括所有部分，不留任何遺漏。",""],["Long face","“苦瓜臉” 或 “面帶愁容”。",""],["Long in the tooth","“年紀大了” 或 “上了年紀”。",""],["Long time no see!","“好久不見！”",""],["Look before you leap","“三思而後行”。",""],["Look like a million bucks/dollars","“看起來神采奕奕” 或 “看起來非常出色”。",""],["Look like the cat that swallowed the canary/got the cream","“像吃了金絲雀的貓” 或 “像吃了奶油的貓”。",""],["Loose cannon","“不可控的人” 或 “危險分子”。",""],["Lose one’s shirt","“賠光所有財產” 或 “損失慘重”。",""],["Lose touch","“失去聯絡” 或 “脫離聯絡”。",""],["Lose your marbles","“失去理智” 或 “發瘋”。",""],["Lose your touch","失去能力、不再擅長某方面的工作。",""],["Lost at sea","“迷失在海上” 或 “茫然不知所措”。",""],["Lost my head","失去理智、發怒或慌亂。",""],["Low-hanging fruit","“唾手可得的東西” 或 “容易實現的目標”。",""],["Luck out","“運氣好” 或 “碰巧走運”。",""],["Lucky break","“幸運的機會” 或 “好運”。指的是不期而遇的好事或機會，使人事態好轉或取得成功。",""],["Lucky dog","“幸運兒” 或 “走運的人”。",""],["Mad as a hornet","“非常生氣” 或 “怒不可遏”。",""],["Made for each other","“天作之合” 或 “天生一對”。",""],["Made my hair stand on end","“令人毛骨悚然” 或 “讓人毛髮直立”。",""],["Make a beeline for","“直奔” 或 “徑直走向”。",""],["Make a big stink","“大張旗鼓地抱怨” 或 “過分嚷嚷”。",""],["Make a long story short","“長話短說” 或 “簡而言之”。",""],["Make a mountain out of a molehill","“小題大做” 或 “誇大問題”。",""],["Make a pit stop","“短暫停留” 或 “中途停留”。",""],["Make a scene","“當眾大吵大鬧” 或 “引人注目的場面”。",""],["Make ends meet","“勉強維持生計” 或 “收支平衡”。",""],["Make eyes at someone","“向某人拋媚眼” 或 “暗送秋波”。",""],["Make hay while the sun shines","“打鐵趁熱” 或 “抓緊時機”。",""],["Make no bones about","“直言不諱” 或 “毫不猶豫”。",""],["Make out like a bandit","“一夜暴富” 或 “賺大錢”；出乎意料地獲得很大的成功或好處。",""],["Make out what someone said","“聽清楚某人說的話” 或 “弄明白某人說的內容”。",""],["Make the grade","“達到標準” 或 “符合要求”。",""],["Make tracks","“趕緊離開” 或 “迅速回避”。",""],["Make waves","“興風作浪” 或 “引起軒然大波”。",""],["Make yourself at home","“隨便一點” 或 “把這裡當自己家”。",""],["Man’s best friend","“人類最好的朋友”。通常用來指狗，因為狗以其忠誠和友好被認為是人類最親密的動物夥伴。",""],["Mark time","“原地踏步” 或 “虛度光陰(等待某事發生)”。",""],["Meat and potatoes","“最基本的” 或 “核心的部分”。",""],["Meet halfway","“妥協” 或 “各退一步”。",""],["Mickey mouse job","“沒什麼實際意義的工作” 或 “不重要的工作”。",""],["Midas touch","金手指（指的是一個人不管碰到什麼事物都會成功或變得有價值）。",""],["Middle of the road","“中庸的” 或 “平庸的” 。",""],["Mind your own beeswax","“管好你自己的事” 或 “少管閒事”。",""],["Miss the boat","“錯過機會” 或 “比喻因猶豫或遲疑而錯過做重要事情的時機”。",""],["Mom-and-pop","“夫妻店” 或 “家庭經營的小店”。",""],["Money burns a hole in someone’s pocket","“錢在口袋裡燒了個洞” 或 “留不住錢”（形容某人很難存住錢，總是迫不及待地花掉）。",""],["Money talks","“金錢至上” 或 “金錢萬能”。",""],["Money to burn","“有的是錢” 或 “錢多得花不完”。",""],["More bang for your buck","“物有所值” 或 “價效比更高”。",""],["More than I bargained for","“超出預期” 或 “比我預想的更多”。",""],["More than meets the eye","“表面不單如此” 或 “有深層意義”。",""],["Move some things around","“調整安排” 或 “騰出時間”。",""],["Mum’s the word","“嘴嚴” 或 “保持沉默”。",""],["Mumbo jumbo","“胡言亂語” 或 “莫名其妙的話”。",""],["My bad","“我的錯” 或 “是我的責任”。",""],["My eyes are bigger than my stomach","“眼睛比胃大”，即 “貪多嚼不爛”。",""],["My hands are tied","“我束手無策” 或 “我的手被綁住了（無法作為）”。",""],["My heart is set on","“我心意已決” 或 “我的心已定”。",""],["My neck of the woods","“我這片地方” 或 “我這裡” 或 “我住的這塊地方。”",""],["9-to-5","“朝九晚五” 或 “平常的上班時間”。",""],["Nest egg","“儲備金” 或 “養老金”。",""],["Never bite the hand that feeds you","“不要咬餵你的人” 或 “不要恩將仇報”。",""],["New kid on the block","“新來的” 或 “新人”。",""],["New York minute","“紐約分鐘”，表示時間非常短暫的意思。在快節奏的環境中，事情發生得極快，幾乎沒有任何拖延。用來形容某些在瞬間完成或者發生的事情，非常迅速。",""],["Night owl","“夜貓子”，指那些習慣於深夜活動或遲睡晚起的人。",""],["Nip something in the bud","“防患於未然” 或 “及時制止萌芽的事情”。",""],["Nitty-gritty","“本質” 或 “重要細節”。",""],["No big deal","“小事一樁”、“沒什麼大不了”。",""],["No dice","“不行” 或 “不符合要求”。",""],["No pain, no gain","“沒有付出就沒有收穫” 或 “不經歷風雨，怎麼見彩虹”。",""],["No rhyme or reason","“毫無道理” 或 “沒有任何邏輯”。",""],["No-brainer","不需要動腦筋的簡單決定，顯而易見的事情。",""],["Not a spark of decency","“一點禮貌也沒有” 或 “毫無禮貌”。",""],["Not have a leg to stand on","“沒有立場” 或 “沒有依據”。",""],["Not one’s cup of tea","“不是某人的菜” 或 “不是某人喜歡的東西”。",""],["Not playing with a full deck","“腦袋不靈光” 或 “思維有問題”。",""],["Not what it’s cracked up to be","“並不像所說的那麼好” 或 “名不副實”。",""],["Not worth a red cent","“一文不值” 或 “完全沒有價值”。",""],["Nothing to write home about","“不值一提” 或 “沒什麼特別的”。",""],["Number cruncher","“數字粉碎機” 或 “擅長處理和分析大量數字和資料的人”。",""],["Odd man out","“局外人” 或 “與眾不同的人”。",""],["Off on the wrong foot","“開局不順” 或 “一開始就出錯”。",""],["Off the cuff","“即興的” 或 “未經準備的”。",""],["Off the hook","“脫身” 或 “擺脫困境”。",""],["Off the record","“非正式談話” 或 “不公開發表”。",""],["Off the top of my head","“憑記憶” 或 “憑直覺”。",""],["Off the wall","“異想天開” 或 “出乎意料”。",""],["Off-color","“有傷風化” 或 “不雅的”。",""],["Old school","“老派的” 或 “老式的”。",""],["On a shoestring","“靠微薄的預算” 或 “資金很緊”。",""],["On a tear","“表現突出” 或 “狀態極佳”。",""],["On a treadmill","“像在跑步機上” 或 “重複且無效的努力”。",""],["On cloud nine","“非常高興” 或 “飄飄然”。",""],["On pins and needles","“如坐針氈” 或 “極度緊張”。",""],["On the ball","“機靈的” 或 “反應迅速的”。",""],["On the blink","“出故障” 或 “運轉不正常”。",""],["On the cheap","“廉價” 或 “節省開支地”。",""],["On the dot","“準時” 或 “正好在某個時間點”。",""],["On the fence","“保持中立” 或 “猶豫不決”。",""],["On the fly","“臨時” 或 “即興”。",""],["On the fritz","“出故障” 或 “壞了”。",""],["On the house","“由店家請客” 或 “免費提供”。",""],["On the level","“靠譜” 或 “可信的”。",""],["On the line","“處於危險中” 或 “處在風險之中”。",""],["On the same page","“意見一致” 或 “觀點一致”。",""],["On the spot","“當場” 或 “立即”。",""],["On the spur of the moment","“心血來潮” 或 “一時衝動”。",""],["On top of the world","“心情非常好” 或 “非常開心”。",""],["On the up and up","“越來越好” 或 “誠實可信”。",""],["On the warpath","“怒氣衝衝” 或 “準備開戰”。",""],["On thin ice","“如履薄冰” 或 “處於危險境地”。",""],["Once and for all","“一勞永逸” 或 “徹底地、最終地解決問題”。",""],["Once bitten, twice shy","“一朝被蛇咬，十年怕井繩” 或 “吃一塹，長一智”。",""],["Once in a blue moon","“千載難逢” 或 “難得一見”。",""],["One fell swoop","“一下子”，“一舉”，“突然”。",""],["One-trick pony","“單一技能的人” 或 “單打獨鬥的人”。",""],["Open a can of worms","“開啟一罐蚯蚓” 或 “引發一連串麻煩”。",""],["Out of date","“過時” 或 “不再流行”。",""],["Out of left field","“出乎意料” 或 “突然”。這個短語用來形容某個想法、評論或事件完全出人意料，通常是毫無預警的。",""],["Out of my hands","“我無能為力” 或 “這不由我掌控”。",""],["Out of order","“損壞” 或 “故障”。",""],["Out of the blue","“突如其來” 或 “出乎意料”。",""],["Out of the frying pan and into the fire","“跳出油鍋，又入火坑”，表示從一個困境又掉入另一個更糟糕的困境。",""],["Out of the question","“毫無可能” 或 “完全不可能”。",""],["Out of the woods","“脫離困境” 或 “擺脫危險”。",""],["Out of this world","“特別好” 或 “令人讚歎的”。",""],["Out on the town","“去城裡玩” 或 “外出娛樂”。",""],["Out to lunch","“走神” 或 “心不在焉”。",""],["Over my dead body","“除非我死了” 或 “絕不允許”。",""],["Packed like sardines","“像沙丁魚一樣被擠滿” 或 “擠得像沙丁魚罐頭一樣”。",""],["Pain in the neck","“眼中釘” 或 “讓人煩心的人或事”。",""],["Paint the town red","“狂歡” 或 “盡情歡樂”。",""],["Paint you a picture","“描繪一個畫面” 或 “描述詳細”。",""],["Pandora’s box","“潘多拉的盒子” 或 “災難的根源”。",""],["Par for the course","“情理之中” 或 “習以為常”。",""],["Party animal","“歡慶動物” 或 “派對動物”。",""],["Pass the buck","“推卸責任” 或 “轉嫁責任”。",""],["Passed the course","“Passed the course” 表示 “通過了課程” 或 “通過了課程的考試”。",""],["Pay a pretty penny","“花大價錢” 或 “花很多錢”。",""],["Pay an arm and a leg","“付出高昂的代價” 或 “花了大價錢”。",""],["Pay the piper","“為自己的行為承擔後果” 或 “付出代價”。",""],["Pay through the nose","“被敲竹槓” 或 “支付高得離譜的價格”。",""],["Pedal to the metal","“全力以赴” 或 “全速前進”。",""],["Peg out","“去世” 或 “死亡”。",""],["Pencil/paper pusher","“文書工作者” 或 “做文書工作的人”。",""],["Peter out","“逐漸消失” 或 “逐漸減少”。",""],["Pick up the tab","“買單” 或 “付賬”。",""],["Pick up your ears","“豎起耳朵” 或 “留心聽” 。",""],["Pie in the sky","“空中樓閣” 或 “不切實際的幻想”。",""],["Pig out","“暴飲暴食” 或 “大吃特吃”。",""],["Pigheaded","“固執的” 或 “頑固的”，形容一個人非常固執，不輕易改變自己的看法或計劃。",""],["Pipe down","“安靜下來” 或 “住嘴”。",""],["Pipe dream","“白日夢” 或 “空想”。",""],["Pitch dark","“漆黑一片” 或 “伸手不見五指”。",""],["Pitch in","“幫忙” 或 “共同出力”。",""],["Play by ear","隨機應變；見機行事。",""],["Play devil’s advocate","“扮演魔鬼的代言人” 或 “唱反調”。",""],["Play hardball","“強硬手段” 或 “採取強硬立場”。",""],["Play second fiddle","“甘居其次” 或 “當副手”。",""],["Playing dumb","裝傻，裝作不知道。",""],["Playing with fire","“玩火自焚” 或 “冒險”。",""],["Poker face","“撲克臉” 或 “面無表情”。",""],["Pound the pavement","“尋找工作” 或 “徒步四處奔走”。",""],["Power dressing","“權力穿著”、“強勢著裝” 或 “權利打扮”。",""],["Pride comes before a fall","“驕兵必敗” 或 “驕傲使人落後”。",""],["Pull his/her own weight","“儘自己的本分” 或 “承擔自己應有的任務”。",""],["Pull it off","“成功做到” 或 “完成某件困難的事情”。",""],["Pull out all the stops","“竭盡全力” 或 “不遺餘力”。",""],["Pull rank","“倚老賣老” 或 “仗勢欺人”。",""],["Pull someone’s leg","“開某人的玩笑” 或 “捉弄某人”。",""],["Pull strings","“利用關係” 或 “走後門”。",""],["Pull the plug","“拔掉插頭” 或 “終止、結束某事”。",""],["Pull the wool over your eyes","“矇蔽某人” 或 “欺騙某人”。",""],["Pull up stakes","“拔營” 或 “遷居”。",""],["Pull your chain","“開你的玩笑” 或 “耍你”。",""],["Pull yourself together","“冷靜下來” 或 “振作起來”。",""],["Pulled a rabbit out of one’s hat","“讓人大吃一驚” 或 “出奇制勝”。",""],["Pulled the rug out from under me","“突然讓人失去依靠” 或 “突然讓人陷入困境”。",""],["Pulling my leg","“開玩笑” 或 “捉弄某人”。",""],["Puppy love","“初戀” 或 “少男少女的戀愛”。",""],["Pushing your luck","“得寸進尺” 或 “把好運氣用到極限”。",""],["Put a sock in it","“閉嘴” 或 “安靜”。",""],["Put in their place","“把某人放在應有的位置” 或 “讓某人清楚自己的位置”。",""],["Put it on the back burner","“將它放在次要位置” 或 “暫時擱置”。",""],["Put my foot down","“堅持立場” 或 “斷然拒絕”。",""],["Put on my thinking cap","“仔細思考” 或 “認真思考”。",""],["Put our heads together","“共同商議” 或 “一起商量”。",""],["Put someone on the spot","“讓某人當場回答問題” 或 “讓某人難堪”。",""],["Put something down in black and white","“用書面形式記錄下來” 或 “白紙黑字寫下來”。",""],["Put something into practice","“將某事付諸實踐” 或 “實踐某事”。",""],["Put something on ice","“擱置某事” 或 “暫緩處理某事”。",""],["Put the squeeze/screws on someone","“施壓於某人” 或 “對某人施加壓力”。",""],["Put your finger on it","“準確指出” 或 “恰恰找出問題的根源”。",""],["Put your money where your mouth is","“言行一致” 或 “用實際行動證明”。這個短語用來敦促一個人去支援他所說過的話，用財務或實際行動來證明他們確實相信這些話。",""],["Quality time","“優質時間” 或 “高質量的陪伴時間”。",""],["Racking my brain","“絞盡腦汁” 或 “費力思考”。",""],["Rain on someone’s parade","“煞某人的風景” 或 “潑某人冷水”。",""],["Rain or shine","“風雨無阻”。",""],["Raise Cain","“惹是生非” 或 “生事”。",""],["Read someone the riot act","“嚴厲訓斥某人” 或 “警告某人”。",""],["Real McCoy","“正牌貨” 或 “真品”。",""],["Red flag","“紅旗” 或 “危險訊號”。",""],["Red herring","“紅鯡魚” 或 “誘餌”。",""],["Red in the face","“臉紅” 或 “感到尷尬”。",""],["Red letter day","“紅字日” 或 “特別重要的日子”。",""],["Rest on one’s laurels","“躺在功勞簿上” 或 “吃老本”。",""],["Right this way","“這邊請” 或 “請這邊走”。",""],["Ring a bell","“聽起來很熟” 或 “想起某事”。",""],["Rinky-dink","“簡陋的” 或 “不重要的”。",""],["Roll out the red carpet","“鋪開紅地毯” 或 “隆重歡迎”。",""],["Rolling in it","“財源滾滾” 或 “非常富有”。",""],["Rome wasn’t built in a day","“羅馬不是一天建成的”。表示偉大的成就或事情需要時間和耐心，無法一蹴而就。",""],["Rub elbows with someone","“與某人密切接觸” 或 “與某人交往”。",""],["Ruffle feathers","“惹惱，激怒某人。” 從字面上翻譯就是 “弄亂羽毛”，意指在某種情形下冒犯或激怒他人，像是撥弄了舒展的羽毛使其感到不適。",""],["Rule of thumb","“經驗法則” 或 “通常通則”。",""],["Run amok","“失控” 或 “狂亂”。",""],["Run circles around someone","輕鬆超過某人；在某方面表現得比某人好很多。",""],["Run errands","“跑腿” 或 “辦雜事”。",""],["Run its course","“順其自然” 或 “自然而然地結束”。",""],["Run like the wind","“跑得像風一樣快” 或 “飛快地跑”。",""],["Run one’s mouth off","“口無遮攔” 或 “信口開河”。",""],["Run out of steam","“筋疲力盡” 或 “失去動力”。",""],["Run the show","“掌控全域性” 或 “負責一切”。",""],["Run-of-the-mill","“普通的” 或 “平凡的”。",""],["Running on fumes","“繼續執行但已幾乎沒有能量”；常用於形容人已經疲憊不堪但仍在勉強堅持。",""],["Sail close to the wind","“冒險行事” 或 “接近危險”。",""],["Sales pitch","“推銷話術” 或 “銷售演示”。",""],["Salt of the earth","“社會中最有價值的人” 或 “忠實和誠實的人”。",""],["Saved by the bell","“千鈞一髮時刻得救” 或 “險險脫身”。",""],["Saved someone’s skin","“救了某人的命” 或 “讓某人免於困境”。",""],["Saving for a rainy day","“未雨綢繆” 或 “儲蓄以備不時之需”。",""],["Say uncle","“認輸” 或 “投降”。",""],["Say your piece","“發表意見” 或 “說出自己的觀點”。",""],["Scapegoat","“替罪羊”。",""],["Scare the pants off someone","“把某人嚇得魂不附體” 或 “把某人嚇得屁滾尿流”。",""],["School of thought","“學派” 或者 “思想流派”。",""],["School someone in something","“在某事上教某人” 或 “在某事上訓練某人”。",""],["Scot-free","“毫無損傷地” 或 “毫髮無損地”。",""],["Screw up","“搞砸” 或 “弄糟”。",""],["Sea legs","“適應海上生活” 或 “海船上站穩的本領”。",""],["Second-rate (or third- or fourth-rate)","“二流的”（或者 “三流的” 或 “四流的”），意指某物或某人不夠優質或處於下層次的水平。",""],["Security blanket","“安全毯” 或 “給予心理安慰的物品或慣例”。",""],["See eye to eye","“意見一致” 或 “看法相同”。",""],["See someone’s true colors","“看清某人的真面目” 或 “看透某人的真實本性”。",""],["See the big picture/look at the big picture","“看到大局” 或 “考慮整體”。",""],["See the light","“看見光明” 或 “頓悟”。",""],["See through someone/something","“看穿某人/某事”。",""],["Sell like hotcakes","“暢銷” 或 “像熱蛋糕一樣賣得快”。",""],["Sell someone short","“小看某人” 或 “低估某人”。",""],["Set my teeth on edge","使人煩躁不安，令人極度反感。",""],["Shake a leg","“快點” 或 “趕緊行動”。",""],["Shape up or ship out","“改變表現或者被解僱” 或 “要麼改進，要麼走人”。",""],["Sharp as a tack","“腦袋非常靈光” 或 “聰明伶俐”。",""],["Ships passing in the night","“夜晚交錯而過的船隻” 或 “擦肩而過的陌生人”。",""],["Shoestring budget","“極其有限的預算” 或 “微薄的預算”。",""],["Shoot from the hip","“直接了當” 或 “不加思索地行動或發言”。",""],["Shoot hoops","“投籃” 或 “打籃球”。",""],["Shoot off one’s mouth","“口無遮攔”，或 “胡說八道”。",""],["Shoot the breeze","閒聊，閒談。",""],["Shot in the arm","“強心針” 或 “有力的鼓勵”。",""],["Shot in the dark","“瞎猜” 或 “盲目嘗試”。",""],["Show of hands","“舉手表決” 或 “舉手投票”。",""],["Sick as a dog","“病得很嚴重”，“病得很厲害”。",""],["Sit tight","“耐心等待” 或 “堅持住”。",""],["Sitting like a bump on a log","形容某人什麼也不做，呆若木雞，無所事事地坐著。",""],["Sitting pretty","“處境優越” 或 “安然處之”。",""],["Sixth sense","“第六感” 或 “直覺”。",""],["Skeleton in the closet","“有不可告人的秘密” 或 “家醜”。",""],["Skeleton crew","“基礎工作人員” 或 “最低限度的人員配置”。",""],["Skip class/cut class","“逃課” 或 “曠課”。",""],["Slap on the wrist","“小懲大誡” 或 “輕微的處罰”。",""],["Sleep like a log","“睡得像根木頭” 意即 “睡得很香” 或 “睡得很沉”。",""],["Slim chance","“機會渺茫” 或 “幾乎沒有可能”。",""],["Slip of the tongue","“口誤” 或 “說漏嘴”。",""],["Slow and steady wins the race","“穩紮穩打才能贏得比賽” 或 “穩步前進勝過急於求成”。",""],["Small world","“世界真小”。",""],["Smell a rat","感覺有貓膩，覺得事情有蹊蹺。",""],["Smoke and mirrors","“煙霧和鏡子” 或 “障眼法”。",""],["Smoke like a chimney","“抽菸像煙囪一樣” 或 “抽菸成癮”。",""],["Snowed under","“被壓得喘不過氣” 或 “工作堆積如山”。",""],["So far so good","“到目前為止一切順利”。",""],["Sold me out","“出賣我” 或 “背叛我”。",""],["Something is killing me","“某事正在折磨我” 或 “某事令我非常痛苦”。",""],["Something sucks","“某事很糟糕” 或 “某事很差勁”。",""],["Something to crow about","“值得炫耀的事情” 或 “引以為豪的事情”。",""],["Sour grapes","“酸葡萄” 或 “假裝不在乎其實得不到的東西”。",""],["Speak of the devil","“說曹操，曹操到” 或 “說到某人，某人就出現”。",""],["Spice things up","“給事情增添趣味” 或 “讓生活更有趣”。",""],["Spill the beans","“洩漏秘密” 或 “透露真相”。",""],["Spin doctor","“政治公關” 或 “新聞發言人”。",""],["Spineless","“懦弱的” 或 “沒有骨氣的”。",""],["Spitting image","“酷似” 或 “一模一樣”。",""],["Splitting hairs","“斤斤計較” 或 “過分在意細節”。",""],["Spread too thin","“攤得太薄” 或 “分散精力太多”。",""],["Square meal","“一頓豐盛的飯” 或 “營養均衡的一餐”。",""],["Squeaky clean","“非常乾淨” 或 “一塵不染”。",""],["Stab someone in the back","“在背後捅刀子” 或 “背叛某人”。",""],["Stand my ground","“堅持立場” 或 “堅守立場”。",""],["Stay in touch","“保持聯絡”。",""],["Stay on budget","“控制預算” 或 “按預算行事”。",""],["Steal someone’s thunder","“搶某人的風頭”。",""],["Step up your game","“提升你的表現” 或 “加把勁兒”。",""],["Stew in your own juices","“自食其果” 或 “自作自受”。",""],["Stick out like a sore thumb","“顯得非常突兀” 或 “格格不入”。",""],["Stick to your guns","“堅持己見” 或 “堅持立場”。",""],["Stick-in-the-mud","“守舊的人” 或 “固執的人”。",""],["Sticking points","“僵持點” 或 “癥結點”。",""],["Sticky fingers","“順手牽羊” 或 “小偷小摸”。",""],["Stop on a dime","“剎車迅速” 或 “說停就停”。",""],["Street-smart","“街頭智慧” 或 “見多識廣”。",""],["Stretch the truth","“誇大其詞” 或 “言過其實”。",""],["Strike it rich","“暴富” 或 “突然致富”。",""],["String someone along","“吊某人胃口” 或 “一直讓某人抱有希望”。",""],["Stuffed shirt","“裝腔作勢的人” 或 “自以為是、古板的人”。",""],["Swallow your pride","“嚥下你的自尊” 或 “放下自尊”。",""],["Sweat blood","“汗流浹背” 或 “費盡心血”。",""],["Sweating bullets","“汗如雨下” 或 “非常緊張、焦慮”。",""],["Take a rain check","“改天再約” 或 “下次再說”。",""],["Take a shine to something/someone","“對某物/某人產生好感” 或 “對某物/某人喜愛”。",""],["Take it easy","“放輕鬆” 或 “別緊張”。",""],["Take it with a grain of salt/a pinch of salt","“持保留態度” 或 “有所懷疑地看待”。",""],["Take someone at their word","“信以為真” 或 “按某人說的去做”。",""],["Take something by storm","“橫掃” 或 “迅速成功”。",""],["Take something in stride","泰然處之，從容應對。",""],["Take the cake","“出乎意料” 或 “最了不起” 或 “糟糕透頂”。",""],["Take the floor","“發言” 或 “開始講話”。",""],["Take the plunge","“冒險一試” 或 “果斷行動”。",""],["Take the wind out of your sails","“讓你洩氣” 或 “使你氣餒”。",""],["Taken for a ride","“被欺騙” 或 “受騙上當”。",""],["Talk a blue streak","“滔滔不絕” 或 “說話特別快”。",""],["Talk of the town","“談論的熱點” 或 “城中話題”。",""],["Talk someone’s ear off","“說得某人耳朵都快掉了” 或 “喋喋不休地說話”。",""],["Talk through one’s hat","“胡說八道” 或 “不懂裝懂”。",""],["Talk to someone like a Dutch uncle","“像荷蘭叔叔一樣對某人談話” 或 “嚴厲地批評或勸導”。",""],["Talk to the hand","“別跟我說” 或 “我不想聽”。",""],["Talk turkey","“直截了當” 或 “開門見山”。",""],["Talking shop","“談論工作” 或 “談論行業內的事情”。",""],["Tall order","“艱難的任務” 或 “難以實現的請求”。",""],["Tall story","“誇張的故事” 或 “荒誕的故事”。",""],["Tar someone with the same brush","“同一枚刷子刷所有人” 或 “一概而論”。",""],["Tell me about it","“就是啊” 或 “可不是嘛”。",""],["Test the waters","“試探” 或 “摸底”。",""],["That hit the spot","“正合我意” 或 “正是我想要的”。",""],["That is to say","“也就是說”。",""],["That ship has sailed","“船已經開了” 或 “機不可失時不再來”。",""],["That’s all she wrote","“事情就到這裡”，或 “事情結束了”。用來表達某件事情已經完全結束或達到了最終結果，沒有更多的內容可供補充。",""],["That’s the last straw","“這是最後一根稻草” 或 “壓垮駱駝的最後一根稻草”。",""],["That’s wicked","“這真是太棒了” 或 “太厲害了”。",""],["The apple of my eye","“掌上明珠” 或 “珍愛之人”。",""],["The ball is in your court","“輪到你做決定” 或 “現在由你負責”。",""],["The bee’s knees","“最頂尖的” 或 “最好的”。",""],["The best of both worlds","“兩全其美”。",""],["The best thing since sliced bread","自切片面包以來最好的發明，用來形容某物非常棒或極其優秀。",""],["The Big Apple","“紐約市”。",""],["The Big Easy","“新奧爾良” 的暱稱。這個短語用來描述美國路易斯安那州的新奧爾良市，因為該城市的生活節奏輕鬆悠閒，相比其他大城市，這裡的壓力較小。",""],["The bottom line","“底線” 或 “最終結果”。",""],["The boys in blue","“男孩穿著藍色制服”，意為 “警察”。",""],["The brush-off / brushed me off","“被冷落” 或 “被敷衍”。",""],["The burning question","“迫切的問題” 或 “備受關注的問題”。",""],["The cat’s meow","“最好的” 或者 “非常棒的”。",""],["The devil is in the details","“細節決定成敗” 或 “問題出在細節上”。",""],["The early bird gets the worm","“早起的鳥兒有蟲吃”。",""],["The elephant in the room","“顯而易見卻被人忽視的問題”。",""],["The eleventh hour","“在最後一刻” 或 “在最後關頭”。",""],["The gift of the gab","“伶牙俐齒” 或 “口才好”。",""],["The last minute","“最後一刻” 或 “緊要關頭”。",""],["The lion’s share","“最大份額” 或 “最好的一部分”。",""],["The long and short of it","“總之” 或 “長話短說”。",""],["The munchies","“嘴饞” 或 “突然之間很想吃零食”。",""],["The other day","“前幾天” 或 “不久前”。",""],["The patience of Job","“忍受極大的痛苦和麻煩的耐心”，或直譯為 “約伯的耐心”。",""],["The pits","“最糟糕的情況” 或 “絕望的境地”。",""],["The pot calling the kettle black","“鍋嫌壺黑” 或 “五十步笑百步”。",""],["The road less travelled","“不尋常的選擇” 或 “不同尋常的道路”。",""],["The same wavelength","“在同一頻率上” 或 “有相同的想法或觀點”。",""],["The school of hard knocks","“人生的挫折教育” 或 “社會大學”。",""],["The shoe is on the other foot","“換位思考” 或 “角色互換”。",""],["The short end of the stick","“吃虧” 或 “受到不平等對待”。",""],["The squeaky wheel gets the grease","“叫得響的輪子獲得潤滑” 或者 “會哭的孩子有奶吃”。",""],["The straight and narrow","“正道” 或 “正軌”。",""],["The tide has turned","“形勢已經逆轉” 或 “局勢發生了變化”。",""],["The tip of the iceberg","“冰山一角”。",""],["The whole nine yards","“全力以赴” 或 “全部的”。",""],["There are clouds on the horizon","“烏雲壓境” 或 “前景不妙”。",""],["There are other fish in the sea","“天涯何處無芳草” 或 “海里還有別的魚”。",""],["There’s a method to his madness","“他看似瘋狂，實際上有其道理” 或 “外表瘋狂，實則有理”。",""],["There’s no such thing as a free lunch","“天下沒有免費的午餐” 。",""],["They were thrown together","“他們被匆忙地湊到一起” 或 “他們被倉促地安排在一起”。",""],["Think outside the box","跳出框框思考；打破常規思考。",""],["Third time’s a charm","“三次定律” 或 “第三次會有好運”。",""],["This is the life","“這才是生活” 或 “這就是享受人生”。",""],["Those who live in glass houses shouldn’t throw stones","“住在玻璃房子裡的人不應該扔石頭”，意思是人不要對別人進行批評，特別是當自己也有類似缺點或問題時。",""],["Three sheets to the wind","“喝得酩酊大醉” 或 “爛醉如泥”。",""],["Threw me for a loop","“讓我大吃一驚” 或 “讓我措手不及”。",""],["Through thick and thin","“同甘共苦” 或 “風雨無阻”。",""],["Throw a curveball/Throw a curve","“出其不意” 或 “製造意外”。",""],["Throw a monkey wrench into the works","“攪局” 或 “破壞計劃”。",""],["Throw caution to the wind","“不顧後果” 或 “拋開謹慎”。",""],["Thrown to the wolves","“被拋給狼群” 或 “被推入險境”。",""],["Tickled pink","“非常高興” 或 “樂得合不攏嘴”。",""],["Tighten your belt (or belt-tightening)","“勒緊褲腰帶” 或 “緊縮生活”。",""],["Tilt at windmills","“與風車作鬥爭” 或 “庸人自擾”。",""],["Time flies when you’re having fun","“快樂時光總是過得特別快” 或 “快樂的時光總是稍縱即逝”。",""],["Time is money","“時間就是金錢”。",""],["To be a chicken / to chicken out","“膽小鬼” 或 “臨陣退縮”。",""],["To be beside yourself","“極度激動” 或 “極度憤怒、悲傷”。",""],["To be closefisted","“吝嗇” 或 “小氣”。",""],["To be loaded","“很有錢” 或 “財大氣粗”。",""],["To be named after","“以…命名”。",""],["To be out of the question","“不可能的” 或 “不在考慮範圍之內”。",""],["To be tied up with something or someone","“與某事或某人有緊密聯絡” 或 “忙於某事或某人”。",""],["To be up to something","“正在忙某事” 或 “在策劃什麼事情（通常指不太好的事情）”。",""],["To beat the band","“非常響亮” 或 “非常強調地”。",""],["To bend someone’s ear","“借他人的耳朵” 或 “向某人嘮叨”。",""],["To black out","“失去知覺” 或 “臨時斷電”。",""],["To blow your own horn","“自吹自擂” 或 “自我吹噓”。",""],["To bomb","“失敗” 或 “慘遭失敗”。該用語通常用於描述電影、戲劇、演出或其他類似專案在票房或評價上的失敗。",""],["To box someone in","“使某人走投無路” 或 “困住某人”。",""],["To bug someone","“煩擾某人” 或 “使某人心煩”。",""],["To butt in","“插嘴” 或 “插手”。",""],["To call it a day","“收工” 或 “今天到此為止”。",""],["To call someone on the carpet","“訓斥某人” 或 “責怪某人”。",""],["To carry a torch for someone","“暗戀某人” 或 “對某人單相思”。",""],["To come out flat-footed","“措手不及” 或 “毫無準備地應對”。",""],["To come out swinging","“擺出一副迎戰的架勢” 或 “全力以赴地回應”。",""],["To corner the market","“壟斷市場” 或 “壟斷某行業”。",""],["To cry wolf","“狼來了” 或 “虛張聲勢”。",""],["To do a number on something","“對某事造成嚴重損害” 或 “嚴重影響”。",""],["To draw a blank","“一無所獲” 或 “搜尋記憶時想到腦袋空白”。",""],["To drink like a fish","“像魚一樣喝” 或 “牛飲”。",""],["To drop by","“順道拜訪” 或 “順便造訪”。",""],["To find fault with","“吹毛求疵”，或 “挑剔”。",""],["To follow up on something","“跟進某事” 或 “追查某事”。",""],["To get bent out of shape","“生氣” 或 “不高興”。",""],["To get in touch with","“聯絡” 或 “取得聯絡”。",""],["To get rid of","“擺脫” 或 “去除”。",""],["To get your walking papers","“被解僱” 或 “被開除”。",""],["To give in","“妥協” 或 “讓步”。",""],["To give someone the heads-up","“事先提醒某人” 或 “讓某人提前知道”。",""],["To go down like a lead balloon","“像鉛氣球一樣沉下去” 或 “徹底失敗”。",""],["To go Dutch","“各自付賬” 或 “AA 制”。",""],["To go off the deep end","“發瘋” 或 “失去理智”。",""],["To have another thing coming","“另有期待 “或” 大錯特錯 “。",""],["To have one’s back to the wall","“背靠牆” 或 “走投無路”。",""],["To hold out an olive branch","“伸出橄欖枝”，表示意欲和平或示好。",""],["To hold your own","“堅守立場” 或 “自立自強”。",""],["To keep an eye on","“留意” 或 “密切關注”。",""],["To know by sight","“面熟” 或 “見過面但不熟悉”。",""],["To live beyond your means","“入不敷出” 或 “寅吃卯糧”。",""],["To live hand-to-mouth","“勉強餬口” 或 “靠天吃飯”。",""],["To look down one’s nose","“瞧不起” 或 “輕視”。",""],["To make a long story short","“長話短說” 或 “簡而言之”。",""],["To make a mountain out of a molehill","“小題大做” 或 “誇大其詞”。",""],["To make matters worse","“更糟的是” 或 “更進一步的是”。",""],["To nix something","“取消某事” 或 “否決某事”。",""],["To outdo oneself","“超越自我” 或 “超越之前的水平”。",""],["To paddle your own canoe","“獨自划槳” 或 “自力更生”。",""],["To pony up","“掏腰包” 或 “支付”。",""],["To run/blow hot and cold","“翻臉無常” 或 “變化無常”。這個短語通常用來形容一個人的情緒或態度不斷變化，有時候表現得很熱情友好，有時候卻又變得冷淡疏遠。",""],["To see the light","“看到了光明” 或 “恍然大悟”。",""],["To serve one right","“罪有應得” 或 “活該”。",""],["To smooth things over","“平息事態” 或 “緩和情況”。",""],["To stand up for","“為……挺身而出” 或 “支援”。",""],["To start over from scratch","“從頭開始” 或 “從零開始”。",""],["To stonewall","“阻撓” 或 “故意拖延”。",""],["To take a load off someone’s back","“為某人減輕負擔” 或 “替某人分擔壓力”。",""],["To take it easy","“放鬆一下” 或 “不那麼辛苦”。",""],["To take something for granted","“認為…理所當然” 或 “不珍惜、忽視”。",""],["To the hilt","“全力以赴” 或 “徹底地”。",""],["Tongue-in-cheek","“俏皮話” 或 “無傷大雅的玩笑”。",""],["Too big for one’s boots","“自負” 或 “目中無人”。",""],["Too many irons in the fire","“同時做太多事情” 或 “攤子鋪得太大”。",""],["Top dog","“領頭地位” 或 “領導者”。",""],["Top-notch","“頂尖的” 或 “一流的”。",""],["Touch and go","“危險的” 或 “情況不確定的”。",""],["Touch base","“聯絡” 或 “聯絡”。",""],["Track record","“記錄” 或 “業績”。",""],["Train of thought","“思路” 或 “思維的軌跡”。",""],["Train wreck","“車禍現場” 或 “災難性的局面”。",""],["Travel light","“輕裝旅行” 或 “儘量減少行李”。",""],["Treat someone to something","“請某人某物” 或 “款待某人”。",""],["Treat/handle someone with kid gloves","“溫柔地對待某人” 或 “小心翼翼地處理某人的問題”。",""],["Troubled waters","“混亂的局面” 或 “險境”。",""],["True blue","“忠誠的” 或 “堅定不移的”。",""],["Tuckered out","“筋疲力盡” 或 “累壞了”。",""],["Turn a blind eye","“視而不見” 或 “裝作沒看見”。",""],["Turn a place upside down","“翻箱倒櫃” 或 “把某個地方弄得一團糟”。",""],["Turn over a new leaf","“改過自新” 或 “翻開新的一頁”。",""],["Turn the other cheek","“以德報怨” 或 “不計較，不報復”。",""],["Turn the tables","“扭轉局面” 或 “反敗為勝”。",""],["Turn up the heat","“加大壓力” 或 “加緊力度”。",""],["Twist someone’s arm","“扭某人的胳膊” 或 “強迫某人做某事”。",""],["Two peas in a pod","“一模一樣” 或 “形影不離”。",""],["Under a cloud","“處於困境” 或 “被懷疑”。",""],["Under someone’s thumb","“在某人的掌控之下” 或 “受某人控制”。",""],["Under the table/counter","“桌下交易” 或 “暗地裡進行”。",""],["Under the wire","趕在最後時刻，剛好及時。",""],["Until the cows come home","“到了很晚” 或 “很久很久”。",""],["Up a blind alley","“走入死衚衕” 或 “陷入困境”。",""],["Up a gum tree","“陷入困境” 或 “束手無策”。",""],["Up for grabs","“人人可得” 或 “人人都有機會”。",""],["Up in arms","非常憤怒或強烈抗議。",""],["Up in the air","“懸而未決” 或 “不確定”。",""],["Up the Creek Without a Paddle","“陷入困境” 或 “身處困境中無法自拔”。",""],["Up to snuff","“達到標準” 或 “合格”。",""],["Upset the apple cart","“打亂現局” 或 “破壞現有秩序”。",""],["Use your loaf","“動腦筋” 或 “用心想想”。",""],["Veg out","“葛優癱” 或 “無所事事”。",""],["Walk in someone’s shoes","“設身處地” 或 “換位思考”。",""],["Walk in the park","“輕鬆的事情”，或者表示一件非常容易完成的事情。",""],["Walking on air","“飄飄然” 或 “感到無比快樂”。",""],["Wallflower","“牆花” 或 “在社交場合中不引人注意的人”。",""],["Washing my hands of something/someone","“與某事／某人撇清關係” 或 “不再插手某事／某人”。",""],["Waste not, want not","“儉以防匱” 或 “不浪費就不會缺乏”。",""],["Watch out for","“小心” 或 “留意”。",""],["Water under the bridge","“過眼雲煙” 或 “既往不咎”。",""],["Watering hole","“水坑” 或 “飲水地”，在現代英語中，通常指代一個社交場所，比如酒吧、咖啡館等，人們在這裡聚集社交、放鬆。",""],["Wave of the future","“未來的趨勢” 或 “未來的發展方向”。",""],["We see eye to eye","“我們意見一致” 或 “我們看法相同”。",""],["We’ll cross that bridge when we come to it","“船到橋頭自然直”。",""],["Wear many different hats","“身兼多職” 或 “扮演多重角色”。",""],["Wear your heart on your sleeve","“感情外露” 或 “喜怒形於色”。",""],["Weasel out of something","“逃避做某事” 或 “推卸責任”。",""],["Weather the storm","“經受住風暴” 或 “渡過難關”。",""],["Well begun is half done","“好的開端是成功的一半”。",""],["Well-heeled","“富有的” 或 “有錢的”。",""],["Went the extra mile","“付出額外的努力” 或 “全力以赴”。",""],["Wet behind the ears","“還很年輕”，或者 “還很不成熟，缺乏經驗”。",""],["Wet blanket","“掃興的人” 或 “煞風景的人”。",""],["Wet my whistle","“潤潤喉” 或 “喝點酒”。 這個短語常常用來表示通過喝點東西（特別是酒精飲料）來解渴或享受。",""],["What are you up to?","“你在做什麼？” 或 “你最近在忙什麼？”",""],["When it rains, it pours","“禍不單行” 或 “一旦下雨就會傾盆”。",""],["When pigs fly","“除非太陽打西邊出來” 或 “根本不可能發生的事”。",""],["When push comes to shove","“當情況緊急（關鍵時刻）” 或 “不得不面對現實的時候”。",""],["When the chips are down","“在關鍵時刻” 或 “在危急時刻”。",""],["Where the rubber meets the road","“實踐出真知” 或 “關鍵時刻檢驗效果”。",""],["Where were we?","“我們剛剛說到哪裡了？” 或 “我們之前講到哪了？”",""],["White elephant","“無用但昂貴的東西” 或 “華而不實的禮物”。",""],["White lie","“善意的謊言” 或 “無傷大雅的謊言”。",""],["Whitewash","“掩飾” 或 “粉飾太平”。",""],["Who asked you?","“誰問你了？” 或 “輪得著你嗎？”",""],["Who do you think you are?","“你以為你是誰？” 或 “你覺得你算老幾？”",""],["Whole ball of wax","“整件事情” 或 “全部”。",""],["Wild and woolly","“狂野而毛茸茸” 或 “未開化的、粗獷的”。",""],["Will take place","“將會發生” 或 “將會進行”。",""],["Wine and dine","“款待” 或 “盛情款待”。",""],["Winging it","“即興發揮” 或 “臨時應付”。",""],["With bated breath","“屏息以待” 或 “焦急地等待”。",""],["With bells on","“全副武裝” 或 “興高采烈地”。",""],["With flying colors","“取得優異成績”、“出色完成任務” 或 “凱旋而歸”。",""],["Wolf in sheep’s clothing","“披著羊皮的狼”。用來形容那些表面和善，內心險惡的人。",""],["Work against the clock","“爭分奪秒” 或 “爭取時間”。",""],["Worth one’s salt","“值得某人的鹽” 或 “某人稱職”。",""],["Wouldn’t be caught dead","“打死也不願做某事” 或 “絕不願意被看見做某事”。",""],["Wouldn’t hurt a fly","“連只蒼蠅都不願傷害” 或 “特別溫和仁慈”。",""],["Wouldn’t touch it with a ten-foot pole","“避之不及” 或 “完全不想碰”。比喻對於某事或某物的強烈迴避或拒絕。",""],["Wrap your head around something","“理解某事” 或 “弄清楚某事”。",""],["X marks the spot","“X 標記了地點” ，表示某個確切的位置或目標。這一短語通常用於尋寶或解決謎題時，表示地圖上的 X 符號揭示了藏寶或關鍵點。",""],["You bet","“當然” 或 “你說得對”。",""],["You can bet your boots","“你可以肯定” 或 “你可以賭上你的全部”（表示對某事有完全的信心）。",""],["You can bet your bottom dollar","“你可以打包票” 或 “你完全可以相信”。",""],["You can lead a horse to water, but you can’t make him drink","“你可以帶馬到水邊，但不能強迫它喝水。” 這個成語比喻你可以為某人提供機會或資源，但不能強迫他們接受或利用。最終決定權還是在他們自己手中。",""],["You can say that again","“你說得很對” 或 “我完全同意”。",""],["You can’t have your cake and eat it too","魚與熊掌不可得兼。",""],["You can’t judge a book by its cover","“人不可貌相，海水不可斗量”，即不要以表面來評價某事物或某人。",""],["You can’t make an omelet without breaking some eggs","“做大事必有犧牲” 或 “想要有所成，就必須付出代價”。",""],["You can’t squeeze blood out of a turnip","“榨不出蘿蔔血” 或 “沒有辦法從石頭裡榨出水來”。",""],["You can’t take it with you","“身外之物，生不帶來，死不帶去。” 或 “錢財乃身外之物，帶不走。”",""],["You can’t teach an old dog new tricks","“你無法教年老的狗新把戲” 或 “本性難移”。",""],["You get what you pay for","“一分錢一分貨” 或 “便宜沒好貨”。",""],["You’ll catch more flies with honey than with vinegar","“溫言軟語比武力威逼更能說服人” 或 “好話比惡語更能感動人”。",""],["You’re telling me","“你這不是廢話嗎” 或 “這點我還不知道啊”。",""],["You’ve sold me","“你說服我了” 或 “我被你打動了”。",""],["Your guess is as good as mine","“我也不知道” 或 “我和你一樣猜不透”。",""],["Zero tolerance","“零容忍”。",""],["Zip it","“閉嘴” 或 “安靜”。",""]]}};
+
+  // ===================== 設定 =====================
+  var STORE_KEY = 'vocabQuiz:' + QUIZ.id;
+  var WRONG_BOOK = '__WRONG_BOOK__';   // 下拉選單中「錯題本」的內部代號
+  var STREAK_TO_REMOVE = 2;            // 連續答對幾次自動移出錯題本
+  var MAX_SESSIONS = 50;               // 測驗紀錄保留筆數
+  var BACKUP_REMIND_DAYS = 7;          // 幾天未備份就提醒
+
+  // ===================== 工具函式 =====================
+  function $(id) { return document.getElementById(id); }
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function norm(w) { return String(w == null ? '' : w).trim().replace(/\s+/g, ' ').toLowerCase(); }
+  function shuffle(arr) {
+    var a = arr.slice();
+    for (var i = a.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  }
+  function pad2(n) { return String(n).padStart(2, '0'); }
+  function fmtDate(iso, withYear) {
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return '—';
+    return (withYear ? d.getFullYear() + '/' : '') + pad2(d.getMonth() + 1) + '/' + pad2(d.getDate()) +
+      ' ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes());
+  }
+  function daysSince(iso) {
+    if (!iso) return null;
+    var t = new Date(iso).getTime();
+    return isNaN(t) ? null : Math.floor((Date.now() - t) / 86400000);
+  }
+  function fmtDuration(sec) { return Math.floor(sec / 60) + ' 分 ' + (sec % 60) + ' 秒'; }
+  function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
+  function line(k, v) { return '<p>' + esc(k) + '：' + esc(v) + '</p>'; }
+  function sheetLabel(v) { return v === WRONG_BOOK ? '錯題本' : v; }
+
+  // ===================== 儲存層 =====================
+  var Store = (function () {
+    var ok = true;
+    var state = blank();
+
+    function blank() {
+      return { version: 1, quizName: QUIZ.name, wrongBook: {}, sessions: [], lastExport: null, prefs: {} };
+    }
+    function sanitize(d) {
+      var s = blank();
+      if (d && typeof d === 'object') {
+        if (d.wrongBook && typeof d.wrongBook === 'object') s.wrongBook = d.wrongBook;
+        if (Array.isArray(d.sessions)) s.sessions = d.sessions;
+        if (d.lastExport) s.lastExport = d.lastExport;
+        if (d.prefs && typeof d.prefs === 'object') s.prefs = d.prefs;
+      }
+      return s;
+    }
+    function load() {
+      var raw = null;
+      try { raw = window.localStorage.getItem(STORE_KEY); }
+      catch (e) { ok = false; state = blank(); return; }
+      if (!raw) { state = blank(); return; }
+      try {
+        state = sanitize(JSON.parse(raw));
+      } catch (e) {
+        // 資料損毀：另存一份原始內容後重新開始，不直接丟棄
+        try { window.localStorage.setItem(STORE_KEY + ':corrupt:' + Date.now(), raw); } catch (e2) {}
+        state = blank();
+      }
+    }
+    function save() {
+      if (!ok) return false;
+      try {
+        state.quizName = QUIZ.name;
+        window.localStorage.setItem(STORE_KEY, JSON.stringify(state));
+        return true;
+      } catch (e) {
+        ok = false;
+        renderBanners();
+        return false;
+      }
+    }
+    return {
+      load: load,
+      save: save,
+      get state() { return state; },
+      get ok() { return ok; }
+    };
+  })();
+
+  // ===================== 錯題本 =====================
+  var WrongBook = {
+    size: function () { return Object.keys(Store.state.wrongBook).length; },
+    list: function () {
+      var book = Store.state.wrongBook;
+      return Object.keys(book).map(function (k) {
+        var it = book[k];
+        return {
+          key: k, word: it.word, meaning: it.meaning, explanation: it.explanation || '', sheet: it.sheet || '',
+          wrongCount: it.wrongCount || 1, streak: it.streak || 0, lastSelected: it.lastSelected || '',
+          firstWrongAt: it.firstWrongAt || it.lastWrongAt || '', lastWrongAt: it.lastWrongAt || ''
+        };
+      });
+    },
+    recordWrong: function (q, selected) {
+      var key = norm(q.word);
+      var now = new Date().toISOString();
+      var book = Store.state.wrongBook;
+      var it = book[key];
+      if (it) {
+        it.wrongCount = (it.wrongCount || 0) + 1;
+        it.streak = 0;
+        // 以最近一次答錯的內容為準（試算表修改過的中文會自然同步）
+        it.word = q.word; it.meaning = q.meaning; it.explanation = q.explanation; it.sheet = q.sheet;
+        it.lastSelected = selected;
+        it.lastWrongAt = now;
+      } else {
+        book[key] = {
+          word: q.word, meaning: q.meaning, explanation: q.explanation, sheet: q.sheet,
+          wrongCount: 1, streak: 0, lastSelected: selected, firstWrongAt: now, lastWrongAt: now
+        };
+      }
+      Store.save();
+      return book[key];
+    },
+    recordCorrect: function (q) {
+      var key = norm(q.word);
+      var it = Store.state.wrongBook[key];
+      if (!it) return null;
+      it.streak = (it.streak || 0) + 1;
+      if (it.streak >= STREAK_TO_REMOVE) {
+        delete Store.state.wrongBook[key];
+        Store.save();
+        return { removed: true };
+      }
+      Store.save();
+      return { removed: false, streak: it.streak };
+    },
+    remove: function (keys) {
+      keys.forEach(function (k) { delete Store.state.wrongBook[k]; });
+      Store.save();
+    }
+  };
+
+  // ===================== 測驗紀錄 =====================
+  function sortAndTrimSessions() {
+    Store.state.sessions.sort(function (a, b) { return String(b.at).localeCompare(String(a.at)); });
+    if (Store.state.sessions.length > MAX_SESSIONS) Store.state.sessions.length = MAX_SESSIONS;
+  }
+  var Sessions = {
+    all: function () { return Store.state.sessions; },
+    get: function (id) { return Store.state.sessions.filter(function (s) { return s.id === id; })[0] || null; },
+    add: function (s) { Store.state.sessions.unshift(s); sortAndTrimSessions(); Store.save(); },
+    remove: function (id) {
+      Store.state.sessions = Store.state.sessions.filter(function (s) { return s.id !== id; });
+      Store.save();
+    },
+    clear: function () { Store.state.sessions = []; Store.save(); }
+  };
+
+  // ===================== 題庫 =====================
+  function sheetQuestions(name) {
+    return (QUIZ.sheets[name] || []).map(function (r) {
+      return { word: r[0], meaning: r[1], explanation: r[2] || '', sheet: name };
+    });
+  }
+  function itemToQuestion(it) {
+    return { word: it.word, meaning: it.meaning, explanation: it.explanation || '', sheet: it.sheet };
+  }
+  function sortBook(list, mode) {
+    var c = list.slice();
+    if (mode === 'recent') {
+      c.sort(function (a, b) { return String(b.lastWrongAt).localeCompare(String(a.lastWrongAt)); });
+    } else if (mode === 'alpha') {
+      c.sort(function (a, b) { return norm(a.word).localeCompare(norm(b.word)); });
+    } else {
+      c.sort(function (a, b) {
+        return (b.wrongCount - a.wrongCount) || String(b.lastWrongAt).localeCompare(String(a.lastWrongAt));
+      });
+    }
+    return c;
+  }
+  function getPool(value) {
+    if (value === WRONG_BOOK) return sortBook(WrongBook.list(), 'count').map(itemToQuestion);
+    return sheetQuestions(value);
+  }
+
+  var ALL_WORDS = null;   // 整個檔案不重複的單字 [[正規化, 原文], ...]
+  function allWords() {
+    if (!ALL_WORDS) {
+      var seen = {};
+      ALL_WORDS = [];
+      QUIZ.sheetOrder.forEach(function (n) {
+        QUIZ.sheets[n].forEach(function (r) {
+          var k = norm(r[0]);
+          if (!seen[k]) { seen[k] = true; ALL_WORDS.push([k, r[0]]); }
+        });
+      });
+    }
+    return ALL_WORDS;
+  }
+
+  // 錯誤選項：優先取自該字的來源工作表；不足 3 個（或工作表已移除）時從全部單字補足
+  function buildOptions(q) {
+    var seen = {};
+    seen[norm(q.word)] = true;
+    var picks = [];
+    function addFrom(pairs) {
+      shuffle(pairs).forEach(function (p) {
+        if (picks.length < 3 && !seen[p[0]]) { seen[p[0]] = true; picks.push(p[1]); }
+      });
+    }
+    if (QUIZ.sheets[q.sheet]) addFrom(QUIZ.sheets[q.sheet].map(function (r) { return [norm(r[0]), r[0]]; }));
+    if (picks.length < 3) addFrom(allWords());
+    var opts = [{ text: q.word, correct: true }].concat(picks.map(function (w) { return { text: w, correct: false }; }));
+    return shuffle(opts);
+  }
+
+  // ===================== 畫面切換與字體 =====================
+  function showScreen(name) {
+    ['setup', 'quiz', 'result', 'manage'].forEach(function (n) {
+      $('screen-' + n).classList.toggle('hidden', n !== name);
+    });
+    window.scrollTo(0, 0);
+  }
+
+  var fontSize = 18;
+  function applyFont() { document.body.style.fontSize = fontSize + 'px'; }
+  function adjustFont(d) {
+    fontSize = Math.max(14, Math.min(28, fontSize + d));
+    applyFont();
+    Store.state.prefs.fontSize = fontSize;
+    Store.save();
+  }
+
+  // ===================== 設定頁 =====================
+  function refreshSheetSelect() {
+    var sel = $('sheetSelect');
+    var prev = sel.value;
+    sel.innerHTML = '';
+    QUIZ.sheetOrder.forEach(function (n) {
+      sel.add(new Option(n + '（' + QUIZ.sheets[n].length + '題）', n));
+    });
+    var cnt = WrongBook.size();
+    var opt = new Option('★ 錯題本（' + cnt + '題）', WRONG_BOOK);
+    opt.disabled = cnt === 0;
+    sel.add(opt);
+
+    var valid = Array.prototype.some.call(sel.options, function (o) { return o.value === prev && !o.disabled; });
+    sel.value = valid ? prev : QUIZ.sheetOrder[0];
+    onPoolChange();
+  }
+
+  function onPoolChange() {
+    var v = $('sheetSelect').value;
+    var n = getPool(v).length;
+    $('startRow').value = 1;
+    $('endRow').value = n;
+    $('startRow').max = n;
+    $('endRow').max = n;
+    $('poolHint').textContent = v === WRONG_BOOK
+      ? '錯題本依「錯誤次數由多到少」排序，例如第 1～10 題＝錯最多次的 10 題。'
+      : '共 ' + n + ' 題';
+  }
+
+  function renderBanners() {
+    var h = '';
+    if (!Store.ok) {
+      h += '<div class="banner error">⚠️ 這個瀏覽器無法使用本機儲存（可能是無痕模式），錯題記錄在關閉網頁後會消失。</div>';
+    } else {
+      var list = WrongBook.list();
+      if (list.length) {
+        var last = Store.state.lastExport;
+        var days;
+        if (last) {
+          days = daysSince(last);
+        } else {
+          // 從未備份：從最早的錯題日期起算，避免第一次答錯就跳提醒
+          var oldest = list.reduce(function (m, it) { return (!m || it.firstWrongAt < m) ? it.firstWrongAt : m; }, '');
+          days = daysSince(oldest);
+        }
+        if (days !== null && days >= BACKUP_REMIND_DAYS) {
+          h += '<div class="banner warn">錯題本有 ' + list.length + ' 題，' +
+            (last ? '已 ' + days + ' 天未備份' : '尚未備份過') +
+            '。<button type="button" class="secondary" id="bannerBackup">前往備份</button></div>';
+        }
+      }
+    }
+    $('setupBanners').innerHTML = h;
+    var b = $('bannerBackup');
+    if (b) b.addEventListener('click', function () { openManage('backup'); });
+  }
+
+  function startFromSetup() {
+    var v = $('sheetSelect').value;
+    var pool = getPool(v);
+    if (!pool.length) { alert('這個範圍沒有題目。'); return; }
+
+    var start = parseInt($('startRow').value, 10);
+    var end = parseInt($('endRow').value, 10);
+    if (isNaN(start) || isNaN(end) || start < 1 || end < start || end > pool.length) {
+      alert('請輸入有效的題目範圍（1～' + pool.length + '）。');
+      return;
+    }
+
+    var list = shuffle(pool.slice(start - 1, end));
+    var rangeText = '第 ' + start + '～' + end + ' 題';
+    var rc = parseInt($('randomCount').value, 10);
+    if (!isNaN(rc) && rc > 0 && rc < list.length) {
+      list = list.slice(0, rc);
+      rangeText = '隨機 ' + list.length + ' 題（取自第 ' + start + '～' + end + ' 題）';
+    }
+    startQuiz(list, sheetLabel(v), rangeText);
+  }
+
+  // ===================== 測驗流程 =====================
+  var S = { timer: null, ended: true, lastSession: null };
+
+  function startQuiz(list, label, rangeText) {
+    if (!list.length) { alert('沒有可測驗的題目。'); return; }
+    clearInterval(S.timer);
+    var mins = parseInt($('timeSelect').value, 10) || 5;
+    S.questions = list;
+    S.idx = 0;
+    S.correct = 0;
+    S.wrong = 0;
+    S.answered = 0;
+    S.wrongs = [];
+    S.label = label;
+    S.rangeText = rangeText;
+    S.timeLimitMin = mins;
+    S.startTime = new Date();
+    S.endTime = new Date(S.startTime.getTime() + mins * 60000);
+    S.ended = false;
+    S.answeredCurrent = false;
+
+    $('sheetTitle').textContent = label;
+    showScreen('quiz');
+    updateTimer();
+    S.timer = setInterval(updateTimer, 1000);
+    showQuestion();
+  }
+
+  function updateTimer() {
+    var remain = Math.ceil((S.endTime.getTime() - Date.now()) / 1000);
+    if (remain <= 0) {
+      $('timer').textContent = '剩餘 0:00';
+      endQuiz('timeup');
+      return;
+    }
+    $('timer').textContent = '剩餘 ' + Math.floor(remain / 60) + ':' + pad2(remain % 60);
+  }
+
+  function updateProgress() {
+    var shown = Math.min(S.idx + 1, S.questions.length);
+    $('progress').textContent = '第 ' + shown + '/' + S.questions.length + ' 題｜對 ' + S.correct + '｜錯 ' + S.wrong;
+  }
+
+  function showQuestion() {
+    if (S.idx >= S.questions.length) { endQuiz('done'); return; }
+    var q = S.questions[S.idx];
+    S.answeredCurrent = false;
+    S.currentOptions = buildOptions(q);
+
+    $('questionText').innerHTML = '<span class="q-label">Which is：</span>' + esc(q.meaning);
+    var box = $('options');
+    box.innerHTML = '';
+    S.currentOptions.forEach(function (o, i) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'option';
+      b.innerHTML = '<span class="key">' + (i + 1) + '</span>' + esc(o.text);
+      b.addEventListener('click', function () { answer(i); });
+      box.appendChild(b);
+    });
+    $('feedback').innerHTML = '';
+    $('nextBtn').disabled = true;
+    updateProgress();
+  }
+
+  function answer(i) {
+    if (S.ended || S.answeredCurrent) return;
+    var opt = S.currentOptions[i];
+    if (!opt) return;
+    var q = S.questions[S.idx];
+    S.answeredCurrent = true;
+    S.answered++;
+
+    var buttons = $('options').children;
+    S.currentOptions.forEach(function (o, j) {
+      buttons[j].disabled = true;
+      if (o.correct) buttons[j].classList.add('is-correct');
+    });
+
+    var note = '';
+    if (opt.correct) {
+      S.correct++;
+      var r = WrongBook.recordCorrect(q);
+      if (r && r.removed) note = '🎉 連續答對 ' + STREAK_TO_REMOVE + ' 次，已從錯題本移除';
+      else if (r) note = '錯題本：連續答對 ' + r.streak + '/' + STREAK_TO_REMOVE;
+    } else {
+      S.wrong++;
+      buttons[i].classList.add('is-wrong');
+      var it = WrongBook.recordWrong(q, opt.text);
+      S.wrongs.push({ word: q.word, meaning: q.meaning, explanation: q.explanation, sheet: q.sheet, selected: opt.text });
+      note = '已記入錯題本（累計錯 ' + it.wrongCount + ' 次）';
+    }
+
+    $('feedback').innerHTML =
+      '<div class="feedback-box ' + (opt.correct ? 'correct' : 'incorrect') + '">' +
+      (opt.correct ? '答對了！' : '答錯了！') +
+      '<br>正確答案：' + esc(q.word) +
+      (q.explanation ? '<br>解釋：' + esc(q.explanation) : '') +
+      (note ? '<div class="wb-note">' + esc(note) + '</div>' : '') +
+      (Store.ok ? '' : '<div class="wb-note">（無法儲存，關閉網頁後記錄會消失）</div>') +
+      '</div>';
+    $('nextBtn').disabled = false;
+    updateProgress();
+  }
+
+  function nextQuestion() {
+    if (S.ended || !S.answeredCurrent) return;
+    S.idx++;
+    showQuestion();
+  }
+
+  function endQuiz(reason) {
+    if (S.ended) return;
+    S.ended = true;
+    clearInterval(S.timer);
+
+    var finish = new Date();
+    var total = S.questions.length;
+    var session = {
+      id: uid(),
+      at: finish.toISOString(),
+      label: S.label,
+      rangeText: S.rangeText,
+      total: total,
+      answered: S.answered,
+      correct: S.correct,
+      wrong: S.wrong,
+      score: total ? Math.round(S.correct / total * 100) : 0,
+      durationSec: Math.round((finish.getTime() - S.startTime.getTime()) / 1000),
+      timeLimitMin: S.timeLimitMin,
+      endReason: reason,
+      wrongs: S.wrongs.slice()
+    };
+    if (session.answered > 0) Sessions.add(session);   // 一題都沒答就不留紀錄
+    S.lastSession = session;
+
+    renderResult(session);
+    refreshSheetSelect();
+    renderBanners();
+    showScreen('result');
+  }
+
+  function summaryHtml(s) {
+    var reasonText = { timeup: '時間到，自動交卷', quit: '提前交卷', done: '全部作答完畢' }[s.endReason] || '';
+    return '<div class="summary">' +
+      line('測驗日期時間', fmtDate(s.at, true)) +
+      line('測驗範圍', s.label + '｜' + s.rangeText) +
+      line('測驗時間', fmtDuration(s.durationSec) + (reasonText ? '（' + reasonText + '）' : '')) +
+      line('總題數', s.total) +
+      line('答對題數', s.correct) +
+      line('答錯題數', s.wrong) +
+      (s.total - s.answered > 0 ? line('未作答題數', s.total - s.answered) : '') +
+      line('得分', s.score + ' 分') +
+      '</div>';
+  }
+
+  function reviewHtml(s) {
+    if (!s.wrongs.length) {
+      return '<p class="empty">' + (s.answered === s.total ? '全部答對，太棒了！' : '作答的題目都沒有答錯。') + '</p>';
+    }
+    return '<h3>答錯題目回顧</h3>' + s.wrongs.map(function (w, i) {
+      return '<div class="review-item">' +
+        '<p class="review-question">題目 ' + (i + 1) + '：' + esc(w.meaning) + '</p>' +
+        '<p class="review-wrong">您的答案：' + esc(w.selected) + '</p>' +
+        '<p class="review-correct">正確答案：' + esc(w.word) + '</p>' +
+        (w.explanation ? '<p class="review-explanation">解釋：' + esc(w.explanation) + '</p>' : '') +
+        '</div>';
+    }).join('');
+  }
+
+  function renderResult(s) {
+    $('resultBody').innerHTML = '<h2>' + esc(s.label) + ' 測驗結果</h2>' + summaryHtml(s) +
+      '<p class="hint" style="text-align:center">錯題本目前共 ' + WrongBook.size() + ' 題</p>';
+    var btn = $('retestLastBtn');
+    btn.classList.toggle('hidden', !s.wrongs.length);
+    btn.textContent = '重測本次錯題（' + uniqueWrongs(s.wrongs).length + '題）';
+    $('resultReview').innerHTML = reviewHtml(s);
+  }
+
+  function uniqueWrongs(wrongs) {
+    var seen = {};
+    return wrongs.filter(function (w) {
+      var k = norm(w.word);
+      if (seen[k]) return false;
+      seen[k] = true;
+      return true;
+    });
+  }
+
+  function retestWrongs(wrongs, label) {
+    var list = shuffle(uniqueWrongs(wrongs).map(itemToQuestion));
+    startQuiz(list, label, '重測 ' + list.length + ' 題');
+  }
+
+  // ===================== 錯題管理 =====================
+  var manageTab = 'book';
+  var shownBook = [];
+
+  function openManage(tab) {
+    showScreen('manage');
+    switchTab(tab || manageTab);
+  }
+
+  function switchTab(t) {
+    manageTab = t;
+    Array.prototype.forEach.call(document.querySelectorAll('.tab'), function (b) {
+      b.classList.toggle('active', b.getAttribute('data-tab') === t);
+    });
+    ['book', 'sessions', 'backup'].forEach(function (n) {
+      $('tab-' + n).classList.toggle('hidden', n !== t);
+    });
+    if (t === 'book') renderBook();
+    else if (t === 'sessions') renderSessions();
+    else renderBackup();
+  }
+
+  // ---- 錯題本 ----
+  function renderBook() {
+    var filterSel = $('bookFilter');
+    var prev = filterSel.value;
+    var list = WrongBook.list();
+
+    var sheetSet = {};
+    list.forEach(function (it) { sheetSet[it.sheet] = (sheetSet[it.sheet] || 0) + 1; });
+    var sheetNames = Object.keys(sheetSet).sort(function (a, b) {
+      var ia = QUIZ.sheetOrder.indexOf(a), ib = QUIZ.sheetOrder.indexOf(b);
+      if (ia < 0) ia = 99999;
+      if (ib < 0) ib = 99999;
+      return (ia - ib) || a.localeCompare(b);
+    });
+    filterSel.innerHTML = '';
+    filterSel.add(new Option('全部（' + list.length + '）', ''));
+    sheetNames.forEach(function (s) {
+      filterSel.add(new Option(s + (QUIZ.sheets[s] ? '' : '〔已移除〕') + '（' + sheetSet[s] + '）', s));
+    });
+    filterSel.value = sheetSet[prev] ? prev : '';
+
+    var f = filterSel.value;
+    shownBook = sortBook(f ? list.filter(function (it) { return it.sheet === f; }) : list, $('bookSort').value);
+
+    $('bookClear').textContent = f ? '清空此工作表錯題' : '清空全部錯題';
+    $('bookCount').textContent = '顯示 ' + shownBook.length + ' 題｜連續答對 ' + STREAK_TO_REMOVE + ' 次會自動移除';
+    $('bookSelectAll').checked = false;
+    ['bookQuiz', 'bookDeleteSelected', 'bookClear'].forEach(function (id) { $(id).disabled = !shownBook.length; });
+
+    $('bookList').innerHTML = shownBook.length ? shownBook.map(function (it) {
+      return '<li class="wb-row">' +
+        '<input type="checkbox" class="bookChk" value="' + esc(it.key) + '">' +
+        '<div class="wb-main">' +
+          '<div class="wb-word">' + esc(it.word) +
+            '<span class="badge">錯 ' + it.wrongCount + ' 次</span>' +
+            (it.streak ? '<span class="badge streak">連對 ' + it.streak + '/' + STREAK_TO_REMOVE + '</span>' : '') +
+          '</div>' +
+          '<div class="wb-meaning">' + esc(it.meaning) + '</div>' +
+          '<div class="wb-meta">' + esc(it.sheet) + '｜最近答錯 ' + fmtDate(it.lastWrongAt, true) +
+            (it.lastSelected ? '｜曾誤選 ' + esc(it.lastSelected) : '') + '</div>' +
+        '</div>' +
+        '<button type="button" class="danger" data-del="' + esc(it.key) + '">刪除</button>' +
+      '</li>';
+    }).join('') : '<li class="empty">' + (list.length ? '這個工作表沒有錯題' : '錯題本是空的') + '</li>';
+  }
+
+  function checkedBookKeys() {
+    return Array.prototype.filter.call(document.querySelectorAll('.bookChk'), function (c) { return c.checked; })
+      .map(function (c) { return c.value; });
+  }
+
+  function afterBookChange() {
+    renderBook();
+    refreshSheetSelect();
+    renderBanners();
+  }
+
+  // ---- 測驗紀錄 ----
+  function renderSessions() {
+    var sel = $('sessionSelect');
+    var prev = sel.value;
+    var list = Sessions.all();
+    sel.innerHTML = '';
+    if (!list.length) {
+      sel.add(new Option('（尚無測驗紀錄）', ''));
+      sel.disabled = true;
+      $('sessionDetail').innerHTML = '<p class="empty">尚無測驗紀錄。最多保留最近 ' + MAX_SESSIONS + ' 筆。</p>';
+      ['sessionRetest', 'sessionDelete', 'sessionClear'].forEach(function (id) { $(id).disabled = true; });
+      return;
+    }
+    sel.disabled = false;
+    list.forEach(function (s) {
+      sel.add(new Option(fmtDate(s.at) + '｜' + s.label + '｜' + s.score + '分｜錯 ' + s.wrong + ' 題', s.id));
+    });
+    sel.value = Sessions.get(prev) ? prev : list[0].id;
+    renderSessionDetail();
+  }
+
+  function renderSessionDetail() {
+    var s = Sessions.get($('sessionSelect').value);
+    if (!s) return;
+    $('sessionDetail').innerHTML = '<div class="control-panel">' + summaryHtml(s) + '</div>' + reviewHtml(s) +
+      '<p class="hint" style="text-align:center">共 ' + Sessions.all().length + ' 筆紀錄，最多保留最近 ' + MAX_SESSIONS + ' 筆</p>';
+    $('sessionRetest').disabled = !s.wrongs.length;
+    $('sessionRetest').textContent = '重測此次錯題' + (s.wrongs.length ? '（' + uniqueWrongs(s.wrongs).length + '題）' : '');
+    $('sessionDelete').disabled = false;
+    $('sessionClear').disabled = false;
+  }
+
+  // ---- 備份 ----
+  var persistState = null;   // true / false / null(不支援)
+  function requestPersist() {
+    if (!(navigator.storage && navigator.storage.persisted)) return;
+    navigator.storage.persisted()
+      .then(function (p) { return p || (navigator.storage.persist ? navigator.storage.persist() : false); })
+      .then(function (p) { persistState = !!p; })
+      .catch(function () {});
+  }
+
+  function renderBackup() {
+    var st = Store.state;
+    var d = daysSince(st.lastExport);
+    $('exportInfo').innerHTML =
+      '錯題本 ' + WrongBook.size() + ' 題、測驗紀錄 ' + st.sessions.length + ' 筆<br>' +
+      (st.lastExport ? '上次匯出：' + fmtDate(st.lastExport, true) + '（' + d + ' 天前）' : '尚未匯出過');
+    $('storageInfo').innerHTML =
+      '題庫：' + esc(QUIZ.name) + '<br>' +
+      '儲存代號：' + esc(STORE_KEY) + '<br>' +
+      '網頁產生時間：' + fmtDate(QUIZ.generatedAt, true) + '<br>' +
+      '本機儲存：' + (Store.ok ? '可用' : '<span style="color:#c62828">無法使用</span>') + '<br>' +
+      '長期保存：' + (persistState === true ? '已取得'
+        : persistState === false ? '未取得（瀏覽器仍可能在長期未使用時清除資料，請定期匯出）'
+        : '此瀏覽器不支援查詢') +
+      '<br>資料只存在這台裝置的這個瀏覽器；換裝置請用匯出／匯入。';
+  }
+
+  function exportBackup() {
+    var st = Store.state;
+    var data = {
+      format: 'vocabQuiz-backup',
+      version: 1,
+      quizId: QUIZ.id,
+      quizName: QUIZ.name,
+      exportedAt: new Date().toISOString(),
+      wrongBook: st.wrongBook,
+      sessions: st.sessions
+    };
+    var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    var url = URL.createObjectURL(blob);
+    var d = new Date();
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = '錯題備份_' + String(QUIZ.name).replace(/[\\/:*?"<>|]/g, '_') + '_' +
+      d.getFullYear() + pad2(d.getMonth() + 1) + pad2(d.getDate()) + '.json';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
+
+    st.lastExport = data.exportedAt;
+    Store.save();
+    renderBackup();
+    renderBanners();
+  }
+
+  function mergeBackup(data, withSessions) {
+    var book = Store.state.wrongBook;
+    var added = 0, merged = 0, sessionsAdded = 0;
+
+    Object.keys(data.wrongBook).forEach(function (rawKey) {
+      var inc = data.wrongBook[rawKey];
+      if (!inc || !inc.word || !inc.meaning) return;
+      var key = norm(inc.word);
+      var cur = book[key];
+      if (!cur) {
+        book[key] = {
+          word: inc.word, meaning: inc.meaning, explanation: inc.explanation || '', sheet: inc.sheet || '',
+          wrongCount: inc.wrongCount || 1, streak: Math.min(inc.streak || 0, STREAK_TO_REMOVE - 1),
+          lastSelected: inc.lastSelected || '', firstWrongAt: inc.firstWrongAt || inc.lastWrongAt || '',
+          lastWrongAt: inc.lastWrongAt || ''
+        };
+        added++;
+        return;
+      }
+      var newer = String(inc.lastWrongAt || '') > String(cur.lastWrongAt || '') ? inc : cur;
+      var firsts = [cur.firstWrongAt, inc.firstWrongAt].filter(Boolean).sort();
+      book[key] = {
+        word: newer.word, meaning: newer.meaning, explanation: newer.explanation || '', sheet: newer.sheet || '',
+        wrongCount: Math.max(cur.wrongCount || 1, inc.wrongCount || 1),
+        streak: Math.min(cur.streak || 0, inc.streak || 0),
+        lastSelected: newer.lastSelected || '',
+        firstWrongAt: firsts[0] || newer.lastWrongAt || '',
+        lastWrongAt: newer.lastWrongAt || ''
+      };
+      merged++;
+    });
+
+    if (withSessions && Array.isArray(data.sessions)) {
+      var ids = {};
+      Store.state.sessions.forEach(function (s) { ids[s.id] = true; });
+      data.sessions.forEach(function (s) {
+        if (s && s.id && s.at && !ids[s.id] && Array.isArray(s.wrongs)) {
+          Store.state.sessions.push(s);
+          ids[s.id] = true;
+          sessionsAdded++;
+        }
+      });
+      sortAndTrimSessions();
+    }
+    return { added: added, merged: merged, sessionsAdded: sessionsAdded };
+  }
+
+  function importBackup() {
+    var f = $('importFile').files[0];
+    if (!f) { alert('請先選擇備份檔。'); return; }
+    var withSessions = $('importSessions').checked;
+    var reader = new FileReader();
+    reader.onload = function () {
+      var data;
+      try { data = JSON.parse(reader.result); }
+      catch (e) { alert('檔案格式錯誤，無法讀取。'); return; }
+      if (!data || data.format !== 'vocabQuiz-backup' || !data.wrongBook || typeof data.wrongBook !== 'object') {
+        alert('這不是錯題備份檔。');
+        return;
+      }
+      if (data.quizId !== QUIZ.id &&
+          !confirm('這個備份來自另一份題庫「' + (data.quizName || '未知') + '」，和目前的題庫「' + QUIZ.name + '」不同。\n仍要合併匯入嗎？')) {
+        return;
+      }
+      var r = mergeBackup(data, withSessions);
+      Store.save();
+      $('importFile').value = '';
+      alert('匯入完成：\n錯題本新增 ' + r.added + ' 筆、合併 ' + r.merged + ' 筆' +
+        (withSessions ? '\n測驗紀錄新增 ' + r.sessionsAdded + ' 筆' : ''));
+      renderBackup();
+      refreshSheetSelect();
+      renderBanners();
+    };
+    reader.onerror = function () { alert('讀取檔案失敗。'); };
+    reader.readAsText(f);
+  }
+
+  // ===================== 事件綁定 =====================
+  function bindEvents() {
+    Array.prototype.forEach.call(document.querySelectorAll('[data-font]'), function (b) {
+      b.addEventListener('click', function () { adjustFont(parseInt(b.getAttribute('data-font'), 10)); });
+    });
+
+    $('sheetSelect').addEventListener('change', onPoolChange);
+    $('timeSelect').addEventListener('change', function () {
+      Store.state.prefs.timeMin = $('timeSelect').value;
+      Store.save();
+    });
+    $('startBtn').addEventListener('click', startFromSetup);
+    $('manageBtn').addEventListener('click', function () { openManage(); });
+
+    $('nextBtn').addEventListener('click', nextQuestion);
+    $('quitBtn').addEventListener('click', function () {
+      if (confirm('確定要提前交卷嗎？未作答的題目不會記入錯題本。')) endQuiz('quit');
+    });
+
+    $('retestLastBtn').addEventListener('click', function () {
+      if (S.lastSession && S.lastSession.wrongs.length) retestWrongs(S.lastSession.wrongs, S.lastSession.label + '（重測）');
+    });
+    $('backHomeBtn').addEventListener('click', function () { renderBanners(); showScreen('setup'); });
+    $('resultManageBtn').addEventListener('click', function () { openManage(); });
+
+    Array.prototype.forEach.call(document.querySelectorAll('.tab'), function (b) {
+      b.addEventListener('click', function () { switchTab(b.getAttribute('data-tab')); });
+    });
+    $('manageBackBtn').addEventListener('click', function () { refreshSheetSelect(); renderBanners(); showScreen('setup'); });
+
+    // 錯題本
+    $('bookFilter').addEventListener('change', renderBook);
+    $('bookSort').addEventListener('change', renderBook);
+    $('bookSelectAll').addEventListener('change', function () {
+      var on = $('bookSelectAll').checked;
+      Array.prototype.forEach.call(document.querySelectorAll('.bookChk'), function (c) { c.checked = on; });
+    });
+    $('bookList').addEventListener('click', function (e) {
+      var btn = e.target.closest('[data-del]');
+      if (!btn) return;
+      var key = btn.getAttribute('data-del');
+      var it = Store.state.wrongBook[key];
+      if (it && confirm('確定刪除「' + it.word + '」這筆錯題？')) {
+        WrongBook.remove([key]);
+        afterBookChange();
+      }
+    });
+    $('bookDeleteSelected').addEventListener('click', function () {
+      var keys = checkedBookKeys();
+      if (!keys.length) { alert('請先勾選要刪除的錯題。'); return; }
+      if (confirm('確定刪除勾選的 ' + keys.length + ' 筆錯題？')) {
+        WrongBook.remove(keys);
+        afterBookChange();
+      }
+    });
+    $('bookClear').addEventListener('click', function () {
+      var f = $('bookFilter').value;
+      var keys = shownBook.map(function (it) { return it.key; });
+      if (!keys.length) return;
+      var msg = f ? '確定清空「' + f + '」的 ' + keys.length + ' 筆錯題？' : '確定清空全部 ' + keys.length + ' 筆錯題？此動作無法復原。';
+      if (confirm(msg)) {
+        WrongBook.remove(keys);
+        afterBookChange();
+      }
+    });
+    $('bookQuiz').addEventListener('click', function () {
+      var keys = checkedBookKeys();
+      var items = keys.length
+        ? shownBook.filter(function (it) { return keys.indexOf(it.key) >= 0; })
+        : shownBook;
+      if (!items.length) return;
+      var f = $('bookFilter').value;
+      startQuiz(shuffle(items.map(itemToQuestion)), '錯題本' + (f ? '－' + f : ''),
+        (keys.length ? '勾選 ' : '') + items.length + ' 題');
+    });
+
+    // 測驗紀錄
+    $('sessionSelect').addEventListener('change', renderSessionDetail);
+    $('sessionRetest').addEventListener('click', function () {
+      var s = Sessions.get($('sessionSelect').value);
+      if (s && s.wrongs.length) retestWrongs(s.wrongs, s.label + '（重測 ' + fmtDate(s.at) + '）');
+    });
+    $('sessionDelete').addEventListener('click', function () {
+      var s = Sessions.get($('sessionSelect').value);
+      if (s && confirm('確定刪除「' + fmtDate(s.at) + '｜' + s.label + '」這筆紀錄？\n（不影響錯題本）')) {
+        Sessions.remove(s.id);
+        renderSessions();
+      }
+    });
+    $('sessionClear').addEventListener('click', function () {
+      if (confirm('確定清空全部 ' + Sessions.all().length + ' 筆測驗紀錄？\n（不影響錯題本）此動作無法復原。')) {
+        Sessions.clear();
+        renderSessions();
+      }
+    });
+
+    // 備份
+    $('exportBtn').addEventListener('click', exportBackup);
+    $('importBtn').addEventListener('click', importBackup);
+
+    // 鍵盤操作（只在測驗畫面）
+    document.addEventListener('keydown', function (e) {
+      if ($('screen-quiz').classList.contains('hidden')) return;
+      if (/^[1-4]$/.test(e.key)) {
+        e.preventDefault();
+        answer(parseInt(e.key, 10) - 1);
+      } else if (e.key === 'Enter') {
+        e.preventDefault();   // 避免焦點在按鈕上時重複觸發
+        nextQuestion();
+      }
+    });
+
+    // 同時開了兩個分頁時，同步另一個分頁寫入的資料
+    window.addEventListener('storage', function (e) {
+      if (e.key !== STORE_KEY) return;
+      Store.load();
+      if (!$('screen-setup').classList.contains('hidden')) { refreshSheetSelect(); renderBanners(); }
+    });
+  }
+
+  // ===================== 初始化 =====================
+  function init() {
+    Store.load();
+    document.title = QUIZ.title;
+    $('titleText').textContent = QUIZ.title;
+
+    fontSize = parseInt(Store.state.prefs.fontSize, 10) || 18;
+    applyFont();
+    if (Store.state.prefs.timeMin && $('timeSelect').querySelector('option[value="' + Store.state.prefs.timeMin + '"]')) {
+      $('timeSelect').value = Store.state.prefs.timeMin;
+    }
+
+    bindEvents();
+    refreshSheetSelect();
+    renderBanners();
+    requestPersist();
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>
