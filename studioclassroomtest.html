@@ -1,0 +1,1192 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>單字測驗</title>
+<style>
+* { box-sizing: border-box; }
+body {
+  font-family: 'Noto Sans TC', 'Microsoft JhengHei', Arial, sans-serif;
+  margin: 10px;
+  background-color: #f0f0f0;
+  color: #2c3e50;
+  font-weight: bold;
+  font-size: 18px;
+}
+.hidden { display: none !important; }
+#app {
+  max-width: 800px;
+  margin: 0 auto;
+  background-color: #fff;
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+h1 { text-align: center; font-size: 1.35em; margin: 10px 0 15px; }
+h2 { text-align: center; font-size: 1.15em; margin: 12px 0; }
+h3 { font-size: 1.05em; margin: 14px 0 8px; }
+button {
+  font: inherit;
+  font-size: 0.85em;
+  padding: 8px 14px;
+  background-color: #3498db;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin: 3px;
+}
+button:hover:not(:disabled) { background-color: #2980b9; }
+button:disabled { background-color: #bdbdbd !important; cursor: not-allowed; }
+button.secondary { background-color: #7f8c8d; }
+button.secondary:hover:not(:disabled) { background-color: #6c7a7b; }
+button.danger { background-color: #e74c3c; }
+button.danger:hover:not(:disabled) { background-color: #c0392b; }
+button.success { background-color: #2ecc71; }
+button.success:hover:not(:disabled) { background-color: #27ae60; }
+select, input[type=number] {
+  font: inherit;
+  font-size: 0.85em;
+  padding: 7px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  margin: 3px;
+  max-width: 100%;
+}
+input[type=number] { width: 7em; }
+input[type=checkbox] { width: 1.1em; height: 1.1em; vertical-align: middle; }
+.control-panel {
+  margin-bottom: 12px;
+  padding: 12px 15px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+}
+.control-panel > label:first-child { display: inline-block; min-width: 5em; }
+.hint { font-size: 0.75em; color: #7f8c8d; font-weight: normal; margin-top: 6px; }
+.banner { padding: 10px 14px; border-radius: 8px; margin-bottom: 12px; font-size: 0.85em; }
+.banner.warn { background: #fff3cd; color: #8a6d3b; }
+.banner.error { background: #ffebee; color: #c62828; }
+.banner button { font-size: 0.9em; padding: 4px 10px; }
+.actions { text-align: center; margin: 12px 0; }
+.big-btn {
+  display: block;
+  width: 80%;
+  max-width: 300px;
+  margin: 12px auto;
+  padding: 12px;
+  font-size: 1em;
+}
+
+/* ---------- 測驗畫面 ---------- */
+.status-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  background-color: #f0f7ff;
+  padding: 8px 10px;
+  margin-bottom: 12px;
+  border-radius: 8px;
+  font-size: 0.85em;
+}
+.status-item { padding: 4px 8px; border-radius: 4px; white-space: nowrap; }
+.sheet-name { color: #1565c0; background-color: #e3f2fd; }
+.timer { color: #e53935; background-color: #ffebee; }
+.progress { color: #2e7d32; background-color: #e8f5e9; }
+.status-tools { margin-left: auto; display: flex; gap: 2px; }
+.status-tools button { padding: 4px 10px; margin: 0; font-size: 0.9em; }
+#questionText {
+  font-size: 1.2em;
+  margin: 12px 0;
+  padding: 12px;
+  text-align: center;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+}
+.q-label { color: #0066cc; }
+.option {
+  display: block;
+  width: 80%;
+  max-width: 500px;
+  margin: 10px auto;
+  padding: 10px;
+  font-size: 1.1em;
+  text-align: center;
+  transition: transform 0.15s ease;
+}
+.option:hover:not(:disabled) { transform: translateY(-1px); }
+.option .key { opacity: 0.7; font-size: 0.75em; margin-right: 8px; }
+.option.is-correct { background-color: #2ecc71 !important; }
+.option.is-wrong { background-color: #e74c3c !important; }
+.feedback-box { margin: 10px 0; padding: 12px; border-radius: 8px; text-align: center; }
+.feedback-box.correct { background-color: #fff; color: green; border: 2px solid #c8e6c9; }
+.feedback-box.incorrect { background-color: #ffdc35; color: red; }
+.wb-note { margin-top: 6px; font-size: 0.85em; color: #6a1b9a; }
+
+/* ---------- 結果與回顧 ---------- */
+.summary p { margin: 6px 0; }
+.review-item { padding: 12px 15px; margin: 10px 0; border-radius: 8px; text-align: left; }
+.review-item:nth-child(odd) { background-color: #fff3e0; }
+.review-item:nth-child(even) { background-color: #e3f2fd; }
+.review-item p { margin: 4px 0; }
+.review-question { color: #1a237e; }
+.review-wrong { color: #d32f2f; }
+.review-correct { color: #2e7d32; }
+.review-explanation { color: #1a237e; font-weight: normal; }
+.empty { text-align: center; color: #95a5a6; padding: 20px; font-weight: normal; }
+
+/* ---------- 錯題管理 ---------- */
+.tabs { display: flex; gap: 4px; border-bottom: 2px solid #3498db; margin-bottom: 12px; }
+.tab { background-color: #ecf0f1; color: #2c3e50; border-radius: 6px 6px 0 0; margin: 0; }
+.tab:hover:not(:disabled) { background-color: #d6dbdf; }
+.tab.active, .tab.active:hover:not(:disabled) { background-color: #3498db; color: #fff; }
+.toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 8px; font-size: 0.9em; }
+.wb-list { list-style: none; padding: 0; margin: 0; }
+.wb-row { display: flex; gap: 10px; align-items: flex-start; padding: 10px; border-bottom: 1px solid #eee; }
+.wb-row:nth-child(odd) { background: #fafafa; }
+.wb-row input[type=checkbox] { margin-top: 5px; flex-shrink: 0; }
+.wb-main { flex: 1; min-width: 0; }
+.wb-word { font-size: 1.05em; color: #1a237e; }
+.wb-meaning { font-weight: normal; margin-top: 2px; }
+.wb-meta { font-size: 0.75em; color: #7f8c8d; font-weight: normal; margin-top: 3px; }
+.wb-row > button { padding: 4px 10px; font-size: 0.75em; flex-shrink: 0; }
+.badge { display: inline-block; padding: 1px 7px; border-radius: 10px; background: #ffebee; color: #c62828; font-size: 0.7em; margin-left: 4px; vertical-align: middle; }
+.badge.streak { background: #e8f5e9; color: #2e7d32; }
+#sessionSelect { flex: 1; min-width: 0; }
+.info-lines { font-size: 0.8em; font-weight: normal; line-height: 1.7; word-break: break-all; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ========== 設定頁 ========== -->
+  <section id="screen-setup">
+    <h1 id="titleText"></h1>
+    <div id="setupBanners"></div>
+    <div class="control-panel">
+      <label for="sheetSelect">測驗範圍：</label>
+      <select id="sheetSelect"></select>
+      <div class="hint" id="poolHint"></div>
+    </div>
+    <div class="control-panel">
+      <label for="startRow">起始題號：</label>
+      <input type="number" id="startRow" min="1">
+      <label for="endRow">結束題號：</label>
+      <input type="number" id="endRow" min="1">
+    </div>
+    <div class="control-panel">
+      <label for="randomCount">隨機題數：</label>
+      <input type="number" id="randomCount" min="1" placeholder="留空＝全部">
+      <div class="hint">留空＝依範圍全部出題（順序隨機）</div>
+    </div>
+    <div class="control-panel">
+      <label for="timeSelect">測驗時間：</label>
+      <select id="timeSelect">
+        <option value="5">5 分鐘</option>
+        <option value="10">10 分鐘</option>
+      </select>
+    </div>
+    <div class="control-panel">
+      <label>字體大小：</label>
+      <button type="button" data-font="-2">A-</button>
+      <button type="button" data-font="2">A+</button>
+    </div>
+    <button type="button" class="big-btn success" id="startBtn">開始測驗</button>
+    <button type="button" class="big-btn secondary" id="manageBtn">錯題管理</button>
+  </section>
+
+  <!-- ========== 測驗頁 ========== -->
+  <section id="screen-quiz" class="hidden">
+    <div class="status-bar">
+      <span class="status-item sheet-name" id="sheetTitle"></span>
+      <span class="status-item timer" id="timer"></span>
+      <span class="status-item progress" id="progress"></span>
+      <span class="status-tools">
+        <button type="button" data-font="-2">A-</button>
+        <button type="button" data-font="2">A+</button>
+        <button type="button" class="danger" id="quitBtn">交卷</button>
+      </span>
+    </div>
+    <div id="questionText"></div>
+    <div id="options"></div>
+    <div id="feedback"></div>
+    <button type="button" id="nextBtn" class="big-btn success" disabled>下一題</button>
+    <div class="hint" style="text-align:center">鍵盤：1–4 選答，Enter 下一題</div>
+  </section>
+
+  <!-- ========== 結果頁 ========== -->
+  <section id="screen-result" class="hidden">
+    <div id="resultBody"></div>
+    <div class="actions">
+      <button type="button" class="success" id="retestLastBtn">重測本次錯題</button>
+      <button type="button" id="backHomeBtn">回到首頁</button>
+      <button type="button" class="secondary" id="resultManageBtn">錯題管理</button>
+    </div>
+    <div id="resultReview"></div>
+  </section>
+
+  <!-- ========== 錯題管理頁 ========== -->
+  <section id="screen-manage" class="hidden">
+    <h2>錯題管理</h2>
+    <div class="tabs">
+      <button type="button" class="tab active" data-tab="book">錯題本</button>
+      <button type="button" class="tab" data-tab="sessions">測驗紀錄</button>
+      <button type="button" class="tab" data-tab="backup">備份</button>
+    </div>
+
+    <div id="tab-book">
+      <div class="toolbar">
+        <label>工作表：<select id="bookFilter"></select></label>
+        <label>排序：<select id="bookSort">
+          <option value="count">錯誤次數</option>
+          <option value="recent">最近答錯</option>
+          <option value="alpha">單字 A–Z</option>
+        </select></label>
+      </div>
+      <div class="toolbar">
+        <label><input type="checkbox" id="bookSelectAll"> 全選</label>
+        <button type="button" class="success" id="bookQuiz">測驗這些錯題</button>
+        <button type="button" class="danger" id="bookDeleteSelected">刪除勾選</button>
+        <button type="button" class="danger" id="bookClear">清空全部錯題</button>
+      </div>
+      <div class="hint" id="bookCount"></div>
+      <ul class="wb-list" id="bookList"></ul>
+    </div>
+
+    <div id="tab-sessions" class="hidden">
+      <div class="toolbar"><select id="sessionSelect"></select></div>
+      <div class="actions">
+        <button type="button" class="success" id="sessionRetest">重測此次錯題</button>
+        <button type="button" class="danger" id="sessionDelete">刪除此筆紀錄</button>
+        <button type="button" class="danger" id="sessionClear">清空全部紀錄</button>
+      </div>
+      <div id="sessionDetail"></div>
+    </div>
+
+    <div id="tab-backup" class="hidden">
+      <div class="control-panel">
+        <h3>匯出</h3>
+        <div class="info-lines" id="exportInfo"></div>
+        <button type="button" class="success" id="exportBtn">匯出備份檔（JSON）</button>
+      </div>
+      <div class="control-panel">
+        <h3>匯入</h3>
+        <input type="file" id="importFile" accept=".json,application/json">
+        <div style="margin:8px 0"><label><input type="checkbox" id="importSessions" checked> 一併匯入測驗紀錄</label></div>
+        <button type="button" id="importBtn">匯入並合併</button>
+        <div class="hint">匯入會和目前資料合併，不會覆蓋。同一個單字取較多的錯誤次數、較少的連續答對次數。</div>
+      </div>
+      <div class="control-panel">
+        <h3>儲存狀態</h3>
+        <div class="info-lines" id="storageInfo"></div>
+      </div>
+    </div>
+
+    <div class="actions"><button type="button" id="manageBackBtn">回到首頁</button></div>
+  </section>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  var QUIZ = {"id":"1IqtssCxLf5tRpIgYPrhJyuGCW9v3otFQ2QZnGA_xD20","name":"flashcard for studio classroom with wrong book(ON)","title":"大英單字測驗","generatedAt":"2026-10-07T07:23:03.128Z","sheetOrder":["10月大英","10月空英","10月Advanced","9月大英","9月空英","9月Advanced","8月大英","8月空英","8月Advanced","7月大英","7月空英","7月Advanced","6月大英","6月空英","6月Advanced","5月大英","5月空英","5月Advanced","4月大英","4月空英","4月Advanced","3月大英","3月空英","3月Advanced","2月大英","2月空英","2月Advanced"],"sheets":{"10月大英":[["movie","電影",""],["scene","場景",""],["chase","追逐",""],["football","美式足球，足球",""],["hard","努力地",""],["hero","英雄",""],["born","出生",""],["professional","職業的；專業的",""],["level","水準；級別",""],["act","演出；扮演",""],["exercise","鍛鍊；運動",""],["stand","攤位",""],["pie","派，餡餅",""],["pumpkin","南瓜",""],["candy","糖果",""],["drink","飲料",""],["nose","鼻子",""],["toe","腳趾",""],["hunter","獵人",""],["trap","陷阱",""],["tooth","牙，牙齒",""],["fox","狐狸",""],["forest","森林",""],["feather","羽毛",""],["lovely","美妙的",""],["trust","相信",""],["mile","英里",""],["path","小路，小道",""],["market","市場",""],["roll","潛艇堡麵包；麵包捲",""],["turtle","海龜；龜",""],["real","真實的",""],["through","穿越；通過",""],["mountain","山",""],["ocean","大海；海洋",""],["climb","爬；攀升",""],["music","音樂",""],["fashion","時尚",""],["into","對…感興趣",""],["shop","購物，逛街",""],["around","圍繞；周圍",""],["not care for (something)","不喜歡",""],["anyway","（用於談話中改變話題）對了，總之",""],["sports","運動",""],["basketball","籃球",""],["neighbor","鄰居",""],["air conditioner [AC]","冷氣機，空調",""],["scarf","圍巾",""],["lend","借出，借給",""],["point","指，指向",""],["spill","灑出",""],["track","記錄…的進展；追蹤",""],["choice","選擇",""],["step","步；步伐",""],["information","資訊；消息",""],["habit","習慣",""],["speed","速度",""],["active","活躍的；愛活動的",""],["measure","測量",""],["burn","燃燒",""],["comment","留言，評論",""],["boil","水煮",""],["salt","鹽巴",""],["french fry [fry]","炸薯條",""],["sugar","糖",""],["pepper","胡椒粉",""],["supermarket","超級市場，超市",""],["delicious","好吃的，美味的，可口的",""],["potato chip","洋芋片",""],["sweet potato","地瓜",""],["plain","原味的，不加料的",""],["event","活動；事件",""],["limit","限制",""],["theme","主題",""],["judge","評審；裁判",""],["prize","獎；獎品；獎金",""],["angle","角度",""],["low","低的",""],["side","側面的；旁邊的",""],["subject","主體；主題",""],["middle","中間；中心；中央",""],["secret","秘訣；訣竅",""],["owner","老闆",""],["flour","麵粉",""],["machine","機器",""],["stretch","拉長，拉伸",""],["forward","向前",""],["clean","乾淨的，清潔的",""],["thirsty","口渴的",""],["appear","出現",""],["get off","離開，離去；下（車，飛機）",""],["lonely","孤單的，寂寞的",""],["convenient","方便的；便利的",""],["yard","院子，庭院",""],["Asia","亞洲",""],["block","一塊（木頭，石頭）",""],["snow","雪",""],["story","樓層",""],["inside","在…裡面",""],["bedroom","臥室，臥房",""],["comfortable","舒服的",""],["living room","客廳",""],["decorate","裝飾",""],["farm","農場",""],["pet","撫摸；輕拍",""],["corn","玉米",""],["lost","迷路的，走失的",""],["pick","採，摘",""],["plan","計劃，打算",""],["press","榨取（果汁）",""],["nothing","沒有東西；沒有事情",""],["fairly","相當地",""]],"10月空英":[["enthusiasm","熱情；熱忱",""],["reward","報償；獎賞",""],["championship","錦標賽，冠軍賽",""],["rigid","僵硬的；嚴苛的",""],["competition","比賽，競賽",""],["pursue","追求，從事",""],["retirement","退休；退役",""],["obligation","義務；責任",""],["anniversary","週年紀念日",""],["phenomenon","現象",""],["locate","確定…的位置",""],["champion","冠軍",""],["parade","遊行",""],["entertain","使快樂",""],["earnest","熱心的；誠摯的",""],["comprehend","領悟；理解",""],["faithful","忠實的；忠誠的",""],["sober","使冷靜；使嚴肅",""],["abstract","抽象的",""],["memorize","熟記；記住",""],["automatically","自動地",""],["relevant","相關的；切題的",""],["grip","對…產生強烈影響；緊握",""],["quiver","顫動，發抖",""],["attribute","將…歸因於",""],["terrify","使恐懼，使害怕",""],["symptom","症狀；徵兆",""],["trigger","引發，觸發",""],["disrupt","擾亂，打斷",""],["participant","參與者",""],["citizen","公民；居民",""],["issue","議題",""],["economy","經濟",""],["adequate","足夠的；適當的",""],["anxious","焦慮的",""],["candidate","候選人",""],["echo","附和，重複",""],["political","政治的",""],["clueless","一竅不通的；一無所知的",""],["accidental","偶然的；意外的",""],["transfer","轉移",""],["interaction","交流；相互作用",""],["communication","溝通",""],["confront","對抗；面對",""],["legendary","傳奇的，傳說的",""],["scam","騙局；詐騙",""],["sophisticated","精密的，複雜的",""],["uncover","揭開；揭露",""],["pirate","海盜",""],["manuscript","手稿；原稿",""],["penetrate","穿透；滲入",""],["narrative","敘事；故事",""],["fashionable","流行的；時髦的",""],["consultant","顧問",""],["appointment","預約；約會",""],["accuracy","準確性；精確",""],["generally","通常",""],["reveal","揭露；顯示",""],["frost","為（玻璃）製毛面",""],["explanation","解釋，說明",""],["storage","儲藏；儲存",""],["rhythm","節奏，韻律",""],["knob","球形把手，旋鈕",""],["panel","（漫畫的）一格；鑲板",""],["illustrate","為…畫插圖；說明",""],["yelp","尖叫",""],["diverse","多種多樣的",""],["landscape","陸上風景，景色",""],["spine","脊柱；脊椎",""],["conquer","征服；克服",""],["ranch","經營牧場",""],["rural","農村的，鄉村的",""],["vibrant","活躍的；鮮豔的",""],["elegant","優雅的；高雅的",""],["product","產品",""],["dense","濃密的，密集的",""],["weed","雜草",""],["harvest","收割，收穫",""],["plastic","塑膠的",""],["community","社區；群體",""],["code","代碼；密碼",""],["laboratory","實驗室",""],["imitate","模仿",""],["ritual","儀式；例行公事",""],["researcher","研究人員",""],["dynamics","動態；動力",""],["productivity","生產力",""],["emerge","露出，浮現",""],["descend","降下；下降",""],["skeptical","持懷疑態度的",""],["rational","合理的；理性的",""],["hence","因此，所以",""],["tornado","龍捲風",""],["substantial","大的；可觀的",""],["thereby","從而；由此",""],["extraordinary","令人驚奇的；非凡的",""]],"10月Advanced":[["lethal","致命的，致死的",""],["conversely","相反地；另一方面",""],["prestigious","有威望的，有聲望的，聲譽卓著的",""],["far-flung","遙遠的",""],["flagship","（公司的）旗艦產品，旗艦店",""],["influx","大量湧入的人群、金錢或貨物",""],["cater to/for (somebody/something)","迎合，滿足（某群人的需求）",""],["elite","出類拔萃的，精英的，精銳的",""],["ideological","思想立場上的；意識形態上的（尤指政治或經濟方面的思想）",""],["substantive","實質的；真實的；重要的",""],["affirmative action","平權法案，積極平權措施（指聘用或錄取因種族或性別等常受不公平待遇的人）",""],["linger","（因不想離開而）逗留，徘徊，流連",""],["discrete","分開的，各自獨立的",""],["proxy","用來衡量某物的指標",""],["unprecedented","空前的，前所未有的",""],["replicate","複製",""],["formative","（對人或某事物發展）具有重大影響的",""],["coherent","（文章、觀點）連貫的，有條理的，一致的",""],["hinder","阻礙，妨礙",""],["peripheral","次要的；邊緣的",""],["lob","高吊球",""],["traction","（點子或事物）逐漸被接受，流行起來",""],["ricochet","（子彈、石塊等運動物體）回跳，反彈",""],["misfire","（計畫或笑話）出差錯，未達預期效果",""],["in tandem","協力合作",""],["squash","壁球",""],["tony","時髦高檔的",""],["learning curve","學習曲線",""],["trafficking","（尤指毒品的）走私，非法買賣，非法交易",""],["money laundering","洗錢",""],["impersonation","假冒他人身分（行騙）",""],["fizzle out","逐漸停止；無結而終",""],["mortifying","令人極度難堪或羞愧的",""],["heighten","（使）加強；（使）增加",""],["red flag","示警紅旗",""],["intervene","介入；干涉",""],["embody","體現",""],["every nook and cranny","每個部分，每個角落",""],["emit","排放",""],["benchmark","基準，規範，標竿",""],["epidemiologist","流行病學家",""],["hijack","控制，操縱",""],["go into overdrive/be in overdrive","過度活躍；過度運作",""],["pathway","神經通路",""],["inflatable","充氣式的",""],["accessory","配件",""],["hot spot","熱點；人氣聚集地",""],["vertiginous","高得令人眩暈的",""],["briny","很鹹的，多鹽的",""],["replete","充滿的，充足的",""],["laden","裝滿的，滿載的",""],["dazzle","使（某人）傾倒，使讚嘆",""],["invariably","總是，毫無例外地",""],["liberally","大量地",""],["frayed","磨損的",""],["soup (something) up","改裝，升級（尤其是汽車）以提升性能",""],["stash","一批藏匿之物",""],["nifty","精巧的，有技巧的；有效的",""],["rudimentary","基本的，粗淺的",""],["outburst","（情緒，尤指憤怒）突然爆發",""],["stunted","發育不足的；生長不良的",""],["binge","放縱；暴食，大吃大喝",""],["purge","清除（有害或不可接受之物）",""],["fluctuation","波動；起伏",""],["bloated","發脹的，膨脹的；腫腫的",""],["dietitian","營養師，營養學家",""],["supplement","補充，增補",""],["plagiarism","抄襲",""],["accrue","（好處）逐漸產生，逐漸形成",""],["eschew","（有意地）迴避，避開",""],["relinquish","（不情願地）放棄，交出",""],["antipathy","厭惡，反感",""],["deputize","委任（下級）代理工作",""],["noxious","有害的，有毒的",""],["asceticism","禁慾主義",""],["earworm","縈繞於腦中揮之不去的旋律",""],["immersive","沉浸式的",""],["gondola","（航行威尼斯運河的）貢多拉平底船",""],["parody","（文章、音樂等）滑稽的模仿作品",""],["glitzy","盛大的，華麗的，光鮮亮麗的",""],["climax","高潮",""],["villainous","邪惡的；犯罪的",""],["sinister","不祥的，凶兆的，陰險的",""],["grove","小樹林；樹叢",""],["bleak","沒有希望的；（情況）慘淡的",""],["dwindle","逐漸減少、變小",""],["deplete","減少，損耗",""],["canopy","樹冠，天篷狀的樹蔭",""],["rebuttal","反駁；駁斥",""],["incinerate","焚毀，燒成灰燼",""],["regeneration","再生；重生",""],["sustained","持續的，持久的",""],["give (somebody) the go-ahead/get the go-ahead","給予（某人）許可；得到准許",""],["cut corners","走捷徑；為省時、省力、省錢而馬虎行事",""],["outfit","提供全套服裝、配備、裝備",""],["Paralympics","帕拉林匹克運動會，簡稱帕運",""],["compress","壓縮（時間）；縮短（流程所需時間）",""],["potent","效力強大的；（藥效、影響力）強烈的",""],["stench","惡臭，臭氣",""],["ramification","衍生後果；派生影響",""],["citation","（官方發出的）傳訊，傳票；罰單",""],["garner","得到，收集（信息或支持）",""],["pungent","（氣味）刺鼻的；（味道）濃烈的",""],["obnoxious","令人討厭的，可憎的",""],["a bum/bad rap","（非正式）不公正的對待或懲罰",""]],"9月大英":[["recycle","回收利用;重新利用",""],["collect","收集;使...聚中",""],["prevent","防止;預止;阻止",""],["supplies","日用品;生活必需品",""],["dig","挖;掘",""],["single","單身的;未婚的",""],["hand","遞給;遞交;交給",""],["classroom","教室",""],["flower","花;開花植物",""],["date","約會",""],["spend","花(時間)",""],["set","放置;設定",""],["aloud","出聲地;大聲地",""],["wallet","皮夾;錢包",""],["pause","暫停",""],["return","歸還;返回",""],["notice","看到;注意到",""],["clever","聰明的;機靈的",""],["picture","圖片;照片",""],["bike","自行車;單車",""],["holiday","節日;假期;假期",""],["express","表達;陳述",""],["influence","影響;使...受影響",""],["raise","撫養;飼養;提高",""],["share","分享;講述;共用",""],["master","大師;名家;主人",""],["behave","表現;行為;舉止;行為",""],["rich","富有的;富裕的",""],["leader","領導者;領首",""],["government","政府",""],["wise","聰慧的;聰明的",""],["barbecue","烤肉架;烤肉",""],["grill","烤烤;烤肉",""],["burger","漢堡",""],["wood","木頭;木塊",""],["steak","牛排",""],["special","特別的;特殊的",""],["Moon Festival","中秋節;中秋節",""],["outdoors","在戶外;戶外",""],["gather","聚集;聚集",""],["location","位置;地點;場所",""],["volleyball","排球",""],["team","團隊;隊伍;隊",""],["court","球場;籃球場",""],["player","球員;選手;表演者",""],["indoors","在室內;室內",""],["match","比賽;競賽;火柴",""],["serve","發球;提供",""],["attack","攻擊;進攻",""],["difficult","困難的;難度的",""],["effort","努力;努力",""],["bill","帳單;賬單",""],["treat","請客;款待;對待",""],["invite","邀請",""],["split","分開;分裂;分開",""],["restaurant","餐廳",""],["owe","欠",""],["cost","花費;花費;需要",""],["couple","夫婦;夫妻",""],["downtown","在市中心;市中心",""],["choose","選擇;挑選",""],["environment","環境;周圍環境",""],["kilogram","公斤",""],["local","當地的;本地的;本地",""],["fuel","燃料",""],["ugly","醜陋的;難看的",""],["star","明星;星星",""],["visit","參觀;訪問;拜訪",""],["finish","完成;完成;結束",""],["café","咖啡館;咖啡廳",""],["unique","獨特的;獨一無二的",""],["dish","一道;菜;盤子",""],["option","選擇;選項",""],["concerned","關心的;擔心的;涉及",""],["server","服務生;侍者;侍者",""],["onion","洋蔥",""],["junior high school","初級中學;國中;國中",""],["play","戲劇;話劇;戲劇",""],["servant","僕人;仆人;仆人",""],["guard","守衛;警衛;警衛",""],["practice","練習;訓練;訓練",""],["net","網;網狀物;網絡",""],["dead","死的;死去的;完全的",""],["jar","罐子;玻璃瓶;罐",""],["smoke","煙;煙霧;吸菸",""],["kill","殺死;殺害;殺死",""],["free","釋放;使自由;免費的",""],["sigh","嘆氣;嘆息;嘆息",""],["treasure","財寶;珍寶;珍品",""],["believe","相信;相信;認為",""],["die","死亡;消亡;停止",""],["prove","證明;表明;驗證",""]],"9月空英":[["chat","聊天;談話;交談",""],["colorful","色彩繽紛的;豐富多彩的",""],["privacy","隱私;私密性;隱私權",""],["logic","邏輯;邏輯學;推理",""],["endless","無止境的;無限的;沒完沒了的",""],["playful","有趣的;愛玩耍的;嬉戲的",""],["sentimental","充滿感情的;多愁善感的;傷感的",""],["artificial","人工的;人造的;非天然的",""],["decay","腐爛;衰退;衰落",""],["donate","捐贈;獻出;捐獻",""],["adoption","領養;採納;採用",""],["website","網站;網址;網頁",""],["accessibility","可達性;易達成性;無障礙性",""],["specialize","專門從事;專攻;特別經營",""],["sensor","感測器;傳感器;傳感裝置",""],["contagious","傳染性的;會傳染的;具傳染力的",""],["consultation","諮詢;商量;咨詢會",""],["fraction","分數;一小部分;微不足道的量",""],["deadly","致命的;令人厭煩的;極其的",""],["affordable","價格合理的;可以接受的;買得起的",""],["landmark","地標;路標;里程碑;界標",""],["grab","抓住;奪取;佔據",""],["tourist","觀光客;旅遊者;遊客",""],["tourism","旅遊業;旅遊;觀光",""],["involve","涉及;參與;包含",""],["clip","片段;短片;夾子",""],["spectrum","光譜;範圍;領域",""],["comedian","喜劇演員;滑稽演員;幽默大師",""],["rhythm","節奏;韻律;旋律",""],["ballet","芭蕾舞;芭蕾舞劇;芭蕾",""],["courageous","勇敢的;有勇氣的;膽大的",""],["popularity","人氣;受歡迎;流行度",""],["signature","簽名;特徵;標誌",""],["remarkable","非凡的;顯著的;值得注意的",""],["ethical","倫理的;道德的;合乎道德的",""],["scheme","計畫;方案;組織",""],["consumer","消費者;顧客;購買者",""],["incentive","刺激;鼓勵;獎勵;動機",""],["illegally","非法地;違法地;不合法地",""],["expertise","專門知識;技能;專業知識",""],["betray","背叛;洩露;暴露",""],["lawsuit","訴訟;法律訴訟;控告",""],["unexpected","意外的;出乎意料的;不期而至的",""],["ragged","破爛的;參差不齊的;衣衫襤褸的",""],["librarian","圖書館員;圖書館館長;書籍管理員",""],["backyard","後院;後花園;後院地區",""],["labor","勞動;工作;費力",""],["encounter","遭遇;相遇;對抗",""],["assignment","分配;任務;作業;指派",""],["concept","概念;主意;觀念;想法",""],["organize","組織;整理;安排",""],["creative","有創意的;創新的;創造性的",""],["harmful","有害的;傷害的;危害的",""],["dread","害怕;擔心;畏懼",""],["strengthen","加強;增強;強化",""],["motivate","激勵;激發;驅使",""],["neutral","中立的;不帶感情的;中性的",""],["motive","動機;目的;理由",""],["illusion","幻想;幻覺;錯覺",""],["widespread","廣泛的;普遍的;遍佈的",""],["prevail","流行;盛行;佔上風",""],["legitimate","合法的;正當的;有道理的",""],["deliberate","故意的;蓄意的;有意的;深思熟慮的",""],["recommendation","推薦;建議;推薦信",""],["recreation","娛樂;消遣;休閒活動",""],["estimate","估計;估價;評估",""],["noncontact","非接觸的;不接觸的;無接觸",""],["offensive","進攻性的;冒犯的;令人厭惡的",""],["oppose","反對;對抗;相反",""],["defensive","防禦性的;防守的;保衛性的",""],["poetic","詩歌般的;詩人的;有詩意的",""],["flatter","奉承;討好;使...看起來好看",""],["blush","臉紅;羞紅;泛起紅暈",""],["prompt","提示詞;提示;提詞",""],["reference","參考;引用;指涉",""],["genuine","真正的;真實的;真誠的",""],["evident","明顯的;易看出的;顯然的",""],["risky","冒險的;有危險的;危險的",""],["noticeable","明顯的;容易察覺的;顯著的",""],["irony","諷刺;反諷;嘲弄",""],["prospect","前景;展望;前景;期望",""],["missionary","傳教士;傳道士;宣教士",""],["assert","主張;聲稱;堅持",""],["grant","授予;給予;允許",""],["strategic","戰略的;戰術的;戰略性的",""],["honor","尊敬;敬重;履行",""],["contribution","貢獻;捐獻;貢獻度",""],["costume","服裝;戲服;民族服裝",""],["gratitude","感謝;感恩;感謝之情",""],["award","獎項;獎勵;奬品",""],["elect","選舉;選擇;決定",""],["overlook","俯視;看不到;忽視;藐視",""],["gorgeous","非常漂亮的;華麗的;美麗的",""],["beloved","摯愛的;深愛的;所愛的",""],["copper","銅;銅幣;銅色",""],["wildlife","野生動物;野生生物",""],["ferry","渡輪;渡口;渡河",""],["resident","居民;住户;當地人",""],["facial","臉部的;面部的;面貌的",""]],"9月Advanced":[["outpost","哨所;前哨;邊遠地區",""],["gateway to","通往...的門戶;進入...的途徑",""],["extraction","提取;開採;抽取",""],["polar","極地的;近地極的",""],["saboteur","破壞者;恐怖分子",""],["bandwidth","頻寬",""],["perceive","知覺;看待;認知",""],["corroborated","已確認的;得到確證的",""],["hierarchy","階級制度;階層制度",""],["precedent","先例;前例;判決先例",""],["undermine","侵蝕;損害;削弱",""],["neutrality","中立立場;不偏不倚",""],["ambivalence","兩種感受並存;矛盾的感受",""],["chafe","激怒;使...惱怒;擦傷",""],["riveting","令人著迷的;極其引人注目的",""],["schism","分裂;教派分裂",""],["deftly","巧妙地;靈巧地",""],["ailment","疾病;小病",""],["autonomous","自主的;獨立的",""],["mint","薄荷;造幣廠;鑄造",""],["put the kibosh on","終止;阻止;打住",""],["anonymity","匿名;匿名性",""],["a plethora of","大量的;多...的東西",""],["imposing","堂皇的;壯麗的;令人印象深刻的",""],["communal","公共的;共用的;公有的",""],["raucous","吵鬧的;粗厲的;刺耳的",""],["shrill","尖銳的;刺耳的;高亢的",""],["knee-jerk","本能反應的;下意識的",""],["intimidate","恐嚇;使...害怕;威嚇",""],["cramped","狹窄的;局促的",""],["savvy","精明的;聰慧的;機智的",""],["galore","充足地;大量地;豐富地",""],["price point","價位;價格點",""],["lease","租約;出租",""],["outpace","超越;超過;快於",""],["comprehensive","全面的;詳盡的;綜合的",""],["untapped","未開發的;未被利用的",""],["capitalize on","利用;充分利用;乘機利用",""],["psychiatrist","精神科醫生;心理醫生",""],["hypothesis","假設;假說;預測",""],["continuum","連續體;連續統",""],["mundane","平凡的;日常的;平常的",""],["a mixed bag","各式各樣的;好壞參半的",""],["freelance","自由職業的;自由職業者",""],["candid","直言不諱的;坦白的",""],["baseline","基準;基線;基本水平",""],["pivotal","關鍵的;樞紐的;中心的",""],["default","默認;預設;違約",""],["defer to","服從;尊重...的意見;推遲",""],["scrappy","好鬥的;鬥志旺盛的",""],["referee","裁判;仲裁人;調停人",""],["ingrained","根深蒂固的;習慣性的",""],["palate","味覺;口感;品味",""],["condiment","調味料;佐料",""],["robust","強健的;穩健的;牢固的",""],["braise","燜;用小火燉",""],["craze","狂熱;時尚;熱潮",""],["aromatic","芳香的;有香味的",""],["gratifying","令人滿足的;令人欣慰的",""],["low-hanging fruit","容易得到的東西;垂手可得的果實",""],["outskirts","邊緣;郊區;外圍",""],["demographic","人口統計的;統計學的",""],["physiological","生理的;生理學的",""],["taboo","禁忌;禁止;忌諱",""],["discourse","論述;講演;言論",""],["postpartum","產後的;分娩後的",""],["knowledge/physics, etc.","知識;物理等領域;知識領域",""],["moat","護城河;濠溝;防禦",""],["unleash","發動;發洩;解開束縛",""],["from scratch","從頭開始;從零開始",""],["reckoning","結算;清算;計算",""],["grid","電網;網格;柵欄",""],["order of magnitude","數量級;數量級的差異",""],["consortium","聯盟;財團;聯合體",""],["sage","智者;聖人;賢人",""],["rationalize","理性化;為...辯護;合理化",""],["iteration","反覆;迭代;重複",""],["playwright","劇作家;編劇",""],["posture","姿勢;態度;身姿",""],["credibility","可信度;信譽;可信性",""],["recurring","反覆出現的;經常發生的;循環的",""],["fallacy","謬誤;謬論;邏輯錯誤",""],["simultaneously","同時地;一起;同時發生",""],["dichotomy","二分;對立;兩分法",""],["omnipresence","無所不在;普遍存在",""],["oligarch","寡頭;少數統治者",""],["ferociously","猛烈地;兇狠地;激烈地",""],["rake","騙;搜刮;甚至獲得",""],["diversification","多樣化;差異化;多元化",""],["hospitality","好客;熱情款待;款待",""],["inception","開始;起源;建立",""],["lucrative","利潤豐厚的;賺錢的;獲利的",""],["standoff","膠著狀態;平手;僵持",""],["prime time","黃金檔期;最佳時段;高峰期",""]],"8月大英":[["village","村莊",""],["delicious","美味的",""],["piece","一片;片段",""],["pot","鍋盆",""],["waste","浪費",""],["softly","輕聲地;溫柔地",""],["higher","更高的",""],["reach","伸手(去尋找或拿到)",""],["hunt","打獵;狩獵",""],["remind","提醒",""],["bamboo","竹子",""],["hope","希望",""],["basket","籃子",""],["container","容器",""],["cut off","剪掉;切掉;刪除",""],["express","高速的;快速的",""],["daily","每天的;每日的",""],["leave","離開;出發",""],["weather","天氣",""],["affect","影響",""],["wife","太太;妻子",""],["idea","主意",""],["hostess","女主人",""],["follow","跟隨",""],["menu","菜單",""],["kid","小孩",""],["overnight","過夜;一晚晚",""],["focus","聚焦",""],["math","數學",""],["art","藝術",""],["lucky","幸運的",""],["daughter","女兒",""],["sleep","睡眠",""],["robot","機器人",""],["engineer","工程師",""],["city","城市",""],["coast","海岸",""],["list","清單",""],["wall","牆",""],["nail","釘子",""],["system","系統",""],["string","繩子",""],["organ","管風琴",""],["pipe","管子",""],["sunset","日落",""],["bird","鳥",""],["wing","翅膀",""],["penguin","企鵝",""],["group","群;組",""],["either","也(用肯定定句)",""],["video","影片",""],["goose","雁;鵝",""],["distance","距離",""],["pigeon","鴿子",""],["plenty","大量",""],["office","辦公室",""],["wait","等待",""],["hold","拿著;握著",""],["appointment","約會;約會",""],["bother","麻煩",""],["pass away","去世",""],["faith","宗教信仰",""],["radio","收音機",""],["program","節目;課程",""],["gift","禮物",""],["trumpet","小喇叭;喇叭",""],["listener","聆聽者",""],["magazine","雜誌",""],["continue","繼續",""],["award","獎項",""],["confused","困惑的;混亂的",""],["handle","處理;操作",""],["misunderstanding","誤會;誤解",""],["explain","解釋;說明",""],["feeling","感受;感情",""],["deal","處理",""],["interrupt","打斷(別人說話)",""],["thought","想法;思考",""],["respectful","有禮貌的;表示尊敬的",""],["solution","解決辦法;解決方法",""],["right off the bat","立刻;馬上;直言不諱",""],["bat a thousand","百戰百勝;佳緣失手",""],["hit a home run","打出本壘打",""],["come out of left field","由予意料;突如其來",""],["step up to the plate","挺身而出;站出來擔當",""],["pancake","美式煎餅",""],["easily","容易地;輕鬆地",""],["milk","奶;牛奶",""],["cook","煮;烧;烹調;做飯",""],["blueberry","藍莓",""],["waffle","格子煎餅",""],["twice","兩次",""],["strawberry","草莓",""],["check","查看;核查訊息",""],["bacon","培根",""]],"8月空英":[["makeup","化妝品",""],["adjust","調整;適應",""],["responsibility","責任",""],["meanwhile","同時;其間",""],["regulation","規則;法規",""],["quarrel","吵架;爭執",""],["calmly","冷靜地;平靜地",""],["announce","宣布;宣告",""],["reputation","名聲;聲望",""],["frown","皺眉",""],["hack","砍;斬;撬",""],["theft","盜竊;竊取",""],["contempt","輕蔑;藐視",""],["ruin","毀滅;摧毀",""],["immediately","立即;馬上",""],["handwriting","筆跡;字跡",""],["identical","完全相同的",""],["witness","目擊;見證人",""],["booth","攤位;小亭",""],["genetics","遺傳學;遺傳學",""],["characteristic","特徵;特色;特性",""],["charm","小飾物;魅力;吸引力",""],["protection","保護",""],["status","身份;地位",""],["virtue","高尚品德;美德",""],["accent","特點;鄉音",""],["expressive","有表現力的;富有表情的",""],["eclipse","(日、月)食",""],["abnormal","反常的;異常的",""],["transformation","轉變;變化",""],["likelihood","可能性;很有可能",""],["whereas","然而;反之",""],["caution","警告;小心",""],["filter","濾器;過濾器",""],["cruise","航海旅遊",""],["tribute","致敬;頌詞",""],["arena","競技場",""],["snatch","搶奪;奪取",""],["ally","同盟;結盟",""],["alliance","聯盟;同盟",""],["injure","傷害;損傷",""],["obtain","獲得;得到",""],["romance","戀愛關係",""],["relieve","緩解;減輕",""],["variety","各種各樣",""],["hardware","硬體",""],["process","過程;流程",""],["accurate","精確的;正確的",""],["stir","攪拌",""],["singular","非凡的;獨一無二的",""],["tournament","競賽;錦標賽",""],["professional","專業的;職業的",""],["consecutive","連續的;相連的",""],["tactics","戰術;策略",""],["opponent","對手;敵手",""],["foundation","基金會",""],["administrative","行政的;管理的",""],["nasty","惡劣的;令人厭惡的",""],["manipulate","操縱;控制",""],["scroll","滾動;拖動",""],["align","對齊;排成一列",""],["persist","堅持;執意",""],["profile","個人資料",""],["recommend","推薦;建議",""],["subtly","微妙地;巧妙地",""],["ensure","確保;保證",""],["access","進入;接觸;存取",""],["hot spot","(行動網路;熱點;活躍)",""],["assume","假設;設想",""],["unique","獨一無二的;獨特的",""],["preparation","準備",""],["massaged","按摩",""],["spa","溫泉療養地",""],["compact","小巧的",""],["cliff","懸崖;峭壁",""],["highlight","最精彩的部份",""],["differ","有區別;不同",""],["artistic","藝術的;有藝術眼光的",""],["impression","印象",""],["etc.","等等;請參照",""],["certainty","確實;肯定",""],["undertake","承擔;著手",""],["distress","痛苦;悲傷",""],["inherit","繼承;遺傳給",""],["speculate","猜測;推測",""],["likewise","同樣地;也一樣",""],["despair","失去希望;絕望",""],["productive","有成效的;有效的",""],["relief","減輕;解除",""],["priority","優先事項",""],["relax","放鬆",""],["guilt","內疚;自責",""],["achieve","實現;完成",""]],"8月Advanced":[["heartfelt","發自內心的;令人真摯感人的",""],["mimic","模仿",""],["counterpart","對應人員;配對的東西;相對應的人",""],["lay (somebody) off","停業;裁員;暫時離開",""],["compose","冷靜;沉著;穩定",""],["obligate","使負有義務;強制要求",""],["severance pay/package","遣散費;解僱金;離職補償",""],["euphemism","委婉說法;婉轉說法",""],["soften/cushion the blow","減輕打擊;緩和影響",""],["detrimental","有害的;造成損傷的",""],["validate","證實;確認;使者的觀念或感覺得到認可",""],["exude","散發出;充滿著",""],["starboard","(從後望船的)右舷;右側",""],["sentry","衛兵;哨兵",""],["cosmopolitan","(體驗多國)國際化的;世界性的",""],["pitch","音高(聲音);調高;投擲",""],["rite of passage","人生轉折點;成人儀式",""],["mangled","受到嚴重傷害的;粉碎的",""],["espionage","間諜活動;刺探情報",""],["banter","玩笑;打趣;開玩笑的談話",""],["inmate","受囚人;因犯;住客",""],["navigate","導航;理解;計劃路線",""],["subside","(暴風雨等)趨緩;減弱;沉降",""],["breadbasket","糧倉;穀物主要產地",""],["dub","給...配音;把...做成;配音",""],["hardy","耐寒的;生命力強的;能夠承擔的",""],["propagate","(使)(植物)繁殖;傳播;生長繁衍",""],["cyclone","氣旋;颶風;風暴",""],["spectacle","壯觀的景象;奇觀;視覺表演",""],["workforce","勞動力;(公司的)全體職員",""],["budgetary","預算的",""],["head on","直接地;迎面地;正面對抗",""],["turbulent","動盪的;不安穩的;混亂的",""],["justify","證明是正當的;為...辯護;排版對齊",""],["gig","短期工作;一場演出",""],["vernacular","本地語言;日常用語;方言",""],["gargantuan","巨大的;龐大的;巨人般的",""],["lament","悲傷;悲哀;為...哭泣;哀悼",""],["perpetuate","使持續;使長久存在;永久化",""],["precipitate","促成;加速發生;(液體)析出",""],["dearth","不足;缺乏;短缺",""],["spearhead","帶頭;成為先鋒;引領;矛尖",""],["camcorder","便攜式攝像機;攝影機",""],["supplant","取代;代替;排擠",""],["churn","香戶;使感到不安",""],["relentlessly","無情地;不留情地;不間斷地",""],["catch (somebody) flat-footed","使(人)措手不及;出其不意",""],["lure","引誘;誘惑;吸引",""],["canopy","天篷;樹頂部;華蓋",""],["cylinder","圓柱;圓筒;汽缸",""],["go haywire","亂套;出毛病;發瘋",""],["mishapen","形狀怪異的;畸形的",""],["full-fledged","完全成熟的;名副其實的;全部具備的",""],["attrition","自然減員;人員流失;逐漸損耗",""],["abatement","減少;緩解;阻止不徹底",""],["deter","阻止;制止;使不敢",""],["lumber","木材;緩慢沉重地移動",""],["whiff","輕微的氣息;一吹法",""],["confiscate","沒收;把...充公",""],["ostracize","放逐;排擠;驅逐出社會",""],["stint","(固定的事業期間內的)時間;期限",""],["primate","靈長類動物;最高統治者",""],["contingency","(可能發生的)意外事件;突發情況",""],["inbreeding","近親繁殖;同族交配",""],["aesthetic","美學的;審美的;藝術上",""],["crooked","彎曲的;虛偽的;不正直的",""],["pervasiveness","普遍性;無所不在;廣泛存在",""],["morph","(使)變形;(使)逐漸演變",""],["gainful employment/work/activity","有酬勞的;有收入的;獲利的工作活動",""],["fixated","固著於;著迷於;痴迷於",""],["game","勇敢的;敢冒險的;願意嘗試",""],["complement","補充;補全;相配",""],["animated","生動活潑的;充滿活力的;製作動畫的",""],["take (somewhere) by storm","在某地大獲成功;引起轟動",""],["the masses","群眾;大眾;普通百姓",""],["synthesize","合成;綜合;做出綜合",""],["biodegradable","可生物分解的;能自然分解的",""],["pliable","柔軟的;易變的;易被說服的",""],["pulp","紙漿;果肉;軟組織",""],["ridicule","嘲笑;嘲弄;嘲笑的評論",""],["espouse","支持;擁護;采取主張;與...結婚",""],["flat out","完全地;直截了當;直言不諱;全力以赴",""],["oblivion","遺忘;被遺忘;無意識狀態",""],["potion","(有特殊魔力的)飲品;藥劑;毒藥",""],["osteopathic","骨療的;骨病的;整骨療法的",""],["excessive","過度的;過分的;超過必要的",""],["clot","凝塊;血栓;笨蛋",""],["velocity","速度;速率",""],["cranky","易怒的;脾氣壞的;古怪的",""],["tactile","觸覺的;活在觸覺的;有紋理的",""],["console","遊戲機;控制台;安慰;慰問",""],["utensil","(廚房)器具;用具",""]],"7月大英":[["cookie","餅乾",""],["sure","確保;當然",""],["try out","試用;嘗試",""],["update","更新",""],["exciting","刺激的;令人興奮的",""],["remember","記得",""],["celebration","慶祝活動",""],["concert","音樂會",""],["fireworks","煙火;煙火表演",""],["marvelous","絕佳的;精彩的",""],["nearly","幾乎;差不多",""],["sample","品嚐;樣本",""],["amazing","驚人的;令人驚嘆的",""],["wonder","奇蹟;奇觀",""],["fail","失敗",""],["map","地圖",""],["key","鑰匙",""],["restroom","洗手間",""],["area","地區;區域",""],["helmet","安全帽",""],["protect","保護",""],["tire","輪胎;疲倦",""],["obey","遵守;服從",""],["sign","標誌;牌子",""],["accident","事故",""],["police","警察",""],["wear","穿;戴",""],["pay attention","注意;留意",""],["road","道路;馬路",""],["across","穿過;橫貫",""],["interested","感興趣的",""],["plane","飛機",""],["pilot","飛行員",""],["skilled","有技能的;熟練的",""],["adventure","冒險",""],["brave","勇敢的",""],["solo","獨自地;單獨地",""],["mystery","謎;奧秘",""],["solve","解決;破解",""],["cucumber","黃瓜",""],["ham","火腿",""],["spicy","辛辣的;香辣的",""],["vinegar","醋",""],["add","增加;添加",""],["pasta","義大利麵",""],["salad","沙拉",""],["juice","果汁",""],["light","清淡的;簡便的",""],["perfect","完美的;適當的",""],["Earth","地球;世界",""],["evil","邪惡的;壞的",""],["flood","洪水;泛濫",""],["build","建造;建築",""],["crazy","瘋狂的;瘋癲的",""],["male","雄性;男性",""],["female","雌性;女性",""],["rise","上升;升起",""],["rainbow","彩虹",""],["sky","天空",""],["in hot water","處於困境;陷入困境",""],["keep (one's) head above water","勉強維持;度過難關",""],["water under the bridge","過去的事;已成往事",""],["test the waters","試水;試探",""],["dead in the water","完全失敗;陷於困境",""],["plant","植物;工廠",""],["important","重要的",""],["boring","無聊的;乏味的",""],["huge","巨大的;龐大的",""],["smell","氣味;嗅覺",""],["unusual","不尋常的;罕見的",""],["actually","其實;實際上",""],["weird","奇怪的;古怪的",""],["noise","噪音;雜音",""],["rather","寧可;相反;倒不如",""],["borrow","借;借用",""],["item","物品;物件",""],["responsible","有責任感的;負責任的",""],["give back","還;歸還;歸還",""],["loan","借款;貸款",""],["offer","提議;主動幫忙",""],["anytime","在任何時候;隨時",""],["respect","尊敬;體尊",""],["suitcase","手提箱;行李箱",""],["air","空中;空氣",""],["storybook","故事書;童話書",""],["detail","細節;詳情",""],["imagine","想像",""],["bean","豆",""],["factory","工廠;製造廠",""],["match","火柴",""],["fire","火;火焰",""],["spot","地點;場所",""],["circle","圓圈;圓形",""],["stick","樹枝;木棒",""],["baseball","棒球",""],["base","壘;基地",""],["score","得分;比分",""],["out","出局的人;局外",""],["fence","柵欄;圍牆",""],["field","球場;田地",""],["slide","滑行;滑動",""],["bat","球棒;球拍",""],["swing","擺(動);打(擊);搖晃",""],["bounce","彈起;反彈",""],["everywhere","到處;各處",""],["freeze","冷凍;冰凍;凍結",""],["cube","立方體;立方",""],["regular","尋常的;一般的;規則的",""],["ice","冰;冰塊",""],["neck","頸;脖子",""],["silly","可笑的;愚蠢的",""],["recommend","推薦;建議",""],["bottle","瓶子;瓶",""],["button","按鈕;按鍵",""]],"7月空英":[["environ","物件;設型",""],["transportation","運送;交通工具",""],["convenience","便利;方便",""],["repetitive","重複的;反覆的",""],["exotic","異國情調的",""],["prioritize","優先考慮;優先",""],["mountainous","多山的;山區的",""],["impact","巨大影響;衝擊",""],["liberty","自由",""],["revolution","革命",""],["exhibition","展覽",""],["exhibit","展覽;展出",""],["historian","歷史學家",""],["memorial","紀念碑;紀念方式",""],["companion","伙伴;同伴",""],["digital","數位的;數字的",""],["identify","辨認;識別",""],["reliability","可靠性;信賴性",""],["agreeable","欣然同意的;爽快的",""],["perspective","觀點;視線",""],["aspect","方面;種類",""],["unrealistic","不切實際的",""],["tablet","平板電腦",""],["device","裝置",""],["trend","趨勢;潮流",""],["appeal","吸引力",""],["fold","摺疊",""],["software","軟體",""],["batter","試擊;炮擊",""],["categorize","歸...分類",""],["Celsius","攝氏的",""],["condense","凝結;濃縮",""],["intensify","增強;增強烈",""],["duration","持續時間",""],["devastation","破壞;摧毀",""],["formidable","令人恐懼的;難對付的",""],["mislead","誤導",""],["frustration","挫折;沮喪",""],["patience","耐心",""],["discouragement","挫折;沮喪",""],["panic","恐慌;驚慌",""],["capable","有能力的",""],["miserable","痛苦的;悲慘的",""],["automatic","自動的;無意識的",""],["interpret","解釋;闡釋",""],["deceive","欺騙",""],["viewpoint","觀點;視角",""],["amuse","使開心;娛樂",""],["interactive","互動的",""],["visual","視覺的",""],["accuse","控告;指控",""],["attach","貼上;附上;附件",""],["sue","控告;起訴",""],["journalism","新聞業;新聞工作",""],["stubbornly","頑固地;固執地",""],["tremble","顫抖;發抖",""],["strive","努力;奮鬥",""],["blink","眨(眼睛)",""],["timid","膽小的",""],["witch","魔女;女巫",""],["greedy","貪心的;貪婪的",""],["preservation","保護;維護",""],["pollute","污染",""],["release","釋放;發佈",""],["criticize","批評;指責",""],["critic","批評者",""],["acceptance","接納;認可",""],["viable","可行的",""],["realistic","現實的;現實主義的",""],["critical","批判的;挑剔的",""],["tolerate","容忍;容受",""],["distinction","區別;差別",""],["immense","巨大的;龐大的",""],["exceed","超過;超越",""],["cavern","大洞穴",""],["descent","下降;下降",""],["reed","蘆葦",""],["volcano","火山",""],["illuminate","照亮;闡明",""],["superb","優美的;超級的",""],["monster","怪物;怪獸",""],["studio","電影公司;工作室",""],["adventure","冒險;冒險",""],["attract","吸引;招引",""],["advertisement","廣告",""],["global","全球的",""],["predict","預測;預測",""],["economics","經濟學;經濟",""],["agent","代理人;代理商",""],["appreciation","感謝;欣賞",""],["bond","紐帶;聯繫",""],["tragic","悲劇的;悲傷的",""],["reflect","反射;深思",""],["ecological","生態的;與生態有關的",""],["conservation","保護;保護",""],["grapefruit","葡萄柚",""],["cashier","收銀員",""],["discriminate","差別對待;區別對待",""],["suspend","暫停;停學",""],["opposition","反對;敵對",""],["detain","扣留;扣押",""],["dismantle","拆除;拆卸",""],["injustice","不公正;不公正",""]],"7月Advanced":[["quixotic","異想天開的;不切實際的",""],["voracious","貪食的;嗜好強烈的",""],["benumbs","變得迷糊;使變得遲鈍",""],["liquidity","液體流動性;流動性",""],["hamper","阻礙;困難",""],["aggregate","總計的;集合的",""],["a tall order","一項艱鉅的要求;難度高的工作",""],["hurdle","障礙;跨欄",""],["abusive","虐待的;辱罵的",""],["delve","深入探究;深入調查",""],["fawn","巴結;討好;獻媚",""],["interrogate","(長時間地)詢問;審問",""],["allocate","分配;配給;分配",""],["sprint","衝刺;短跑;加速",""],["gobsmacked","(非正式)目瞪口呆的;大為驚愕的",""],["dumbstruck","啞口無言的;驚得說不出話來",""],["bereft","失去;被奪去;喪失",""],["pothole","坑洞;路面破裂",""],["minutely","微小地;細緻地;詳細地",""],["marvel","奇蹟;妙事;令人驚嘆的事物",""],["corrode","腐蝕;銹蝕;侵蝕",""],["splay","(向外展開)打開;張開;展開",""],["a welter of (something)","一大堆...的混亂;複雜的東西",""],["tripartite","(三方面的)分為三部分的;涉及三方的",""],["latent","潛在的;潛藏的;隱伏的",""],["dytonic","根據歷史記載;根據官方記載",""],["jittery","緊張不安;忐忑不安的",""],["inaugural","(首次的)開創性的;首次的",""],["precision","精確;精確度;精細",""],["inhabit","居住;棲息;佔據",""],["cluster","聚落;群集;群組",""],["disparity","不平等;(不合適的)不同;差異",""],["per capita","人均;(每)人均",""],["flash flood/fire","驟然的洪水;災難",""],["mitigate","減輕;減緩;緩解",""],["sustainability","永續性;可持續性",""],["amenity","生活設施;便利設施",""],["prowess","(戰爭事的)高超技能;能力",""],["on the spot","立即;馬上;當場",""],["frenzy","狂亂;狂熱;瘋狂",""],["verbatim","逐字地;一字不改地",""],["mock","嘲笑的;模擬的;仿造的",""],["screen","放映;篩查;檢查",""],["rub (somebody) the wrong way","激怒某人;惹惱某人",""],["breach of trust","背信;背信行為;非法使用委託的資產",""],["opus","藝術作品;書籍;音樂完全的作品",""],["truncate","截短;截斷;縮短",""],["rash","魯莽的;輕率的;匆忙的",""],["glaring","非常明顯且十分顯眼的;刺眼的",""],["amnesia","記憶喪失;遺忘;健忘",""],["plucky","(非正式)勇敢的;勇氣的;有膽識的",""],["homegrown","(自產的;本土的;製造的;國產的)",""],["face (somebody) down","用勇敢來對付(某人);威脅;嚇嚇",""],["transnational","(跨越國界的)跨國的;多國的",""],["ileum","(間直腸)小腸;近肛門的一部分",""],["think tank","智囊團;研究機構",""],["arsenic","砒;一種有毒物質;砒毒",""],["quintessential","典型的;最重要的;完美的",""],["clout","(影響他人決定的)力量;勢力;權力",""],["embossed","(凸版的)浮雕的;飾有浮雕",""],["subsume","把...納入;納入...之一類;使隸屬",""],["retrofit","對...進行新改造;改造;改進",""],["pediatrician","小兒科醫生;兒科醫生",""],["adolescence","青春期;青年期",""],["potency","(力量特別的)效能;效力;強度",""],["counterfeit","偽造的;仿造品;偽造者;製造贗品",""],["lace","鞋帶;繫;混入(加入某種成份)",""],["scare tactics","恐嚇戰術;驚嚇策略",""],["jagged","參差不齊的;鋸齒狀的;不規則的",""],["spare","多餘的;富足的;備用的",""],["sparsely","稀少地;分散地;疏稀地",""],["corrugated","波浪狀的;瓦楞的;有皺紋的",""],["evocation","(喚起)想起;回憶;召喚;引發",""],["skyrocket","(火箭等)飛行的;急速上升",""],["be taken aback","大吃一驚;嚇一跳",""],["illustrious","著名的;傑出的;光榮的",""],["canon","正典;教規;原理",""],["trajectory","(事物的)走向;軌道;軌跡",""],["reprisal","報復;懲罰行動;復仇",""],["deem","(認為;判定)認為;推斷;視為",""],["pang","一陣痛楚;一陣(尤其是心理上的);難受",""],["visionary","(有遠見的)有眼光的;見識的;未來主義的",""],["underlie","在...的下面;作為...的原因;構成...的基礎",""],["counteract","抵抗;對抗;相互抵消",""],["metabolism","新陳代謝;代謝;變化",""],["secondary","次要的;中學的;副次的",""],["counterproductive","適得其反的;有害的;反而產生不利影響",""],["override","(用更高的權力)否決;推翻;放棄;優先",""],["prevalent","普遍的;盛行的;流行的;常見的",""],["facilitate","促進;使易進行;幫助(進行);協助",""],["notoriously","眾所周知地;臭名昭著地;惡名昭彰地",""],["dial (something) back/down","調降;降低;減少;調整音量向下",""],["gum (something) up","用膠質塗;阻礙口膠機械;妨礙;阻擾",""],["permit","(酬賞;儀權力)准許;允許",""],["feedstock","原料;飼料;加工的主要原料",""],["polymer","聚合物;大分子化合物",""],["porous","能滲透的;滲水性的;多孔的",""],["condense","(使)濃縮;(使)凝聚;壓縮",""],["configuration","(排列;配置;構造;組態;配置;配置",""]],"6月大英":[["hang up","掛起",""],["blow up","吹爆;充氣",""],["table","桌子",""],["refrigerator","冰箱",""],["arrive","到達",""],["businessman","商人",""],["company","公司",""],["fly","飛",""],["found","創立;創辦",""],["land","著陸;降落",""],["video game","電玩遊戲",""],["technology","科技",""],["electric","電動的;用電的",""],["impossible","不可能的",""],["success","成功",""],["example","例子",""],["request","要求;請求",""],["task","任務;工作",""],["finally","終於;最後",""],["short","短的",""],["improve","改善;改進",""],["come to life","活躍;顯得生動",""],["rewrite","重寫",""],["organize","組織;籌組",""],["quickly","迅速地;快速地",""],["dark","深色的;暗的",""],["thick","厚的",""],["butter","奶油",""],["jam","果醬",""],["cheese","起司",""],["bakery","麵包店",""],["toast","吐司;烤麵包",""],["loaf","一條(麵包);一塊",""],["thin","薄的",""],["oven","烤箱",""],["enough","足夠的",""],["discuss","討論;商議",""],["abroad","在國外;到國外",""],["half","一半",""],["close","關上;合上",""],["island","島嶼;島",""],["beauty","美麗;美景",""],["smooth","光滑的;平順的",""],["potato","馬鈴薯",""],["lobster","龍蝦",""],["route","路線;路線圖",""],["section","路段;分段",""],["fan","粉絲;愛好者",""],["tour","旅遊;遊覽",""],["nearby","附近;靠近",""],["watermelon","西瓜",""],["peach","桃子",""],["pound","磅(重量單位)",""],["tomato","番茄",""],["chicken","雞肉",""],["blind","失明的;看不見的",""],["crowd","人群;擁擠",""],["touch","觸摸;接觸",""],["sharp","銳利的;尖銳的",""],["snake","蛇",""],["rope","繩子;繩索",""],["argue","爭論;辯論",""],["shout","大聲說;呼喊",""],["kindly","親切地;好心地",""],["knowledge","知識;學問",""],["boat","船",""],["honor","向...致敬;紀念",""],["drum","鼓",""],["million","一百萬",""],["country","國家",""],["dumpling","有餡麵的東西或肉片",""],["mushroom","蘑菇;蕈",""],["sauce","醬汁;醬料",""],["sad","傷心的;悲傷的",""],["jump","跳躍;跳",""],["sing","唱;唱歌",""],["dance","跳舞;舞蹈",""],["egg","蛋;雞蛋",""],["letter","信;字母",""],["interesting","有趣的;引起興趣",""],["soccer","足球",""],["prefer","更喜歡;較喜歡",""],["goal","目標;球門",""],["save","救援;救助",""],["block","區塊;阻擋",""],["lose","輸掉",""],["anywhere","任何地方",""],["connect","連接;連結",""],["plan ahead","提前計畫",""],["teamwork","團隊合作",""],["careful","小心的;當心的",""],["password","密碼",""],["unknown","未知的;不知名的",""],["mirror","鏡子",""],["skin","皮膚",""],["modern","現代的;現代化",""],["stone","石頭;石子",""],["design","設計;圖案",""],["lion","獅子",""],["put away","整理好;收拾起來",""],["belong","屬於;從屬",""],["bookcase","書架;書櫃",""],["shoe","鞋;鞋子",""],["already","已經;早就",""],["bake","烘烤;烤",""],["trouble","麻煩;困難",""],["appreciate","感激;欣賞",""],["skill","技能;技巧",""],["trick","技巧;詭計",""]],"6月空英":[["swap","交換",""],["purchase","購買",""],["decompose","分解",""],["consume","吃喝;攝取",""],["poke","戳;刺",""],["substitute","替代品",""],["crooked","歪的;彎曲的",""],["janitor","工友;管理員",""],["trophy","獎盃",""],["stride","進度;遠步走",""],["overlaid","覆蓋;疊上",""],["mumble","含糊;含糊地說",""],["observer","觀察者",""],["frame","(清晰陳述)表達",""],["negotiate","協商;解決(議題)",""],["automatic","自動的;無意識的",""],["habitual","習慣性的",""],["anchor","定著的",""],["disguise","偽裝;隱瞞",""],["confidence","自信",""],["determine","抉擇;下定心",""],["potential","潛在的;可能的",""],["nutrient","營養物;營分",""],["gene","基因",""],["procedure","程序;步驟",""],["demand","需求;請求",""],["emission","排放",""],["disconnect","使脫離;切斷",""],["ban","禁止",""],["decade","十年",""],["creature","生物;動物",""],["designer","設計者",""],["represent","代表",""],["naturally","自然地",""],["zone","地區;地帶",""],["proof","證明;證據",""],["iceberg","冰山",""],["spectacle","奇觀;壯觀景象",""],["offshore","離岸;在海上",""],["intriguing","引人入勝的;有趣的",""],["conceal","隱藏;隱瞞",""],["glacier","冰川",""],["patrol","巡邏隊",""],["via","途經;經由",""],["collide","碰撞;相撞",""],["venture","冒險;冒險事業",""],["helicopter","直升機",""],["overcome","克服;戰勝",""],["parachute","降落傘",""],["improvise","臨時拼湊;即興創作",""],["series","系列;連續",""],["versus (vs.)","對比;以...對抗...",""],["feat","功績;技藝",""],["privilege","特權;特殊權利",""],["comparable","相似的;可比較的",""],["component","組成部份;零件",""],["derive","獲得;得出",""],["exceptional","不尋常的",""],["induce","誘導;導致",""],["trigger","引發;引起",""],["refrain","避免;迴避",""],["overall","整體;工作服",""],["handwrite","手寫",""],["wisdom","智慧",""],["retire","退休",""],["volunteer","自願(做)",""],["operation","行動;運作",""],["thoughtful","體貼的;有想周到的",""],["gracious","親切的;有禮貌的",""],["monument","紀念碑",""],["specialty","特色;專科",""],["mansion","豪宅;大樓",""],["colonial","殖民地時的",""],["sustain","維持;支撐",""],["estate","莊園;不動產",""],["horizon","地平線",""],["steam","蒸汽;蒸",""],["toss","扔;引起",""],["emperor","皇帝",""],["rosewater","玫瑰水",""],["shrimp","蝦",""],["humidity","濕度;濕氣",""],["stroll","散步;閒逛",""],["spectacular","壯觀的;令人嘆為觀止的",""],["architect","建築師",""],["ceramic","陶瓷的",""],["residential","住宅的;居住的",""],["vine","藤蔓;藤爬植物",""],["sculpted","雕刻的;雕塑的",""],["legacy","遺產;遺留",""],["idiot","白癡;笨蛋",""],["imaginative","想像力豐盈的",""],["clash","衝突;爭執",""],["intention","意圖;打算",""],["adjustment","調整;小改動",""],["constructive","建設性的;有益的",""],["compatible","相容的;可共存的",""],["abrupt","突然的;意外的",""]],"6月Advanced":[["bellicose","好戰的;好鬥的;挑釁的",""],["stow","放置;放好;整齊放置",""],["crackdown","打擊;鎮壓;嚴厲的措施",""],["anecdotal","軼聞的;傳聞的;根據個人故事的",""],["unfettered","不受約束的;自由的",""],["surreptitious","偷偷摸摸的;秘密的",""],["brute force/strength","蠻力;野蠻力量",""],["root (something) out","挖出;根除;檢驗",""],["scourge","災害;禍害;鞭打",""],["competence/competency","(做某職位工作所必要的)能力",""],["charisma","領人魅力;個人魅力",""],["consensus","共識;一致同意",""],["pull (something) off","成功完成;成功(做困難的事)",""],["align","使一致;排成一列",""],["pillar","支柱;柱子",""],["cultivate","培養;養成;種植",""],["fortress","堡壘;堡壘城市;防禦工事",""],["antiquity","古代;古物;古董",""],["the crown jewels","王冠上的珠寶;最寶貴的東西",""],["glisten","閃亮;閃閃發光",""],["snarky","嘲諷的;出言不遜的",""],["caste","社會階級;等級制度",""],["exorcism","驅魔;驅鬼;驅鬼儀式",""],["caricature","漫畫;諷刺畫;夸張的描寫",""],["vintage","老式的;古色古香的;佳釀",""],["rigorous","嚴厲的;嚴格的",""],["sweltering","悶熱的;炎熱的",""],["be accustomed to (doing) something","習慣於(做某事)",""],["elation","欣喜;興高采烈;歡欣鼓舞",""],["oscillation","(電壓的)振盪;擺動",""],["rebuff","冷淡對待;拒絕;冷遇",""],["precipitous","急速的;陡峭的;冒失的",""],["alteration","改變;改動;修改",""],["plateau","高原;高地;停滯期;達到平面",""],["frailty","脆弱;虛弱;易損性",""],["negligible","微不足道的;可忽視的",""],["inflection point","臨界點;轉折點;拐點",""],["serendipity","幸運遇見;意外的驚喜",""],["deride","嘲笑;嘲弄;譏誚",""],["exacerbate","使惡化;使加劇;加重",""],["complacency","自滿;自得;自得其樂",""],["inexpurt","不熟練的;外行的;缺乏專業能力的",""],["gross","違法的;粗暴的;總的;總計",""],["nominally","名義上;表面上",""],["puberty","青春期;青年期",""],["nurture","養護;培育;養育",""],["misguided","誤導的;錯誤的",""],["prickly","多刺的;易怒的;不友好的",""],["leaning","傾向;偏好;偏見",""],["speech impediment","語音障礙;說話障礙",""],["multiplicity","多重;多樣性;眾多",""],["meddle","干涉;攙和;亂碰",""],["deflect","(使)轉向;(使)偏斜",""],["stave (something) off","延遲;延期;推遲",""],["signatory","(正式簽署的)簽署方;簽署國",""],["suppress","抑制;壓抑;制止",""],["unforeseen","未預料到的;意料之外的",""],["aspiring","有志當...的;立志的",""],["ironclad","無法更改的;牢固的;鐵律的",""],["ambiguity","含糊不清;模棱兩可",""],["inquisitive","好奇的;求知的;追根究底的",""],["contentious","愛爭論的;有爭議的;引起爭議的",""],["esoteric","只有小數人能理解的;深奧的",""],["turgid","過度浮誇的;充滿水份的;腫脹的",""],["baffling","令人困惑的;複雜的;令人茫然的",""],["emanate from (something)","來自;發源自;散發出",""],["improbable","不可能的;不太可能的;奇怪的",""],["flamboyant","誇耀的;炫耀的;華麗的",""],["uncharted territory","全新的領域;未知的領域",""],["mesh","網眼;網格;鐵絲網;互相配合",""],["mock-up","實體模型;試製品;模型",""],["intricately","錯綜複雜地;精細地;細緻地",""],["subsidiary","次要的;從屬的;附屬的",""],["ostensibly","表面上地;表面上說來;據稱",""],["monetize","(通過廣告或收費)賺錢;營利",""],["lavish","奢華的;豪華的;豐富的",""],["lead the charge","帶頭領導;率先行動",""],["harness","馬具;馬缚繩;約束力;利用",""],["molten","熔化的;熔融的;液態的",""],["trench","壕溝;濠溝;溝渠;深溝",""],["feasibility","可行性;做得到性;實現的可能性",""],["supersonic","超音速的;高於音速的",""],["invert","倒轉;上下顛倒;反轉",""],["bulge","隆起;鼓出;突出;鼓出",""],["meticulous","謹慎的;細心的;細緻的",""],["automation","自動化;自動操作",""],["debug","排除程式中的錯誤;除去蟲子",""],["paradox","自相矛盾的說法;悖論",""],["sanitize","消毒;清潔;冒充好感",""],["vigilance","警戒;警成;警惕",""],["audit","審查;稽查;旁聽",""],["transparency","透明度;透明;清晰度",""],["customize","(為某份雜誌或設施的)客製;訂製",""],["deliberately","故意地;蓄意地;有意地",""],["avid","熱心的;熱誠的;渴望的",""],["enthuse","熱心;熱情;令人興奮;使熱情高漲",""],["relish","享受;喜愛;品嚐",""],["endorphin","腦內啡;內啡肽",""],["personal best","個人最佳成績;個人紀錄",""]],"5月大英":[["get (something) off (one's) chest","一吐為快",""],["on (one's) mind","掛念;擔心",""],["butt heads with (someone)","與...意見衝突",""],["cost an arm and a leg","極其昂貴",""],["get under (someone's) skin","在...生氣;激怒...",""],["answer","回答;答案",""],["letter","信",""],["rest","休息",""],["day off","休假日;休假",""],["housework","家事",""],["seed","種子",""],["root","根",""],["wipe","擦;拭",""],["hold on","緊握抓住",""],["granddaughter","(外)孫女",""],["bark","吠叫",""],["yawn","打哈欠",""],["mouse","老鼠",""],["hole","洞",""],["cheer","歡呼",""],["attract","吸引",""],["activity","活動",""],["shop","商店",""],["seafood","海鮮",""],["colorful","色彩繽紛的",""],["shark","鯊魚",""],["cage","籠子",""],["safe","安全的",""],["whale","鯨魚",""],["likely","有可能地",""],["hand","手",""],["hide","躲藏",""],["wrong","不對勁的;出毛病的",""],["knock","敲擊聲",""],["blow","吹",""],["international","國際的",""],["nurse","護士;護理人員",""],["smart","聰明的",""],["hospital","醫院",""],["patient","病人;患者",""],["dream","夢想",""],["war","戰爭",""],["hurt","受傷的",""],["lamp","燈",""],["health","健康",""],["review","評論",""],["product","產品",""],["mean","刻薄的;惡劣的",""],["encourage","鼓勵",""],["discourage","使氣餒;使沮喪",""],["service","服務",""],["decision","決定",""],["make a difference","產生影響",""],["negative","負面的;消極的",""],["experience","體驗;經歷",""],["coconut","椰子",""],["way","方式;方法",""],["dessert","甜點",""],["soup","湯",""],["fry","油煎;油炸",""],["taste","吃起來;嘗起來",""],["noodle","麵條",""],["shrimp","蝦子",""],["sauce","調味汁;醬汁",""],["vegetable","蔬菜;青菜",""],["test","測驗;考試",""],["online","在網上;在線上",""],["nervous","緊張的",""],["simple","簡單的;容易的",""],["skip","跳過;省略",""],["anymore","不(再)",""],["exam","考試",""],["calm","冷靜的;鎮靜的;沉著的",""],["extra","多餘的;額外的",""],["correct","對的;正確的",""],["soak","浸泡;泡",""],["soften","(使)軟化;(使)變軟",""],["remove","除去;去掉",""],["lay","放置;平放",""],["traditional","傳統的",""],["friendly","友善的;友好的",""],["cute","可愛的;逗人喜愛的",""],["weigh","有...重;秤起來",""],["near","離...不遠;靠近",""],["zoo","動物園",""],["hang","掛;吊;吊著",""],["bag","包;手提包;提袋",""],["large","大的",""],["get along","相處和睦;合得來",""],["social","群居的;愛於社交的",""],["enter","報名參加(競賽、考試等)",""],["ticket","票;門票",""],["slowly","慢慢地;緩緩地",""],["mean","(用於強調)是...的意思;意思是",""],["glance","瞥一眼;迅速地看一眼",""],["create","創作;設計",""],["Asian","亞洲的;亞洲人的",""],["pea","豌豆",""],["college","大學",""],["till","直到;到...為止",""],["dangerous","危險的;有威脅的",""],["subway","地鐵",""],["view","觀看次數",""],["seriously","嚴重地",""],["safety","安全;平安",""]],"5月空英":[["glimpse","一瞥;一眼",""],["contrast","對比;差異",""],["symbolic","象徵的",""],["empire","帝國",""],["historically","從歷史角度;歷史上",""],["classify","將...歸類;將...分類",""],["globe","地球;地球儀",""],["twist","轉化;轉折",""],["consciously","有意識地;故意",""],["recognize","正式承認;認出",""],["marathon","馬拉松",""],["celebration","慶祝活動",""],["compassion","愛心;同情",""],["graduation","畢業",""],["destructive","毀滅性的;破壞性的",""],["significance","重要意義;重要性",""],["hesitation","猶豫;躊躇",""],["reflection","深思;審慎思考",""],["heartbreaking","令人心碎的",""],["possession","財產;所有物",""],["paddle","用槳划船",""],["organism","生物體;有機體",""],["sparkle","閃爍;發光",""],["glitter","閃閃發光",""],["twinkle","閃爍;閃爍",""],["serene","寧靜的;平靜的",""],["sunscreen","防曬乳;防曬霜",""],["lotion","乳液;護膚液",""],["pitch","投球",""],["strike zone","好球帶",""],["initial","最初的;開始的",""],["confirm","確認",""],["reduction","減少;降低",""],["margin","餘裕;幅度",""],["pioneer","先驅;先鋒",""],["obstacle","阻礙;障礙",""],["vast","巨大的;廣大的",""],["groundbreaking","開創性的",""],["resume","繼續;恢復",""],["blade","葉片;刀片",""],["advocate","提倡者",""],["distinguished","傑出的",""],["array","大量;一系列",""],["feasible","可行的;做得到的",""],["maximize","極大化",""],["spur","激勵;促進",""],["obscure","模糊;遮蔽",""],["resentment","憤慨;怨恨",""],["browsing","瀏覽",""],["prevalent","普遍的;盛行的",""],["controller","控制器;遙控手把",""],["flash","閃爍;閃光",""],["risk","風險;危險",""],["self-esteem","自尊",""],["otherwise","以另外的方式",""],["addict","使成癮",""],["suffer","受損害;受苦",""],["intense","強烈的;激烈的",""],["deserve","值得;應得",""],["delight","樂事;欣喜",""],["strain","過濾;濾掉",""],["bacteria","細菌",""],["immune system","免疫系統",""],["composition","成分;構成",""],["corrupt","腐敗的;貪汙的",""],["enrich","使富裕",""],["devastate","毀滅;摧毀",""],["compel","強迫;逼迫",""],["accountable","應負責任的",""],["transparent","透明的;清楚易懂的",""],["certificate","證書;證明",""],["jeweler","珠寶商",""],["corruption","腐敗;貪汙",""],["efficiency","效率",""],["corresponding","對應的;相應的",""],["log","日誌;記錄",""],["collection","收藏品;收集物",""],["entry","記錄;條目",""],["craft","手藝;工藝",""],["tortoise","陸龜;烏龜",""],["luxurious","奢華的",""],["curve","曲線",""],["marine","海洋的",""],["cuisine","烹飪;菜餚",""],["frontline","前線;第一線",""],["fragile","脆弱的;易碎的",""],["despite","儘管;雖然",""],["phony","假冒的;虛偽的",""],["evacuate","撤離;疏散",""],["competence","能力;才能",""],["inquire","詢問;打聽",""],["browser","瀏覽器",""],["administration","管理人員;行政部門",""],["grumble","抱怨;發牢騷",""],["frantic","緊張忙亂的",""]],"5月Advanced":[["gimmick","引人注意的花招;噱頭",""],["diesel","柴油",""],["pharmaceuticals","藥物;藥品",""],["bottleneck","(妨礙進度的)瓶頸;阻礙",""],["pallet","托盤;墊盤(貨物的)鐵框;裝貨架",""],["plaster","灰泥",""],["propulsion","推進力",""],["climactic","高潮的;最激烈的",""],["visceral","發自內心的;出自體會的",""],["crave","渴求;熱望",""],["amplify","增強;放大",""],["ebb and flow","有規律的;起伏;消長",""],["imperative","緊急的事;必要的事",""],["proliferate","激增;擴散",""],["tempo","(事情進展的)節奏;步調",""],["inflamed","發炎的;(因受傷或感染而)紅腫的",""],["veterinary","獸醫的",""],["vibration","震動;振動",""],["treadmill","跑步機",""],["flop","(電影、戲劇或產品等)失敗之作",""],["turmoil","混亂;騷亂;動亂",""],["denigrate","貶低;詆毀",""],["akin (to something)","與某物相似的;類似的",""],["volatile","易變的;動盪不定的",""],["cement","加強;鞏固(關係)",""],["simplicity","簡樸;簡單",""],["bureaucratic","官僚的",""],["agile","敏捷的;靈活的",""],["dividend","股息;紅利",""],["tariff","關稅",""],["spam","發送垃圾;垃圾郵件",""],["track","專輯裡的;歌曲",""],["grapple with (something)","努力因應;盡力解決;設法應對",""],["precursor","先兆;前兆;前身",""],["secrete","分泌",""],["radiologist","放射師",""],["vascular","血管的;循環的",""],["biomarker","生物標記",""],["reputed","據說的;據稱的;聲稱的",""],["outstrip","跨越上太快",""],["prefecture","(某些國家的)省;縣",""],["stagnant","不流動的;停滯不前的",""],["bellow","咆哮;低聲吼叫",""],["choke (somebody) up","使某人哽咽;說不出話",""],["verdant","草木蒼翠的",""],["state-of-the-art","最先進的",""],["fusion","融合",""],["underscore","強調",""],["hew","砍;劈",""],["labyrinth","迷宮;錯綜複雜的路徑",""],["replenish","補充;補足",""],["invigorating","使精力充沛的",""],["safeguard","保障;防護",""],["rote","死記硬背的",""],["smear","污跡;污漬",""],["dethrone","廢(某人)下台;使(某人)失去頭銜",""],["budding","萌芽的;成長中的",""],["free-for-all","自由放任;人人皆可為所欲為的情形",""],["indie","獨立小公司",""],["reputable","聲譽好的;有信譽的;有聲望的",""],["knack","(天生的)技巧;本領",""],["back-to-back","連續發生的;一個接一個的",""],["file","排成一列行進",""],["inanimate","無生命的;無生氣的",""],["tune (somebody/something) out","不理睬;置之不理",""],["front and center","處於重要位置的;居顯眼主的",""],["lessen","(使)變低;(使)減少;(使)變小",""],["untrammeled","不受拘束的;不被妨礙的",""],["cornerstone","基石;奠基石",""],["off-the-cuff","即興的;當場的",""],["rift","間隙或裂縫",""],["stirring","激動人心的;令人振奮的",""],["homestead","田園;有日光照撫的分配的自耕土地",""],["exploitative","剝削性的",""],["sanity","理智;明智",""],["asynchronous","異步的;非同步的",""],["constraint","限制;束縛;約束力",""],["liberate","解放;使獲取自由",""],["revisit","重新檢視;再次討論",""],["breach","違反;破壞",""],["overextend","過度延伸;把...使用過頭",""],["stick to (something)","堅持;遵守;信守",""],["discomfort","不適;不舒適;煩惱",""],["drawback","缺點;不利因素",""],["implore","懇切斯霸;懇求",""],["predispose","使傾向於;使敏感作為",""],["gadget","裝置;小工具",""],["dry","冷面滑稽的",""],["indomitable","不屈不撓的;勇敢堅定的",""],["luxuriate","盡情享受;享用",""],["posthumous","死後發生的;死後出版的",""],["adhere to (something)","堅持;信守",""],["hysterical","歇斯底里的;行為、喜怒哀樂極為誇張的",""],["thrust","(成功或敗壞的)要旨;中心點",""],["corpus","某作品的總集;某人的全集",""]],"4月大英":[["schedule","安排",""],["reply","回答;回覆",""],["decide","決定",""],["shake","搖動",""],["fool","愚人;傻瓜",""],["mix","混合",""],["move","移動",""],["hit","擊;打",""],["paddle","槳拍",""],["plastic","塑膠的",""],["toward","朝;向",""],["square","方塊;正方形",""],["completely","完全地",""],["advice","建議;忠告",""],["go after","追逐;追趕",""],["furniture","家具",""],["bathroom","浴室",""],["bed","床",""],["clothes","衣服",""],["towel","毛巾",""],["ago","以前",""],["ancient","古老的;古代的",""],["ignore","忽視;不理睬",""],["whisper","低語;小聲說",""],["lid","蓋子",""],["pain","痛苦;疼痛",""],["spread","蔓延;傳開",""],["sob","哭泣",""],["suffer","受苦;受折磨",""],["spirit","精靈;精靈",""],["south","南方的",""],["beach","海灘;沙灘",""],["swim","游泳",""],["sand","沙;沙子",""],["area","地區;區域",""],["lively","熱情活潑的",""],["culture","文化",""],["famous","著名的;有名的",""],["giant","巨大的",""],["cover","覆蓋",""],["watch","照顧;看護",""],["sofa","沙發",""],["throw","扔;投",""],["smile","笑容;微笑",""],["face","臉",""],["shirt","襯衫",""],["pants","褲子;長褲",""],["casual","休閒的",""],["pajamas","睡衣褲",""],["slippers","拖鞋",""],["skirt","裙子",""],["shorts","短褲",""],["purse","手提包;錢包",""],["carry","攜帶;拿著",""],["personal","個人的",""],["action","動作(片)",""],["favorite","最喜歡的;特別喜愛的",""],["future","未來",""],["star","主演;擔任主角",""],["popcorn","爆米花",""],["invent","發明",""],["disappear","消失",""],["fix","修理",""],["power","驅動;為...提供動力",""],["successful","成功的",""],["invitation","邀請函;邀請書",""],["guest","客人;賓客",""],["different","不同的;不一樣的",""],["wish","祝福;願望",""],["full","充滿的;滿的",""],["bread","麵包",""],["life","生活;人生",""],["drop","落下",""],["coin","硬幣",""],["luck","好運;運氣",""],["pet","寵物",""],["relax","放鬆;輕鬆",""],["rat","老鼠",""],["energy","精力;體力",""],["fit","符合款式",""],["take care of","照顧",""],["animal","動物",""],["reduce","減少;降低",""],["messy","髒亂的;凌亂的",""],["awake","醒著的;清醒的",""],["hobby","嗜好",""],["bowl","碗",""],["tool","工具",""],["soft","軟的;柔軟的",""],["allow","允許;准許",""],["rainy","下雨的;多雨的",""],["rain","下雨",""],["cloudy","陰天的;多雲的",""],["sunshine","陽光",""],["snowy","下雪的",""],["storm","暴風雨",""],["wind","風",""],["temperature","溫度;氣溫",""],["windy","風吹的;風大的",""],["shower","陣雨;驟雨",""],["theater","劇場;劇院",""],["look up","查閱;查尋",""],["record","記錄;記載",""],["hurry","匆忙;(使)加快",""],["popular","受大眾歡迎的;受歡迎的",""],["marry","結婚",""],["round","圓形的",""],["actress","女演員",""],["spell","用字母拼;拼寫",""],["common","常見的;普遍的",""]],"4月空英":[["destination","目的地",""],["founder","創辦人",""],["endangered species","瀕危物種",""],["economic","經濟的",""],["incredible","難以置信的;驚人的",""],["engineering","工程(學)",""],["guarantee","保證",""],["reinvestment","再投資",""],["religious","宗教的",""],["Christian","基督徒",""],["associate","與...聯繫起來",""],["decorate","裝飾",""],["adopt","採用",""],["bloom","綻放;開花",""],["stroke","中風",""],["resemble","與...相似;像",""],["liability","不利因素;差錯",""],["charity","慈善機構",""],["disaster","不幸;災難",""],["percent","百分比",""],["infection","感染",""],["determination","決心;毅力",""],["apron","圍裙",""],["raw","生的",""],["slice","切;把...切成薄片",""],["recipe","食譜",""],["pasta","義大利麵",""],["fundamental","基本的;根本的",""],["rally","集會",""],["tuck","收藏入;把...藏入",""],["blot","汙漬;墨水漬",""],["undo","取消;抵消(行為的效果)",""],["sluggish","緩慢的;遲鈍的",""],["auditorium","禮堂;會堂",""],["shuffle","拖步走;拖著腳走",""],["slump","猛然倒下;(癱軟下)",""],["pace","節奏;步調",""],["relaxation","放鬆",""],["delightful","有趣的;喜引人的",""],["connect","連結;把...聯繫起來",""],["entertainment","娛樂;消遣",""],["opportunity","機會",""],["frustrate","使受挫;挫敗",""],["tackle","處理;應對",""],["vague","模糊的",""],["approval","認可;稱許",""],["philosophy","哲學;人生觀",""],["clarity","清晰",""],["objective","目標;目的",""],["ultimately","最終;最終",""],["sheer","純粹的;徹底無遮擋的",""],["rugged","崎嶇的",""],["thrill","激動;興奮",""],["ledge","岩架;岩石突出處",""],["endurance","耐力;持久力",""],["vertical","垂直的",""],["intimidate","使畏縮;恐嚇",""],["recreational","休閒娛樂的",""],["well-being","幸福;安康",""],["advantage","優點;好處",""],["additionally","此外;另外",""],["background","背景;出身",""],["expand","擴大;擴展",""],["troublesome","麻煩的;令人困擾的",""],["pretend","假裝",""],["necessity","必需品;需要",""],["recycle","回收;再利用",""],["minimal","極少的;極小的",""],["witness","目擊;看到",""],["preserve","保護;維護",""],["lecture","講課;演講",""],["community","社區;群體",""],["customary","習俗上的",""],["verbal","口頭的",""],["accustom","使習慣",""],["perceive","注意到;察覺",""],["heritage","遺產;傳統",""],["asset","優點;資產",""],["accordingly","相應地",""],["pushy","咄咄逼人的",""],["bubble","氣泡;泡沫",""],["benefit","好處;利益",""],["research","研究;調查",""],["concentration","專注;專心",""],["digest","消化",""],["theory","理論",""],["alternative","備選方案;替代品",""],["flexibility","靈活性;彈性",""],["characterize","是...的特徵",""],["shift","轉移;改變",""],["convert","轉變;變換",""],["protection","預測",""],["tidal","潮汐的",""],["quest","尋求;探尋",""],["gravity","引力;重力",""],["generator","發電機",""],["renewable","可再生的;可更新的",""],["coastline","海岸線",""],["rotate","轉動;旋轉",""],["constraint","限制;約束",""]],"4月Advanced":[["temperate climate/zone/region, etc.","溫帶氣候",""],["niche","針對特定小群體的;小眾的",""],["surge","急遽上漲;颶增",""],["irrigate","灌溉",""],["stride","進展;進步",""],["momentum","動力;勢頭",""],["puck","(冰上曲棍球或桌球用)橡膠小圓盤",""],["preserve","維護;保護;維護",""],["cassette","錄音帶;卡式錄音帶",""],["retro","懷舊的;舊顯現昔日精新鮮的",""],["resurgence","再起;再現",""],["cue (something) up","準備好播放",""],["nostalgia","(懷常之情;對過去美好時光之眷戀",""],["fed up","厭煩的;受夠了",""],["erratically","不規則地;不穩定地;不可靠地",""],["bewildered","困惑的;不知所措的",""],["glitch","(與器故障帶的)故障",""],["loophole","(法律中的)漏洞;破綻",""],["impenetrably","不能透過地;無法穿入地",""],["terrace","階台;露天平台",""],["void","空的地方;空間",""],["fluctuate","波動;上下震盪",""],["barrage","攔河壩;攔水壩;攔壩",""],["sediment","沉積物;沉澱物",""],["jurisdiction","管轄權;司法權",""],["dial (something) back/down","減少...;降...數不刻度;減低",""],["garb","(某種特定式樣;或屬於特定職業的)服裝;衣裝",""],["close-knit","(人們)關係密切;結合緊密的",""],["infamy","聲名狼藉;臭名昭彰的罪狀",""],["hamlet","小村莊",""],["confluence","(河流)匯流處",""],["seamlessly","流暢;一體地;沒縫隙地",""],["bonanza","(獲利之機;致富之源",""],["boom town","新興城市;新興城市",""],["mismatch","不匹配;不協調;不相稱",""],["accessible","易取得的;易使用的",""],["repose","休息",""],["discreet","小心的;謹慎的",""],["clutter","雜物",""],["out of thin air","憑空出現;無中生有",""],["dilute","降低(質量);削弱(使弱)",""],["ergonomic","符合人體工學的;提高工效的",""],["trot","小步跑;慢跑",""],["concourse","中央大廳",""],["insatiable","無法滿足的;貪得無厭的",""],["snag","障礙;棘刺(難以特例)的麻煩",""],["usher","引導員",""],["jersey","球衣",""],["transcribe","把...轉錄為一種語言",""],["fringe group/event/issue, etc.","邊緣團體;非主流議題",""],["sentient","有感知能力的;有感覺的",""],["cursor","游標",""],["corresponding","相符合的;(位置)對應的;相稱的",""],["retrieve","檢索;(從存貯設備的讀取;取出",""],["catch","陷阱;隱患;圈套",""],["merchandising","商銷;促銷;推銷",""],["longevity","長壽;持久",""],["tout","讚揚;吹捧",""],["tarnish","中傷;玷污;敗壞(名聲或形象)",""],["quadruple","使成四倍",""],["pernicious","邪惡的;有害的",""],["degenerate","退化的;墮化的",""],["swerve","(為了避免碰撞)緊急轉向",""],["unravel","理解;解釋;闡明",""],["flank","位於...兩側",""],["notch","V字形的缺口;凹口",""],["nuisance","討厭的人或事物;廢棄的人或事物",""],["sporadically","不時發生地;零星地",""],["come around","改變觀點;改變心態",""],["pique (someone's) interest/curiosity","激起興趣或好奇心",""],["forensic","法醫的",""],["concur","同意;意見一致",""],["sloth","樹懶",""],["fraught","焦慮不安的;非常緊張的",""],["apprehensive","憂慮的;擔心的",""],["whodunit/whodunnit","(偵破才揭示兇手的)懸疑故事",""],["daunting","嚇人的;令人卻步的;令人氣餒的",""],["baggage","先入之見;阿有偏法",""],["hustle","實力;努力;忙碌",""],["hold (it) to the fire/flames","火上添油;使事情惡化",""],["proactive","積極的;主動的;預先採取行動的",""],["absenteeism","(經常性)無故缺勤;曠職",""],["fester","(不快的感覺或問題)惡化;加劇",""],["firefighting","緊急處理臨時發生的問題",""],["drywall","乾牆石膏板;乾牆板",""],["braille","盲文;點字",""],["assistive technology","輔助科技",""],["carryout","外帶食物;製作外帶食物之餐廳",""],["reclaim","挽回;奪回",""],["trek","(徒步)長途跋涉;(令人疲倦的)艱辛行程",""],["lasagna","千層麵",""],["integral","不可或缺的;必要的",""]],"3月大英":[["count","數;計算",""],["save up","存(錢);儲蓄",""],["clean","打掃;清潔",""],["grass","草;草地",""],["front","前面的;前部的",""],["lift","舉起;抬起",""],["lazy","懶惰的",""],["ground","地;地面",""],["voice","聲音",""],["lead","率;帶領",""],["fight","打架;打鬥",""],["tie","綁;繫",""],["weak","虛弱的;虛弱的",""],["single","單一的",""],["alone","獨自地",""],["deliver","遞送;遞送",""],["order","訂購;點菜",""],["traffic","車流量;交通",""],["camera","攝影機;照相機",""],["avoid","避開;避免",""],["photo [photograph]","照片",""],["app [application]","應用程式",""],["control","控制",""],["rule","規定;法則",""],["airport","機場",""],["celebrate","慶祝",""],["beef","牛肉",""],["pork","豬肉",""],["meat","肉;肉類",""],["sandwich","三明治",""],["tip","指點;提議",""],["song","歌曲",""],["start","開始",""],["right away","立刻;馬上",""],["practice","練習",""],["take (one's) time","慢慢來",""],["pressure","壓力",""],["greet","向...打招呼;問候",""],["scary","可怕的",""],["stranger","陌生人",""],["scientist","科學家",""],["light","光;光線",""],["funny","有趣的",""],["wheel","輪子",""],["tongue","舌頭",""],["space","空間;太空",""],["science","科學",""],["physics","物理學",""],["sail","駕駛帆船;航行",""],["sock","襪子",""],["creative","有創造力的",""],["toy","玩具",""],["doll","娃娃",""],["trade","交換;交易",""],["rare","稀有的",""],["proud","自豪的;驕傲的",""],["dress","穿衣服",""],["jewelry","首飾;珠寶",""],["comic","漫畫",""],["tear","撕破",""],["worth","值...的",""],["building","建築物;大樓",""],["problem","問題;困難",""],["sleepy","想睡的",""],["survive","倖過;挺過;繼續生存",""],["understand","了解;明白;懂得",""],["northern","北部的;北邊的",""],["bargain","討價還價",""],["prepare","做(飯菜);準備",""],["nature","大自然;自然界",""],["splash","噴水;濺;潑(水)",""],["trip","旅行;行程",""],["history","歷史",""],["picnic","野餐",""],["rent","租用",""],["midnight","午夜;半夜十二點鐘",""],["tourist","遊客;觀光客",""],["river","河;河流;江",""],["thousand","一千",""],["farmer","農夫",""],["bridge","橋;橋樑",""],["describe","描述;描繪;形容",""],["loud","大聲的;吵鬧的",""],["tiny","極小的;微小的",""],["sweet","甜的",""],["clear","晴朗的",""],["break","休息",""],["bun","小圓麵包;小圓餐包",""],["yummy","很好吃的;美味的",""],["fresh","新鮮的",""],["lemon","檸檬",""],["blow up","爆炸如嚴;勃然大怒",""],["blow (someone) away","使(某人)驚讚;令(某人)印象深刻",""],["blow in","突然來到",""],["blow out","吹熄;吹滅;(被)吹滅;大獲全勝",""],["blow over","(暴雨)過去;平息;平復",""],["scared","害怕的;恐懼的",""],["bug","小蟲子",""],["leaf","葉子",""],["beetle","甲蟲",""],["besides","除...之外",""],["wonderful","奇妙的;極好的;了不起的",""],["part","部分;局部",""],["grow","(植物)生長",""],["bloom","開花",""],["rose","玫瑰",""],["stop in","順便拜訪",""],["suppose","認為;想(表示勉強)",""],["look forward to","期待;盼望",""],["cheerful","高興的;興高采烈的;情緒好的",""],["true","真的;真實的",""]],"3月空英":[["receiver","接受者",""],["neighborhood","社區",""],["engage","從事;參與",""],["sincere","真誠的",""],["shallow","膚淺的",""],["connected","有連結的;有聯繫的",""],["contemporary","當代的;現代的",""],["cathedral","大教堂",""],["performer","表演者",""],["comedy","喜劇",""],["district","區;區域",""],["tin","錫製的",""],["stew","燉肉;燉菜",""],["witty","風趣的;機智的",""],["atmosphere","氣圍;氣氛",""],["simplify","使簡化",""],["framework","框架;架構",""],["representative","代表...的",""],["milestone","里程碑",""],["inventory","存貨",""],["institution","機構",""],["reminder","提醒",""],["errand","跑腿;差事",""],["diversity","多樣性;多樣化",""],["exposure","接觸;曝露",""],["immigrant","移民",""],["blend","交融;混合",""],["behavior","行為;舉止",""],["tension","緊張關係;張力",""],["interact","互動;交流",""],["humility","謙遜;謙遜",""],["tunnel","隧道",""],["thus","因此;從而",""],["dodge","躲閃;避開",""],["relatively","相對地",""],["violence","暴力",""],["intend","打算;計畫",""],["guideline","指導準則",""],["mortality","死亡率",""],["particle","顆粒;微粒",""],["chronic","慢性的;長期的",""],["awareness","意識;覺認",""],["utilize","使用;利用",""],["purify","淨化",""],["safeguard","保衛;護護",""],["straw","草編的",""],["circulation","流通",""],["magical","魔法的;神奇的",""],["crew","船員;機組人員",""],["imagination","想像力",""],["significant","重要的;重大的",""],["locker","置物櫃",""],["confession","告解;坦白",""],["dangle","懸掛;垂下",""],["grim","嚴厲的;凄慘的",""],["random","隨機的",""],["bully","欺凌;脅負",""],["linger","徘徊;徘徊",""],["shrug","聳肩",""],["sensation","引起轟動的人或事",""],["entertainment","娛樂",""],["vocal","歌唱的;聲音的",""],["debut","首次亮相",""],["numerous","大量的;許多的",""],["icon","偶像",""],["generosity","慷慨;大方",""],["creativity","創造力",""],["reduce","降低;減少",""],["additional","另外的;額外的",""],["deadline","截後期限;截止日期",""],["stressful","有壓力的;緊張的",""],["regulate","調節;控制",""],["scarf","圍巾",""],["physicist","物理學家",""],["atomic","原子的;原子能的",""],["anecdote","軼事;趣聞",""],["physics","物理學",""],["evidence","證據",""],["explosion","爆炸",""],["mechanical","機械的;機械學中的",""],["convince","說服;使相信",""],["versatile","多功能的;多個用途的",""],["implant","植入;栽植",""],["paradox","矛盾;悖論",""],["aluminum","鋁",""],["grease","潤滑脂;油脂",""],["psychiatry","精神病學",""],["document","記錄;記載",""],["adolescent","青少年",""],["decline","衰退;降落",""],["moral","道德的",""],["conscience","良心;良知",""],["sacrifice","犧牲;犧牲",""],["exhaust","使筋疲力盡",""],["assist","協助;幫助",""],["tough","難事的;困難的",""],["flexible","有彈性的;靈活的",""],["guilty","內疚的",""]],"3月Advanced":[["not mince (your) words","直言不諱",""],["consolidate","合併;整合",""],["hub","中心",""],["purport","聲稱;聲稱",""],["exodus","(大批人)出走;離開",""],["pervasive","普遍的;瀰漫的",""],["resonate","引起共鳴;激盪迴響或認同感",""],["embellish","美化;裝飾",""],["ethos","精神;思想信念(個人團體;道德體系",""],["replicate","複製;重做",""],["derivatives","衍伸物(文字);衍生(財)精緻",""],["utterly","完全地;十足地",""],["tactful","圓融;得體",""],["take/hand over the reins","掌控主導權;接管控制權;接管控制權",""],["pulse","脈動;心跳",""],["immersive","沉浸式",""],["conjure","令人想起;(使)來到腦海",""],["indulge","(使自己)沉溺於;放縱",""],["archaeologist","考古學家",""],["be steeped in history/tradition/politics","有豐富的歷史•傳統•政治等",""],["regal","帝王的;正氣的;莊嚴的",""],["dealbreaker","(因無法接受的)破局因素",""],["prime","使某人準備好;(使其具備足夠)",""],["hydration","維維補水",""],["disproportionately","不成比例地;不相稱地",""],["outreach","延伸服務;擴大範圍的服務",""],["nonchalant","若無其事的;毫不在乎的",""],["wane","(權力、影響或強度)減弱;消減之餘",""],["marauding","(人或動物)四處掠奪的;掠奪掠奪",""],["wallow","(允許自己在痛、沉溺於負面情緒;打滾",""],["swine","豬",""],["ravenous","極其飢餓的",""],["eccentric","古怪的;異常的;反常的",""],["clutch of (something)","一小群...",""],["divert","改變...用途",""],["quirk","怪癖;古怪之處",""],["rift","裂口;裂縫",""],["tantalizing","撩撥人的;誘引人的",""],["not cut it","不符要求",""],["tap","利用;發掘;開發",""],["accumulate","累積;累積",""],["prospector","採礦者;探礦者",""],["fertilizer","肥料",""],["myriad","無數的;極大量的",""],["cautionary","警告的;告誡的",""],["punchy","簡短有力的",""],["surpass","超越;超過;勝過",""],["cardio","有氧運動;心臟強化鍛鍊",""],["onerous","繁重的;艱鉅的;繁重的",""],["spurt","(活動、努力、速度或情緒的)短暫激增;迸發",""],["cadence","節奏;節拍",""],["crack down","打擊;制裁;鎮壓",""],["steppingstone","階梯;跳板;墊腳石",""],["contend with","對付;必須處理;必須應對",""],["manipulate","(熟練地)操作;使用",""],["rife","(不良事物)盛行的;流行的;普遍的",""],["backlash","強烈反應;反彈;抵制",""],["displacement","取代;排出;挪出",""],["synthetic","合成的;人造的",""],["tread carefully","小心行事;言行謹慎",""],["turf","草皮;人工草皮",""],["mounting","越來越多的;常用於負面意思",""],["downside","負面;缺點;不利因素",""],["upside","(不利情況中)積極(好)的一面",""],["patchy","局部性地的;零散的;不均勻的",""],["pristine","極好的(沒法破壞的);未受破壞的",""],["permeable","可滲透的;具滲透性的",""],["seep","滲漏;滲出",""],["intrepid","勇敢的;無畏的",""],["traction","(觀點或產品)獲得行走或吸引支持",""],["rank-and-file","普通的;普通的",""],["revolt","(眾人的)叛變",""],["beleaguered","處於困境的;飽受指責的",""],["vicious circle/cycle","惡性循環",""],["fleeting","短暫即逝的;轉瞬一現的",""],["unparalleled","無比的;無與倫比;空前的",""],["whisk","迅速攜帶走",""],["choreograph","設計舞蹈動作;編舞",""],["improvise","即興做",""],["cityscape","城市景觀;都市景觀",""],["overture","序曲;前奏曲",""],["flourish","茂盛任何物;一件引人注目的動作",""],["backfire","產生反效果;事與願違;適得其反",""],["wager","打賭;賭注",""],["diminishing returns","收斂遞減;收益遞減",""],["sabotage","(對設施或是操作徵的)蓄意破壞",""],["cohesion","凝聚;緊聚力",""],["tipping point","臨界點",""],["duplication","重複;複製",""],["rankle","使人抓狂憤怒;令人惱怒",""],["one-liner","簡短的笑話;俏皮話;打趣話",""],["contemplation","沉思;冥想",""],["radiant","燦爛的;光芒奪目的",""],["scribble","匆匆塗寫;潦草地寫",""],["brimming over with (something)","充滿;某種豐沛;盈滿某物(熱情等)",""],["grumble","不斷抱怨;抱怨",""],["be captive to (something)","受某事物掌控;被奴役",""],["hermit","隱士;隱居修道士",""]],"2月大英":[["card","卡片",""],["backpack","背包",""],["drive","開車",""],["turn","轉彎;成為",""],["keep","保留;保存",""],["poor","貧窮的",""],["dirt","泥土",""],["surprise","驚訝;意外",""],["hungry","飢餓的",""],["coat","外套",""],["cow","母牛",""],["land","國家;土地",""],["angry","生氣的",""],["sea","海",""],["ship","船",""],["wave","浪;波浪",""],["fashion","時尚",""],["window","窗戶",""],["world","世界",""],["among","在...之間",""],["artist","藝術家",""],["chat","聊天",""],["afford","負擔得起",""],["rather","而不是",""],["serve","提供;供應",""],["all year round","一年到頭",""],["chocolate","巧克力",""],["treat","點心",""],["bitter","苦的",""],["nut","堅果",""],["bar","條狀物",""],["plain","不複雜的;簡單的",""],["yum","好吃",""],["slice","薄片",""],["kitchen","廚房",""],["perhaps","或許;可能",""],["manager","經理",""],["progress","進展;進步",""],["arm","手臂",""],["do (one's) part","盡本分;盡職責",""],["fair","公平的",""],["happen","發生",""],["compete","競爭;對抗",""],["fast","快的;迅速的",""],["train","訓練",""],["medal","獎牌",""],["parade","遊行",""],["nation","國家",""],["come together","結合;聚集成一體",""],["against","對抗;反對",""],["competition","比賽;競爭",""],["fact","事實",""],["billion","十億",""],["American","美國人",""],["top","最受歡迎的;最好的",""],["flavor","口味;味道",""],["honest","誠實的;真誠的",""],["kind","親切的;和善的;體貼的",""],["promise","承諾;諾言",""],["forgive","寬恕;原諒",""],["forget","忘記",""],["break up with (someone)","和(某人)分手",""],["yet","(否定句)還(沒)",""],["upset","使生氣;使難過",""],["communicate","溝通",""],["assume","(想當然地)認為;假設",""],["quit","停止;放棄",""],["especially","尤其;特別",""],["normal","普通的;正常的",""],["teenager","青少年",""],["final","決賽",""],["pretend","假裝",""],["champion","冠軍;優勝者",""],["realize","(漸漸)了解",""],["retire","退休;退休",""],["prize","獎;獎品;獎金",""],["horse","馬",""],["strong","強健的;強壯的",""],["leg","腿",""],["ride","騎",""],["heavy","重的;沉重的",""],["several","幾個的",""],["afraid","害怕的",""],["small","小的",""],["inch","英吋",""],["lie","躺",""],["reason","理由;原因",""],["tired","疲的;疲憊的",""],["agree","同意;對...一致同意",""],["whatever","無論什麼",""],["choice","選擇",""],["grandkid","孫子或孫女",""],["favor","幫助",""],["lend","借出",""],["ruin","全毀壞;毀壞",""],["friendship","友誼;友情",""],["healthy","健康的",""],["useful","有用的;有益的",""],["glove","手套",""],["burn","(使)燃燒;(使)燙傷",""],["oil","油;油類",""],["pour","倒;注",""]],"2月空英":[["anxiety","焦慮;不安",""],["misunderstood","被誤解的",""],["ancestor","祖先",""],["overwhelm","壓倒;使難以承受",""],["crush","壓榨;擠壓",""],["reframe","重新建構;重新框架",""],["invest","投入;耗費",""],["confess","坦白;承認",""],["transform","轉化;改變",""],["surpass","超越;勝過",""],["emit","發出;射出",""],["precision","精確(性);準確(性)",""],["presumably","據推測",""],["generate","產生",""],["weird","怪異的",""],["foul","惡臭的",""],["thaw","解凍;融化",""],["athlete","運動員",""],["site","地點;地點",""],["urban","都市的",""],["temporary","臨時的;暫時的",""],["competitor","參賽者;競爭者",""],["compete","競爭",""],["option","選項;選擇",""],["towering","高聳的",""],["fort","堡壘;堡寨",""],["architecture","建築",""],["prosperity","繁榮;昌盛",""],["plunge","跳入;落下",""],["permanent","永久的",""],["sustainable","可持續的",""],["rush","向...衝刺",""],["routine","例行公事",""],["convenience store","便利商店",""],["pause","停頓;暫停",""],["sip","啜飲",""],["accomplish","完成",""],["accusation","指控;譴責",""],["tentative","試探性的;暫時地",""],["smudge","汙跡;汙漬",""],["loop","圈圈;環狀",""],["blazer","正式外套;西裝外套",""],["poke","突出;伸出",""],["tilt","傾斜;傾向",""],["flourish","花繁;茂盛生長作",""],["continent","洲;大陸",""],["reunion","團聚;聚會",""],["mobile","行動的;移動的",""],["closeness","親密;親近",""],["merry","愉快的",""],["meaningful","有意義的",""],["tap","輕點;輕敲",""],["festive","喜慶的;歡樂的",""],["astonish","使驚訝",""],["countless","無數的",""],["alien","外星人的;不熟悉的",""],["consistent","持續的;一貫的",""],["fierce","猛烈的",""],["nevertheless","儘管如此",""],["reconnect","重新連上",""],["refresh","使恢復精力",""],["transition","過渡;轉變",""],["qualify","具有資格;合格",""],["despondent","沮喪的;垂頭喪氣的",""],["complement","補足;使完善",""],["therapist","治療師",""],["prolong","延長",""],["crawl","爬行",""],["smoothly","流暢地",""],["technique","技巧;技術",""],["ledge","壁架;懸崖",""],["extreme","極端的",""],["navy","海軍",""],["advertiser","廣告商",""],["tempt","誘惑;引誘",""],["naive","天真的",""],["innovative","創新的;新穎的",""],["endorsement","名人代言;支持",""],["impulse","衝動的",""],["intervention","干預;介入",""],["dictate","決定;影響",""],["competitive","具競爭力的;好勝的",""],["athletic","擅長運動的",""],["resort","度假村",""],["triumph","勝利;巨大成功",""],["inspire","激勵;啟發",""],["acknowledge","承認;認可",""],["dominate","支配;控制",""],["mentally","心理上",""]],"2月Advanced":[["sartorial","衣著的;男裝的",""],["churn out","大量生產某物;粗製濫造",""],["disintegrate","(使)分解;(使)破裂",""],["refuse","廢物;垃圾",""],["arable","適於耕種的;可耕的",""],["optical","光學的;視覺的",""],["ubiquity","無所不在;普遍存在",""],["empirical","以經驗(或實驗)為依據的;憑經驗(或實驗)",""],["atrophy","(身體或的)萎縮;停止發育;(使)退化",""],["correlation","相互關係;關聯",""],["outsize/outsized","特大的;超大型的",""],["ramification","可能的後果;衍生後果",""],["degrade","(使)退化降階;惡化;損壞",""],["implement","實施;實施",""],["renowned","著名的;有名望的",""],["torturous","痛苦的;折磨人的",""],["streamer","飄帶",""],["dangle","懸掛;垂落;(使)懸垂",""],["click","突然明白;開竅;誠懇大悟",""],["gloss over (something)","粉飾/不談(不愉快的事);輕描淡寫",""],["roam","漫遊;到處遊盪",""],["evade","躲避;迴避",""],["degrade","使(物質、化學品等)分解;降解",""],["constellation","星座",""],["explicitly","直接了當地;明確地;明白地",""],["erode","逐步損害;侵蝕",""],["efficacy","效能;效力",""],["discernment","鑑賞力;識別能力",""],["ascension","(地位或職位的)上升;升級",""],["archival","檔案的",""],["manuscript","手抄本;手寫本",""],["legible","(字跡)可以辨認的;清晰的",""],["averse","不願意的;反對的;排斥的",""],["hash out","徹底討論以達成協議",""],["escalate","惡化;(使)升級;(使)逐步擴大",""],["give-and-take","互相讓步;互讓互助",""],["inherently","本質上;固有地",""],["amenable","易接受建議的;願意的",""],["dig your heels in","頑強已見;拒不讓步;一意孤行",""],["traverse","跨越;穿過;橫越",""],["just another (something/somebody/something or v)","(對其光榮事物的)尋常;無奇",""],["enervating","使疲力的;令人疲累的",""],["harrowing","使慘的;令人痛苦的",""],["garner","獲得;得到",""],["rebate","(稅金)退款;返款",""],["court","奉承;討好;爭取...的青睞",""],["stiffen","加強;變得更嚴肅",""],["butler","男管家",""],["logistical","後勤的;物流的",""],["premiere","首映",""],["be out of touch","不清醒對;不了解最新訊息",""],["fault","斷層;裂縫",""],["aftershock","餘震;後續影響",""],["obsolete","過時的;淘汰的",""],["upheaval","劇變;劇變",""],["cognition","認知;認識",""],["scenic","風景優美的;景色秀麗的",""],["transplant","移居者;移植者",""],["influx","大批湧入;大量流入",""],["tram","(市區街道上的)有軌電車",""],["squeal","發出尖叫聲的聲響",""],["cathedral","大教堂;主教座堂",""],["reminisce","懷舊往事;回憶",""],["proprietor","業主;老闆",""],["celestial","天空的;天上的",""],["appropriation","挪為己有;撥用;私佔",""],["wiggle room","迴旋空間;轉圜餘地",""],["unilateral","單方的;單邊的",""],["buffer","緩衝(人或物)",""],["the intervening years/months/period, etc.","(兩事件)其間的數年",""],["protocol","國際禮儀;公約",""],["template","範本;模板",""],["empathy","同理;同理心",""],["skepticism","懷疑主義",""],["millennium","千年",""],["experiential","體驗的;來自經驗的",""],["distressed","苦惱的;焦慮的",""],["simulation","模擬;模仿",""],["at stake","有風險;處於危急關頭",""],["propitious","吉利的;有利的;適合的",""],["hunch","弓著身子;彎腰",""],["harassment","騷擾",""],["ironic","諷刺的;令人啼笑皆非的",""],["hybrid","混合種;雜交品種",""],["captive","被俘的;受監禁的",""],["robust","強壯的;強健的",""],["hospitable","(環境)適合生長的;適宜的",""]]}};
+
+  // ===================== 設定 =====================
+  var STORE_KEY = 'vocabQuiz:' + QUIZ.id;
+  var WRONG_BOOK = '__WRONG_BOOK__';   // 下拉選單中「錯題本」的內部代號
+  var STREAK_TO_REMOVE = 2;            // 連續答對幾次自動移出錯題本
+  var MAX_SESSIONS = 50;               // 測驗紀錄保留筆數
+  var BACKUP_REMIND_DAYS = 7;          // 幾天未備份就提醒
+
+  // ===================== 工具函式 =====================
+  function $(id) { return document.getElementById(id); }
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function norm(w) { return String(w == null ? '' : w).trim().replace(/\s+/g, ' ').toLowerCase(); }
+  function shuffle(arr) {
+    var a = arr.slice();
+    for (var i = a.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  }
+  function pad2(n) { return String(n).padStart(2, '0'); }
+  function fmtDate(iso, withYear) {
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return '—';
+    return (withYear ? d.getFullYear() + '/' : '') + pad2(d.getMonth() + 1) + '/' + pad2(d.getDate()) +
+      ' ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes());
+  }
+  function daysSince(iso) {
+    if (!iso) return null;
+    var t = new Date(iso).getTime();
+    return isNaN(t) ? null : Math.floor((Date.now() - t) / 86400000);
+  }
+  function fmtDuration(sec) { return Math.floor(sec / 60) + ' 分 ' + (sec % 60) + ' 秒'; }
+  function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
+  function line(k, v) { return '<p>' + esc(k) + '：' + esc(v) + '</p>'; }
+  function sheetLabel(v) { return v === WRONG_BOOK ? '錯題本' : v; }
+
+  // ===================== 儲存層 =====================
+  var Store = (function () {
+    var ok = true;
+    var state = blank();
+
+    function blank() {
+      return { version: 1, quizName: QUIZ.name, wrongBook: {}, sessions: [], lastExport: null, prefs: {} };
+    }
+    function sanitize(d) {
+      var s = blank();
+      if (d && typeof d === 'object') {
+        if (d.wrongBook && typeof d.wrongBook === 'object') s.wrongBook = d.wrongBook;
+        if (Array.isArray(d.sessions)) s.sessions = d.sessions;
+        if (d.lastExport) s.lastExport = d.lastExport;
+        if (d.prefs && typeof d.prefs === 'object') s.prefs = d.prefs;
+      }
+      return s;
+    }
+    function load() {
+      var raw = null;
+      try { raw = window.localStorage.getItem(STORE_KEY); }
+      catch (e) { ok = false; state = blank(); return; }
+      if (!raw) { state = blank(); return; }
+      try {
+        state = sanitize(JSON.parse(raw));
+      } catch (e) {
+        // 資料損毀：另存一份原始內容後重新開始，不直接丟棄
+        try { window.localStorage.setItem(STORE_KEY + ':corrupt:' + Date.now(), raw); } catch (e2) {}
+        state = blank();
+      }
+    }
+    function save() {
+      if (!ok) return false;
+      try {
+        state.quizName = QUIZ.name;
+        window.localStorage.setItem(STORE_KEY, JSON.stringify(state));
+        return true;
+      } catch (e) {
+        ok = false;
+        renderBanners();
+        return false;
+      }
+    }
+    return {
+      load: load,
+      save: save,
+      get state() { return state; },
+      get ok() { return ok; }
+    };
+  })();
+
+  // ===================== 錯題本 =====================
+  var WrongBook = {
+    size: function () { return Object.keys(Store.state.wrongBook).length; },
+    list: function () {
+      var book = Store.state.wrongBook;
+      return Object.keys(book).map(function (k) {
+        var it = book[k];
+        return {
+          key: k, word: it.word, meaning: it.meaning, explanation: it.explanation || '', sheet: it.sheet || '',
+          wrongCount: it.wrongCount || 1, streak: it.streak || 0, lastSelected: it.lastSelected || '',
+          firstWrongAt: it.firstWrongAt || it.lastWrongAt || '', lastWrongAt: it.lastWrongAt || ''
+        };
+      });
+    },
+    recordWrong: function (q, selected) {
+      var key = norm(q.word);
+      var now = new Date().toISOString();
+      var book = Store.state.wrongBook;
+      var it = book[key];
+      if (it) {
+        it.wrongCount = (it.wrongCount || 0) + 1;
+        it.streak = 0;
+        // 以最近一次答錯的內容為準（試算表修改過的中文會自然同步）
+        it.word = q.word; it.meaning = q.meaning; it.explanation = q.explanation; it.sheet = q.sheet;
+        it.lastSelected = selected;
+        it.lastWrongAt = now;
+      } else {
+        book[key] = {
+          word: q.word, meaning: q.meaning, explanation: q.explanation, sheet: q.sheet,
+          wrongCount: 1, streak: 0, lastSelected: selected, firstWrongAt: now, lastWrongAt: now
+        };
+      }
+      Store.save();
+      return book[key];
+    },
+    recordCorrect: function (q) {
+      var key = norm(q.word);
+      var it = Store.state.wrongBook[key];
+      if (!it) return null;
+      it.streak = (it.streak || 0) + 1;
+      if (it.streak >= STREAK_TO_REMOVE) {
+        delete Store.state.wrongBook[key];
+        Store.save();
+        return { removed: true };
+      }
+      Store.save();
+      return { removed: false, streak: it.streak };
+    },
+    remove: function (keys) {
+      keys.forEach(function (k) { delete Store.state.wrongBook[k]; });
+      Store.save();
+    }
+  };
+
+  // ===================== 測驗紀錄 =====================
+  function sortAndTrimSessions() {
+    Store.state.sessions.sort(function (a, b) { return String(b.at).localeCompare(String(a.at)); });
+    if (Store.state.sessions.length > MAX_SESSIONS) Store.state.sessions.length = MAX_SESSIONS;
+  }
+  var Sessions = {
+    all: function () { return Store.state.sessions; },
+    get: function (id) { return Store.state.sessions.filter(function (s) { return s.id === id; })[0] || null; },
+    add: function (s) { Store.state.sessions.unshift(s); sortAndTrimSessions(); Store.save(); },
+    remove: function (id) {
+      Store.state.sessions = Store.state.sessions.filter(function (s) { return s.id !== id; });
+      Store.save();
+    },
+    clear: function () { Store.state.sessions = []; Store.save(); }
+  };
+
+  // ===================== 題庫 =====================
+  function sheetQuestions(name) {
+    return (QUIZ.sheets[name] || []).map(function (r) {
+      return { word: r[0], meaning: r[1], explanation: r[2] || '', sheet: name };
+    });
+  }
+  function itemToQuestion(it) {
+    return { word: it.word, meaning: it.meaning, explanation: it.explanation || '', sheet: it.sheet };
+  }
+  function sortBook(list, mode) {
+    var c = list.slice();
+    if (mode === 'recent') {
+      c.sort(function (a, b) { return String(b.lastWrongAt).localeCompare(String(a.lastWrongAt)); });
+    } else if (mode === 'alpha') {
+      c.sort(function (a, b) { return norm(a.word).localeCompare(norm(b.word)); });
+    } else {
+      c.sort(function (a, b) {
+        return (b.wrongCount - a.wrongCount) || String(b.lastWrongAt).localeCompare(String(a.lastWrongAt));
+      });
+    }
+    return c;
+  }
+  function getPool(value) {
+    if (value === WRONG_BOOK) return sortBook(WrongBook.list(), 'count').map(itemToQuestion);
+    return sheetQuestions(value);
+  }
+
+  var ALL_WORDS = null;   // 整個檔案不重複的單字 [[正規化, 原文], ...]
+  function allWords() {
+    if (!ALL_WORDS) {
+      var seen = {};
+      ALL_WORDS = [];
+      QUIZ.sheetOrder.forEach(function (n) {
+        QUIZ.sheets[n].forEach(function (r) {
+          var k = norm(r[0]);
+          if (!seen[k]) { seen[k] = true; ALL_WORDS.push([k, r[0]]); }
+        });
+      });
+    }
+    return ALL_WORDS;
+  }
+
+  // 錯誤選項：優先取自該字的來源工作表；不足 3 個（或工作表已移除）時從全部單字補足
+  function buildOptions(q) {
+    var seen = {};
+    seen[norm(q.word)] = true;
+    var picks = [];
+    function addFrom(pairs) {
+      shuffle(pairs).forEach(function (p) {
+        if (picks.length < 3 && !seen[p[0]]) { seen[p[0]] = true; picks.push(p[1]); }
+      });
+    }
+    if (QUIZ.sheets[q.sheet]) addFrom(QUIZ.sheets[q.sheet].map(function (r) { return [norm(r[0]), r[0]]; }));
+    if (picks.length < 3) addFrom(allWords());
+    var opts = [{ text: q.word, correct: true }].concat(picks.map(function (w) { return { text: w, correct: false }; }));
+    return shuffle(opts);
+  }
+
+  // ===================== 畫面切換與字體 =====================
+  function showScreen(name) {
+    ['setup', 'quiz', 'result', 'manage'].forEach(function (n) {
+      $('screen-' + n).classList.toggle('hidden', n !== name);
+    });
+    window.scrollTo(0, 0);
+  }
+
+  var fontSize = 18;
+  function applyFont() { document.body.style.fontSize = fontSize + 'px'; }
+  function adjustFont(d) {
+    fontSize = Math.max(14, Math.min(28, fontSize + d));
+    applyFont();
+    Store.state.prefs.fontSize = fontSize;
+    Store.save();
+  }
+
+  // ===================== 設定頁 =====================
+  function refreshSheetSelect() {
+    var sel = $('sheetSelect');
+    var prev = sel.value;
+    sel.innerHTML = '';
+    QUIZ.sheetOrder.forEach(function (n) {
+      sel.add(new Option(n + '（' + QUIZ.sheets[n].length + '題）', n));
+    });
+    var cnt = WrongBook.size();
+    var opt = new Option('★ 錯題本（' + cnt + '題）', WRONG_BOOK);
+    opt.disabled = cnt === 0;
+    sel.add(opt);
+
+    var valid = Array.prototype.some.call(sel.options, function (o) { return o.value === prev && !o.disabled; });
+    sel.value = valid ? prev : QUIZ.sheetOrder[0];
+    onPoolChange();
+  }
+
+  function onPoolChange() {
+    var v = $('sheetSelect').value;
+    var n = getPool(v).length;
+    $('startRow').value = 1;
+    $('endRow').value = n;
+    $('startRow').max = n;
+    $('endRow').max = n;
+    $('poolHint').textContent = v === WRONG_BOOK
+      ? '錯題本依「錯誤次數由多到少」排序，例如第 1～10 題＝錯最多次的 10 題。'
+      : '共 ' + n + ' 題';
+  }
+
+  function renderBanners() {
+    var h = '';
+    if (!Store.ok) {
+      h += '<div class="banner error">⚠️ 這個瀏覽器無法使用本機儲存（可能是無痕模式），錯題記錄在關閉網頁後會消失。</div>';
+    } else {
+      var list = WrongBook.list();
+      if (list.length) {
+        var last = Store.state.lastExport;
+        var days;
+        if (last) {
+          days = daysSince(last);
+        } else {
+          // 從未備份：從最早的錯題日期起算，避免第一次答錯就跳提醒
+          var oldest = list.reduce(function (m, it) { return (!m || it.firstWrongAt < m) ? it.firstWrongAt : m; }, '');
+          days = daysSince(oldest);
+        }
+        if (days !== null && days >= BACKUP_REMIND_DAYS) {
+          h += '<div class="banner warn">錯題本有 ' + list.length + ' 題，' +
+            (last ? '已 ' + days + ' 天未備份' : '尚未備份過') +
+            '。<button type="button" class="secondary" id="bannerBackup">前往備份</button></div>';
+        }
+      }
+    }
+    $('setupBanners').innerHTML = h;
+    var b = $('bannerBackup');
+    if (b) b.addEventListener('click', function () { openManage('backup'); });
+  }
+
+  function startFromSetup() {
+    var v = $('sheetSelect').value;
+    var pool = getPool(v);
+    if (!pool.length) { alert('這個範圍沒有題目。'); return; }
+
+    var start = parseInt($('startRow').value, 10);
+    var end = parseInt($('endRow').value, 10);
+    if (isNaN(start) || isNaN(end) || start < 1 || end < start || end > pool.length) {
+      alert('請輸入有效的題目範圍（1～' + pool.length + '）。');
+      return;
+    }
+
+    var list = shuffle(pool.slice(start - 1, end));
+    var rangeText = '第 ' + start + '～' + end + ' 題';
+    var rc = parseInt($('randomCount').value, 10);
+    if (!isNaN(rc) && rc > 0 && rc < list.length) {
+      list = list.slice(0, rc);
+      rangeText = '隨機 ' + list.length + ' 題（取自第 ' + start + '～' + end + ' 題）';
+    }
+    startQuiz(list, sheetLabel(v), rangeText);
+  }
+
+  // ===================== 測驗流程 =====================
+  var S = { timer: null, ended: true, lastSession: null };
+
+  function startQuiz(list, label, rangeText) {
+    if (!list.length) { alert('沒有可測驗的題目。'); return; }
+    clearInterval(S.timer);
+    var mins = parseInt($('timeSelect').value, 10) || 5;
+    S.questions = list;
+    S.idx = 0;
+    S.correct = 0;
+    S.wrong = 0;
+    S.answered = 0;
+    S.wrongs = [];
+    S.label = label;
+    S.rangeText = rangeText;
+    S.timeLimitMin = mins;
+    S.startTime = new Date();
+    S.endTime = new Date(S.startTime.getTime() + mins * 60000);
+    S.ended = false;
+    S.answeredCurrent = false;
+
+    $('sheetTitle').textContent = label;
+    showScreen('quiz');
+    updateTimer();
+    S.timer = setInterval(updateTimer, 1000);
+    showQuestion();
+  }
+
+  function updateTimer() {
+    var remain = Math.ceil((S.endTime.getTime() - Date.now()) / 1000);
+    if (remain <= 0) {
+      $('timer').textContent = '剩餘 0:00';
+      endQuiz('timeup');
+      return;
+    }
+    $('timer').textContent = '剩餘 ' + Math.floor(remain / 60) + ':' + pad2(remain % 60);
+  }
+
+  function updateProgress() {
+    var shown = Math.min(S.idx + 1, S.questions.length);
+    $('progress').textContent = '第 ' + shown + '/' + S.questions.length + ' 題｜對 ' + S.correct + '｜錯 ' + S.wrong;
+  }
+
+  function showQuestion() {
+    if (S.idx >= S.questions.length) { endQuiz('done'); return; }
+    var q = S.questions[S.idx];
+    S.answeredCurrent = false;
+    S.currentOptions = buildOptions(q);
+
+    $('questionText').innerHTML = '<span class="q-label">Which is：</span>' + esc(q.meaning);
+    var box = $('options');
+    box.innerHTML = '';
+    S.currentOptions.forEach(function (o, i) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'option';
+      b.innerHTML = '<span class="key">' + (i + 1) + '</span>' + esc(o.text);
+      b.addEventListener('click', function () { answer(i); });
+      box.appendChild(b);
+    });
+    $('feedback').innerHTML = '';
+    $('nextBtn').disabled = true;
+    updateProgress();
+  }
+
+  function answer(i) {
+    if (S.ended || S.answeredCurrent) return;
+    var opt = S.currentOptions[i];
+    if (!opt) return;
+    var q = S.questions[S.idx];
+    S.answeredCurrent = true;
+    S.answered++;
+
+    var buttons = $('options').children;
+    S.currentOptions.forEach(function (o, j) {
+      buttons[j].disabled = true;
+      if (o.correct) buttons[j].classList.add('is-correct');
+    });
+
+    var note = '';
+    if (opt.correct) {
+      S.correct++;
+      var r = WrongBook.recordCorrect(q);
+      if (r && r.removed) note = '🎉 連續答對 ' + STREAK_TO_REMOVE + ' 次，已從錯題本移除';
+      else if (r) note = '錯題本：連續答對 ' + r.streak + '/' + STREAK_TO_REMOVE;
+    } else {
+      S.wrong++;
+      buttons[i].classList.add('is-wrong');
+      var it = WrongBook.recordWrong(q, opt.text);
+      S.wrongs.push({ word: q.word, meaning: q.meaning, explanation: q.explanation, sheet: q.sheet, selected: opt.text });
+      note = '已記入錯題本（累計錯 ' + it.wrongCount + ' 次）';
+    }
+
+    $('feedback').innerHTML =
+      '<div class="feedback-box ' + (opt.correct ? 'correct' : 'incorrect') + '">' +
+      (opt.correct ? '答對了！' : '答錯了！') +
+      '<br>正確答案：' + esc(q.word) +
+      (q.explanation ? '<br>解釋：' + esc(q.explanation) : '') +
+      (note ? '<div class="wb-note">' + esc(note) + '</div>' : '') +
+      (Store.ok ? '' : '<div class="wb-note">（無法儲存，關閉網頁後記錄會消失）</div>') +
+      '</div>';
+    $('nextBtn').disabled = false;
+    updateProgress();
+  }
+
+  function nextQuestion() {
+    if (S.ended || !S.answeredCurrent) return;
+    S.idx++;
+    showQuestion();
+  }
+
+  function endQuiz(reason) {
+    if (S.ended) return;
+    S.ended = true;
+    clearInterval(S.timer);
+
+    var finish = new Date();
+    var total = S.questions.length;
+    var session = {
+      id: uid(),
+      at: finish.toISOString(),
+      label: S.label,
+      rangeText: S.rangeText,
+      total: total,
+      answered: S.answered,
+      correct: S.correct,
+      wrong: S.wrong,
+      score: total ? Math.round(S.correct / total * 100) : 0,
+      durationSec: Math.round((finish.getTime() - S.startTime.getTime()) / 1000),
+      timeLimitMin: S.timeLimitMin,
+      endReason: reason,
+      wrongs: S.wrongs.slice()
+    };
+    if (session.answered > 0) Sessions.add(session);   // 一題都沒答就不留紀錄
+    S.lastSession = session;
+
+    renderResult(session);
+    refreshSheetSelect();
+    renderBanners();
+    showScreen('result');
+  }
+
+  function summaryHtml(s) {
+    var reasonText = { timeup: '時間到，自動交卷', quit: '提前交卷', done: '全部作答完畢' }[s.endReason] || '';
+    return '<div class="summary">' +
+      line('測驗日期時間', fmtDate(s.at, true)) +
+      line('測驗範圍', s.label + '｜' + s.rangeText) +
+      line('測驗時間', fmtDuration(s.durationSec) + (reasonText ? '（' + reasonText + '）' : '')) +
+      line('總題數', s.total) +
+      line('答對題數', s.correct) +
+      line('答錯題數', s.wrong) +
+      (s.total - s.answered > 0 ? line('未作答題數', s.total - s.answered) : '') +
+      line('得分', s.score + ' 分') +
+      '</div>';
+  }
+
+  function reviewHtml(s) {
+    if (!s.wrongs.length) {
+      return '<p class="empty">' + (s.answered === s.total ? '全部答對，太棒了！' : '作答的題目都沒有答錯。') + '</p>';
+    }
+    return '<h3>答錯題目回顧</h3>' + s.wrongs.map(function (w, i) {
+      return '<div class="review-item">' +
+        '<p class="review-question">題目 ' + (i + 1) + '：' + esc(w.meaning) + '</p>' +
+        '<p class="review-wrong">您的答案：' + esc(w.selected) + '</p>' +
+        '<p class="review-correct">正確答案：' + esc(w.word) + '</p>' +
+        (w.explanation ? '<p class="review-explanation">解釋：' + esc(w.explanation) + '</p>' : '') +
+        '</div>';
+    }).join('');
+  }
+
+  function renderResult(s) {
+    $('resultBody').innerHTML = '<h2>' + esc(s.label) + ' 測驗結果</h2>' + summaryHtml(s) +
+      '<p class="hint" style="text-align:center">錯題本目前共 ' + WrongBook.size() + ' 題</p>';
+    var btn = $('retestLastBtn');
+    btn.classList.toggle('hidden', !s.wrongs.length);
+    btn.textContent = '重測本次錯題（' + uniqueWrongs(s.wrongs).length + '題）';
+    $('resultReview').innerHTML = reviewHtml(s);
+  }
+
+  function uniqueWrongs(wrongs) {
+    var seen = {};
+    return wrongs.filter(function (w) {
+      var k = norm(w.word);
+      if (seen[k]) return false;
+      seen[k] = true;
+      return true;
+    });
+  }
+
+  function retestWrongs(wrongs, label) {
+    var list = shuffle(uniqueWrongs(wrongs).map(itemToQuestion));
+    startQuiz(list, label, '重測 ' + list.length + ' 題');
+  }
+
+  // ===================== 錯題管理 =====================
+  var manageTab = 'book';
+  var shownBook = [];
+
+  function openManage(tab) {
+    showScreen('manage');
+    switchTab(tab || manageTab);
+  }
+
+  function switchTab(t) {
+    manageTab = t;
+    Array.prototype.forEach.call(document.querySelectorAll('.tab'), function (b) {
+      b.classList.toggle('active', b.getAttribute('data-tab') === t);
+    });
+    ['book', 'sessions', 'backup'].forEach(function (n) {
+      $('tab-' + n).classList.toggle('hidden', n !== t);
+    });
+    if (t === 'book') renderBook();
+    else if (t === 'sessions') renderSessions();
+    else renderBackup();
+  }
+
+  // ---- 錯題本 ----
+  function renderBook() {
+    var filterSel = $('bookFilter');
+    var prev = filterSel.value;
+    var list = WrongBook.list();
+
+    var sheetSet = {};
+    list.forEach(function (it) { sheetSet[it.sheet] = (sheetSet[it.sheet] || 0) + 1; });
+    var sheetNames = Object.keys(sheetSet).sort(function (a, b) {
+      var ia = QUIZ.sheetOrder.indexOf(a), ib = QUIZ.sheetOrder.indexOf(b);
+      if (ia < 0) ia = 99999;
+      if (ib < 0) ib = 99999;
+      return (ia - ib) || a.localeCompare(b);
+    });
+    filterSel.innerHTML = '';
+    filterSel.add(new Option('全部（' + list.length + '）', ''));
+    sheetNames.forEach(function (s) {
+      filterSel.add(new Option(s + (QUIZ.sheets[s] ? '' : '〔已移除〕') + '（' + sheetSet[s] + '）', s));
+    });
+    filterSel.value = sheetSet[prev] ? prev : '';
+
+    var f = filterSel.value;
+    shownBook = sortBook(f ? list.filter(function (it) { return it.sheet === f; }) : list, $('bookSort').value);
+
+    $('bookClear').textContent = f ? '清空此工作表錯題' : '清空全部錯題';
+    $('bookCount').textContent = '顯示 ' + shownBook.length + ' 題｜連續答對 ' + STREAK_TO_REMOVE + ' 次會自動移除';
+    $('bookSelectAll').checked = false;
+    ['bookQuiz', 'bookDeleteSelected', 'bookClear'].forEach(function (id) { $(id).disabled = !shownBook.length; });
+
+    $('bookList').innerHTML = shownBook.length ? shownBook.map(function (it) {
+      return '<li class="wb-row">' +
+        '<input type="checkbox" class="bookChk" value="' + esc(it.key) + '">' +
+        '<div class="wb-main">' +
+          '<div class="wb-word">' + esc(it.word) +
+            '<span class="badge">錯 ' + it.wrongCount + ' 次</span>' +
+            (it.streak ? '<span class="badge streak">連對 ' + it.streak + '/' + STREAK_TO_REMOVE + '</span>' : '') +
+          '</div>' +
+          '<div class="wb-meaning">' + esc(it.meaning) + '</div>' +
+          '<div class="wb-meta">' + esc(it.sheet) + '｜最近答錯 ' + fmtDate(it.lastWrongAt, true) +
+            (it.lastSelected ? '｜曾誤選 ' + esc(it.lastSelected) : '') + '</div>' +
+        '</div>' +
+        '<button type="button" class="danger" data-del="' + esc(it.key) + '">刪除</button>' +
+      '</li>';
+    }).join('') : '<li class="empty">' + (list.length ? '這個工作表沒有錯題' : '錯題本是空的') + '</li>';
+  }
+
+  function checkedBookKeys() {
+    return Array.prototype.filter.call(document.querySelectorAll('.bookChk'), function (c) { return c.checked; })
+      .map(function (c) { return c.value; });
+  }
+
+  function afterBookChange() {
+    renderBook();
+    refreshSheetSelect();
+    renderBanners();
+  }
+
+  // ---- 測驗紀錄 ----
+  function renderSessions() {
+    var sel = $('sessionSelect');
+    var prev = sel.value;
+    var list = Sessions.all();
+    sel.innerHTML = '';
+    if (!list.length) {
+      sel.add(new Option('（尚無測驗紀錄）', ''));
+      sel.disabled = true;
+      $('sessionDetail').innerHTML = '<p class="empty">尚無測驗紀錄。最多保留最近 ' + MAX_SESSIONS + ' 筆。</p>';
+      ['sessionRetest', 'sessionDelete', 'sessionClear'].forEach(function (id) { $(id).disabled = true; });
+      return;
+    }
+    sel.disabled = false;
+    list.forEach(function (s) {
+      sel.add(new Option(fmtDate(s.at) + '｜' + s.label + '｜' + s.score + '分｜錯 ' + s.wrong + ' 題', s.id));
+    });
+    sel.value = Sessions.get(prev) ? prev : list[0].id;
+    renderSessionDetail();
+  }
+
+  function renderSessionDetail() {
+    var s = Sessions.get($('sessionSelect').value);
+    if (!s) return;
+    $('sessionDetail').innerHTML = '<div class="control-panel">' + summaryHtml(s) + '</div>' + reviewHtml(s) +
+      '<p class="hint" style="text-align:center">共 ' + Sessions.all().length + ' 筆紀錄，最多保留最近 ' + MAX_SESSIONS + ' 筆</p>';
+    $('sessionRetest').disabled = !s.wrongs.length;
+    $('sessionRetest').textContent = '重測此次錯題' + (s.wrongs.length ? '（' + uniqueWrongs(s.wrongs).length + '題）' : '');
+    $('sessionDelete').disabled = false;
+    $('sessionClear').disabled = false;
+  }
+
+  // ---- 備份 ----
+  var persistState = null;   // true / false / null(不支援)
+  function requestPersist() {
+    if (!(navigator.storage && navigator.storage.persisted)) return;
+    navigator.storage.persisted()
+      .then(function (p) { return p || (navigator.storage.persist ? navigator.storage.persist() : false); })
+      .then(function (p) { persistState = !!p; })
+      .catch(function () {});
+  }
+
+  function renderBackup() {
+    var st = Store.state;
+    var d = daysSince(st.lastExport);
+    $('exportInfo').innerHTML =
+      '錯題本 ' + WrongBook.size() + ' 題、測驗紀錄 ' + st.sessions.length + ' 筆<br>' +
+      (st.lastExport ? '上次匯出：' + fmtDate(st.lastExport, true) + '（' + d + ' 天前）' : '尚未匯出過');
+    $('storageInfo').innerHTML =
+      '題庫：' + esc(QUIZ.name) + '<br>' +
+      '儲存代號：' + esc(STORE_KEY) + '<br>' +
+      '網頁產生時間：' + fmtDate(QUIZ.generatedAt, true) + '<br>' +
+      '本機儲存：' + (Store.ok ? '可用' : '<span style="color:#c62828">無法使用</span>') + '<br>' +
+      '長期保存：' + (persistState === true ? '已取得'
+        : persistState === false ? '未取得（瀏覽器仍可能在長期未使用時清除資料，請定期匯出）'
+        : '此瀏覽器不支援查詢') +
+      '<br>資料只存在這台裝置的這個瀏覽器；換裝置請用匯出／匯入。';
+  }
+
+  function exportBackup() {
+    var st = Store.state;
+    var data = {
+      format: 'vocabQuiz-backup',
+      version: 1,
+      quizId: QUIZ.id,
+      quizName: QUIZ.name,
+      exportedAt: new Date().toISOString(),
+      wrongBook: st.wrongBook,
+      sessions: st.sessions
+    };
+    var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    var url = URL.createObjectURL(blob);
+    var d = new Date();
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = '錯題備份_' + String(QUIZ.name).replace(/[\\/:*?"<>|]/g, '_') + '_' +
+      d.getFullYear() + pad2(d.getMonth() + 1) + pad2(d.getDate()) + '.json';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
+
+    st.lastExport = data.exportedAt;
+    Store.save();
+    renderBackup();
+    renderBanners();
+  }
+
+  function mergeBackup(data, withSessions) {
+    var book = Store.state.wrongBook;
+    var added = 0, merged = 0, sessionsAdded = 0;
+
+    Object.keys(data.wrongBook).forEach(function (rawKey) {
+      var inc = data.wrongBook[rawKey];
+      if (!inc || !inc.word || !inc.meaning) return;
+      var key = norm(inc.word);
+      var cur = book[key];
+      if (!cur) {
+        book[key] = {
+          word: inc.word, meaning: inc.meaning, explanation: inc.explanation || '', sheet: inc.sheet || '',
+          wrongCount: inc.wrongCount || 1, streak: Math.min(inc.streak || 0, STREAK_TO_REMOVE - 1),
+          lastSelected: inc.lastSelected || '', firstWrongAt: inc.firstWrongAt || inc.lastWrongAt || '',
+          lastWrongAt: inc.lastWrongAt || ''
+        };
+        added++;
+        return;
+      }
+      var newer = String(inc.lastWrongAt || '') > String(cur.lastWrongAt || '') ? inc : cur;
+      var firsts = [cur.firstWrongAt, inc.firstWrongAt].filter(Boolean).sort();
+      book[key] = {
+        word: newer.word, meaning: newer.meaning, explanation: newer.explanation || '', sheet: newer.sheet || '',
+        wrongCount: Math.max(cur.wrongCount || 1, inc.wrongCount || 1),
+        streak: Math.min(cur.streak || 0, inc.streak || 0),
+        lastSelected: newer.lastSelected || '',
+        firstWrongAt: firsts[0] || newer.lastWrongAt || '',
+        lastWrongAt: newer.lastWrongAt || ''
+      };
+      merged++;
+    });
+
+    if (withSessions && Array.isArray(data.sessions)) {
+      var ids = {};
+      Store.state.sessions.forEach(function (s) { ids[s.id] = true; });
+      data.sessions.forEach(function (s) {
+        if (s && s.id && s.at && !ids[s.id] && Array.isArray(s.wrongs)) {
+          Store.state.sessions.push(s);
+          ids[s.id] = true;
+          sessionsAdded++;
+        }
+      });
+      sortAndTrimSessions();
+    }
+    return { added: added, merged: merged, sessionsAdded: sessionsAdded };
+  }
+
+  function importBackup() {
+    var f = $('importFile').files[0];
+    if (!f) { alert('請先選擇備份檔。'); return; }
+    var withSessions = $('importSessions').checked;
+    var reader = new FileReader();
+    reader.onload = function () {
+      var data;
+      try { data = JSON.parse(reader.result); }
+      catch (e) { alert('檔案格式錯誤，無法讀取。'); return; }
+      if (!data || data.format !== 'vocabQuiz-backup' || !data.wrongBook || typeof data.wrongBook !== 'object') {
+        alert('這不是錯題備份檔。');
+        return;
+      }
+      if (data.quizId !== QUIZ.id &&
+          !confirm('這個備份來自另一份題庫「' + (data.quizName || '未知') + '」，和目前的題庫「' + QUIZ.name + '」不同。\n仍要合併匯入嗎？')) {
+        return;
+      }
+      var r = mergeBackup(data, withSessions);
+      Store.save();
+      $('importFile').value = '';
+      alert('匯入完成：\n錯題本新增 ' + r.added + ' 筆、合併 ' + r.merged + ' 筆' +
+        (withSessions ? '\n測驗紀錄新增 ' + r.sessionsAdded + ' 筆' : ''));
+      renderBackup();
+      refreshSheetSelect();
+      renderBanners();
+    };
+    reader.onerror = function () { alert('讀取檔案失敗。'); };
+    reader.readAsText(f);
+  }
+
+  // ===================== 事件綁定 =====================
+  function bindEvents() {
+    Array.prototype.forEach.call(document.querySelectorAll('[data-font]'), function (b) {
+      b.addEventListener('click', function () { adjustFont(parseInt(b.getAttribute('data-font'), 10)); });
+    });
+
+    $('sheetSelect').addEventListener('change', onPoolChange);
+    $('timeSelect').addEventListener('change', function () {
+      Store.state.prefs.timeMin = $('timeSelect').value;
+      Store.save();
+    });
+    $('startBtn').addEventListener('click', startFromSetup);
+    $('manageBtn').addEventListener('click', function () { openManage(); });
+
+    $('nextBtn').addEventListener('click', nextQuestion);
+    $('quitBtn').addEventListener('click', function () {
+      if (confirm('確定要提前交卷嗎？未作答的題目不會記入錯題本。')) endQuiz('quit');
+    });
+
+    $('retestLastBtn').addEventListener('click', function () {
+      if (S.lastSession && S.lastSession.wrongs.length) retestWrongs(S.lastSession.wrongs, S.lastSession.label + '（重測）');
+    });
+    $('backHomeBtn').addEventListener('click', function () { renderBanners(); showScreen('setup'); });
+    $('resultManageBtn').addEventListener('click', function () { openManage(); });
+
+    Array.prototype.forEach.call(document.querySelectorAll('.tab'), function (b) {
+      b.addEventListener('click', function () { switchTab(b.getAttribute('data-tab')); });
+    });
+    $('manageBackBtn').addEventListener('click', function () { refreshSheetSelect(); renderBanners(); showScreen('setup'); });
+
+    // 錯題本
+    $('bookFilter').addEventListener('change', renderBook);
+    $('bookSort').addEventListener('change', renderBook);
+    $('bookSelectAll').addEventListener('change', function () {
+      var on = $('bookSelectAll').checked;
+      Array.prototype.forEach.call(document.querySelectorAll('.bookChk'), function (c) { c.checked = on; });
+    });
+    $('bookList').addEventListener('click', function (e) {
+      var btn = e.target.closest('[data-del]');
+      if (!btn) return;
+      var key = btn.getAttribute('data-del');
+      var it = Store.state.wrongBook[key];
+      if (it && confirm('確定刪除「' + it.word + '」這筆錯題？')) {
+        WrongBook.remove([key]);
+        afterBookChange();
+      }
+    });
+    $('bookDeleteSelected').addEventListener('click', function () {
+      var keys = checkedBookKeys();
+      if (!keys.length) { alert('請先勾選要刪除的錯題。'); return; }
+      if (confirm('確定刪除勾選的 ' + keys.length + ' 筆錯題？')) {
+        WrongBook.remove(keys);
+        afterBookChange();
+      }
+    });
+    $('bookClear').addEventListener('click', function () {
+      var f = $('bookFilter').value;
+      var keys = shownBook.map(function (it) { return it.key; });
+      if (!keys.length) return;
+      var msg = f ? '確定清空「' + f + '」的 ' + keys.length + ' 筆錯題？' : '確定清空全部 ' + keys.length + ' 筆錯題？此動作無法復原。';
+      if (confirm(msg)) {
+        WrongBook.remove(keys);
+        afterBookChange();
+      }
+    });
+    $('bookQuiz').addEventListener('click', function () {
+      var keys = checkedBookKeys();
+      var items = keys.length
+        ? shownBook.filter(function (it) { return keys.indexOf(it.key) >= 0; })
+        : shownBook;
+      if (!items.length) return;
+      var f = $('bookFilter').value;
+      startQuiz(shuffle(items.map(itemToQuestion)), '錯題本' + (f ? '－' + f : ''),
+        (keys.length ? '勾選 ' : '') + items.length + ' 題');
+    });
+
+    // 測驗紀錄
+    $('sessionSelect').addEventListener('change', renderSessionDetail);
+    $('sessionRetest').addEventListener('click', function () {
+      var s = Sessions.get($('sessionSelect').value);
+      if (s && s.wrongs.length) retestWrongs(s.wrongs, s.label + '（重測 ' + fmtDate(s.at) + '）');
+    });
+    $('sessionDelete').addEventListener('click', function () {
+      var s = Sessions.get($('sessionSelect').value);
+      if (s && confirm('確定刪除「' + fmtDate(s.at) + '｜' + s.label + '」這筆紀錄？\n（不影響錯題本）')) {
+        Sessions.remove(s.id);
+        renderSessions();
+      }
+    });
+    $('sessionClear').addEventListener('click', function () {
+      if (confirm('確定清空全部 ' + Sessions.all().length + ' 筆測驗紀錄？\n（不影響錯題本）此動作無法復原。')) {
+        Sessions.clear();
+        renderSessions();
+      }
+    });
+
+    // 備份
+    $('exportBtn').addEventListener('click', exportBackup);
+    $('importBtn').addEventListener('click', importBackup);
+
+    // 鍵盤操作（只在測驗畫面）
+    document.addEventListener('keydown', function (e) {
+      if ($('screen-quiz').classList.contains('hidden')) return;
+      if (/^[1-4]$/.test(e.key)) {
+        e.preventDefault();
+        answer(parseInt(e.key, 10) - 1);
+      } else if (e.key === 'Enter') {
+        e.preventDefault();   // 避免焦點在按鈕上時重複觸發
+        nextQuestion();
+      }
+    });
+
+    // 同時開了兩個分頁時，同步另一個分頁寫入的資料
+    window.addEventListener('storage', function (e) {
+      if (e.key !== STORE_KEY) return;
+      Store.load();
+      if (!$('screen-setup').classList.contains('hidden')) { refreshSheetSelect(); renderBanners(); }
+    });
+  }
+
+  // ===================== 初始化 =====================
+  function init() {
+    Store.load();
+    document.title = QUIZ.title;
+    $('titleText').textContent = QUIZ.title;
+
+    fontSize = parseInt(Store.state.prefs.fontSize, 10) || 18;
+    applyFont();
+    if (Store.state.prefs.timeMin && $('timeSelect').querySelector('option[value="' + Store.state.prefs.timeMin + '"]')) {
+      $('timeSelect').value = Store.state.prefs.timeMin;
+    }
+
+    bindEvents();
+    refreshSheetSelect();
+    renderBanners();
+    requestPersist();
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>
