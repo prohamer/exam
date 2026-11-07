@@ -54,6 +54,7 @@ textarea#md{width:100%;height:260px;font-family:ui-monospace,Consolas,"Courier N
 .pill.ok{color:var(--ok);border-color:#a7d8b4;background:var(--ok-soft)}
 details.help summary{cursor:pointer;font-weight:700;font-size:14px}
 details.help ol{padding-left:20px;margin:8px 0}
+details.help a{color:var(--accent);font-weight:700}
 details.help li{margin-bottom:4px;font-size:13.5px}
 
 /* ---------- preview (the form) ---------- */
@@ -118,6 +119,21 @@ mark.tbc{background:#ffe066;padding:0 2px}
 <main>
 <div class="left">
   <section class="panel">
+    <div class="body">
+      <details class="help">
+        <summary>使用說明</summary>
+        <ol>
+          <li>下載 Skill 檔：<a href="https://prohamer.github.io/exam/tsiesexamreport/exam-review-report.zip" target="_blank" rel="noopener">exam-review-report.zip</a>，解壓縮後在 Gemini「設定 &gt; Skills &gt; 上傳」匯入 SKILL.md，並附上 references 資料夾裡的兩個檔案。</li>
+          <li>在 Gemini 使用這個 Skill，完成試題分析與考卷辨識後，複製最後輸出的 MD。</li>
+          <li>貼到下方「匯入 MD」。表頭資料若 MD 有提供會自動帶入，其餘請手動填寫。</li>
+          <li>依「檢查結果」修正：<b>紅色</b>是格式錯誤，會影響輸出；<b>黃色</b>是提醒，例如還有【待確認】項目或欄位未填。點一下黃色的【待確認】會跳到預覽中的位置。</li>
+          <li>確認預覽無誤後，匯出 Word（學校紀錄表格式）、PDF 或 Excel（所有表格與圖表數據）。</li>
+          <li>所有資料只在這台電腦的瀏覽器中處理，不會上傳。</li>
+        </ol>
+      </details>
+    </div>
+  </section>
+  <section class="panel">
     <h2><span class="num">1</span>匯入 MD<span class="spacer"></span>
       <button class="btn small" id="btnExample">載入範例</button>
     </h2>
@@ -172,20 +188,6 @@ mark.tbc{background:#ffe066;padding:0 2px}
     </div>
   </section>
 
-  <section class="panel">
-    <div class="body">
-      <details class="help">
-        <summary>使用說明</summary>
-        <ol>
-          <li>在 Gemini 使用「試卷分析檢討」Skill，完成試題分析與考卷辨識後，複製最後輸出的 MD。</li>
-          <li>貼到上方「匯入 MD」。表頭資料若 MD 有提供會自動帶入，其餘請手動填寫。</li>
-          <li>依「檢查結果」修正：<b>紅色</b>是格式錯誤，會影響輸出；<b>黃色</b>是提醒，例如還有【待確認】項目或欄位未填。點一下黃色的【待確認】會跳到預覽中的位置。</li>
-          <li>確認預覽無誤後，匯出 Word（學校紀錄表格式）、PDF 或 Excel（所有表格與圖表數據）。</li>
-          <li>所有資料只在這台電腦的瀏覽器中處理，不會上傳。</li>
-        </ol>
-      </details>
-    </div>
-  </section>
 </div>
 
 <div class="right">
