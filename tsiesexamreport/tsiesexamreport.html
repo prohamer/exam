@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>試卷分析檢討紀錄表產生器V1</title>
+<title>試卷分析檢討紀錄表產生器V2</title>
 <style>
 :root{
   --ink:#1f2328; --muted:#5b6470; --line:#d0d7de; --bg:#f6f7f9; --panel:#fff;
@@ -20496,8 +20496,12 @@ function fmtNum(v){return Number.isInteger(v)?String(v):String(Math.round(v*10)/
 function valueText(spec,s,i){
   const v=fmtNum(s.data[i])+(spec.unit==="%"?"%":"");
   const lab=Array.isArray(s.labels)&&s.labels[i]!=null&&s.labels[i]!==""?String(s.labels[i]):"";
-  if(spec.unit==="%"&&lab) return `${v}（${lab}）`;
-  return lab? `${v} ${lab}` : (spec.unit&&spec.unit!=="%"? v+spec.unit : v);
+  if(spec.unit==="%") return lab? `${v}（${lab}）` : v;
+  const vu = spec.unit? v+spec.unit : v;
+  if(!lab) return vu;
+  // label already carries the number (e.g. data 1, label "1人") -> show the label only
+  if(lab.replace(/\s/g,"").includes(fmtNum(s.data[i]))) return lab;
+  return `${vu}（${lab}）`;
 }
 function legendSVG(spec,y,W){
   let x=0; const items=spec.series.map((s,i)=>{const w=18+8+wrapText(s.name||`資料${i+1}`,99)[0].length*13+22; const o={s,i,x,w}; x+=w; return o;});
