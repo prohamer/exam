@@ -47,6 +47,8 @@
 
     .row { display: flex; gap: 8px; align-items: stretch; }
     .row > * { flex: 1; }
+    .action-row { display: flex; gap: 8px; }
+    .action-row > button { flex: 1; }
     .check-row { display: flex; align-items: center; gap: 8px; margin: 0.6rem 0 0.2rem; text-align: left; }
     .check-row input { width: auto; margin: 0; }
     .check-row label { margin: 0; }
@@ -285,7 +287,10 @@
             <img id="ans-image" class="hidden" alt="" referrerpolicy="no-referrer" onerror="this.classList.add('hidden')" style="max-width:100%;max-height:180px;border-radius:6px;margin-top:0.4rem;">
         </div>
         <p id="next-question-countdown" class="countdown hidden"></p>
-        <button id="next-question-btn" class="hidden">下一題</button>
+        <div class="action-row">
+            <button id="reveal-btn" class="btn-secondary hidden">顯示答案</button>
+            <button id="next-question-btn" class="hidden">下一題</button>
+        </div>
         <button id="quit-btn" class="btn-secondary" style="margin-top:1rem;">結束並查看成績</button>
     </div>
 
@@ -489,7 +494,7 @@ function bindEvents() {
         const q = currentQ(); if (!q) return;
         const el = $('example-sentence');
         if (!q.example.en) return;
-        el.textContent = q.status === STATUS.CORRECT ? q.example.en : maskWord(q.example.en, q.entry.word);
+        el.textContent = (q.done || q.revealed) ? q.example.en : maskWord(q.example.en, q.entry.word);
         el.classList.remove('hidden');
     });
     $('show-translation').addEventListener('click', () => {
@@ -502,6 +507,7 @@ function bindEvents() {
         if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); handleAnswer(); }
     });
     $('next-question-btn').addEventListener('click', goToNextQuestion);
+    $('reveal-btn').addEventListener('click', revealAnswer);
     $('quit-btn').addEventListener('click', endQuiz);
 
     $('retry-wrong-btn').addEventListener('click', retryWrong);
@@ -791,6 +797,8 @@ function startQuiz(entries, label) {
             ? entry.examples[Math.floor(Math.random() * entry.examples.length)]
             : { en: '', zh: '' },
         status: null,
+        done: false,       // 已拼對、等待進入下一題
+        revealed: false,   // 練習模式按過「顯示答案」
         attempts: 0,
         userAnswer: ''
     }));
@@ -879,7 +887,7 @@ function resetUI(q) {
     fb.className = '';
 
     ['show-example', 'show-translation', 'repeat-word', 'repeat-sentence'].forEach(id => { $(id).disabled = true; });
-    ['example-sentence', 'example-translation', 'answer-panel', 'next-question-countdown', 'next-question-btn']
+    ['example-sentence', 'example-translation', 'answer-panel', 'next-question-countdown', 'next-question-btn', 'reveal-btn']
         .forEach(id => $(id).classList.add('hidden'));
     $('example-sentence').textContent = '';
     $('example-translation').textContent = '';
@@ -909,13 +917,14 @@ async function playAudioSequence(seq) {
 
 function onThinkingDone() {
     const q = currentQ();
-    if (!q || q.status === STATUS.CORRECT) return;
+    if (!q || q.done) return;
 
     $('show-example').disabled = !q.example.en;
     $('show-translation').disabled = !q.example.zh;
 
     if (state.mode === 'practice') {
         showNextButton('跳過此題', q.attempts > 0 ? 'btn-danger' : 'btn-warning');
+        showRevealButton(q);
     } else {
         // 測驗模式：以輸入框目前內容判定，鎖定作答後公布答案
         const input = $('answer-input');
@@ -937,7 +946,7 @@ function handleAnswer() {
     const value = input.value;
 
     if (state.mode === 'practice') {
-        if (q.status === STATUS.CORRECT) { goToNextQuestion(); return; }
+        if (q.done) { goToNextQuestion(); return; }
         if (!value.trim()) return;
 
         q.userAnswer = value.trim();
@@ -945,11 +954,18 @@ function handleAnswer() {
         if (result) {
             state.seq++;                 // 中止語音流程與思考計時
             clearQuestionTimers();
-            q.status = STATUS.CORRECT;
+            q.done = true;
             q.attempts++;
-            setFeedback(result === 'homophone'
-                ? '✓ 答對了！（同音字，本題單字是 ' + q.entry.word + '）'
-                : '✓ 答對了！很棒！', 'ok');
+            // 看過答案後拼對：給練習機會，但仍記為答錯
+            q.status = q.revealed ? STATUS.INCORRECT : STATUS.CORRECT;
+            $('reveal-btn').classList.add('hidden');
+            if (q.revealed) {
+                setFeedback('✓ 拼對了！（看過答案，本題記為答錯）', 'info');
+            } else {
+                setFeedback(result === 'homophone'
+                    ? '✓ 答對了！（同音字，本題單字是 ' + q.entry.word + '）'
+                    : '✓ 答對了！很棒！', 'ok');
+            }
             $('repeat-word').disabled = false;
             $('repeat-sentence').disabled = !q.example.en;
             $('show-example').disabled = !q.example.en;
@@ -961,6 +977,7 @@ function handleAnswer() {
             q.attempts++;
             setFeedback('✗ 答案不正確，請再試一次（第 ' + q.attempts + ' 次）', 'bad');
             showNextButton('跳過此題', 'btn-danger');
+            showRevealButton(q);
             input.select();
         }
     } else {
@@ -1008,6 +1025,26 @@ function showAnswerPanel(q) {
     $('answer-panel').classList.remove('hidden');
 }
 
+function showRevealButton(q) {
+    if (state.mode !== 'practice' || q.revealed || q.done) return;
+    $('reveal-btn').classList.remove('hidden');
+}
+
+// 練習模式：顯示答案後可以看著拼一次，拼對才進入下一題（本題記為答錯）
+function revealAnswer() {
+    const q = currentQ();
+    if (!q || q.done || state.mode !== 'practice') return;
+    q.revealed = true;
+    $('reveal-btn').classList.add('hidden');
+    showAnswerPanel(q);
+    $('show-example').disabled = !q.example.en;
+    $('show-translation').disabled = !q.example.zh;
+    if (!$('example-sentence').classList.contains('hidden')) $('example-sentence').textContent = q.example.en;
+    setFeedback('請看著答案拼一次，拼對後進入下一題（本題記為答錯）', 'info');
+    const input = $('answer-input');
+    try { input.focus(); input.select(); } catch (e) { /* 忽略 */ }
+}
+
 function showNextButton(text, cls) {
     const btn = $('next-question-btn');
     btn.textContent = text;
@@ -1038,7 +1075,7 @@ function goToNextQuestion() {
     const q = currentQ();
     if (q && q.status === null) {
         if (state.mode === 'practice') {
-            q.status = q.attempts > 0 ? STATUS.INCORRECT : STATUS.SKIPPED;
+            q.status = (q.attempts > 0 || q.revealed) ? STATUS.INCORRECT : STATUS.SKIPPED;
         } else {
             gradeTestAnswer(q, $('answer-input').value);
         }
